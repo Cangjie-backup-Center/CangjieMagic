@@ -1,0 +1,39 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+ */
+package magic.tool
+
+import magic.core.tool.*
+import magic.jsonable.JsonUtils
+
+import std.collection.{ArrayList}
+import encoding.json.{JsonValue, JsonObject, JsonString, JsonArray}
+
+public abstract class AbsTool <: Tool {
+    public func toString(): String {
+        let properties = JsonObject()
+        let required = ArrayList<String>()
+        for (param in this.parameters) {
+            let paramTypeSchema = param.typeSchema.toJsonValue().asObject()
+            // description should be added to the type schema
+            if (!param.description.isEmpty()) {
+                paramTypeSchema.put("description", JsonString(param.description))
+            }
+            properties.put(param.name, paramTypeSchema)
+            required.append(param.name)
+        }
+        let toolSchema = JsonUtils.buildJsonObject([
+            ("name", JsonString(name)),
+            ("description", JsonString(description)),
+            ("inputSchema", JsonUtils.buildJsonObject([
+                ("type", JsonString("object")),
+                ("properties", properties),
+                ("required", JsonUtils.buildJsonArray(required.toArray()))]))
+            // ("result", retType.toJsonValue())
+        ])
+        if (!examples.isEmpty()) {
+            toolSchema.put("examples", JsonUtils.buildJsonArray(examples))
+        }
+        return toolSchema.toJsonString()
+    }
+}

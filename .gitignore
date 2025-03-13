@@ -1,0 +1,13 @@
+.vscode/
+cjpm.lock
+target/
+.cache
+.env
+*.macrocall
+backups/
+third_party
+logs/
+*.log
+bench/
+venv/
+.venv/

@@ -1,0 +1,59 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+ */
+package magic.agent_group
+
+import magic.core.agent.*
+
+public enum FreeGroupMode {
+    | Auto // The speaker will be selected by LLM automatically
+    | RoundRobin
+}
+
+public class FreeGroup <: AgentGroup {
+    private let members = ArrayList<Agent>()
+
+    public init(a: Agent, b: Agent) {
+        members.append(a)
+        members.append(b)
+    }
+
+    override public func chat(request: AgentRequest): AgentResponse {
+        return chat(request, maxRound: DISCUSSION_MAX_ROUND)
+    }
+
+    override public func chat(request: AgentRequest, maxRound!: Int64): AgentResponse {
+        let dGroup = AutoDiscussGroup(topic: request.question, members: members)
+        return dGroup.discuss(maxRound: maxRound)
+    }
+
+    override public func asyncChat(request: AgentRequest): AsyncAgentResponse {
+        throw UnsupportedException()
+    }
+
+    public func discuss(topic!: String, initiator!: String, speech!: String,
+                        mode!: FreeGroupMode = FreeGroupMode.Auto,
+                        maxRound!: Int64 = DISCUSSION_MAX_ROUND): String {
+        let dGroup = match (mode) {
+            case FreeGroupMode.Auto => AutoDiscussGroup(topic: topic, members: members)
+            case FreeGroupMode.RoundRobin => RoundRobinDiscussGroup(topic: topic, members: members)
+        }
+        let resp = dGroup.discuss(initiator, speech, maxRound: maxRound)
+        return resp.content
+    }
+
+    override public operator func [](memberName: String): Agent {
+        for (agent in members) {
+            if (agent.name == memberName) {
+                return agent
+            }
+        }
+        throw Exception("Access unknown agent member")
+    }
+
+    public operator func |(member: Agent): FreeGroup {
+        members.append(member)
+        return this
+    }
+}
+

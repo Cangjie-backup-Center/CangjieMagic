@@ -1,0 +1,95 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+ */
+package magic.agent_group
+
+import magic.prompt.Template
+import magic.log.LogUtils
+import magic.parser.OutputParserUtils
+import magic.core.agent.*
+import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
+import magic.model.ModelUtils
+
+import std.collection.ArrayList
+
+private let AUTO_SPEAKER_SELECT_PROMPT = """
+There are {numOfAgent} agents collaborate to solve questions, i.e., the topic.
+They solve the problem by discussion. The discussion can be divided as multiple rounds.
+During each round, there is an agent to speak.
+You should select the next agent to speak according to what they have discussed so far.
+If the problem have been solved, return the final answer instead of selecting an agent.
+
+## Agents
+Each agent has a name and a description, whose description summarize its ability.
+The following are agent involved in the discussion.
+
+----- Begin of agent descriptions -----
+{agents}
+----- End of agent descriptions -----
+
+## Topic
+{topic}
+
+## Output Format
+1. If the problem is solved, there is no need to select the agent and return the final answer.
+   The output should be formatted as [Final Answer] ... [/Final Answer]
+1. If an agent select, The output should be formatted as [Selection] <agent-name> [/Selection]
+
+## Discussion
+The discussion is split as speeches, and each speech is wrapped by the pair of [Speech] and [/Speech].
+The following is the discussion content.
+{discussion}
+
+## Task
+Select the next speaker or make the final answer.
+"""
+
+class AutoDiscussGroup <: DiscussGroup {
+    init(topic!: String, members!: ArrayList<Agent>) {
+        super(topic, members)
+    }
+
+    private func buildSelectSystemPrompt(): String {
+        let agentsStrBuilder = StringBuilder()
+        for (agent in members) {
+            agentsStrBuilder.append("[Agent] name: ${agent.name}; description: ${agent.description} [/Agent]\n")
+        }
+        return AUTO_SPEAKER_SELECT_PROMPT.format(
+            ("numOfAgent", members.size),
+            ("agents", agentsStrBuilder),
+            ("topic", topic),
+            ("discussion", buildDiscussionPrompt())
+        )
+    }
+
+    override public func selectSpeaker(): Selection {
+        let sysPrompt = buildSelectSystemPrompt()
+        let dialog = Dialog([
+            ChatMessage.system(sysPrompt)
+        ])
+        LogUtils.info(name, sysPrompt)
+        dialog.addMessage(
+            ChatMessage.user("Now, select the next speaker or make the final answer")
+        )
+
+        let msg = match (ModelUtils.makeChat(this.model, dialog)) {
+            case Some(msg) => msg
+            case None => return Selection.Failure("LLM repsonse error")
+        }
+        LogUtils.info(name, msg)
+        if (let Some(answer) <- OutputParserUtils.extractLastSection(msg.content, "[Final Answer]")) {
+            return Selection.Summary(answer)
+        }
+
+        if (let Some(name) <- OutputParserUtils.extractLastSection(msg.content, "[Selection]")) {
+            if (let Some(idx) <- findAgent(name)) {
+                currSpeakerIndex = idx
+                return Selection.Speaker(members[idx])
+            } else {
+                return Selection.Failure("Select a non-existed agent")
+            }
+        } else {
+            return Selection.Failure("Parse [Selection] failure")
+        }
+    }
+}
