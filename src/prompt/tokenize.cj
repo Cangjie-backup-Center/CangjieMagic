@@ -3,19 +3,25 @@
  */
 package magic.prompt
 
-/* These methods are not enabled currently
-
+@When[llamacpp == "enable"]
 foreign {
-// Load the vocab model
-func doInit(modelPath: CString): Unit
+    /**
+     * Load the vocab model
+     */
+    func doInit(modelPath: CString): Unit
 
-// Free the vocab model
-func doFini(): Unit
+    /**
+     * Free the vocab model
+     */
+    func doFini(): Unit
 
-// find the number of tokens in the prompt
-func tokenize(prompt: CString): Int64
+    /**
+     * Compute the number of tokens in the prompt
+     */
+    func tokenize(prompt: CString): Int64
 }
 
+@When[llamacpp == "enable"]
 protected struct TokenizeUtils {
     protected static func doInit(modelPath: String): Unit {
         unsafe {
@@ -39,4 +45,3 @@ protected struct TokenizeUtils {
         return result
     }
 }
-*/

@@ -88,10 +88,11 @@ import magic.prelude.*
 | `faiss`  | `enable\|disable`  | 是否构建 `faiss` 向量数据库 |
 | `sqlite`  | `enable\|disable`  | 是否构建支持 `sqlite` 数据库的 RAG 功能 |
 | `http`  | `curl\|cj`  | 使用 `curl` 或是仓颉标准库 http 包发送 http 请求 |
+| `llamacpp`  | `enable\|disable` | 是否使用 llamacpp，当前不需要启用 |
 
 **📌 额外说明**
 
-- 如果构建 `faiss` 或是 `sqlite`，需要构建对应的二进制库（详见 [third_party_libs.md](./docs/third_party_libs.md)），添加到目录（例如 `./ffi_libs`）并修改 `cjpm.toml`。
+- 如果构建 `faiss`、`sqlite` 或是 `llamacpp`，需要构建对应的二进制库（详见 [third_party_libs.md](./docs/third_party_libs.md)），添加到目录（例如 `./ffi_libs`）并修改 `cjpm.toml`。
   ```toml
   [ffi.c]
     sqlite = { path = "./ffi_libs/" }
