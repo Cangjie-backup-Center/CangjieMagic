@@ -117,12 +117,3 @@ int64_t tokenize(const char *prompt) {
     int n_prompt = -llama_tokenize(model, prompt, strlen(prompt), NULL, 0, true, true);
     return n_prompt;
 }
-
-// int main() {
-//     const char *model_path = "./token-model/Llama3.1-Chinese-Chat-vocab.gguf";
-//     const char *prompt = "hello world again";
-//     doInit(model_path);
-//     printf("#token %d\n", tokenize(prompt));
-//     doFini();
-//     return 0;
-// }
