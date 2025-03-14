@@ -7,13 +7,12 @@
 
 <!-- code_chunk_output -->
 
-- [Magic: Make Apps Grow Intelligence and Creativity](#magic-make-apps-grow-intelligence-and-creativity)
+- [Cangjie Magic: Make Apps Grow Intelligence and Creativity](#cangjie-magic-make-apps-grow-intelligence-and-creativity)
   - [运行示例代码](#运行示例代码)
   - [使用教程](#使用教程docstutorialmd)
   - [API 手册](#api-手册docsapi_referencemd)
   - [其他构建配置说明](#其他构建配置说明)
     - [构建选项](#构建选项)
-    - [使用二进制发布包配置](#使用二进制发布包配置)
   - [示例程序](#示例程序)
 
 <!-- /code_chunk_output -->
@@ -30,7 +29,7 @@
     - **推荐**方式一：直接配置 git 依赖
         ```toml
         [dependencies]
-          magic = { git = "<url-to-this-project>/magic.git", branch = "master" }
+          magic = { git = "https://gitcode.com/Cangjie-TPC/CangjieMagic.git", branch = "dev" }
         ```
 
     - 方式二：下载本项目代码并配置本地源码依赖
@@ -99,21 +98,6 @@ import magic.prelude.*
     faiss_c = { path = "./ffi_libs/" }
   ```
 - 如果使用 `curl` 发送 http 请求需要自行安装。
-
-### 使用二进制发布包配置
-
-如果直接使用本项目提供的**二进制发布包**，注意修改 `cjpm.toml` 中的二进制依赖选项文件为
-
-```toml
-[target.x86_64-unknown-windows-gnu.bin-dependencies]
-path-option = [ "<path-to-magic-sdk>/magic" ]
-
-[ffi.c]
-sqlite = { path = "<path-to-magic-sdk>/ffi_libs" }
-faiss_c = { path = "<path-to-magic-sdk>/ffi_libs" }
-```
-
-注意，通过执行 `cjc -V` 获取 target 信息来替换上述的 `target.<target>.bin-dependencies`。
 
 ## 示例程序
 

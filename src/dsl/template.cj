@@ -57,7 +57,7 @@ func transformStringLiteral(input: Tokens, isDecl!: Bool): Tokens {
             collector.isIndependentStringLiteral(token)) {
             transformedTokens.append(quote(
                 $PROMPT_BUILDER.append($token)
-                $token
+                // $token
             ))
         } else {
             transformedTokens.append(token)
