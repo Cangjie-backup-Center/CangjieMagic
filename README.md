@@ -40,7 +40,7 @@
 - 3️⃣ 拷贝如下代码至 `main.cj` 中，并在代码中设置大语言模型服务商的 API key。
 - 4️⃣ 通过 `cjpm run --name <your-package-name>` 运行
 
-```swift
+```cangjie
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
@@ -64,7 +64,7 @@ main() {
 
 📝 在使用本项目时，一般使用如下的 `import` 规则。
 
-```swift
+```cangjie
 import magic.dsl.*
 import magic.prelude.*
 ```

@@ -53,7 +53,7 @@ Cangjie Agent DSL 被设计为仓颉语言的 eDSL，即在仓颉语言中通过
 
 目前，我们使用宏 `@agent` 修饰 `class` 类型来定义一个 Agent 类型。
 
-```swift
+```cangjie
 @agent class Foo { }
 ```
 
@@ -82,7 +82,7 @@ Cangjie Agent DSL 被设计为仓颉语言的 eDSL，即在仓颉语言中通过
 **示例：字符串拼接**
 以下代码将三个字符串依次拼接作为完整的 Agent 系统提示词，并且第三个插值字符串中调用了函数 `bar`。
 
-```swift
+```cangjie
 @agent
 class Foo {
     @prompt(
@@ -95,7 +95,7 @@ class Foo {
 
 **示例：访问成员变量**
 
-```swift
+```cangjie
 @agent
 class Calculator {
     @prompt(
@@ -119,7 +119,7 @@ let calculator = Calculator(name: "aha", version: 1)
 
 **示例：使用外部文件编写系统提示词**
 
-```swift
+```cangjie
 @agent
 class Foo {
     @prompt[include: "./a.md"]()
@@ -138,7 +138,7 @@ class Foo {
 
 **示例：使用提示词模式**
 
-```swift
+```cangjie
 @agent
 class Foo {
     @prompt[pattern: APE] (
@@ -367,7 +367,7 @@ class Foo {
 
 **示例：自定义提示词模式**
 
-```swift
+```cangjie
 @promptPattern
 class APE {
     @element[description: "定义任务"]
@@ -389,7 +389,7 @@ class APE {
 
 由 `@agent` 定义的 Agent 都有一个默认方法 `func chat(question: ToString): String` 作为与交互入口。
 
-```swift
+```cangjie
 @agent class Foo { ... }
 
 let agent = Foo()
@@ -399,7 +399,7 @@ println(result)
 
 此外，通过 `chatGet` 能够让 Agent 能够直接返回一个数据类型而不仅仅是字符串。如果 Agent 未能生成满足要求的数据类型，则返回 `None`。方法定义如下：
 
-```swift
+```cangjie
 func chatGet<T>(question: String): Option<T> where T <: Jsonable<T>
 ```
 
@@ -412,7 +412,7 @@ func chatGet<T>(question: String): Option<T> where T <: Jsonable<T>
 
 **示例：返回数据结构**
 
-```swift
+```cangjie
 @jsonable
 class MyDate {
     @field["Year of the foundation"]
@@ -442,7 +442,7 @@ println(date.month)
 
 **示例：使用输入模板**
 
-```swift
+```cangjie
 @agent
 class Foo {
     @prompt(
@@ -471,7 +471,7 @@ let area = agent.chat(
 
 **示例：定义并配置全局工具**
 
-```swift
+```cangjie
 @tool[description: "...",
       parameters: { arg: "..."}]
 func globalTool(arg: String): String {
@@ -486,7 +486,7 @@ class Foo { }
 
 **示例：定义内部工具**
 
-```swift
+```cangjie
 @agent
 class A {
     @tool[description: "...",
@@ -500,7 +500,7 @@ class A {
 对于工具函数存在的限制：
 - 当前工具函数无法像普通函数一样直接调用
 
-    ```swift
+    ```cangjie
     @tool[...]
     func foo() { ... }
 
@@ -513,7 +513,7 @@ class A {
 
 在上述自定义的函数作为工具外，Agent 也能使用开源的 MCP 工具。通过 `mcp` 属性可以进行设置。该属性接收多个 MCP 服务器的设置，每个 MCP 服务器都由 `command`（启动命令）和 `args`（启动参数）构成。
 
-```swift
+```cangjie
 @agent[
     mcp: [
         { command: "node", args: [ "index.js", "args" ] },
@@ -525,7 +525,7 @@ class Foo { ... }
 
 此外，我们也可以直接通过 API 方式给 Agent 配置 MCP 工具。
 
-```swift
+```cangjie
 // 初始化 MCP client
 let client = MCPClient("node", ["args"])
 let agent = SomeAgent()
@@ -546,7 +546,7 @@ agent.toolManager.addTools(client.getTools())
 
 **示例：配置规划方法**
 
-```swift
+```cangjie
 @agent[executor: "naive"]
 class Foo{ }
 
@@ -571,7 +571,7 @@ class Bar{ }
     - 当前支持的文件类型包括 markdown, Sqlite 数据库
 - 类型为 `Retriever` 的表达式
 
-```swift
+```cangjie
 @agent[
   rag: { source: "path/to/some.db" }
 ]
@@ -584,7 +584,7 @@ class Foo { }
 
 ### 示例 1: 命令行助手 Agent
 
-```swift
+```cangjie
 @agent[executor: "react"]
 class CJCAgent {
     @prompt(
@@ -623,7 +623,7 @@ let result = agent.chat("编译一个文件到 ARM 平台")
 
 管道表达式 `|>` 用于将多个 Agent 组成为 `LinearGroup`。
 
-```swift
+```cangjie
 let linearGroup: LinearGroup = ag1 |> ag2 |> ag3
 ```
 
@@ -631,7 +631,7 @@ let linearGroup: LinearGroup = ag1 |> ag2 |> ag3
 
 使用 `<=` 操作符将多个 Agent 组成 `LeaderGroup`，操作符前的 Agent 作为领导者，后面的值作为下属 Agent 的数组。
 
-```swift
+```cangjie
 let leaderGroup: LeaderGroup = ag1 <= [ag2, ag3]
 ```
 
@@ -639,13 +639,13 @@ let leaderGroup: LeaderGroup = ag1 <= [ag2, ag3]
 
 使用 `|` 操作符将多个 Agent 组成 `FreeGroup`。
 
-```swift
+```cangjie
 let freeGroup: FreeGroup = ag1 | ag2 | ag3
 ```
 
 `FreeGroup` 还提供更为灵活的 `discuss` 方法。
 
-```swift
+```cangjie
 public enum FreeGroupMode {
     | Auto // The speaker will be selected by LLM automatically
     | RoundRobin
@@ -666,7 +666,7 @@ class FreeGroup {
 
 以下代码实现两个 Agent 进行猜数字游戏，参考 [AutoGen](https://github.com/microsoft/autogen/blob/main/website/docs/tutorial/human-in-the-loop.ipynb)。
 
-```swift
+```cangjie
 @agent class AgentWithNumber {
     @prompt(
         "You are playing a game of guess-my-number. You have the "
@@ -696,7 +696,7 @@ func game() {
 
 在构建线程协同时，不仅 Agent 能够参与，AgentGroup 同样能够直接参与构造。例如，
 
-```swift
+```cangjie
 ag1 |> (ag2 <= [ag3]) |> ag4
 ```
 
@@ -704,7 +704,7 @@ ag1 |> (ag2 <= [ag3]) |> ag4
 
 然而，在构建主从协同和自由协同时无法直接将 `AgentGroup` 纳入构建；此时需要使用函数 `func subGroup(g: AgentGroup, description!: String): Agent` 将一个 Agent 协同组转换成可参与构建 Agent 协同组的子组对象。
 
-```swift
+```cangjie
 ag1 | (ag2 <= [ag3]) | ag4 // Compilation error
 ag1 | subGroup(ag2 <= [ag3], description: "An subgroup attempts to ...") | ag4 // Okay
 ```
@@ -714,7 +714,7 @@ ag1 | subGroup(ag2 <= [ag3], description: "An subgroup attempts to ...") | ag4 /
 `@ai` 可用于修饰函数，其接收的属性和 `@agent` 一致。
 被 `@ai` 修饰的函数体内可包含任意多个插值字符串，这些字符串将依次拼接组成提示词，并交由指定的模型生成输出。
 
-```swift
+```cangjie
 @ai[model: "deepseek:deepseek-chat"]
 func foo(topic: String): String {
     "根据主题 ${topic} 生成一份 PPT 内容"
@@ -769,7 +769,7 @@ func foo(topic: String): String {
 
 所有被 `@agent` 定义的类型都自动实现 `interface Agent`，具有如下的 API。这些 API 的用途是访问 Agent 的属性。
 
-```swift
+```cangjie
 public interface Agent {
     /**
      * Name of the agent
@@ -836,7 +836,7 @@ public interface Agent {
 其中 `func chat(request: AgentRequest): String` 方法是消息处理接口。
 注意到，[章节](#agent-交互方法)中介绍的交互方法 `func chat(question: String): String` 是基于这一接口方法的封装。其中，
 
-```swift
+```cangjie
 class AgentRequest {
     // The current user question
     public let question: String
@@ -848,7 +848,7 @@ class AgentRequest {
 
 `Agent` 拥有可变属性 `mut prop interceptor: Interceptor` 可用于设置消息处理劫持 Agent。
 
-```swift
+```cangjie
 enum InterceptorMode {
     | Always
     | Periodic(Int64)
@@ -866,7 +866,7 @@ class Interceptor {
 - `Periodic` 周期性地劫持，即原本 Agent 每处理指定数量的消息后，下一条消息将被劫持
 - `Conditional` 使用判别函数进行判断，如果函数返回 `true`，则劫持消息
 
-```swift
+```cangjie
 let ag1 = Foo()
 let ag2 = Bar()
 ag1.interceptor = Interceptor(ag2, mode: InterceoptorMode.Periodic(2))
@@ -884,7 +884,7 @@ ag1.chat("msg 3") // ag2 will handle with this request message
 
 `BaseAgent` 用于通过 API 调用的方式构造 Agent。
 
-```swift
+```cangjie
 class BaseAgent <: Agent {
     public init(
         name!:         String                = "Base Agent",
@@ -903,7 +903,7 @@ class BaseAgent <: Agent {
 
 **示例：通过 `BaseAgent` 构造 Agent**
 
-```swift
+```cangjie
 let agent= BaseAgent()
 agent.systemPrompt = "New system prompt ..."
 agent.model = ModelManager.createChatModel("ollama:phi3")
@@ -914,7 +914,7 @@ agent.toolManager.addTool(fooTool)
 
 `DispatchAgent` 专用于在主从协同模式下完成任务分发
 
-```swift
+```cangjie
 class DispatchAgent {
     public init(model!: String)
 }
@@ -922,7 +922,7 @@ class DispatchAgent {
 
 **示例**
 
-```swift
+```cangjie
 let group = DiapatchAgent(model: "deepseek:deepseek-chat") <=[
     FooAgent(),
     BarAgent(),
@@ -934,7 +934,7 @@ let group = DiapatchAgent(model: "deepseek:deepseek-chat") <=[
 
 `ToolAgent` 不再使用大语言模型回复问题，而是直接执行提供的函数来产生回复。
 
-```swift
+```cangjie
 class ToolAgent<T> where T <: Jsonable<T> {
     public init(fn!: (String) -> T)
 }
@@ -942,7 +942,7 @@ class ToolAgent<T> where T <: Jsonable<T> {
 
 使用该 Agent 配合线性协同，可完成类似 Langchain 的编排功能。
 
-```swift
+```cangjie
 let group = FooAgent() |> ToolAgent(fn: { q: String => ...; }) |> BarAgent()
 ```
 
@@ -950,7 +950,7 @@ let group = FooAgent() |> ToolAgent(fn: { q: String => ...; }) |> BarAgent()
 
 `HumanAgent` 用户将用户作为 Agent 参与到 Agent 协同中。可将其视作特殊的 `ToolAgent`。
 
-```swift
+```cangjie
 class HumanAgent {
     public init(qaFunc!: Option<(String) -> String> = None)
 }
@@ -958,7 +958,7 @@ class HumanAgent {
 
 其中参数 `qaFunc` 可自定义，默认实现为将用户问题打之终端并接收用户输入作为回复。
 
-```swift
+```cangjie
 let humanAgent = HumanAgent(qaFunc: { q: String => println(q); return "answer" })
 let result = humanAgent.chat("question")
 ```
@@ -967,7 +967,7 @@ let result = humanAgent.chat("question")
 
 `Jsonable` 接口约束了类型能够和 JSON 数据进行互相转换。宏 `@jsonable` 能够为修饰的 `class` 类型自动实现该接口。
 
-```swift
+```cangjie
 public interface Jsonable<T> {
     /**
      * Get the type schema of T
@@ -992,7 +992,7 @@ public interface Jsonable<T> {
 
 模型相关类型在 `magic.core.model` 包中。
 
-```swift
+```cangjie
 interface ChatModel <: Model {
     func create(req: ChatRequest): ChatResponse
     func asyncCreate(req: ChatRequest): AsyncChatResponse
@@ -1001,7 +1001,7 @@ interface ChatModel <: Model {
 
 使用到的消息类型在 `magic.core.message` 中。
 
-```swift
+```cangjie
 public class ChatMessage <: ToString {
     public let name: String          // name of the sender
     public let role: ChatMessageRole // role of the sender
@@ -1011,7 +1011,7 @@ public class ChatMessage <: ToString {
 
 **示例：自定义对话模型**
 
-```swift
+```cangjie
 @agent
 class Foo { }
 
@@ -1029,7 +1029,7 @@ foo.model = NewModel()
 
 **示例：注册自定义模型**
 
-```swift
+```cangjie
 @agent[model: "newModel"]
 class Foo { }
 
@@ -1045,7 +1045,7 @@ main() {
 
 该接口相关类型在 `magic.core.agent` 包中。
 
-```swift
+```cangjie
 interface AgentExecutor {
     func run(agent: Agent, request: AgentRequest): AgentResponse
 
@@ -1055,7 +1055,7 @@ interface AgentExecutor {
 
 **示例：自定义Agent执行器**
 
-```swift
+```cangjie
 @agent
 class Foo { }
 
@@ -1074,7 +1074,7 @@ foo.executor = NewExecutor()
 
 **示例：注册自定义执行器**
 
-```swift
+```cangjie
 @agent[executor: "newExecutor"]
 class Foo { }
 
@@ -1099,7 +1099,7 @@ main() {
 
 向量被定义如下。
 
-```swift
+```cangjie
 class Vector {
     public init(data: Array<Float32>)
 }
@@ -1107,7 +1107,7 @@ class Vector {
 
 可使用 `VectorBuilder` 构建向量。
 
-```swift
+```cangjie
 public class VectorBuilder {
     public VectorBuilder(model!: EmbeddingModel)
 
@@ -1117,7 +1117,7 @@ public class VectorBuilder {
 
 目前支持如下两种 embedding 模型服务，位于 `model.openai/ollama` 子包中。
 
-```swift
+```cangjie
 class OpenAIEmbeddingModel <: EmbeddingModel {
     ...
 }
@@ -1131,7 +1131,7 @@ class OllamaEmbeddingModel <: EmbeddingModel {
 
 **示例：构建向量**
 
-```swift
+```cangjie
 let model = ModelManager.createEmbeddingModel("openai:text-embedding-ada-002")
 let vecBuilder = VectorBuilder(model: model)
 let vector= vecBuilder.createEmbeddingVector("第一条向量")
@@ -1141,7 +1141,7 @@ let vector= vecBuilder.createEmbeddingVector("第一条向量")
 
 向量数据库抽象为如下的接口。
 
-```swift
+```cangjie
 public interface VectorDatabase<Self> {
     /**
      * Add the vector to the database
@@ -1168,7 +1168,7 @@ public interface VectorDatabase<Self> {
 
 目前支持的是 `InMemoryVectorDatabase` 和 `FaissVectorDatabase` 两个。
 
-```swift
+```cangjie
 class FaissVectorBase {
     public init(dimension: Int64)
 }
@@ -1184,7 +1184,7 @@ class InMemoryVectorDatabase {
 
 索引映射表用于维护 `index -> 数据` 关系，被抽象为如下接口。
 
-```swift
+```cangjie
 public interface IndexMap<Self, T> where T <: ToString {
     /**
      * The index is determined by the order in which it was added.
@@ -1202,13 +1202,13 @@ public interface IndexMap<Self, T> where T <: ToString {
 目前提供了如下两种索引映射表：
 
 `SimpleIndexMap` 支持保存数据类型为 `String`，即维护 `index -> String` 的映射关系。在持久化时，它会直接将映射关系保存为 JSON 文件。
-```swift
+```cangjie
 class SimpleIndexMap <: IndexMap<SimpleIndexMap, String> { ... }
 ```
 
 `JsonlIndexMap` 支持保存任意满足 `Jsonable` 的数据类型。在持久化时，它会将数据保存为 JSONL 文件，并且 index 即为文件行号。
 
-```swift
+```cangjie
 class JsonlIndexMap<T> <: IndexMap<JsonlIndexMap<T>, T> where T <: Jsonable<T> & ToString
 ```
 
@@ -1216,7 +1216,7 @@ class JsonlIndexMap<T> <: IndexMap<JsonlIndexMap<T>, T> where T <: Jsonable<T> &
 
 向量数据集一般不直接使用，而是被封装在两个数据结构 `SemanticMap` 和 `SemanticSet` 中。
 
-```swift
+```cangjie
 public class SemanticMap<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
                                              IMAP <: IndexMap<IMAP, T>,
                                              T <: ToString {
@@ -1267,7 +1267,7 @@ public class SemanticMap<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
 
 另一个数据结构 `SemanticSet` 有相似 API，差异在于：它检索和查找的内容就是 value 本身。
 
-```swift
+```cangjie
 public class SemanticSet<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
                                              IMAP <: IndexMap<IMAP, T>,
                                              T <: ToString {
@@ -1284,7 +1284,7 @@ public class SemanticSet<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
 
 #### 使用示例
 
-```swift
+```cangjie
 import magic.vdb.*
 
 main() {
@@ -1300,7 +1300,7 @@ main() {
 
 将向量数据库作为 retriever 添加到 agent 中使用。目前，使用的向量数据库只能作为 `Static` 模式使用。
 
-```swift
+```cangjie
 let agent = FooAgent()
 agent.retriever = smap.asRetriever()
 ```
