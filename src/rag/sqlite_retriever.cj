@@ -27,7 +27,9 @@ class SqliteRetriever <: Retriever {
         set(m) { _mode = m }
     }
 
-    override public func search(query: String): Array<Document> {
-        return [Document(sqliteAgent.chat(query))]
+    override public func search(query: String): Retrieval {
+        return DocumentRetrieval(
+            [Document(sqliteAgent.chat(query))]
+        )
     }
 }
