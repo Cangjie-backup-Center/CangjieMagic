@@ -12,5 +12,5 @@ public interface Retriever {
 
     mut prop mode: RetrieverMode
 
-    func search(query: String): Array<Document>
+    func search(query: String): Retrieval
 }

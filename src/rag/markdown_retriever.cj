@@ -51,13 +51,11 @@ class MarkdownRetriever <: Retriever {
         set(m) { _mode = m }
     }
 
-    override public func search(query: String): Array<Document> {
-        let docs = this.semanticMap.search(query, number: 5)
-        let content = String.join(
-            docs |> map { doc: Document => doc.toPrompt() } |> collectArray,
-            delimiter: "\n---\n"
+    override public func search(query: String): Retrieval {
+        let retrieval = DocumentRetrieval(
+            this.semanticMap.search(query, number: 5)
         )
-        LogUtils.info("MarkdownRetriever", "Found ${content}")
-        return docs
+        LogUtils.info("MarkdownRetriever", "Found ${retrieval.toPrompt()}")
+        return retrieval
     }
 }

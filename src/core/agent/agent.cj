@@ -45,7 +45,7 @@ public interface Agent {
     mut prop executor: AgentExecutor
 
     /**
-     * Retreiver the agent can use
+     * Retriever the agent can use
      */
     mut prop retriever: Option<Retriever>
 
