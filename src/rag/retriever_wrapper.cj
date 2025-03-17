@@ -29,7 +29,7 @@ class RetrieverWrapper <: Retriever {
         set(m) { _mode = m }
     }
 
-    override public func search(query: String): Array<Document> {
+    override public func search(query: String): Retrieval {
         return this.retriever.search(query)
     }
 }

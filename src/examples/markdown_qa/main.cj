@@ -37,8 +37,8 @@ main () {
     }
     println("\n---end---")
     if (let Some(info) <- aresp.execInfo) {
-        for (r in info.retrievalInfo) {
-            for (doc in r.documents) {
+        for (info in info.retrievalInfo) {
+            for (doc in info.retrieval.sources) {
                 println(doc.metadata)
             }
         }

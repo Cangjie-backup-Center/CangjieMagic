@@ -4,17 +4,61 @@
 package magic.core.agent
 
 import magic.core.message.Dialog
-import magic.core.rag.Document
+import magic.core.rag.{Retrieval, RetrievalInfo}
 
 import std.collection.ArrayList
 import std.collection.concurrent.BlockingQueue
 
-public struct RetrievalInfo {
-    public RetrievalInfo(
-        public let query: String,
-        public let documents: Array<Document>) { }
-}
+/**
+ * Bookkeeping information during the agent execution
+ */
+public class AgentExecutionInfo {
+    /**
+     * Internal chat history between the agent and llm
+     */
+    public let dialog: Dialog
 
+    /**
+     * Retrieved documents during execution
+     */
+    public let retrievalInfo: ArrayList<RetrievalInfo>
+
+    public init() {
+        this.dialog = Dialog()
+        this.retrievalInfo = ArrayList<RetrievalInfo>()
+    }
+
+    public init(dialog: Dialog) {
+        this.dialog = dialog
+        this.retrievalInfo = ArrayList<RetrievalInfo>()
+    }
+
+    protected func addRetrieval(query: String, retrieval: Retrieval): Unit {
+        this.retrievalInfo.append(RetrievalInfo(query, retrieval))
+    }
+
+    /**
+     * A communication channel to transfer verbose information during the agent execution
+     */
+    protected var _verboseChannel: Option<SimpleChannel> = None
+    protected prop verboseChannel: SimpleChannel {
+        get() {
+            if (let Some(ch) <- _verboseChannel) { return ch }
+            let ch = SimpleChannel()
+            _verboseChannel = ch
+            return ch
+        }
+    }
+
+    /**
+     * Only access this field when setting verbose: true in AgentRequest
+     */
+    public prop verboseInfo: Iterator<String> {
+        get() {
+            this.verboseChannel
+        }
+    }
+}
 /**
  * A simple channel to transfer verbose information between threads
  */
@@ -41,53 +85,3 @@ protected class SimpleChannel <: Iterator<String> {
     }
 }
 
-/**
- * Bookkeeping information during the agent execution
- */
-public class AgentExecutionInfo {
-    /**
-     * Internal chat history between the agent and llm
-     */
-    public let dialog: Dialog
-
-    /**
-     * Retrieved documents during execution
-     */
-    public let retrievalInfo: ArrayList<RetrievalInfo>
-
-    public init() {
-        this.dialog = Dialog()
-        this.retrievalInfo = ArrayList<RetrievalInfo>()
-    }
-
-    public init(dialog: Dialog) {
-        this.dialog = dialog
-        this.retrievalInfo = ArrayList<RetrievalInfo>()
-    }
-
-    protected func addRetrieval(query: String, docs: Array<Document>): Unit {
-        this.retrievalInfo.append(RetrievalInfo(query, docs))
-    }
-
-    /**
-     * A communication channel to transfer verbose information during the agent execution
-     */
-    protected var _verboseChannel: Option<SimpleChannel> = None
-    protected prop verboseChannel: SimpleChannel {
-        get() {
-            if (let Some(ch) <- _verboseChannel) { return ch }
-            let ch = SimpleChannel()
-            _verboseChannel = ch
-            return ch
-        }
-    }
-
-    /**
-     * Only access this field when setting verbose: true in AgentRequest
-     */
-    public prop verboseInfo: Iterator<String> {
-        get() {
-            this.verboseChannel
-        }
-    }
-}

@@ -95,15 +95,9 @@ protected struct ReactPromptUtils {
         let agent = task.agent
         if (let Some(rt) <- agent.retriever) {
             let query = task.request.question
-            LogUtils.info(agent.name, "=============    RAG     ===================\n")
-            let docs = rt.search(query)
-            task.execInfo.addRetrieval(query, docs)
-            LogUtils.info(agent.name, "==============    END RAG ===================\n")
-            let content = String.join(
-                docs |> map { doc: Document => doc.content } |> collectArray,
-                delimiter: "\n"
-            )
-            return "# Retrieved Content\n${content}\n---end of Retrieved Content---"
+            let retrieval = rt.search(query)
+            task.execInfo.addRetrieval(query, retrieval)
+            return "# Retrieved Content\n${retrieval.toPrompt()}\n---end of Retrieved Content---"
         } else {
             return ""
         }

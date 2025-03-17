@@ -43,11 +43,9 @@ protected struct ToolUsage {
         if (this.tool == "__retriever__tool___") {
             // See RetrieverTool
             let query = this.args["query"].asString().getValue()
-            let docs = task.agent.retriever.getOrThrow().search(query)
-            task.execInfo.addRetrieval(query, docs)
-            observation = String.join(
-                docs |> map { doc => doc.content } |> collectArray,
-                delimiter: "\n")
+            let retrieval = task.agent.retriever.getOrThrow().search(query)
+            task.execInfo.addRetrieval(query, retrieval)
+            observation = retrieval.toPrompt()
         } else if (let Some(foundTool) <- toolManager.findTool(this.tool)) {
             try {
                 let convertedArgs = HashMap<String, ToJsonValue>()
