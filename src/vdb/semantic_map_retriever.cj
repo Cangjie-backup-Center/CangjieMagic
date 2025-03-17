@@ -27,9 +27,11 @@ class SemanticMapRetriever<VDB, IMAP, T> <: Retriever where VDB <: VectorDatabas
         set(m) { _mode = m }
     }
 
-    public func search(query: String): Array<Document> {
-        return semanticMap.search(query, number: number) |>
-            map { value: T => Document(value.toPrompt()) } |>
-            collectArray
+    public func search(query: String): Retrieval {
+        return DocumentRetrieval(
+            semanticMap.search(query, number: number) |>
+                map { value: T => Document(value.toPrompt()) } |>
+                collectArray
+        )
     }
 }

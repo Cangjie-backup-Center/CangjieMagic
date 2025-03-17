@@ -46,10 +46,7 @@ public class RetrieverTool <: AbsTool {
     public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
         // The retriever model tool must accept a string
         let query = args["query"].toJsonValue().asString().getValue()
-        let docs = retriever.search(query)
-        let result = String.join(
-            docs |> map { doc: Document => doc.content } |> collectArray,
-            delimiter: "\n")
-        return ToolResponse(result)
+        let retrieval = retriever.search(query)
+        return ToolResponse(retrieval.toPrompt())
     }
 }
