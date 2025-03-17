@@ -15,6 +15,16 @@
 [target.x86_64-w64-mingw32]
   compile-option = "--cfg \"ohos=false\""
 
+[target.x86_64-apple-darwin]
+  compile-option = "--cfg \"ohos=false\""
+[target.x86_64-apple-darwin.bin-dependencies]
+    path-option = [ "${X86_64_MACOS_LIBS}", "${X86_64_MACOS_MACRO_LIBS}" ]
+[target.aarch64-apple-darwin]
+  compile-option = "--cfg \"ohos=false\""
+  [target.aarch64-apple-darwin.bin-dependencies]
+    path-option = [ "${AARCH64_MACOS_LIBS}", "${AARCH64_MACOS_MACRO_LIBS}" ]
+
+
 [package]
   cjc-version = "0.56.4"
   compile-option = "-Woff unused --cfg \"faiss=disable,sqlite=disable,llamacpp=disable,http=curl\" "
