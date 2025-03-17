@@ -5,10 +5,13 @@ package magic.memory
 
 import magic.core.memory.Memory
 import magic.vdb.{SemanticSet, InMemoryVectorDatabase, SimpleIndexMap}
+import magic.core.model.EmbeddingModel
+import magic.config.Config
 
 public class ShortMemory <: Memory {
     private let vecSet = SemanticSet(vectorDB: InMemoryVectorDatabase(),
-                                     indexMap: SimpleIndexMap())
+                                     indexMap: SimpleIndexMap(),
+                                     embeddingModel: Config.defaultEmbeddingModel)
 
     override public func update(segment: String): Unit {
         vecSet.put(segment)
