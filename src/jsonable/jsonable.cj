@@ -3,7 +3,7 @@
  */
 package magic.jsonable
 
-import encoding.json.{JsonValue, JsonObject, JsonString, JsonBool, JsonFloat, JsonInt, JsonArray, JsonKind}
+import encoding.json.*
 import std.collection.{ArrayList, HashMap, map, collectArray}
 
 import encoding.json.JsonNull

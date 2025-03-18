@@ -35,11 +35,10 @@ public class MCPClient {
     private func initialize(): Unit {
         let initRequest = InitialRequest(
             params: InitialParams(
-                protocolVersion: LATEST_PROTOCOL_VERSION,
                 capabilities: ClientCapabilities(),
                 clientInfo: Implementation(
-                    name: "Example",
-                    version: "1"
+                    name: "Cangjie Magic Agent Client",
+                    version: "0.1"
                 )
             )
         )
@@ -78,6 +77,9 @@ public class MCPClient {
         )
         this.send(req)
         let resp = this.recvResponse<CallToolResponse>()
+        if (req.id != resp.id) {
+            LogUtils.error("Received invalid response with mismatched id: ${resp.toJsonValue().toJsonString()}")
+        }
         return resp.result
     }
 

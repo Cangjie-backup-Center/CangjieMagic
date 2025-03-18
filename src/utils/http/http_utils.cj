@@ -7,7 +7,7 @@ import magic.log.LogUtils
 
 import std.collection.concurrent.BlockingQueue
 import std.collection.HashMap
-import encoding.json.JsonValue
+import encoding.json.JsonObject
 
 protected class HttpException <: Exception {
     protected init(msg: String) { super(msg) }
@@ -16,7 +16,7 @@ protected class HttpException <: Exception {
 @When[ohos == "true"]
 public func httpPost(url: String,
                      header: HashMap<String, String>,
-                     body: JsonValue,
+                     body: JsonObject,
                      verify!: Bool = false): ?String {
     for((k,v) in header){
         LogUtils.debug("httpPost: ${k} - ${v}")
@@ -28,7 +28,7 @@ public func httpPost(url: String,
 @When[ohos != "true" && http == "curl"]
 public func httpPost(url: String,
                      header: HashMap<String, String>,
-                     body: JsonValue,
+                     body: JsonObject,
                      verify!: Bool = false): ?String {
     for((k,v) in header){
         LogUtils.debug("httpPost: ${k} - ${v}")
@@ -40,7 +40,7 @@ public func httpPost(url: String,
 @When[ohos != "true" && http != "curl"]
 public func httpPost(url: String,
                      header: HashMap<String, String>,
-                     body: JsonValue,
+                     body: JsonObject,
                      verify!: Bool = false): ?String {
     for((k,v) in header){
         LogUtils.debug("httpPost: ${k} - ${v}")
@@ -95,7 +95,7 @@ public class HttpStream <: Iterator<String> {
 @When[ohos == "true"]
 public func asyncHttpPost(url: String,
                           header: HashMap<String, String>,
-                          body: JsonValue,
+                          body: JsonObject,
                           verify!: Bool = false): HttpStream {
     for((k,v) in header){
         LogUtils.debug("async httpPost: ${k} - ${v}")
@@ -107,7 +107,7 @@ public func asyncHttpPost(url: String,
 @When[ohos != "true" && http == "curl"]
 public func asyncHttpPost(url: String,
                           header: HashMap<String, String>,
-                          body: JsonValue,
+                          body: JsonObject,
                           verify!: Bool = false): HttpStream {
     for((k,v) in header){
         LogUtils.debug("async httpPost: ${k} - ${v}")
@@ -119,7 +119,7 @@ public func asyncHttpPost(url: String,
 @When[ohos != "true" && http != "curl"]
 public func asyncHttpPost(url: String,
                           header: HashMap<String, String>,
-                          body: JsonValue,
+                          body: JsonObject,
                           verify!: Bool = false): HttpStream {
     for((k,v) in header){
         LogUtils.debug("async httpPost: ${k} - ${v}")

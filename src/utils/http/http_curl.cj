@@ -11,7 +11,7 @@ import std.io.InputStream
 import std.io.StringReader
 import std.collection.HashMap
 import std.collection.ArrayList
-import encoding.json.JsonValue
+import encoding.json.*
 @When[cjc_version < "0.56.4"]
 import std.time.Duration
 
@@ -29,7 +29,7 @@ private func prepareCurlArgs(url: String, header: HashMap<String, String>, body:
         args.append("--insecure")
     }
     args.append("--data")
-    // Since the length limiation of the argument passed to the Process.start,
+    // Since the length of the argument passed to the Process.start is limited,
     // we save the http body in a file and pass its path.
     // This argument must be the last one
     let tempPath = saveTempFile(Config.modelRequestDir, body.toJsonString())

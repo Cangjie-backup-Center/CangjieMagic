@@ -8,6 +8,7 @@ import log.LogLevel
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
+import magic.agent_executor.react.ReactDumper
 
 const MARKDOWNIFY_DIR = "<path-to-markdownify-mcp>"
 const MOUNT_DIR = "<path-to-mount>"
@@ -42,5 +43,20 @@ main() {
     Config.env["DEEPSEEK_API_KEY"] = DEEPSEEK_API_KEY
 
     let agent = FileAssistant()
-    println(agent.chat("帮我把所有 pdf 转换为 markdown 格式"))
+    // println(agent.chat("帮我把所有 pdf 转换为 markdown 格式"))
+
+    // 采用异步调用并打印中间信息
+    let asyncResp = agent.asyncChat(
+        AgentRequest("帮我把所有 pdf 转换为 markdown 格式", verbose: true)
+    )
+
+    // 打印中间信息
+    let dumper = ReactDumper(asyncResp.execInfo.getOrThrow().verboseInfo)
+    dumper.dump()
+
+    // 打印结果
+    for (data in asyncResp) {
+        print(data)
+    }
+    println()
 }
