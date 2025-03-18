@@ -9,8 +9,9 @@ import magic.jsonable.*
 import std.collection.{HashMap, ArrayList}
 import encoding.json.*
 
+//--------------------------------------------------------------------------------------------
 // https://github.com/modelcontextprotocol/specification/blob/main/schema/2024-11-05/schema.ts
-
+//--------------------------------------------------------------------------------------------
 const LATEST_PROTOCOL_VERSION = "2024-11-05";
 const JSONRPC_VERSION = "2.0";
 
@@ -22,7 +23,7 @@ func getRequestID(): Int64 {
 }
 
 @jsonable
-class PingRequest {
+class MCPRequest {
     let jsonrpc: String
     let id: Int64
     let method: String
@@ -35,6 +36,42 @@ class PingRequest {
 }
 
 @jsonable
+class MCPError {
+    var jsonrpc: String = JSONRPC_VERSION
+    let id: Int64
+    let error: ErrorContent
+}
+
+const PARSE_ERROR = -32700
+const INVALID_REQUEST = -32600
+const METHOD_NOT_FOUND = -32601
+const INVALID_PARAMS = -32602
+const INTERNAL_ERROR = -32603
+
+@jsonable
+class ErrorContent {
+    /**
+    * The error type that occurred.
+    */
+    let code: Int64
+    /**
+    * A short description of the error. The message SHOULD be limited to a concise single sentence.
+    */
+    let message: String
+    /**
+    * Additional information about the error. The value of this member is defined by the sender (e.g. detailed error information, nested errors etc.).
+    */
+    // data?: unknown;
+}
+
+@jsonable
+class PingRequest {
+    var jsonrpc: String = JSONRPC_VERSION
+    var id: Int64 = getRequestID()
+    var method: String = "ping"
+}
+
+@jsonable
 public class Annotation {
     let audience: Option<Array<String>>
     let priority: Option<Int64>
@@ -42,15 +79,15 @@ public class Annotation {
 
 @jsonable
 public class TextContent {
-    let annotations: Option<Annotation>
-    let `type`: String
+    var annotations: Option<Annotation> = None
+    var `type`: String = "text"
     let text: String
 }
 
 @jsonable
 public class ImageContent {
-    let annotations: Option<Annotation>
-    let `type`: String
+    var annotations: Option<Annotation> = None
+    var `type`: String = "image"
     let data: String
     let mimeType: String
 }
@@ -74,7 +111,6 @@ class InitialParams {
 
 @jsonable
 class ClientCapabilities {
-
 }
 
 @jsonable
@@ -85,17 +121,17 @@ class Implementation {
 
 @jsonable
 class InitialResponse {
-    let jsonrpc: String
+    var jsonrpc: String = JSONRPC_VERSION
     let id: Int64
     let result: InitialResult
 }
 
 @jsonable
 class InitialResult {
-    let protocolVersion: String
+    var protocolVersion: String = LATEST_PROTOCOL_VERSION
     let capabilities: ServerCapabilities
     let serverInfo: Implementation
-    let instructions: Option<String>
+    var instructions: Option<String> = None
 }
 
 @jsonable
@@ -109,17 +145,18 @@ class ServerCapabilities {
 
 @jsonable
 struct PromptsCapability {
-    let listChanged: Bool
+    var listChanged: Bool = false
 }
 
 @jsonable
 struct ResourcesCapability {
-    let subscribe: Bool
-    let listChanged: Bool
+    var subscribe: Bool = false
+    var listChanged: Bool = false
 }
+
 @jsonable
 struct ToolsCapability {
-    let listChanged: Bool
+    var listChanged: Bool = false
 }
 
 @jsonable
@@ -176,7 +213,7 @@ class ListToolsRequest {
 
 @jsonable
 class ListToolsResponse {
-    let jsonrpc: String
+    var jsonrpc: String = JSONRPC_VERSION
     let id: Int64
     let result: ListToolsResult
 }
@@ -184,7 +221,7 @@ class ListToolsResponse {
 @jsonable
 public class ListToolsResult {
     let tools: Array<MCPTool>
-    let nextCursor: Option<String>
+    var nextCursor: Option<String> = None
 }
 
 @jsonable
@@ -212,7 +249,7 @@ class CallToolParams {
 
 @jsonable
 class CallToolResponse {
-    let jsonrpc: String
+    var jsonrpc: String = JSONRPC_VERSION
     let id: Int64
     let result: CallToolResult
 }
