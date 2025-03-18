@@ -16,12 +16,12 @@
     - [prop memory](#prop-memory)
     - [prop interceptor](#prop-interceptor)
   - [class DispatchAgent](#class-dispatchagent)
-    - [func init](#func-init-1)
     - [func chat](#func-chat)
+    - [func init](#func-init-1)
   - [class HumanAgent](#class-humanagent)
     - [func init](#func-init-2)
     - [func chat](#func-chat-1)
-  - [class ToolAgent](#class-toolagent)
+  - [class ToolAgent<T>](#class-toolagentt)
     - [func init](#func-init-3)
     - [func chat](#func-chat-2)
     - [func chatGet](#func-chatget)
@@ -35,36 +35,39 @@
     - [func run](#func-run)
     - [func asyncRun](#func-asyncrun)
 - [Package agent_executor.react](#package-agent_executorreact)
+  - [class ReactDumper](#class-reactdumper)
+    - [func init](#func-init-4)
+    - [func dump](#func-dump)
   - [class ReactExecutor](#class-reactexecutor)
     - [func run](#func-run-1)
     - [func asyncRun](#func-asyncrun-1)
 - [Package agent_group](#package-agent_group)
   - [interface AgentCollaboration](#interface-agentcollaboration)
-    - [func chat](#func-chat-3)
-    - [func asyncChat](#func-asyncchat)
   - [interface AgentGroup](#interface-agentgroup)
+    - [func chat](#func-chat-3)
     - [func chat](#func-chat-4)
+    - [func asyncChat](#func-asyncchat)
+    - [func operator operator []](#func-operator-operator-)
+  - [class FreeGroup](#class-freegroup)
+    - [func init](#func-init-5)
     - [func chat](#func-chat-5)
     - [func chat](#func-chat-6)
     - [func asyncChat](#func-asyncchat-1)
-    - [func operator []](#func-operator-)
-  - [class FreeGroup](#class-freegroup)
-    - [func init](#func-init-4)
-    - [func chat](#func-chat-7)
-    - [func asyncChat](#func-asyncchat-2)
     - [func discuss](#func-discuss)
-    - [func operator operator []](#func-operator-operator-)
-    - [func operator operator |](#func-operator-operator--1)
+    - [func []](#func-)
+    - [func |](#func--1)
   - [enum FreeGroupMode](#enum-freegroupmode)
     - [Auto](#auto)
     - [RoundRobin](#roundrobin)
   - [class LeaderGroup](#class-leadergroup)
+    - [func chat](#func-chat-7)
     - [func chat](#func-chat-8)
-    - [func asyncChat](#func-asyncchat-3)
-    - [func operator operator []](#func-operator-operator--2)
+    - [func asyncChat](#func-asyncchat-2)
+    - [func operator []](#func-operator-)
   - [class LinearGroup](#class-lineargroup)
     - [func chat](#func-chat-9)
-    - [func asyncChat](#func-asyncchat-4)
+    - [func chat](#func-chat-10)
+    - [func asyncChat](#func-asyncchat-3)
     - [func operator []](#func-operator--1)
 - [Package config](#package-config)
   - [class Config](#class-config)
@@ -79,7 +82,14 @@
     - [var defaultChatModel](#var-defaultchatmodel)
     - [var defaultEmbeddingModel](#var-defaultembeddingmodel)
     - [prop externalScriptDir](#prop-externalscriptdir)
+    - [var modelRetryNumber](#var-modelretrynumber)
     - [var filterThink](#var-filterthink)
+    - [let env](#let-env)
+    - [var maxReactNumber](#var-maxreactnumber)
+    - [var outputRepairRetryNumber](#var-outputrepairretrynumber)
+  - [struct EnvWrapper](#struct-envwrapper)
+    - [func operator []](#func-operator--2)
+    - [func operator []](#func-operator--3)
 - [Package core.agent](#package-coreagent)
   - [interface Agent](#interface-agent)
     - [prop name](#prop-name-1)
@@ -92,42 +102,41 @@
     - [prop retriever](#prop-retriever-1)
     - [prop memory](#prop-memory-1)
     - [prop interceptor](#prop-interceptor-1)
-    - [func chat](#func-chat-10)
     - [func chat](#func-chat-11)
-    - [func asyncChat](#func-asyncchat-5)
+    - [func asyncChat](#func-asyncchat-4)
   - [class AgentExecutionException](#class-agentexecutionexception)
-    - [func init](#func-init-5)
+    - [func init](#func-init-6)
   - [class AgentExecutionInfo](#class-agentexecutioninfo)
     - [let dialog](#let-dialog)
     - [let retrievalInfo](#let-retrievalinfo)
-    - [func init](#func-init-6)
     - [func init](#func-init-7)
-    - [func addRetrieval](#func-addretrieval)
+    - [func init](#func-init-8)
+    - [prop verboseInfo](#prop-verboseinfo)
   - [interface AgentExecutor](#interface-agentexecutor)
     - [func run](#func-run-2)
     - [func asyncRun](#func-asyncrun-2)
   - [struct AgentRequest](#struct-agentrequest)
     - [let question](#let-question)
     - [let dialog](#let-dialog-1)
-    - [func init](#func-init-8)
+    - [let verbose](#let-verbose)
+    - [func init](#func-init-9)
   - [struct AgentResponse](#struct-agentresponse)
     - [let content](#let-content)
     - [let execInfo](#let-execinfo)
-    - [func init](#func-init-9)
     - [func init](#func-init-10)
+    - [func init](#func-init-11)
   - [class AsyncAgentResponse](#class-asyncagentresponse)
     - [let execInfo](#let-execinfo-1)
-    - [func init](#func-init-11)
     - [func init](#func-init-12)
+    - [func init](#func-init-13)
     - [prop content](#prop-content)
     - [func next](#func-next)
   - [class Interceptor](#class-interceptor)
-    - [func init](#func-init-13)
+    - [func init](#func-init-14)
   - [enum InterceptorMode](#enum-interceptormode)
     - [Always](#always)
     - [Periodic](#periodic)
     - [Conditional](#conditional)
-  - [struct RetrievalInfo](#struct-retrievalinfo)
 - [Package core.memory](#package-corememory)
   - [interface Memory](#interface-memory)
     - [func update](#func-update)
@@ -138,7 +147,7 @@
     - [let role](#let-role)
     - [let content](#let-content-1)
     - [let image](#let-image)
-    - [func init](#func-init-14)
+    - [func init](#func-init-15)
     - [func toString](#func-tostring)
     - [func toLogString](#func-tologstring)
     - [func system](#func-system)
@@ -151,12 +160,12 @@
     - [Unknown](#unknown)
     - [func toString](#func-tostring-1)
     - [func fromStr](#func-fromstr)
-    - [func operator ==](#func-operator--2)
-    - [func operator !=](#func-operator--3)
+    - [func operator ==](#func-operator--4)
+    - [func operator !=](#func-operator--5)
   - [class Dialog](#class-dialog)
-    - [func init](#func-init-15)
     - [func init](#func-init-16)
     - [func init](#func-init-17)
+    - [func init](#func-init-18)
     - [func clone](#func-clone)
     - [func addMessage](#func-addmessage)
     - [func addMessage](#func-addmessage-1)
@@ -172,7 +181,7 @@
   - [class AsyncChatResponse](#class-asyncchatresponse)
     - [let model](#let-model)
     - [let chunks](#let-chunks)
-    - [func init](#func-init-18)
+    - [func init](#func-init-19)
     - [func next](#func-next-1)
     - [prop stream](#prop-stream)
     - [prop usage](#prop-usage)
@@ -180,80 +189,82 @@
     - [func toString](#func-tostring-3)
   - [interface ChatModel](#interface-chatmodel)
     - [func create](#func-create-1)
-    - [func create](#func-create-2)
     - [func asyncCreate](#func-asynccreate)
   - [class ChatRequest](#class-chatrequest)
     - [let dialog](#let-dialog-2)
     - [let stop](#let-stop)
     - [let temperature](#let-temperature)
-    - [func init](#func-init-19)
     - [func init](#func-init-20)
     - [func init](#func-init-21)
+    - [func init](#func-init-22)
     - [func toString](#func-tostring-4)
   - [struct ChatResponse](#struct-chatresponse)
     - [let model](#let-model-1)
     - [let dialog](#let-dialog-3)
     - [let usage](#let-usage)
-    - [func init](#func-init-22)
+    - [func init](#func-init-23)
     - [func toString](#func-tostring-5)
   - [class ChatUsage](#class-chatusage)
     - [let promptTokens](#let-prompttokens)
     - [let completionTokens](#let-completiontokens)
     - [let totalTokens](#let-totaltokens)
     - [let timeCost](#let-timecost)
-    - [func init](#func-init-23)
+    - [func init](#func-init-24)
     - [func toString](#func-tostring-6)
   - [interface EmbeddingModel](#interface-embeddingmodel)
-    - [func create](#func-create-3)
+    - [func create](#func-create-2)
   - [struct EmbeddingRequest](#struct-embeddingrequest)
     - [let prompt](#let-prompt)
     - [let dimensions](#let-dimensions)
-    - [func init](#func-init-24)
+    - [func init](#func-init-25)
   - [struct EmbeddingResponse](#struct-embeddingresponse)
     - [let data](#let-data)
-    - [func init](#func-init-25)
+    - [func init](#func-init-26)
     - [func toString](#func-tostring-7)
   - [interface ImageModel](#interface-imagemodel)
-    - [func create](#func-create-4)
+    - [func create](#func-create-3)
   - [struct ImageRequest](#struct-imagerequest)
     - [let prompt](#let-prompt-1)
     - [let quality](#let-quality)
     - [let responseFormat](#let-responseformat)
     - [let size](#let-size)
     - [let style](#let-style)
-    - [func init](#func-init-26)
+    - [func init](#func-init-27)
   - [struct ImageResponse](#struct-imageresponse)
     - [let b64Json](#let-b64json)
     - [let url](#let-url)
     - [let revisedPrompt](#let-revisedprompt)
-    - [func init](#func-init-27)
+    - [func init](#func-init-28)
   - [interface Model](#interface-model)
     - [prop service](#prop-service)
     - [prop name](#prop-name-2)
   - [class ModelException](#class-modelexception)
-    - [func init](#func-init-28)
+    - [func init](#func-init-29)
 - [Package core.rag](#package-corerag)
   - [class Document](#class-document)
     - [let content](#let-content-2)
     - [let metadata](#let-metadata)
-    - [func init](#func-init-29)
     - [func init](#func-init-30)
+    - [func init](#func-init-31)
     - [func toString](#func-tostring-8)
     - [func toPrompt](#func-toprompt)
     - [func getTypeSchema](#func-gettypeschema)
-    - [func fromJson](#func-fromjson)
-    - [func toJson](#func-tojson)
+    - [func fromJsonValue](#func-fromjsonvalue)
+    - [func toJsonValue](#func-tojsonvalue)
+  - [interface Retrieval](#interface-retrieval)
+    - [prop sources](#prop-sources)
+  - [struct RetrievalInfo](#struct-retrievalinfo)
   - [interface Retriever](#interface-retriever)
     - [prop description](#prop-description-2)
     - [prop mode](#prop-mode)
     - [func search](#func-search-1)
   - [class RetrieverException](#class-retrieverexception)
-    - [func init](#func-init-31)
+    - [func init](#func-init-32)
   - [enum RetrieverMode](#enum-retrievermode)
     - [Static](#static)
     - [Dynamic](#dynamic)
-    - [func operator ==](#func-operator--4)
-    - [func operator !=](#func-operator--5)
+    - [func operator ==](#func-operator--6)
+    - [func operator !=](#func-operator--7)
 - [Package core.tool](#package-coretool)
   - [interface Tool](#interface-tool)
     - [prop name](#prop-name-3)
@@ -264,7 +275,7 @@
     - [func invoke](#func-invoke)
   - [class ToolException](#class-toolexception)
     - [let reason](#let-reason)
-    - [func init](#func-init-32)
+    - [func init](#func-init-33)
   - [interface ToolManager](#interface-toolmanager)
     - [func addTool](#func-addtool)
     - [func delTool](#func-deltool)
@@ -278,10 +289,10 @@
     - [let name](#let-name-1)
     - [let description](#let-description)
     - [let typeSchema](#let-typeschema)
-    - [func init](#func-init-33)
+    - [func init](#func-init-34)
   - [struct ToolResponse](#struct-toolresponse)
     - [let content](#let-content-3)
-    - [func init](#func-init-34)
+    - [func init](#func-init-35)
 - [Package instrumentor](#package-instrumentor)
   - [class Instrumentor](#class-instrumentor)
     - [var BEFORE_CHAT_MODEL_FN](#var-before_chat_model_fn)
@@ -298,6 +309,7 @@
     - [func buildJsonObject](#func-buildjsonobject)
     - [func buildJsonObject](#func-buildjsonobject-1)
     - [func buildJsonObject](#func-buildjsonobject-2)
+    - [func buildJsonArray](#func-buildjsonarray)
     - [func appendJsonObject](#func-appendjsonobject)
     - [func asJsonObject](#func-asjsonobject)
     - [func asJsonArray](#func-asjsonarray)
@@ -315,10 +327,11 @@
     - [func toFloatArray](#func-tofloatarray)
   - [interface Jsonable](#interface-jsonable)
     - [func getTypeSchema](#func-gettypeschema-1)
-    - [func fromJson](#func-fromjson-1)
-    - [func toJson](#func-tojson-1)
+    - [func fromJsonValue](#func-fromjsonvalue-1)
   - [class JsonableException](#class-jsonableexception)
-    - [func init](#func-init-35)
+    - [func init](#func-init-36)
+  - [interface ToJsonValue](#interface-tojsonvalue)
+    - [func toJsonValue](#func-tojsonvalue-1)
   - [enum TypeSchema](#enum-typeschema)
     - [Str](#str)
     - [Int](#int)
@@ -326,7 +339,7 @@
     - [Boolean](#boolean)
     - [Arr](#arr)
     - [Obj](#obj)
-    - [func toJson](#func-tojson-2)
+    - [func toJsonValue](#func-tojsonvalue-2)
     - [func toString](#func-tostring-10)
 - [Package log](#package-log)
   - [struct LogUtils](#struct-logutils)
@@ -353,13 +366,29 @@
     - [func info](#func-info-15)
     - [func error](#func-error-2)
     - [func error](#func-error-3)
+- [Package mcp](#package-mcp)
+  - [class MCPClient](#class-mcpclient)
+    - [func init](#func-init-37)
+    - [func getTools](#func-gettools-1)
+    - [func callTool](#func-calltool)
+  - [enum ToolCallContent](#enum-toolcallcontent)
+    - [Text](#text)
+    - [Image](#image)
+    - [func getTypeSchema](#func-gettypeschema-2)
+    - [func fromJsonValue](#func-fromjsonvalue-2)
+    - [func toJsonValue](#func-tojsonvalue-3)
+    - [func getValue](#func-getvalue)
+  - [class MCPServer](#class-mcpserver)
+    - [func init](#func-init-38)
+    - [func start](#func-start)
+    - [func startWith](#func-startwith)
 - [Package memory](#package-memory)
   - [class ShortMemory](#class-shortmemory)
     - [func update](#func-update-1)
     - [func search](#func-search-2)
 - [Package model](#package-model)
   - [class ModelConfig](#class-modelconfig)
-    - [func init](#func-init-36)
+    - [func init](#func-init-39)
   - [struct ModelManager](#struct-modelmanager)
     - [func registerChatModel](#func-registerchatmodel)
     - [func createChatModel](#func-createchatmodel)
@@ -394,23 +423,22 @@
     - [func load](#func-load)
     - [func loadSplit](#func-loadsplit)
   - [class MarkdownSplitter](#class-markdownsplitter)
-    - [func init](#func-init-37)
+    - [func init](#func-init-40)
     - [func split](#func-split-1)
   - [interface Splitter](#interface-splitter)
     - [func split](#func-split-2)
 - [Package tool](#package-tool)
   - [class NativeFuncTool](#class-nativefunctool)
-    - [func init](#func-init-38)
+    - [func init](#func-init-41)
     - [prop name](#prop-name-4)
     - [prop description](#prop-description-4)
     - [prop parameters](#prop-parameters-1)
     - [prop retType](#prop-rettype-1)
     - [prop examples](#prop-examples-1)
     - [func invoke](#func-invoke-1)
-    - [func addParam](#func-addparam)
-    - [func addFunction](#func-addfunction)
     - [func addExamples](#func-addexamples)
   - [class RetrieverTool](#class-retrievertool)
+    - [func init](#func-init-42)
     - [prop name](#prop-name-5)
     - [prop description](#prop-description-5)
     - [prop parameters](#prop-parameters-2)
@@ -418,14 +446,14 @@
     - [prop examples](#prop-examples-2)
     - [func invoke](#func-invoke-2)
   - [class SimpleToolManager](#class-simpletoolmanager)
-    - [func init](#func-init-39)
-    - [func init](#func-init-40)
+    - [func init](#func-init-43)
+    - [func init](#func-init-44)
     - [func addTool](#func-addtool-1)
     - [func delTool](#func-deltool-1)
     - [func addTools](#func-addtools-1)
     - [func clear](#func-clear-2)
     - [func findTool](#func-findtool-1)
-    - [func getTools](#func-gettools-1)
+    - [func getTools](#func-gettools-2)
     - [func searchTool](#func-searchtool-1)
     - [prop enableToolSearch](#prop-enabletoolsearch-1)
 - [Package utils](#package-utils)
@@ -472,7 +500,7 @@
     - [func fromJS](#func-fromjs)
 - [Package vdb](#package-vdb)
   - [class FaissVectorDatabase](#class-faissvectordatabase)
-    - [func init](#func-init-41)
+    - [func init](#func-init-45)
     - [func close](#func-close)
     - [func save](#func-save)
     - [func load](#func-load-1)
@@ -488,7 +516,7 @@
     - [func get](#func-get)
     - [func save](#func-save-2)
     - [func load](#func-load-3)
-  - [class JsonlIndexMap](#class-jsonlindexmap)
+  - [class JsonlIndexMap<T>](#class-jsonlindexmapt)
     - [func add](#func-add-1)
     - [func get](#func-get-1)
     - [func save](#func-save-3)
@@ -496,7 +524,7 @@
   - [class SemanticMap](#class-semanticmap)
     - [let vectorDB](#let-vectordb)
     - [let indexMap](#let-indexmap)
-    - [func init](#func-init-42)
+    - [func init](#func-init-46)
     - [prop embeddingModel](#prop-embeddingmodel)
     - [func put](#func-put-1)
     - [func search](#func-search-5)
@@ -504,7 +532,7 @@
     - [func save](#func-save-4)
     - [func load](#func-load-5)
   - [class SemanticSet](#class-semanticset)
-    - [func init](#func-init-43)
+    - [func init](#func-init-47)
     - [prop embeddingModel](#prop-embeddingmodel-1)
     - [func put](#func-put-2)
     - [func search](#func-search-6)
@@ -520,7 +548,7 @@
     - [func load](#func-load-7)
   - [class Vector](#class-vector)
     - [let vector](#let-vector)
-    - [func init](#func-init-44)
+    - [func init](#func-init-48)
   - [class VectorBuilder](#class-vectorbuilder)
     - [func createEmbeddingVector](#func-createembeddingvector)
   - [interface VectorDatabase](#interface-vectordatabase)
@@ -532,21 +560,20 @@
 <!-- /code_chunk_output -->
 
 
-
 ## Package agent
 ### class BaseAgent
 #### func init
 ```
 init(model: ChatModel, name: String = "Base Agent", description: String = "", temperature: Option<Float64> = None, systemPrompt: String = "", toolManager: ToolManager = SimpleToolManager(), executor: Option<AgentExecutor> = None, retriever: Option<Retriever> = None, memory: Option<Memory> = None, interceptor: Option<Interceptor> = None)
 ```
-- 描述: 初始化BaseAgent类实例
+- 描述: 初始化BaseAgent实例
 - 参数:
   - `model`: `ChatModel`, 聊天模型
   - `name`: `String`, 代理名称，默认为"Base Agent"
   - `description`: `String`, 代理描述，默认为空
   - `temperature`: `Option<Float64>`, 温度参数，默认为None
   - `systemPrompt`: `String`, 系统提示，默认为空
-  - `toolManager`: `ToolManager`, 工具管理器，默认为SimpleToolManager()
+  - `toolManager`: `ToolManager`, 工具管理器，默认为SimpleToolManager
   - `executor`: `Option<AgentExecutor>`, 代理执行器，默认为None
   - `retriever`: `Option<Retriever>`, 检索器，默认为None
   - `memory`: `Option<Memory>`, 内存，默认为None
@@ -614,21 +641,21 @@ prop interceptor: Option<Interceptor>
 
 
 ### class DispatchAgent
-#### func init
-```
-init(model: String)
-```
-- 描述: 初始化DispatchAgent，设置模型名称。
-- 参数:
-  - `model`: `String`, 模型名称
-
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
 - 描述: 处理用户问题并将其分发给其他代理。
 - 参数:
-  - `request`: `AgentRequest`, 包含用户问题的请求对象
+  - `request`: `AgentRequest`, 包含用户问题的请求对象。
+
+#### func init
+```
+init(model: String)
+```
+- 描述: 初始化DispatchAgent实例。
+- 参数:
+  - `model`: `String`, 用于创建聊天模型的模型名称。
 
 
 ### class HumanAgent
@@ -636,20 +663,20 @@ func chat(request: AgentRequest): AgentResponse
 ```
 init(qaFunc!: Option<(String) -> String> = None)
 ```
-- 描述: 初始化HumanAgent实例，接受一个可选的问答函数作为参数。
+- 描述: 初始化 HumanAgent 实例，接受一个可选的 qaFunc 参数。
 - 参数:
-  - `qaFunc`: `Option<(String) -> String>`, 可选的问答函数，用于处理用户输入的问题。
+  - `qaFunc`: `Option<(String) -> String>`, 一个可选的函数，用于处理问题和生成答案。
 
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理用户请求并返回响应。
+- 描述: 处理用户的问题并返回答案。
 - 参数:
   - `request`: `AgentRequest`, 包含用户问题的请求对象。
 
 
-### class ToolAgent
+### class ToolAgent<T>
 #### func init
 ```
 init(fn!: (String) -> T)
@@ -662,7 +689,7 @@ init(fn!: (String) -> T)
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理用户请求，通过执行传入的函数来生成回答。
+- 描述: 处理聊天请求，通过执行传入的函数来回答问题。
 - 参数:
   - `request`: `AgentRequest`, 包含用户问题的请求对象。
 
@@ -670,7 +697,7 @@ func chat(request: AgentRequest): AgentResponse
 ```
 func chatGet<U>(question: String): Option<U> where U <: Jsonable<U>
 ```
-- 描述: 根据用户问题，通过执行传入的函数并尝试将结果转换为指定类型U。
+- 描述: 根据用户问题，执行传入的函数并返回一个`Option<U>`类型的结果。
 - 参数:
   - `question`: `String`, 用户提出的问题。
 
@@ -681,16 +708,16 @@ func chatGet<U>(question: String): Option<U> where U <: Jsonable<U>
 ```
 public static func register(checkFn: (String) -> Bool, buildFn: (String) -> AgentExecutor): Unit
 ```
-- 描述: 注册一个代理执行器构建器，根据检查函数和构建函数来创建代理执行器。
+- 描述: 注册一个代理执行器构建器，用于根据条件函数和构建函数创建代理执行器。
 - 参数:
-  - `checkFn`: `(String) -> Bool`, 检查函数，用于判断是否使用该构建器。
+  - `checkFn`: `(String) -> Bool`, 条件函数，用于检查是否使用该构建器。
   - `buildFn`: `(String) -> AgentExecutor`, 构建函数，用于创建代理执行器。
 
 #### func register
 ```
 public static func register(name: String, buildFn: () -> AgentExecutor): Unit
 ```
-- 描述: 注册一个代理执行器构建器，根据名称和构建函数来创建代理执行器。
+- 描述: 注册一个代理执行器构建器，用于根据名称和构建函数创建代理执行器。
 - 参数:
   - `name`: `String`, 代理执行器的名称。
   - `buildFn`: `() -> AgentExecutor`, 构建函数，用于创建代理执行器。
@@ -699,7 +726,7 @@ public static func register(name: String, buildFn: () -> AgentExecutor): Unit
 ```
 public static func create(name: String): AgentExecutor
 ```
-- 描述: 根据名称创建代理执行器。如果名称匹配内置的执行器，则返回对应的执行器；否则遍历注册的构建器，找到匹配的构建器并返回其创建的代理执行器。
+- 描述: 根据名称创建代理执行器。如果名称匹配已知的执行器，则返回相应的执行器；否则抛出异常。
 - 参数:
   - `name`: `String`, 代理执行器的名称。
 
@@ -726,84 +753,76 @@ func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 
 
 ## Package agent_executor.react
+### class ReactDumper
+#### func init
+```
+init(chunks: Iterator<String>)
+```
+- 描述: 初始化ReactDumper类，用于调试React内部信息
+- 参数:
+  - `chunks`: `Iterator<String>`, 包含React内部信息的字符串迭代器
+
+#### func dump
+```
+dump(): Unit
+```
+- 描述: 打印React内部信息，用于调试
+
+
 ### class ReactExecutor
 #### func run
 ```
 func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
-- 描述: 执行React任务，处理Agent请求并返回响应。
+- 描述: 执行代理的同步运行逻辑
 - 参数:
-  - `agent`: `Agent`, 要执行的Agent实例。
-  - `request`: `AgentRequest`, Agent请求对象，包含请求的详细信息。
+  - `agent`: `Agent`, 要执行的代理
+  - `request`: `AgentRequest`, 代理请求
 
 #### func asyncRun
 ```
 func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步执行React任务，处理Agent请求并返回异步响应。
+- 描述: 执行代理的异步运行逻辑
 - 参数:
-  - `agent`: `Agent`, 要执行的Agent实例。
-  - `request`: `AgentRequest`, Agent请求对象，包含请求的详细信息。
+  - `agent`: `Agent`, 要执行的代理
+  - `request`: `AgentRequest`, 代理请求
 
 
 ## Package agent_group
 ### interface AgentCollaboration
-#### func chat
-```
-func chat(request: AgentRequest): AgentResponse
-```
-- 描述: 用于处理代理之间的同步聊天请求
-- 参数:
-  - `request`: `AgentRequest`, 包含聊天请求信息的对象
-
-#### func asyncChat
-```
-func asyncChat(request: AgentRequest): AsyncAgentResponse
-```
-- 描述: 用于处理代理之间的异步聊天请求
-- 参数:
-  - `request`: `AgentRequest`, 包含异步聊天请求信息的对象
-
 
 ### interface AgentGroup
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 根据请求进行聊天，并返回响应
+- 描述: 处理聊天请求并返回响应
 - 参数:
-  - `request`: `AgentRequest`, 聊天请求
+  - `request`: `AgentRequest`, 聊天请求对象
 
 #### func chat
 ```
-func chat(question: String): String
+func chat(request: AgentRequest, maxRound!: Int64): AgentResponse
 ```
-- 描述: 根据问题字符串进行聊天，并返回聊天内容
+- 描述: 处理聊天请求并返回响应，限制最大轮次
 - 参数:
-  - `question`: `String`, 聊天问题
-
-#### func chat
-```
-func chat(request: AgentRequest, maxRound: Int64): AgentResponse
-```
-- 描述: 根据请求和最大轮次进行聊天，并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求
-  - `maxRound`: `Int64`, 最大聊天轮次
+  - `request`: `AgentRequest`, 聊天请求对象
+  - `maxRound!`: `Int64`, 最大聊天轮次
 
 #### func asyncChat
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步处理聊天请求，并返回异步响应
+- 描述: 异步处理聊天请求并返回响应
 - 参数:
-  - `request`: `AgentRequest`, 聊天请求
+  - `request`: `AgentRequest`, 聊天请求对象
 
-#### func operator []
+#### func operator operator []
 ```
 operator func [](memberName: String): Agent
 ```
-- 描述: 根据成员名称查找对应的代理
+- 描述: 根据成员名称查找代理
 - 参数:
   - `memberName`: `String`, 成员名称
 
@@ -820,16 +839,24 @@ init(a: Agent, b: Agent)
 
 #### func chat
 ```
-func chat(request: AgentRequest, maxRound!: Int64): AgentResponse
+chat(request: AgentRequest): AgentResponse
 ```
 - 描述: 处理聊天请求，返回AgentResponse
 - 参数:
   - `request`: `AgentRequest`, 聊天请求
-  - `maxRound`: `Int64`, 最大轮次
+
+#### func chat
+```
+chat(request: AgentRequest, maxRound: Int64): AgentResponse
+```
+- 描述: 处理聊天请求，指定最大轮数，返回AgentResponse
+- 参数:
+  - `request`: `AgentRequest`, 聊天请求
+  - `maxRound`: `Int64`, 最大讨论轮数
 
 #### func asyncChat
 ```
-func asyncChat(request: AgentRequest): AsyncAgentResponse
+asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
 - 描述: 处理异步聊天请求，返回AsyncAgentResponse
 - 参数:
@@ -837,29 +864,29 @@ func asyncChat(request: AgentRequest): AsyncAgentResponse
 
 #### func discuss
 ```
-func discuss(topic!: String, initiator!: String, speech!: String, mode!: FreeGroupMode = FreeGroupMode.Auto, maxRound!: Int64 = DISCUSSION_MAX_ROUND): String
+discuss(topic: String, initiator: String, speech: String, mode: FreeGroupMode, maxRound: Int64): String
 ```
-- 描述: 讨论指定话题，返回讨论结果
+- 描述: 根据指定模式和最大轮数进行讨论，返回讨论结果
 - 参数:
-  - `topic`: `String`, 讨论话题
+  - `topic`: `String`, 讨论主题
   - `initiator`: `String`, 发起者
   - `speech`: `String`, 发言内容
-  - `mode`: `FreeGroupMode`, 讨论模式，默认为Auto
-  - `maxRound`: `Int64`, 最大轮次，默认为DISCUSSION_MAX_ROUND
+  - `mode`: `FreeGroupMode`, 讨论模式
+  - `maxRound`: `Int64`, 最大讨论轮数
 
-#### func operator operator []
+#### func []
 ```
-operator func [](memberName: String): Agent
+[](memberName: String): Agent
 ```
-- 描述: 通过成员名称访问Agent成员
+- 描述: 根据成员名称获取Agent
 - 参数:
   - `memberName`: `String`, 成员名称
 
-#### func operator operator |
+#### func |
 ```
-operator func |(member: Agent): FreeGroup
+|(member: Agent): FreeGroup
 ```
-- 描述: 添加Agent成员到FreeGroup
+- 描述: 添加一个Agent成员并返回当前FreeGroup
 - 参数:
   - `member`: `Agent`, 要添加的Agent成员
 
@@ -881,9 +908,52 @@ RoundRobin
 ### class LeaderGroup
 #### func chat
 ```
-func chat(request: AgentRequest, maxRound!: Int64): AgentResponse
+func chat(request: AgentRequest): AgentResponse
 ```
 - 描述: 处理聊天请求并返回响应
+- 参数:
+  - `request`: `AgentRequest`, 聊天请求对象
+
+#### func chat
+```
+func chat(request: AgentRequest, maxRound: Int64): AgentResponse
+```
+- 描述: 处理聊天请求并返回响应，指定最大轮次
+- 参数:
+  - `request`: `AgentRequest`, 聊天请求对象
+  - `maxRound`: `Int64`, 最大讨论轮次
+
+#### func asyncChat
+```
+func asyncChat(request: AgentRequest): AsyncAgentResponse
+```
+- 描述: 异步处理聊天请求并返回响应
+- 参数:
+  - `request`: `AgentRequest`, 聊天请求对象
+
+#### func operator []
+```
+operator func [](memberName: String): Agent
+```
+- 描述: 通过成员名称访问代理
+- 参数:
+  - `memberName`: `String`, 成员名称
+
+
+### class LinearGroup
+#### func chat
+```
+func chat(request: AgentRequest): AgentResponse
+```
+- 描述: 处理聊天请求并返回响应
+- 参数:
+  - `request`: `AgentRequest`, 聊天请求对象
+
+#### func chat
+```
+func chat(request: AgentRequest, maxRound: Int64): AgentResponse
+```
+- 描述: 处理聊天请求并返回响应，支持指定最大轮次
 - 参数:
   - `request`: `AgentRequest`, 聊天请求对象
   - `maxRound`: `Int64`, 最大聊天轮次
@@ -896,40 +966,13 @@ func asyncChat(request: AgentRequest): AsyncAgentResponse
 - 参数:
   - `request`: `AgentRequest`, 聊天请求对象
 
-#### func operator operator []
-```
-operator func [](memberName: String): Agent
-```
-- 描述: 根据成员名称获取对应的代理对象
-- 参数:
-  - `memberName`: `String`, 成员名称
-
-
-### class LinearGroup
-#### func chat
-```
-func chat(request: AgentRequest, maxRound!: Int64): AgentResponse
-```
-- 描述: 处理聊天请求，按照顺序依次调用每个代理的聊天方法，并返回最终响应。
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求对象，包含聊天内容和对话上下文。
-  - `maxRound`: `Int64`, 最大聊天轮次，用于控制聊天流程的迭代次数。
-
-#### func asyncChat
-```
-func asyncChat(request: AgentRequest): AsyncAgentResponse
-```
-- 描述: 异步处理聊天请求，依次调用每个代理的聊天方法，并返回最后一个代理的异步响应。
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求对象，包含聊天内容和对话上下文。
-
 #### func operator []
 ```
 operator func [](memberName: String): Agent
 ```
-- 描述: 通过成员名称获取代理对象，当前实现不支持此操作。
+- 描述: 获取指定名称的成员代理
 - 参数:
-  - `memberName`: `String`, 代理成员的名称，用于查找对应的代理对象。
+  - `memberName`: `String`, 成员代理的名称
 
 
 ## Package config
@@ -938,13 +981,13 @@ operator func [](memberName: String): Agent
 ```
 static var logLevel = LogLevel.ERROR
 ```
-- 描述: 设置日志级别，默认为ERROR级别
+- 描述: 日志级别，默认为ERROR
 
 #### var logFile
 ```
 static var logFile: String = "stdout"
 ```
-- 描述: 设置日志文件路径，默认为标准输出
+- 描述: 日志文件路径，默认为标准输出
 
 #### var enableAgentLog
 ```
@@ -956,7 +999,7 @@ static var enableAgentLog = false
 ```
 static var agentLogDir = "./logs/agent-logs"
 ```
-- 描述: 设置代理日志目录，默认为"./logs/agent-logs"
+- 描述: 代理日志目录，默认为"./logs/agent-logs"
 
 #### var saveModelRequest
 ```
@@ -968,7 +1011,7 @@ static var saveModelRequest = false
 ```
 static var modelRequestDir = "./logs/model-requests"
 ```
-- 描述: 设置模型请求保存目录，默认为"./logs/model-requests"
+- 描述: 模型请求保存目录，默认为"./logs/model-requests"
 
 #### var saveCodeInterpreter
 ```
@@ -980,31 +1023,74 @@ static var saveCodeInterpreter = false
 ```
 static var codeInterpreterDir = "./logs/code-interpreter-scripts"
 ```
-- 描述: 设置代码解释器脚本保存目录，默认为"./logs/code-interpreter-scripts"
+- 描述: 代码解释器脚本保存目录，默认为"./logs/code-interpreter-scripts"
 
 #### var defaultChatModel
 ```
 static var defaultChatModel = Option<ChatModel>.None
 ```
-- 描述: 设置默认的聊天模型，默认为None
+- 描述: 默认的聊天模型，默认为None
 
 #### var defaultEmbeddingModel
 ```
 static var defaultEmbeddingModel = Option<EmbeddingModel>.None
 ```
-- 描述: 设置默认的嵌入模型，默认为None
+- 描述: 默认的嵌入模型，默认为None
 
 #### prop externalScriptDir
 ```
 static mut prop externalScriptDir: String
 ```
-- 描述: 获取或设置外部脚本目录。如果目录不存在，访问时会抛出异常
+- 描述: 外部脚本目录，可读写
+
+#### var modelRetryNumber
+```
+static var modelRetryNumber = 3
+```
+- 描述: 获取LLM响应失败时的最大重试次数，默认为3
 
 #### var filterThink
 ```
 static var filterThink = false
 ```
-- 描述: 是否过滤思考日志，默认为false
+- 描述: 是否过滤推理LLM生成的思考消息，仅在同步调用时生效，默认为false
+
+#### let env
+```
+static let env = EnvWrapper()
+```
+- 描述: 提供一种简便的方式来获取/设置环境变量
+
+#### var maxReactNumber
+```
+static var maxReactNumber = 10
+```
+- 描述: React执行的最大步骤数，默认为10
+
+#### var outputRepairRetryNumber
+```
+static var outputRepairRetryNumber = 3
+```
+- 描述: 生成所需JSON Schema输出失败时的最大重试次数，默认为3
+
+
+### struct EnvWrapper
+#### func operator []
+```
+operator func [](name: String): Option<String>
+```
+- 描述: 获取环境变量的值
+- 参数:
+  - `name`: `String`, 环境变量的名称
+
+#### func operator []
+```
+operator func [](name: String, value!: String): Unit
+```
+- 描述: 设置环境变量的值
+- 参数:
+  - `name`: `String`, 环境变量的名称
+  - `value!`: `String`, 环境变量的值
 
 
 ## Package core.agent
@@ -1025,7 +1111,7 @@ prop description: String
 ```
 mut prop temperature: Option<Float64>
 ```
-- 描述: 代理传递给LLM的温度值
+- 描述: 代理传递给大语言模型的温度值
 
 #### prop systemPrompt
 ```
@@ -1073,25 +1159,17 @@ mut prop interceptor: Option<Interceptor>
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 查询代理并获取答案，可能会抛出AgentExecutionException异常
+- 描述: 向代理查询并获取答案，可能会抛出AgentExecutionException异常
 - 参数:
-  - `request`: `AgentRequest`, 代理请求对象
-
-#### func chat
-```
-func chat(question: String): String
-```
-- 描述: chat方法的快捷使用方式
-- 参数:
-  - `question`: `String`, 问题字符串
+  - `request`: `AgentRequest`, 代理请求
 
 #### func asyncChat
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 查询代理并获取答案，返回代理的流式回复
+- 描述: 向代理查询并获取答案，返回代理的流式回复
 - 参数:
-  - `request`: `AgentRequest`, 代理请求对象
+  - `request`: `AgentRequest`, 代理请求
 
 
 ### class AgentExecutionException
@@ -1109,7 +1187,7 @@ init(msg: String)
 ```
 let dialog: Dialog
 ```
-- 描述: 代理与LLM之间的内部聊天记录
+- 描述: 代理执行期间与LLM的内部对话历史
 
 #### let retrievalInfo
 ```
@@ -1121,24 +1199,21 @@ let retrievalInfo: ArrayList<RetrievalInfo>
 ```
 public init()
 ```
-- 描述: 初始化AgentExecutionInfo实例
+- 描述: 初始化AgentExecutionInfo对象，默认初始化dialog和retrievalInfo
 
 #### func init
 ```
 public init(dialog: Dialog)
 ```
-- 描述: 使用指定的Dialog初始化AgentExecutionInfo实例
+- 描述: 使用指定的dialog初始化AgentExecutionInfo对象，默认初始化retrievalInfo
 - 参数:
-  - `dialog`: `Dialog`, 代理与LLM之间的内部聊天记录
+  - `dialog`: `Dialog`, 指定的对话历史
 
-#### func addRetrieval
+#### prop verboseInfo
 ```
-public func addRetrieval(query: String, docs: Array<Document>): Unit
+public prop verboseInfo: Iterator<String>
 ```
-- 描述: 添加检索信息
-- 参数:
-  - `query`: `String`, 检索查询
-  - `docs`: `Array<Document>`, 检索到的文档
+- 描述: 仅在AgentRequest中设置verbose: true时访问此字段
 
 
 ### interface AgentExecutor
@@ -1148,7 +1223,7 @@ func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
 - 描述: 执行代理任务并返回响应
 - 参数:
-  - `agent`: `Agent`, 要执行的代理
+  - `agent`: `Agent`, 代理实例
   - `request`: `AgentRequest`, 代理请求
 
 #### func asyncRun
@@ -1157,7 +1232,7 @@ func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 ```
 - 描述: 异步执行代理任务并返回响应
 - 参数:
-  - `agent`: `Agent`, 要执行的代理
+  - `agent`: `Agent`, 代理实例
   - `request`: `AgentRequest`, 代理请求
 
 
@@ -1172,16 +1247,23 @@ let question: String
 ```
 let dialog: Option<Dialog>
 ```
-- 描述: 用户与代理之间的先前聊天记录
+- 描述: 用户与代理之间的历史对话记录
+
+#### let verbose
+```
+let verbose: Bool
+```
+- 描述: 是否输出内部执行信息
 
 #### func init
 ```
-public init(question: String, dialog!: Option<Dialog> = None)
+public init(question: String, dialog!: Option<Dialog> = None, verbose!: Bool = false)
 ```
 - 描述: 初始化AgentRequest结构体
 - 参数:
   - `question`: `String`, 当前用户的问题
-  - `dialog`: `Option<Dialog>`, 用户与代理之间的先前聊天记录
+  - `dialog`: `Option<Dialog>`, 用户与代理之间的历史对话记录
+  - `verbose`: `Bool`, 是否输出内部执行信息
 
 
 ### struct AgentResponse
@@ -1195,13 +1277,13 @@ let content: String
 ```
 let execInfo: Option<AgentExecutionInfo>
 ```
-- 描述: 执行过程中的内部信息
+- 描述: 执行期间的内部信息
 
 #### func init
 ```
 public init(content: String)
 ```
-- 描述: 初始化AgentResponse，设置执行结果
+- 描述: 初始化AgentResponse
 - 参数:
   - `content`: `String`, 执行结果
 
@@ -1209,10 +1291,10 @@ public init(content: String)
 ```
 public init(content: String, execInfo!: AgentExecutionInfo)
 ```
-- 描述: 初始化AgentResponse，设置执行结果和执行信息
+- 描述: 初始化AgentResponse
 - 参数:
   - `content`: `String`, 执行结果
-  - `execInfo`: `AgentExecutionInfo`, 执行过程中的内部信息
+  - `execInfo`: `AgentExecutionInfo`, 执行期间的内部信息
 
 
 ### class AsyncAgentResponse
@@ -1226,7 +1308,7 @@ public let execInfo: Option<AgentExecutionInfo>
 ```
 public init(chunks: Iterator<String>)
 ```
-- 描述: 初始化AsyncAgentResponse实例
+- 描述: 构造函数，初始化AsyncAgentResponse实例
 - 参数:
   - `chunks`: `Iterator<String>`, 异步执行的块数据
 
@@ -1234,7 +1316,7 @@ public init(chunks: Iterator<String>)
 ```
 public init(chunks: Iterator<String>, execInfo!: AgentExecutionInfo)
 ```
-- 描述: 初始化AsyncAgentResponse实例，包含执行信息
+- 描述: 构造函数，初始化AsyncAgentResponse实例，并包含执行信息
 - 参数:
   - `chunks`: `Iterator<String>`, 异步执行的块数据
   - `execInfo`: `AgentExecutionInfo`, 执行期间的信息
@@ -1249,7 +1331,7 @@ public prop content: String
 ```
 override public func next(): Option<String>
 ```
-- 描述: 获取下一个块数据
+- 描述: 获取下一个块数据，并更新内部内容
 
 
 ### class Interceptor
@@ -1257,9 +1339,9 @@ override public func next(): Option<String>
 ```
 init(agent: Agent, mode!: InterceptorMode = InterceptorMode.Always)
 ```
-- 描述: 初始化拦截器实例
+- 描述: 初始化拦截器
 - 参数:
-  - `agent`: `Agent`, 代理实例，用于拦截操作
+  - `agent`: `Agent`, 代理对象，用于拦截操作
   - `mode`: `InterceptorMode`, 拦截模式，默认为InterceptorMode.Always
 
 
@@ -1276,7 +1358,7 @@ Periodic(Int64)
 ```
 - 描述: 定期拦截请求
 - 参数:
-  - `period`: `Int64`, 拦截的周期时间
+  - `interval`: `Int64`, 拦截的时间间隔
 
 ####  Conditional
 ```
@@ -1286,8 +1368,6 @@ Conditional((AgentRequest) -> Bool)
 - 参数:
   - `condition`: `(AgentRequest) -> Bool`, 拦截请求的条件函数
 
-
-### struct RetrievalInfo
 
 ## Package core.memory
 ### interface Memory
@@ -1361,7 +1441,7 @@ func toLogString(): String
 ```
 static func system(content: String): ChatMessage
 ```
-- 描述: 创建一个系统消息
+- 描述: 创建一个系统角色的消息
 - 参数:
   - `content`: `String`, 消息内容
 
@@ -1369,16 +1449,16 @@ static func system(content: String): ChatMessage
 ```
 static func assistant(content: String, name!: String = ""): ChatMessage
 ```
-- 描述: 创建一个助手消息
+- 描述: 创建一个助手角色的消息
 - 参数:
   - `content`: `String`, 消息内容
-  - `name`: `String`, 助手的名称
+  - `name`: `String`, 发送者的名称
 
 #### func user
 ```
 static func user(content: String, image!: Option<String> = None): ChatMessage
 ```
-- 描述: 创建一个用户消息
+- 描述: 创建一个用户角色的消息
 - 参数:
   - `content`: `String`, 消息内容
   - `image`: `Option<String>`, 图片的URL或Base64编码
@@ -1421,7 +1501,7 @@ static func fromStr(str: String): ChatMessageRole
 ```
 - 描述: 根据字符串返回对应的角色
 - 参数:
-  - `str`: `String`, 角色字符串
+  - `str`: `String`, 表示角色的字符串
 
 #### func operator ==
 ```
@@ -1429,7 +1509,7 @@ operator func ==(other: ChatMessageRole): Bool
 ```
 - 描述: 比较两个角色是否相等
 - 参数:
-  - `other`: `ChatMessageRole`, 另一个角色
+  - `other`: `ChatMessageRole`, 要比较的另一个角色
 
 #### func operator !=
 ```
@@ -1437,19 +1517,19 @@ operator func !=(other: ChatMessageRole): Bool
 ```
 - 描述: 比较两个角色是否不相等
 - 参数:
-  - `other`: `ChatMessageRole`, 另一个角色
+  - `other`: `ChatMessageRole`, 要比较的另一个角色
 
 
 ### class Dialog
 #### func init
 ```
-public init()
+init()
 ```
 - 描述: 初始化一个空的对话集合
 
 #### func init
 ```
-public init(messages: ArrayList<ChatMessage>)
+init(messages: ArrayList<ChatMessage>)
 ```
 - 描述: 使用给定的消息列表初始化对话集合
 - 参数:
@@ -1457,7 +1537,7 @@ public init(messages: ArrayList<ChatMessage>)
 
 #### func init
 ```
-public init(messages: Array<ChatMessage>)
+init(messages: Array<ChatMessage>)
 ```
 - 描述: 使用给定的消息数组初始化对话集合
 - 参数:
@@ -1465,13 +1545,13 @@ public init(messages: Array<ChatMessage>)
 
 #### func clone
 ```
-public func clone(): Dialog
+func clone(): Dialog
 ```
 - 描述: 克隆当前的对话集合
 
 #### func addMessage
 ```
-public func addMessage(msg: ChatMessage): Unit
+func addMessage(msg: ChatMessage): Unit
 ```
 - 描述: 向对话集合中添加一条消息
 - 参数:
@@ -1479,7 +1559,7 @@ public func addMessage(msg: ChatMessage): Unit
 
 #### func addMessage
 ```
-public func addMessage(messages: Array<ChatMessage>): Unit
+func addMessage(messages: Array<ChatMessage>): Unit
 ```
 - 描述: 向对话集合中添加多条消息
 - 参数:
@@ -1487,25 +1567,25 @@ public func addMessage(messages: Array<ChatMessage>): Unit
 
 #### func clear
 ```
-public func clear(): Unit
+func clear(): Unit
 ```
 - 描述: 清空对话集合中的所有消息
 
 #### func removeLast
 ```
-public func removeLast(): ChatMessage
+func removeLast(): ChatMessage
 ```
 - 描述: 移除并返回对话集合中的最后一条消息
 
 #### func iterator
 ```
-public func iterator(): Iterator<ChatMessage>
+func iterator(): Iterator<ChatMessage>
 ```
 - 描述: 返回对话集合的迭代器
 
 #### func operator operator[]
 ```
-public operator func[](index: Int64): ChatMessage
+operator func[](index: Int64): ChatMessage
 ```
 - 描述: 通过索引获取对话集合中的消息
 - 参数:
@@ -1513,19 +1593,19 @@ public operator func[](index: Int64): ChatMessage
 
 #### prop size
 ```
-public prop size: Int64
+prop size: Int64
 ```
 - 描述: 获取对话集合中消息的数量
 
 #### func isEmpty
 ```
-public func isEmpty(): Bool
+func isEmpty(): Bool
 ```
-- 描述: 检查对话集合是否为空
+- 描述: 判断对话集合是否为空
 
 #### func toString
 ```
-public func toString(): String
+func toString(): String
 ```
 - 描述: 将对话集合转换为字符串表示
 
@@ -1548,7 +1628,7 @@ let chunks: Iterator<AsyncChatChunk>
 
 #### func init
 ```
-public init(model: String, chunks: Iterator<AsyncChatChunk>)
+init(model: String, chunks: Iterator<AsyncChatChunk>)
 ```
 - 描述: 初始化异步聊天响应
 - 参数:
@@ -1557,31 +1637,31 @@ public init(model: String, chunks: Iterator<AsyncChatChunk>)
 
 #### func next
 ```
-override public func next(): Option<String>
+func next(): Option<String>
 ```
-- 描述: 获取下一个聊天内容
+- 描述: 获取下一个聊天块的内容
 
 #### prop stream
 ```
-public prop stream: Iterator<String>
+prop stream: Iterator<String>
 ```
-- 描述: 获取聊天内容的流
+- 描述: 获取聊天流的迭代器
 
 #### prop usage
 ```
-public prop usage: Option<ChatUsage>
+prop usage: Option<ChatUsage>
 ```
 - 描述: 获取聊天使用情况
 
 #### prop dialog
 ```
-public prop dialog: Dialog
+prop dialog: Dialog
 ```
-- 描述: 获取完整的聊天对话
+- 描述: 同步获取聊天对话
 
 #### func toString
 ```
-public func toString(): String
+func toString(): String
 ```
 - 描述: 将聊天响应转换为字符串
 
@@ -1594,14 +1674,6 @@ func create(request: ChatRequest): ChatResponse
 - 描述: 聊天模型的同步API
 - 参数:
   - `request`: `ChatRequest`, 聊天请求
-
-#### func create
-```
-func create(messages: Array<ChatMessage>): ChatResponse
-```
-- 描述: create方法的快捷使用方式
-- 参数:
-  - `messages`: `Array<ChatMessage>`, 聊天消息列表
 
 #### func asyncCreate
 ```
@@ -1623,41 +1695,41 @@ let dialog: Dialog
 ```
 let stop: Option<Array<String>>
 ```
-- 描述: 表示停止条件的可选字符串数组
+- 描述: 表示停止条件的字符串数组
 
 #### let temperature
 ```
 let temperature: Option<Float64>
 ```
-- 描述: 表示温度参数的可选浮点数
+- 描述: 表示生成文本时的温度参数
 
 #### func init
 ```
 public init(message: String)
 ```
-- 描述: 使用单个消息初始化ChatRequest对象
+- 描述: 使用单条消息初始化ChatRequest对象
 - 参数:
-  - `message`: `String`, 用户的消息内容
+  - `message`: `String`, 用户输入的消息
 
 #### func init
 ```
 public init(messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None)
 ```
-- 描述: 使用消息数组、温度和停止条件初始化ChatRequest对象
+- 描述: 使用消息数组初始化ChatRequest对象
 - 参数:
-  - `messages`: `Array<ChatMessage>`, 消息数组
-  - `temperature`: `Option<Float64>`, 可选温度参数
-  - `stop`: `Option<Array<String>>`, 可选停止条件
+  - `messages`: `Array<ChatMessage>`, 包含多条消息的数组
+  - `temperature`: `Option<Float64>`, 生成文本时的温度参数
+  - `stop`: `Option<Array<String>>`, 停止条件的字符串数组
 
 #### func init
 ```
 public init(dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None)
 ```
-- 描述: 使用Dialog对象、温度和停止条件初始化ChatRequest对象
+- 描述: 使用Dialog对象初始化ChatRequest对象
 - 参数:
-  - `dialog`: `Dialog`, Dialog对象
-  - `temperature`: `Option<Float64>`, 可选温度参数
-  - `stop`: `Option<Array<String>>`, 可选停止条件
+  - `dialog`: `Dialog`, 包含对话的Dialog对象
+  - `temperature`: `Option<Float64>`, 生成文本时的温度参数
+  - `stop`: `Option<Array<String>>`, 停止条件的字符串数组
 
 #### func toString
 ```
@@ -1705,25 +1777,25 @@ public func toString(): String
 ### class ChatUsage
 #### let promptTokens
 ```
-let promptTokens: Int64
+public let promptTokens: Int64
 ```
 - 描述: 表示提示词的数量
 
 #### let completionTokens
 ```
-let completionTokens: Int64
+public let completionTokens: Int64
 ```
 - 描述: 表示完成词的数量
 
 #### let totalTokens
 ```
-let totalTokens: Int64
+public let totalTokens: Int64
 ```
-- 描述: 表示总词数
+- 描述: 表示总词的数量
 
 #### let timeCost
 ```
-let timeCost: Option<Duration>
+public let timeCost: Option<Duration>
 ```
 - 描述: 表示时间消耗，可能为空
 
@@ -1735,7 +1807,7 @@ public init(promptTokens: Int64, completionTokens: Int64, totalTokens: Int64, ti
 - 参数:
   - `promptTokens`: `Int64`, 提示词的数量
   - `completionTokens`: `Int64`, 完成词的数量
-  - `totalTokens`: `Int64`, 总词数
+  - `totalTokens`: `Int64`, 总词的数量
   - `timeCost`: `Option<Duration>`, 时间消耗，可能为空
 
 #### func toString
@@ -1760,22 +1832,22 @@ func create(request: EmbeddingRequest): EmbeddingResponse
 ```
 let prompt: String
 ```
-- 描述: 用于生成嵌入的提示文本
+- 描述: 用户输入的提示文本
 
 #### let dimensions
 ```
 let dimensions: Option<Int64>
 ```
-- 描述: 嵌入的维度，可选参数
+- 描述: 嵌入向量的维度，可选参数
 
 #### func init
 ```
-init(prompt: String, dimensions!: Option<Int> = None)
+init(prompt: String, dimensions: Option<Int64> = None)
 ```
 - 描述: 初始化EmbeddingRequest结构体
 - 参数:
-  - `prompt`: `String`, 用于生成嵌入的提示文本
-  - `dimensions`: `Option<Int>`, 嵌入的维度，可选参数
+  - `prompt`: `String`, 用户输入的提示文本
+  - `dimensions`: `Option<Int64>`, 嵌入向量的维度，可选参数
 
 
 ### struct EmbeddingResponse
@@ -1783,7 +1855,7 @@ init(prompt: String, dimensions!: Option<Int> = None)
 ```
 let data: Array<Float64>
 ```
-- 描述: 存储嵌入向量的数据
+- 描述: 存储嵌入向量的数组
 
 #### func init
 ```
@@ -1791,7 +1863,7 @@ init(data: Array<Float64>)
 ```
 - 描述: 初始化EmbeddingResponse结构体
 - 参数:
-  - `data`: `Array<Float64>`, 嵌入向量的数据
+  - `data`: `Array<Float64>`, 嵌入向量数组
 
 #### func toString
 ```
@@ -1821,37 +1893,37 @@ let prompt: String
 ```
 let quality: String
 ```
-- 描述: 图像生成的质量
+- 描述: 图像的质量，默认为'standard'
 
 #### let responseFormat
 ```
 let responseFormat: String
 ```
-- 描述: 图像响应的格式
+- 描述: 响应的格式，默认为'url'
 
 #### let size
 ```
 let size: String
 ```
-- 描述: 生成图像的尺寸
+- 描述: 图像的尺寸，默认为'512x512'
 
 #### let style
 ```
 let style: String
 ```
-- 描述: 生成图像的风格
+- 描述: 图像的风格，默认为'natural'
 
 #### func init
 ```
-init(prompt: String, quality: String = "standard", responseFormat: String = "url", size: String = "512x512", style: String = "natural")
+init(prompt: String, quality!: String = "standard", responseFormat!: String = "url", size!: String = "512x512", style!: String = "natural")
 ```
 - 描述: 初始化ImageRequest结构体
 - 参数:
   - `prompt`: `String`, 生成图像的提示文本
-  - `quality`: `String`, 图像生成的质量，默认为standard
-  - `responseFormat`: `String`, 图像响应的格式，默认为url
-  - `size`: `String`, 生成图像的尺寸，默认为512x512
-  - `style`: `String`, 生成图像的风格，默认为natural
+  - `quality`: `String`, 图像的质量，默认为'standard'
+  - `responseFormat`: `String`, 响应的格式，默认为'url'
+  - `size`: `String`, 图像的尺寸，默认为'512x512'
+  - `style`: `String`, 图像的风格，默认为'natural'
 
 
 ### struct ImageResponse
@@ -1859,7 +1931,7 @@ init(prompt: String, quality: String = "standard", responseFormat: String = "url
 ```
 let b64Json: String
 ```
-- 描述: 存储图像的Base64编码字符串
+- 描述: Base64编码的JSON字符串
 
 #### let url
 ```
@@ -1875,11 +1947,11 @@ let revisedPrompt: String
 
 #### func init
 ```
-init(b64Json: String = "", url: String = "", revisedPrompt: String = "")
+public init(b64Json!: String = "", url!: String = "", revisedPrompt!: String = "")
 ```
 - 描述: 初始化ImageResponse结构体
 - 参数:
-  - `b64Json`: `String`, 图像的Base64编码字符串
+  - `b64Json`: `String`, Base64编码的JSON字符串
   - `url`: `String`, 图像的URL地址
   - `revisedPrompt`: `String`, 修订后的提示文本
 
@@ -1932,7 +2004,7 @@ public init(content: String)
 
 #### func init
 ```
-public init(content: String, metadata: HashMap<String, String>)
+public init(content: String, metadata!: HashMap<String, String>)
 ```
 - 描述: 初始化文档对象，包含内容和元数据
 - 参数:
@@ -1949,28 +2021,38 @@ override public func toString(): String
 ```
 override public func toPrompt(): String
 ```
-- 描述: 将文档对象转换为提示信息
+- 描述: 将文档对象转换为提示字符串
 
 #### func getTypeSchema
 ```
 public static func getTypeSchema(): TypeSchema
 ```
-- 描述: 获取文档的类型模式
+- 描述: 获取文档对象的类型模式
 
-#### func fromJson
+#### func fromJsonValue
 ```
-public static func fromJson(json: JsonValue): Document
+public static func fromJsonValue(json: JsonValue): Document
 ```
 - 描述: 从JSON值创建文档对象
 - 参数:
-  - `json`: `JsonValue`, JSON值
+  - `json`: `JsonValue`, 输入的JSON值
 
-#### func toJson
+#### func toJsonValue
 ```
-public func toJson(): JsonValue
+public func toJsonValue(): JsonValue
 ```
 - 描述: 将文档对象转换为JSON值
 
+
+### interface Retrieval
+#### prop sources
+```
+prop sources: Array<Document>
+```
+- 描述: 检索器的结果来源
+
+
+### struct RetrievalInfo
 
 ### interface Retriever
 #### prop description
@@ -1987,9 +2069,9 @@ mut prop mode: RetrieverMode
 
 #### func search
 ```
-func search(query: String): Array<Document>
+func search(query: String): Retrieval
 ```
-- 描述: 根据查询字符串进行搜索，并返回文档数组。
+- 描述: 根据查询字符串进行搜索。
 - 参数:
   - `query`: `String`, 搜索的查询字符串。
 
@@ -2009,13 +2091,13 @@ init(msg: String)
 ```
 Static
 ```
-- 描述: 在代理回答问题之前，检索器将用于搜索相关知识
+- 描述: 检索器将在代理回答问题之前用于搜索相关内容
 
 ####  Dynamic
 ```
 Dynamic
 ```
-- 描述: 在代理解决问题的过程中，检索器将用于搜索相关知识
+- 描述: 检索器将在代理解决问题的过程中使用
 
 #### func operator ==
 ```
@@ -2023,7 +2105,7 @@ operator func ==(other: RetrieverMode): Bool
 ```
 - 描述: 比较两个RetrieverMode是否相等
 - 参数:
-  - `other`: `RetrieverMode`, 要比较的另一个RetrieverMode
+  - `other`: `RetrieverMode`, 另一个RetrieverMode实例
 
 #### func operator !=
 ```
@@ -2031,7 +2113,7 @@ operator func !=(other: RetrieverMode): Bool
 ```
 - 描述: 比较两个RetrieverMode是否不相等
 - 参数:
-  - `other`: `RetrieverMode`, 要比较的另一个RetrieverMode
+  - `other`: `RetrieverMode`, 另一个RetrieverMode实例
 
 
 ## Package core.tool
@@ -2046,33 +2128,33 @@ prop name: String
 ```
 prop description: String
 ```
-- 描述: 工具的描述信息
+- 描述: 工具的描述，LLM将根据描述选择工具
 
 #### prop parameters
 ```
 prop parameters: Array<ToolParameter>
 ```
-- 描述: 工具的参数列表
+- 描述: 工具输入的类型模式
 
 #### prop retType
 ```
 prop retType: TypeSchema
 ```
-- 描述: 工具的返回类型
+- 描述: 工具的返回类型，目前未使用
 
 #### prop examples
 ```
 prop examples: Array<String>
 ```
-- 描述: 工具的使用示例
+- 描述: 工具调用的示例，可选
 
 #### func invoke
 ```
-func invoke(args: Array<String>): ToolResponse
+func invoke(args: HashMap<String, ToJsonValue>): ToolResponse
 ```
-- 描述: 调用工具并执行操作
+- 描述: 参数及其值在哈希表中分组
 - 参数:
-  - `args`: `Array<String>`, 表示每个参数的字符串数组
+  - `args`: `HashMap<String, ToJsonValue>`, 包含参数及其值的哈希表
 
 
 ### class ToolException
@@ -2149,7 +2231,7 @@ func searchTool(question: String, number!: Int64): Array<Tool>
 ```
 prop enableToolSearch: Bool
 ```
-- 描述: 是否启用工具的语义搜索
+- 描述: 是否启用工具语义搜索
 
 
 ### struct ToolParameter
@@ -2204,57 +2286,57 @@ init(content: String)
 ```
 static var BEFORE_CHAT_MODEL_FN: Option<(ChatModel, ChatRequest) -> Option<ChatResponse>>
 ```
-- 描述: 在聊天模型执行前调用的函数
+- 描述: 用于在聊天模型执行前调用的函数，接收聊天模型和聊天请求作为参数，返回可能的聊天响应。
 
 #### var BEFORE_CHAT_MODEL_FN2
 ```
 static var BEFORE_CHAT_MODEL_FN2: Option<(String, ChatModel, ChatRequest) -> Option<ChatResponse>>
 ```
-- 描述: 在聊天模型执行前调用的函数，带有额外字符串参数
+- 描述: 用于在聊天模型执行前调用的函数，接收字符串、聊天模型和聊天请求作为参数，返回可能的聊天响应。
 
 #### func registerBeforeChatModel
 ```
 static func registerBeforeChatModel(fn: (ChatModel, ChatRequest) -> Option<ChatResponse>)
 ```
-- 描述: 注册在聊天模型执行前调用的函数
+- 描述: 注册在聊天模型执行前调用的函数。
 - 参数:
-  - `fn`: `(ChatModel, ChatRequest) -> Option<ChatResponse>`, 在聊天模型执行前调用的函数
+  - `fn`: `(ChatModel, ChatRequest) -> Option<ChatResponse>`, 接收聊天模型和聊天请求作为参数，返回可能的聊天响应的函数。
 
 #### func registerBeforeChatModel
 ```
 static func registerBeforeChatModel(fn: (String, ChatModel, ChatRequest) -> Option<ChatResponse>)
 ```
-- 描述: 注册在聊天模型执行前调用的函数，带有额外字符串参数
+- 描述: 注册在聊天模型执行前调用的函数。
 - 参数:
-  - `fn`: `(String, ChatModel, ChatRequest) -> Option<ChatResponse>`, 在聊天模型执行前调用的函数，带有额外字符串参数
+  - `fn`: `(String, ChatModel, ChatRequest) -> Option<ChatResponse>`, 接收字符串、聊天模型和聊天请求作为参数，返回可能的聊天响应的函数。
 
 #### var BEFORE_AGENT_RUN_FN
 ```
 static var BEFORE_AGENT_RUN_FN: Option<(Agent, AgentRequest) -> Option<AgentResponse>>
 ```
-- 描述: 在代理运行前调用的函数
+- 描述: 用于在代理执行前调用的函数，接收代理和代理请求作为参数，返回可能的代理响应。
 
 #### func registerBeforeAgentRun
 ```
 static func registerBeforeAgentRun(fn: (Agent, AgentRequest) -> Option<AgentResponse>)
 ```
-- 描述: 注册在代理运行前调用的函数
+- 描述: 注册在代理执行前调用的函数。
 - 参数:
-  - `fn`: `(Agent, AgentRequest) -> Option<AgentResponse>`, 在代理运行前调用的函数
+  - `fn`: `(Agent, AgentRequest) -> Option<AgentResponse>`, 接收代理和代理请求作为参数，返回可能的代理响应的函数。
 
 #### var AFTER_AGENT_RUN_FN
 ```
 static var AFTER_AGENT_RUN_FN: Option<(Agent, AgentRequest) -> Unit>
 ```
-- 描述: 在代理运行后调用的函数
+- 描述: 用于在代理执行后调用的函数，接收代理和代理请求作为参数，不返回任何值。
 
 #### func registerAfterAgentRun
 ```
 static func registerAfterAgentRun(fn: (Agent, AgentRequest) -> Unit)
 ```
-- 描述: 注册在代理运行后调用的函数
+- 描述: 注册在代理执行后调用的函数。
 - 参数:
-  - `fn`: `(Agent, AgentRequest) -> Unit`, 在代理运行后调用的函数
+  - `fn`: `(Agent, AgentRequest) -> Unit`, 接收代理和代理请求作为参数，不返回任何值的函数。
 
 
 ## Package jsonable
@@ -2265,154 +2347,162 @@ static func registerAfterAgentRun(fn: (Agent, AgentRequest) -> Unit)
 ```
 func buildJsonObject(key: String, value: String): JsonObject
 ```
-- 描述: 根据给定的键和值构建一个JsonObject。
+- 描述: 根据给定的键值对构建一个JsonObject对象
 - 参数:
-  - `key`: `String`, JsonObject中的键。
-  - `value`: `String`, JsonObject中的值。
+  - `key`: `String`, Json对象中的键
+  - `value`: `String`, Json对象中的值
 
 #### func buildJsonObject
 ```
 func buildJsonObject(items: Array<(String, String)>): JsonObject
 ```
-- 描述: 根据给定的键值对数组构建一个JsonObject。
+- 描述: 根据给定的键值对数组构建一个JsonObject对象
 - 参数:
-  - `items`: `Array<(String, String)>`, 包含键值对的数组。
+  - `items`: `Array<(String, String)>`, 包含键值对的数组
 
 #### func buildJsonObject
 ```
 func buildJsonObject(items: Array<(String, JsonValue)>): JsonObject
 ```
-- 描述: 根据给定的键和JsonValue数组构建一个JsonObject。
+- 描述: 根据给定的键值对数组构建一个JsonObject对象，值类型为JsonValue
 - 参数:
-  - `items`: `Array<(String, JsonValue)>`, 包含键和JsonValue的数组。
+  - `items`: `Array<(String, JsonValue)>`, 包含键值对的数组，值类型为JsonValue
+
+#### func buildJsonArray
+```
+func buildJsonArray(items: Array<String>): JsonArray
+```
+- 描述: 根据给定的字符串数组构建一个JsonArray对象
+- 参数:
+  - `items`: `Array<String>`, 包含字符串的数组
 
 #### func appendJsonObject
 ```
 func appendJsonObject(obj: JsonObject, items: Array<(String, String)>): JsonObject
 ```
-- 描述: 将给定的键值对数组追加到现有的JsonObject中。
+- 描述: 将给定的键值对数组追加到现有的JsonObject对象中
 - 参数:
-  - `obj`: `JsonObject`, 要追加的JsonObject。
-  - `items`: `Array<(String, String)>`, 包含键值对的数组。
+  - `obj`: `JsonObject`, 现有的JsonObject对象
+  - `items`: `Array<(String, String)>`, 包含键值对的数组
 
 #### func asJsonObject
 ```
 func asJsonObject(j: JsonValue): Option<JsonObject>
 ```
-- 描述: 将JsonValue转换为JsonObject。
+- 描述: 将JsonValue转换为JsonObject对象
 - 参数:
-  - `j`: `JsonValue`, 要转换的JsonValue。
+  - `j`: `JsonValue`, 待转换的JsonValue对象
 
 #### func asJsonArray
 ```
 func asJsonArray(j: JsonValue): Option<JsonArray>
 ```
-- 描述: 将JsonValue转换为JsonArray。
+- 描述: 将JsonValue转换为JsonArray对象
 - 参数:
-  - `j`: `JsonValue`, 要转换的JsonValue。
+  - `j`: `JsonValue`, 待转换的JsonValue对象
 
 #### func toString
 ```
 func toString(j: JsonValue): Option<String>
 ```
-- 描述: 将JsonValue转换为字符串。
+- 描述: 将JsonValue转换为字符串
 - 参数:
-  - `j`: `JsonValue`, 要转换的JsonValue。
+  - `j`: `JsonValue`, 待转换的JsonValue对象
 
 #### func toFloat
 ```
 func toFloat(j: JsonValue): Option<Float64>
 ```
-- 描述: 将JsonValue转换为浮点数。
+- 描述: 将JsonValue转换为浮点数
 - 参数:
-  - `j`: `JsonValue`, 要转换的JsonValue。
+  - `j`: `JsonValue`, 待转换的JsonValue对象
 
 #### func toInt
 ```
 func toInt(j: JsonValue): Option<Int64>
 ```
-- 描述: 将JsonValue转换为整数。
+- 描述: 将JsonValue转换为整数
 - 参数:
-  - `j`: `JsonValue`, 要转换的JsonValue。
+  - `j`: `JsonValue`, 待转换的JsonValue对象
 
 #### func toBool
 ```
 func toBool(j: JsonValue): Option<Bool>
 ```
-- 描述: 将JsonValue转换为布尔值。
+- 描述: 将JsonValue转换为布尔值
 - 参数:
-  - `j`: `JsonValue`, 要转换的JsonValue。
+  - `j`: `JsonValue`, 待转换的JsonValue对象
 
 #### func getJsonValue
 ```
 func getJsonValue(j: JsonValue, key: String): Option<JsonValue>
 ```
-- 描述: 从JsonValue中获取指定键的值。
+- 描述: 从JsonValue对象中获取指定键的值
 - 参数:
-  - `j`: `JsonValue`, 要查询的JsonValue。
-  - `key`: `String`, 要获取的键。
+  - `j`: `JsonValue`, JsonValue对象
+  - `key`: `String`, 要获取的键
 
 #### func getJsonObject
 ```
 func getJsonObject(j: JsonValue, key: String): Option<JsonObject>
 ```
-- 描述: 从JsonValue中获取指定键的JsonObject。
+- 描述: 从JsonValue对象中获取指定键的JsonObject对象
 - 参数:
-  - `j`: `JsonValue`, 要查询的JsonValue。
-  - `key`: `String`, 要获取的键。
+  - `j`: `JsonValue`, JsonValue对象
+  - `key`: `String`, 要获取的键
 
 #### func getJsonArray
 ```
 func getJsonArray(j: JsonValue, key: String): Option<JsonArray>
 ```
-- 描述: 从JsonValue中获取指定键的JsonArray。
+- 描述: 从JsonValue对象中获取指定键的JsonArray对象
 - 参数:
-  - `j`: `JsonValue`, 要查询的JsonValue。
-  - `key`: `String`, 要获取的键。
+  - `j`: `JsonValue`, JsonValue对象
+  - `key`: `String`, 要获取的键
 
 #### func getString
 ```
 func getString(j: JsonValue, key: String): Option<String>
 ```
-- 描述: 从JsonValue中获取指定键的字符串值。
+- 描述: 从JsonValue对象中获取指定键的字符串值
 - 参数:
-  - `j`: `JsonValue`, 要查询的JsonValue。
-  - `key`: `String`, 要获取的键。
+  - `j`: `JsonValue`, JsonValue对象
+  - `key`: `String`, 要获取的键
 
 #### func getFloat
 ```
 func getFloat(j: JsonValue, key: String): Option<Float64>
 ```
-- 描述: 从JsonValue中获取指定键的浮点数值。
+- 描述: 从JsonValue对象中获取指定键的浮点数值
 - 参数:
-  - `j`: `JsonValue`, 要查询的JsonValue。
-  - `key`: `String`, 要获取的键。
+  - `j`: `JsonValue`, JsonValue对象
+  - `key`: `String`, 要获取的键
 
 #### func getInt
 ```
 func getInt(key: String, j: JsonValue): Option<Int64>
 ```
-- 描述: 从JsonValue中获取指定键的整数值。
+- 描述: 从JsonValue对象中获取指定键的整数值
 - 参数:
-  - `key`: `String`, 要获取的键。
-  - `j`: `JsonValue`, 要查询的JsonValue。
+  - `key`: `String`, 要获取的键
+  - `j`: `JsonValue`, JsonValue对象
 
 #### func getBool
 ```
 func getBool(j: JsonValue, key: String): Option<Bool>
 ```
-- 描述: 从JsonValue中获取指定键的布尔值。
+- 描述: 从JsonValue对象中获取指定键的布尔值
 - 参数:
-  - `j`: `JsonValue`, 要查询的JsonValue。
-  - `key`: `String`, 要获取的键。
+  - `j`: `JsonValue`, JsonValue对象
+  - `key`: `String`, 要获取的键
 
 #### func toFloatArray
 ```
 func toFloatArray(j: JsonArray): Array<Float64>
 ```
-- 描述: 将JsonArray转换为浮点数数组。
+- 描述: 将JsonArray对象转换为浮点数数组
 - 参数:
-  - `j`: `JsonArray`, 要转换的JsonArray。
+  - `j`: `JsonArray`, 待转换的JsonArray对象
 
 
 ### interface Jsonable
@@ -2420,21 +2510,15 @@ func toFloatArray(j: JsonArray): Array<Float64>
 ```
 static func getTypeSchema(): TypeSchema
 ```
-- 描述: 获取T的类型模式
+- 描述: 获取类型T的模式
 
-#### func fromJson
+#### func fromJsonValue
 ```
-static func fromJson(json: JsonValue): T
+static func fromJsonValue(json: JsonValue): T
 ```
-- 描述: 从Json值反序列化
+- 描述: 从JsonValue反序列化为类型T的对象
 - 参数:
-  - `json`: `JsonValue`, Json值
-
-#### func toJson
-```
-func toJson(): JsonValue
-```
-- 描述: 序列化为Json字符串
+  - `json`: `JsonValue`, 要反序列化的Json值
 
 
 ### class JsonableException
@@ -2442,9 +2526,17 @@ func toJson(): JsonValue
 ```
 public init(msg: String)
 ```
-- 描述: 初始化JsonableException
+- 描述: 初始化JsonableException实例
 - 参数:
   - `msg`: `String`, 异常信息
+
+
+### interface ToJsonValue
+#### func toJsonValue
+```
+func toJsonValue(): JsonValue
+```
+- 描述: 将对象转换为JsonValue
 
 
 ### enum TypeSchema
@@ -2476,19 +2568,23 @@ Boolean
 ```
 Arr(TypeSchema)
 ```
-- 描述: 表示数组类型，包含一个TypeSchema类型的元素
+- 描述: 表示数组类型，数组元素为TypeSchema类型
+- 参数:
+  - `ts`: `TypeSchema`, 数组元素的类型
 
 ####  Obj
 ```
 Obj(Array<FieldSchema>)
 ```
-- 描述: 表示对象类型，包含一个FieldSchema类型的数组
+- 描述: 表示对象类型，对象属性为FieldSchema类型的数组
+- 参数:
+  - `fields`: `Array<FieldSchema>`, 对象属性的数组
 
-#### func toJson
+#### func toJsonValue
 ```
-func toJson(): JsonValue
+func toJsonValue(): JsonValue
 ```
-- 描述: 将TypeSchema转换为JsonValue对象
+- 描述: 将TypeSchema转换为JsonValue
 
 #### func toString
 ```
@@ -2521,31 +2617,31 @@ func info(name: String, msg: String): Unit
 ```
 - 描述: 记录带有名称的一般信息
 - 参数:
-  - `name`: `String`, 信息的名称
+  - `name`: `String`, 日志名称
   - `msg`: `String`, 要记录的信息
 
 #### func info
 ```
 func info(msg: ChatMessage): Unit
 ```
-- 描述: 记录聊天信息
+- 描述: 记录聊天消息信息
 - 参数:
-  - `msg`: `ChatMessage`, 要记录的聊天信息
+  - `msg`: `ChatMessage`, 要记录的聊天消息
 
 #### func info
 ```
 func info(name: String, msg: ChatMessage): Unit
 ```
-- 描述: 记录带有名称的聊天信息
+- 描述: 记录带有名称的聊天消息信息
 - 参数:
-  - `name`: `String`, 信息的名称
-  - `msg`: `ChatMessage`, 要记录的聊天信息
+  - `name`: `String`, 日志名称
+  - `msg`: `ChatMessage`, 要记录的聊天消息
 
 #### func info
 ```
 func info(history: Dialog): Unit
 ```
-- 描述: 记录对话历史
+- 描述: 记录对话历史信息
 - 参数:
   - `history`: `Dialog`, 要记录的对话历史
 
@@ -2553,27 +2649,27 @@ func info(history: Dialog): Unit
 ```
 func info(name: String, history: Dialog): Unit
 ```
-- 描述: 记录带有名称的对话历史
+- 描述: 记录带有名称的对话历史信息
 - 参数:
-  - `name`: `String`, 信息的名称
+  - `name`: `String`, 日志名称
   - `history`: `Dialog`, 要记录的对话历史
 
 #### func info
 ```
 func info(messages: Array<ChatMessage>): Unit
 ```
-- 描述: 记录多条聊天信息
+- 描述: 记录聊天消息数组信息
 - 参数:
-  - `messages`: `Array<ChatMessage>`, 要记录的聊天信息列表
+  - `messages`: `Array<ChatMessage>`, 要记录的聊天消息数组
 
 #### func info
 ```
 func info(name: String, messages: Array<ChatMessage>): Unit
 ```
-- 描述: 记录带有名称的多条聊天信息
+- 描述: 记录带有名称的聊天消息数组信息
 - 参数:
-  - `name`: `String`, 信息的名称
-  - `messages`: `Array<ChatMessage>`, 要记录的聊天信息列表
+  - `name`: `String`, 日志名称
+  - `messages`: `Array<ChatMessage>`, 要记录的聊天消息数组
 
 #### func error
 ```
@@ -2589,7 +2685,7 @@ func error(name: String, msg: String): Unit
 ```
 - 描述: 记录带有名称的错误信息
 - 参数:
-  - `name`: `String`, 信息的名称
+  - `name`: `String`, 日志名称
   - `msg`: `String`, 要记录的错误信息
 
 
@@ -2598,95 +2694,184 @@ func error(name: String, msg: String): Unit
 ```
 func debug(msg: String): Unit
 ```
-- 描述: 记录调试信息
+- 描述: 输出调试信息
 - 参数:
-  - `msg`: `String`, 要记录的调试信息
+  - `msg`: `String`, 要输出的调试信息
 
 #### func info
 ```
 func info(msg: String): Unit
 ```
-- 描述: 记录一般信息
+- 描述: 输出普通信息
 - 参数:
-  - `msg`: `String`, 要记录的信息
+  - `msg`: `String`, 要输出的普通信息
 
 #### func info
 ```
 func info(name: String, msg: String): Unit
 ```
-- 描述: 记录带有名称的一般信息
+- 描述: 输出带有名称的普通信息
 - 参数:
   - `name`: `String`, 信息的名称
-  - `msg`: `String`, 要记录的信息
+  - `msg`: `String`, 要输出的普通信息
 
 #### func info
 ```
 func info(msg: ChatMessage): Unit
 ```
-- 描述: 记录聊天信息
+- 描述: 输出聊天消息
 - 参数:
-  - `msg`: `ChatMessage`, 要记录的聊天信息
+  - `msg`: `ChatMessage`, 要输出的聊天消息
 
 #### func info
 ```
 func info(name: String, msg: ChatMessage): Unit
 ```
-- 描述: 记录带有名称的聊天信息
+- 描述: 输出带有名称的聊天消息
 - 参数:
   - `name`: `String`, 信息的名称
-  - `msg`: `ChatMessage`, 要记录的聊天信息
+  - `msg`: `ChatMessage`, 要输出的聊天消息
 
 #### func info
 ```
 func info(history: Dialog): Unit
 ```
-- 描述: 记录对话历史
+- 描述: 输出对话历史
 - 参数:
-  - `history`: `Dialog`, 要记录的对话历史
+  - `history`: `Dialog`, 要输出的对话历史
 
 #### func info
 ```
 func info(name: String, history: Dialog): Unit
 ```
-- 描述: 记录带有名称的对话历史
+- 描述: 输出带有名称的对话历史
 - 参数:
   - `name`: `String`, 信息的名称
-  - `history`: `Dialog`, 要记录的对话历史
+  - `history`: `Dialog`, 要输出的对话历史
 
 #### func info
 ```
 func info(messages: Array<ChatMessage>): Unit
 ```
-- 描述: 记录多条聊天信息
+- 描述: 输出聊天消息列表
 - 参数:
-  - `messages`: `Array<ChatMessage>`, 要记录的聊天信息列表
+  - `messages`: `Array<ChatMessage>`, 要输出的聊天消息列表
 
 #### func info
 ```
 func info(name: String, messages: Array<ChatMessage>): Unit
 ```
-- 描述: 记录带有名称的多条聊天信息
+- 描述: 输出带有名称的聊天消息列表
 - 参数:
   - `name`: `String`, 信息的名称
-  - `messages`: `Array<ChatMessage>`, 要记录的聊天信息列表
+  - `messages`: `Array<ChatMessage>`, 要输出的聊天消息列表
 
 #### func error
 ```
 func error(msg: String): Unit
 ```
-- 描述: 记录错误信息
+- 描述: 输出错误信息
 - 参数:
-  - `msg`: `String`, 要记录的错误信息
+  - `msg`: `String`, 要输出的错误信息
 
 #### func error
 ```
 func error(name: String, msg: String): Unit
 ```
-- 描述: 记录带有名称的错误信息
+- 描述: 输出带有名称的错误信息
 - 参数:
   - `name`: `String`, 信息的名称
-  - `msg`: `String`, 要记录的错误信息
+  - `msg`: `String`, 要输出的错误信息
 
+
+## Package mcp
+### class MCPClient
+#### func init
+```
+init(command: String, args: Array<String>)
+```
+- 描述: 初始化MCP客户端，启动MCP服务器进程
+- 参数:
+  - `command`: `String`, 启动MCP服务器的命令
+  - `args`: `Array<String>`, 启动MCP服务器的参数
+
+#### func getTools
+```
+func getTools(): Array<Tool>
+```
+- 描述: 获取所有工具
+
+#### func callTool
+```
+func callTool(name: String, args: Array<(String, ToJsonValue)>): CallToolResult
+```
+- 描述: 调用指定工具并返回结果
+- 参数:
+  - `name`: `String`, 工具名称
+  - `args`: `Array<(String, ToJsonValue)>`, 工具参数
+
+
+### enum ToolCallContent
+####  Text
+```
+Text(TextContent)
+```
+- 描述: 表示文本内容的枚举值
+
+####  Image
+```
+Image(ImageContent)
+```
+- 描述: 表示图像内容的枚举值
+
+#### func getTypeSchema
+```
+public static func getTypeSchema(): TypeSchema
+```
+- 描述: 获取类型模式，当前方法不支持
+
+#### func fromJsonValue
+```
+public static func fromJsonValue(json: JsonValue): ToolCallContent
+```
+- 描述: 从JSON值中解析出ToolCallContent对象
+- 参数:
+  - `json`: `JsonValue`, 输入的JSON值
+
+#### func toJsonValue
+```
+public func toJsonValue(): JsonValue
+```
+- 描述: 将ToolCallContent对象转换为JSON值
+
+#### func getValue
+```
+public func getValue(): String
+```
+- 描述: 获取ToolCallContent对象的值
+
+### class MCPServer
+#### func init
+```
+init(tools: Array<Tool>)
+```
+- 描述: 初始化MCP服务器端
+- 参数:
+  - `tools`: `Array<Tool>`, 服务器提供的工具
+
+#### func start
+```
+func start(): Unit
+```
+- 描述: 服务器启动，执行事件循环，监听客户端请求并返回响应
+
+#### func startWith
+```
+static func startWith(agents: Array<Agent>): Unit
+```
+- 描述: 将多个 Agent 作为工具，并启动 MCP 服务器
+- 参数:
+  - `agents`: `Array<Agent>`, 参与作为工具的 Agent
 
 ## Package memory
 ### class ShortMemory
@@ -2696,7 +2881,7 @@ func update(segment: String): Unit
 ```
 - 描述: 更新内存中的片段
 - 参数:
-  - `segment`: `String`, 需要更新的内存片段
+  - `segment`: `String`, 需要更新的片段
 
 #### func search
 ```
@@ -2725,7 +2910,7 @@ init(service!: String, kind!: String, name!: String, apiKey!: String = "", baseU
 ### struct ModelManager
 #### func registerChatModel
 ```
-static func registerChatModel(modelName: String, buildFn: () -> ChatModel): Unit
+registerChatModel(modelName: String, buildFn: () -> ChatModel): Unit
 ```
 - 描述: 注册聊天模型。
 - 参数:
@@ -2734,7 +2919,7 @@ static func registerChatModel(modelName: String, buildFn: () -> ChatModel): Unit
 
 #### func createChatModel
 ```
-static func createChatModel(modelName: String, temperature!: Option<Float64> = None): ChatModel
+createChatModel(modelName: String, temperature!: Option<Float64> = None): ChatModel
 ```
 - 描述: 创建聊天模型。
 - 参数:
@@ -2743,7 +2928,7 @@ static func createChatModel(modelName: String, temperature!: Option<Float64> = N
 
 #### func createChatModel
 ```
-static func createChatModel(modelConfig: ModelConfig, temperature!: Option<Float64> = None): ChatModel
+createChatModel(modelConfig: ModelConfig, temperature!: Option<Float64> = None): ChatModel
 ```
 - 描述: 根据ModelConfig创建聊天模型。
 - 参数:
@@ -2752,7 +2937,7 @@ static func createChatModel(modelConfig: ModelConfig, temperature!: Option<Float
 
 #### func registerEmbeddingModel
 ```
-static func registerEmbeddingModel(modelName: String, buildFn: () -> EmbeddingModel): Unit
+registerEmbeddingModel(modelName: String, buildFn: () -> EmbeddingModel): Unit
 ```
 - 描述: 注册嵌入模型。
 - 参数:
@@ -2761,7 +2946,7 @@ static func registerEmbeddingModel(modelName: String, buildFn: () -> EmbeddingMo
 
 #### func createEmbeddingModel
 ```
-static func createEmbeddingModel(modelName: String): EmbeddingModel
+createEmbeddingModel(modelName: String): EmbeddingModel
 ```
 - 描述: 创建嵌入模型。
 - 参数:
@@ -2769,7 +2954,7 @@ static func createEmbeddingModel(modelName: String): EmbeddingModel
 
 #### func createEmbeddingModel
 ```
-static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel
+createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel
 ```
 - 描述: 根据ModelConfig创建嵌入模型。
 - 参数:
@@ -2777,7 +2962,7 @@ static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel
 
 #### func registerImageModel
 ```
-static func registerImageModel(modelName: String, buildFn: () -> ImageModel): Unit
+registerImageModel(modelName: String, buildFn: () -> ImageModel): Unit
 ```
 - 描述: 注册图像模型。
 - 参数:
@@ -2786,7 +2971,7 @@ static func registerImageModel(modelName: String, buildFn: () -> ImageModel): Un
 
 #### func createImageModel
 ```
-static func createImageModel(modelName: String): ImageModel
+createImageModel(modelName: String): ImageModel
 ```
 - 描述: 创建图像模型。
 - 参数:
@@ -2794,7 +2979,7 @@ static func createImageModel(modelName: String): ImageModel
 
 #### func createImageModel
 ```
-static func createImageModel(modelConfig: ModelConfig): ImageModel
+createImageModel(modelConfig: ModelConfig): ImageModel
 ```
 - 描述: 根据ModelConfig创建图像模型。
 - 参数:
@@ -2804,104 +2989,104 @@ static func createImageModel(modelConfig: ModelConfig): ImageModel
 ### struct ModelUtils
 #### func makeChat
 ```
-public static func makeChat(model: ChatModel, dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
+func makeChat(model: ChatModel, dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
 ```
-- 描述: 根据给定的聊天模型和对话，生成聊天消息。
+- 描述: 根据给定的聊天模型和对话，生成聊天消息
 - 参数:
-  - `model`: `ChatModel`, 聊天模型，用于生成聊天消息。
-  - `dialog`: `Dialog`, 对话内容，包含聊天消息的上下文。
-  - `temperature`: `Option<Float64>`, 生成聊天消息时的温度参数，控制生成文本的随机性。
-  - `stop`: `Option<Array<String>>`, 生成聊天消息时的停止词列表，用于控制生成文本的结束。
+  - `model`: `ChatModel`, 聊天模型
+  - `dialog`: `Dialog`, 对话内容
+  - `temperature`: `Option<Float64>`, 生成消息时的温度参数
+  - `stop`: `Option<Array<String>>`, 生成消息时的停止词
 
 #### func makeChat
 ```
-public static func makeChat(model: ChatModel, messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
+func makeChat(model: ChatModel, messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
 ```
-- 描述: 根据给定的聊天模型和消息列表，生成聊天消息。
+- 描述: 根据给定的聊天模型和消息列表，生成聊天消息
 - 参数:
-  - `model`: `ChatModel`, 聊天模型，用于生成聊天消息。
-  - `messages`: `Array<ChatMessage>`, 消息列表，包含聊天消息的上下文。
-  - `temperature`: `Option<Float64>`, 生成聊天消息时的温度参数，控制生成文本的随机性。
-  - `stop`: `Option<Array<String>>`, 生成聊天消息时的停止词列表，用于控制生成文本的结束。
+  - `model`: `ChatModel`, 聊天模型
+  - `messages`: `Array<ChatMessage>`, 消息列表
+  - `temperature`: `Option<Float64>`, 生成消息时的温度参数
+  - `stop`: `Option<Array<String>>`, 生成消息时的停止词
 
 #### func makeChat
 ```
-public static func makeChat(name: String, model: ChatModel, dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
+func makeChat(name: String, model: ChatModel, dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
 ```
-- 描述: 根据给定的名称、聊天模型和对话，生成聊天消息。
+- 描述: 根据给定的名称、聊天模型和对话，生成聊天消息
 - 参数:
-  - `name`: `String`, 生成聊天消息时的名称标识。
-  - `model`: `ChatModel`, 聊天模型，用于生成聊天消息。
-  - `dialog`: `Dialog`, 对话内容，包含聊天消息的上下文。
-  - `temperature`: `Option<Float64>`, 生成聊天消息时的温度参数，控制生成文本的随机性。
-  - `stop`: `Option<Array<String>>`, 生成聊天消息时的停止词列表，用于控制生成文本的结束。
+  - `name`: `String`, 名称
+  - `model`: `ChatModel`, 聊天模型
+  - `dialog`: `Dialog`, 对话内容
+  - `temperature`: `Option<Float64>`, 生成消息时的温度参数
+  - `stop`: `Option<Array<String>>`, 生成消息时的停止词
 
 #### func makeChat
 ```
-public static func makeChat(name: String, model: ChatModel, messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
+func makeChat(name: String, model: ChatModel, messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
 ```
-- 描述: 根据给定的名称、聊天模型和消息列表，生成聊天消息。
+- 描述: 根据给定的名称、聊天模型和消息列表，生成聊天消息
 - 参数:
-  - `name`: `String`, 生成聊天消息时的名称标识。
-  - `model`: `ChatModel`, 聊天模型，用于生成聊天消息。
-  - `messages`: `Array<ChatMessage>`, 消息列表，包含聊天消息的上下文。
-  - `temperature`: `Option<Float64>`, 生成聊天消息时的温度参数，控制生成文本的随机性。
-  - `stop`: `Option<Array<String>>`, 生成聊天消息时的停止词列表，用于控制生成文本的结束。
+  - `name`: `String`, 名称
+  - `model`: `ChatModel`, 聊天模型
+  - `messages`: `Array<ChatMessage>`, 消息列表
+  - `temperature`: `Option<Float64>`, 生成消息时的温度参数
+  - `stop`: `Option<Array<String>>`, 生成消息时的停止词
 
 #### func makeChatGet
 ```
-public static func makeChatGet<T>(name: String, model: ChatModel, messages: Array<ChatMessage>, getFn!: (ChatMessage) -> Option<T>): Option<T>
+func makeChatGet<T>(name: String, model: ChatModel, messages: Array<ChatMessage>, getFn!: (ChatMessage) -> Option<T>): Option<T>
 ```
-- 描述: 根据给定的名称、聊天模型和消息列表，生成聊天消息并应用获取函数。
+- 描述: 根据给定的名称、聊天模型和消息列表，生成聊天消息并应用获取函数
 - 参数:
-  - `name`: `String`, 生成聊天消息时的名称标识。
-  - `model`: `ChatModel`, 聊天模型，用于生成聊天消息。
-  - `messages`: `Array<ChatMessage>`, 消息列表，包含聊天消息的上下文。
-  - `getFn`: `(ChatMessage) -> Option<T>`, 获取函数，用于从生成的聊天消息中提取特定类型的数据。
+  - `name`: `String`, 名称
+  - `model`: `ChatModel`, 聊天模型
+  - `messages`: `Array<ChatMessage>`, 消息列表
+  - `getFn`: `(ChatMessage) -> Option<T>`, 获取函数
 
 #### func agentMakeChat
 ```
-public static func agentMakeChat(agent: Agent, messages: Array<ChatMessage>): Option<ChatMessage>
+func agentMakeChat(agent: Agent, messages: Array<ChatMessage>): Option<ChatMessage>
 ```
-- 描述: 根据给定的代理和消息列表，生成聊天消息。
+- 描述: 根据给定的代理和消息列表，生成聊天消息
 - 参数:
-  - `agent`: `Agent`, 代理，包含聊天模型和名称。
-  - `messages`: `Array<ChatMessage>`, 消息列表，包含聊天消息的上下文。
+  - `agent`: `Agent`, 代理
+  - `messages`: `Array<ChatMessage>`, 消息列表
 
 #### func agentMakeChatGet
 ```
-public static func agentMakeChatGet<T>(agent: Agent, messages: Array<ChatMessage>, getFn!: (ChatMessage) -> Option<T>): Option<T>
+func agentMakeChatGet<T>(agent: Agent, messages: Array<ChatMessage>, getFn!: (ChatMessage) -> Option<T>): Option<T>
 ```
-- 描述: 根据给定的代理和消息列表，生成聊天消息并应用获取函数。
+- 描述: 根据给定的代理和消息列表，生成聊天消息并应用获取函数
 - 参数:
-  - `agent`: `Agent`, 代理，包含聊天模型和名称。
-  - `messages`: `Array<ChatMessage>`, 消息列表，包含聊天消息的上下文。
-  - `getFn`: `(ChatMessage) -> Option<T>`, 获取函数，用于从生成的聊天消息中提取特定类型的数据。
+  - `agent`: `Agent`, 代理
+  - `messages`: `Array<ChatMessage>`, 消息列表
+  - `getFn`: `(ChatMessage) -> Option<T>`, 获取函数
 
 
 ## Package parser
 ### struct OutputParserUtils
 #### func extractLastCode
 ```
-public static func extractLastCode(str: String, lang: String): ?String
+func extractLastCode(str: String, lang: String): Option<String>
 ```
-- 描述: 从字符串中提取指定语言的最后一段代码。
+- 描述: 从字符串中提取指定编程语言的最后一段代码。
 - 参数:
   - `str`: `String`, 包含代码的字符串。
-  - `lang`: `String`, 代码的语言类型。
+  - `lang`: `String`, 要提取的编程语言。
 
 #### func extractLastSection
 ```
-public static func extractLastSection(str: String, section: String): ?String
+func extractLastSection(str: String, section: String): ?String
 ```
 - 描述: 从字符串中提取指定部分的最后一段内容。
 - 参数:
-  - `str`: `String`, 包含内容的字符串。
+  - `str`: `String`, 包含部分内容的字符串。
   - `section`: `String`, 要提取的部分名称。
 
 #### func parseToolCall
 ```
-public static func parseToolCall(str: String): (toolName: String, arguments: Array<String>)
+func parseToolCall(str: String): (toolName: String, arguments: Array<String>)
 ```
 - 描述: 解析工具调用的字符串，返回工具名称和参数列表。
 - 参数:
@@ -2912,24 +3097,24 @@ public static func parseToolCall(str: String): (toolName: String, arguments: Arr
 ### struct RetrieverUtils
 #### func createRetriever
 ```
-func createRetriever(agent: Agent, source: String, mode: Option<RetrieverMode>, description: Option<String>): Retriever
+public static func createRetriever(agent: Agent, source: String, mode: Option<RetrieverMode>, description: Option<String>): Retriever
 ```
-- 描述: 根据提供的源字符串创建检索器。源字符串可以是SQLite路径、SQLite路径加表名或Markdown路径。
+- 描述: 根据提供的源路径和模式创建一个检索器。源路径可以是SQLite数据库路径或Markdown文件路径。
 - 参数:
   - `agent`: `Agent`, 代理对象，用于获取模型信息。
-  - `source`: `String`, 源字符串，指定检索器的数据来源。
-  - `mode`: `Option<RetrieverMode>`, 检索模式，可选参数。
+  - `source`: `String`, 源路径，可以是SQLite数据库路径或Markdown文件路径。
+  - `mode`: `Option<RetrieverMode>`, 检索器模式，可选参数。
   - `description`: `Option<String>`, 检索器的描述信息，可选参数。
 
 #### func createRetriever
 ```
-func createRetriever(_agent: Agent, source: Retriever, mode: Option<RetrieverMode>, description: Option<String>): Retriever
+public static func createRetriever(_agent: Agent, source: Retriever, mode: Option<RetrieverMode>, description: Option<String>): Retriever
 ```
-- 描述: 根据现有的检索器对象创建新的检索器。
+- 描述: 根据现有的检索器创建一个新的检索器包装器。
 - 参数:
   - `_agent`: `Agent`, 代理对象，用于获取模型信息。
   - `source`: `Retriever`, 现有的检索器对象。
-  - `mode`: `Option<RetrieverMode>`, 检索模式，可选参数。
+  - `mode`: `Option<RetrieverMode>`, 检索器模式，可选参数。
   - `description`: `Option<String>`, 检索器的描述信息，可选参数。
 
 
@@ -2939,7 +3124,7 @@ func createRetriever(_agent: Agent, source: Retriever, mode: Option<RetrieverMod
 ```
 func split(text: String): Array<Document>
 ```
-- 描述: 将输入的文本按照指定的分隔符和块大小进行分割，并返回分割后的文档数组。
+- 描述: 将输入的文本按照指定的大小进行分割，并返回分割后的文档数组。
 - 参数:
   - `text`: `String`, 需要分割的文本内容。
 
@@ -2963,17 +3148,17 @@ func loadSplit(splitter: Splitter): Array<Document>
 ### class MarkdownSplitter
 #### func init
 ```
-init(headersToSplit: Array<(String, String)> = DEFAULT_HEADERS_TO_SPLIT, returnEachLine: Bool = false, stripHeader: Bool = true)
+init(headersToSplit: Array<(String, String)>, returnEachLine: Bool, stripHeader: Bool)
 ```
 - 描述: 初始化MarkdownSplitter类
 - 参数:
   - `headersToSplit`: `Array<(String, String)>`, 需要跟踪的标题
   - `returnEachLine`: `Bool`, 是否返回每一行及其关联的标题
-  - `stripHeader`: `Bool`, 是否从块的内容中剥离分割标题
+  - `stripHeader`: `Bool`, 是否从块的内容中去除分割标题
 
 #### func split
 ```
-override public func split(text: String): Array<Document>
+func split(text: String): Array<Document>
 ```
 - 描述: 分割Markdown文件
 - 参数:
@@ -2985,7 +3170,7 @@ override public func split(text: String): Array<Document>
 ```
 func split(text: String): Array<Document>
 ```
-- 描述: 将输入的文本分割成多个文档
+- 描述: 将输入的文本分割成文档数组
 - 参数:
   - `text`: `String`, 需要分割的文本
 
@@ -2994,15 +3179,16 @@ func split(text: String): Array<Document>
 ### class NativeFuncTool
 #### func init
 ```
-init(name: String, description: String, parameters: Array<(String, String, TypeSchema)>, examples: Array<String>, execFn: Option<(Array<String>) -> String>)
+init(name: String, description: String, parameters: Array<(String, String, TypeSchema)>, retType: TypeSchema, examples: Array<String>, execFn: Option<ExecFn>)
 ```
-- 描述: 初始化NativeFuncTool实例
+- 描述: 初始化NativeFuncTool类
 - 参数:
   - `name`: `String`, 工具的名称
   - `description`: `String`, 工具的描述
   - `parameters`: `Array<(String, String, TypeSchema)>`, 工具的参数列表
-  - `examples`: `Array<String>`, 工具的示例列表
-  - `execFn`: `Option<(Array<String>) -> String>`, 工具的执行函数
+  - `retType`: `TypeSchema`, 工具的返回类型
+  - `examples`: `Array<String>`, 工具的使用示例
+  - `execFn`: `Option<ExecFn>`, 工具的执行函数
 
 #### prop name
 ```
@@ -3032,44 +3218,34 @@ prop retType: TypeSchema
 ```
 prop examples: Array<String>
 ```
-- 描述: 获取工具的示例列表
+- 描述: 获取工具的使用示例
 
 #### func invoke
 ```
-func invoke(args: Array<String>): ToolResponse
+func invoke(args: HashMap<String, ToJsonValue>): ToolResponse
 ```
 - 描述: 调用工具的执行函数
 - 参数:
-  - `args`: `Array<String>`, 传递给执行函数的参数
-
-#### func addParam
-```
-func addParam(name: String, description: String, ty: TypeSchema): Unit
-```
-- 描述: 向工具添加参数
-- 参数:
-  - `name`: `String`, 参数的名称
-  - `description`: `String`, 参数的描述
-  - `ty`: `TypeSchema`, 参数的类型
-
-#### func addFunction
-```
-func addFunction(fn: (Array<String>) -> String): Unit
-```
-- 描述: 向工具添加执行函数
-- 参数:
-  - `fn`: `(Array<String>) -> String`, 要添加的执行函数
+  - `args`: `HashMap<String, ToJsonValue>`, 传递给执行函数的参数
 
 #### func addExamples
 ```
 func addExamples(examples: Array<String>): Unit
 ```
-- 描述: 向工具添加示例
+- 描述: 添加工具的使用示例
 - 参数:
-  - `examples`: `Array<String>`, 要添加的示例列表
+  - `examples`: `Array<String>`, 要添加的使用示例
 
 
 ### class RetrieverTool
+#### func init
+```
+init(retriever: Retriever)
+```
+- 描述: 初始化RetrieverTool实例
+- 参数:
+  - `retriever`: `Retriever`, 用于检索的Retriever实例
+
 #### prop name
 ```
 prop name: String
@@ -3102,11 +3278,11 @@ prop examples: Array<String>
 
 #### func invoke
 ```
-func invoke(args: Array<String>): ToolResponse
+func invoke(args: HashMap<String, ToJsonValue>): ToolResponse
 ```
-- 描述: 执行工具并返回结果
+- 描述: 执行检索操作并返回结果
 - 参数:
-  - `args`: `Array<String>`, 传递给工具的参数列表
+  - `args`: `HashMap<String, ToJsonValue>`, 包含查询参数的哈希表
 
 
 ### class SimpleToolManager
@@ -3123,7 +3299,7 @@ init(tools: Collection<Tool>, enableToolSearch: Bool = false)
 - 描述: 初始化SimpleToolManager，并设置工具集合和工具搜索功能
 - 参数:
   - `tools`: `Collection<Tool>`, 工具集合
-  - `enableToolSearch`: `Bool`, 是否启用工具搜索功能，默认为false
+  - `enableToolSearch`: `Bool`, 是否启用工具搜索功能
 
 #### func addTool
 ```
@@ -3176,7 +3352,7 @@ func searchTool(question: String, number: Int64 = 5): Array<Tool>
 - 描述: 根据问题搜索相关工具
 - 参数:
   - `question`: `String`, 搜索问题
-  - `number`: `Int64`, 返回的工具数量，默认为5
+  - `number`: `Int64`, 返回的工具数量
 
 #### prop enableToolSearch
 ```
@@ -3189,19 +3365,19 @@ prop enableToolSearch: Bool
 ### struct SqliteUtils
 #### let SQLITE_ROW
 ```
-public static let SQLITE_ROW: Int32 = 100
+static let SQLITE_ROW: Int32
 ```
 - 描述: sqlite3_step() 还未完成执行
 
 #### let SQLITE_DONE
 ```
-public static let SQLITE_DONE: Int32 = 101
+static let SQLITE_DONE: Int32
 ```
 - 描述: sqlite3_step() 已执行完成
 
 #### func sqlOpen
 ```
-public static func sqlOpen(path: String): CPointer<CPointer<Unit>>
+static func sqlOpen(path: String): CPointer<CPointer<Unit>>
 ```
 - 描述: 打开数据库db文件
 - 参数:
@@ -3209,16 +3385,16 @@ public static func sqlOpen(path: String): CPointer<CPointer<Unit>>
 
 #### func sqlPrepare
 ```
-public static func sqlPrepare(ppDb: CPointer<CPointer<Unit>>, sql: String): CPointer<CPointer<Unit>>
+static func sqlPrepare(ppDb: CPointer<CPointer<Unit>>, sql: String): CPointer<CPointer<Unit>>
 ```
 - 描述: 预处理sql语句
 - 参数:
-  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库指针
+  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库连接指针
   - `sql`: `String`, 要预处理的SQL语句
 
 #### func sqlStep
 ```
-public static func sqlStep(ppStmt: CPointer<CPointer<Unit>>): Int32
+static func sqlStep(ppStmt: CPointer<CPointer<Unit>>): Int32
 ```
 - 描述: 执行sql语句
 - 参数:
@@ -3226,7 +3402,7 @@ public static func sqlStep(ppStmt: CPointer<CPointer<Unit>>): Int32
 
 #### func sqlColumnType
 ```
-public static func sqlColumnType(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int32
+static func sqlColumnType(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int32
 ```
 - 描述: 获取sql结果指定列的数据类型
 - 参数:
@@ -3235,7 +3411,7 @@ public static func sqlColumnType(ppStmt: CPointer<CPointer<Unit>>, i: Int32): In
 
 #### func sqlColumnText
 ```
-public static func sqlColumnText(ppStmt: CPointer<CPointer<Unit>>, i: Int32): String
+static func sqlColumnText(ppStmt: CPointer<CPointer<Unit>>, i: Int32): String
 ```
 - 描述: 获取sql结果指定文本类型列的值
 - 参数:
@@ -3244,7 +3420,7 @@ public static func sqlColumnText(ppStmt: CPointer<CPointer<Unit>>, i: Int32): St
 
 #### func sqlColumnBytes
 ```
-public static func sqlColumnBytes(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int32
+static func sqlColumnBytes(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int32
 ```
 - 描述: 获取sql结果指定列值的字节数
 - 参数:
@@ -3253,7 +3429,7 @@ public static func sqlColumnBytes(ppStmt: CPointer<CPointer<Unit>>, i: Int32): I
 
 #### func sqlColumnInt64
 ```
-public static func sqlColumnInt64(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int64
+static func sqlColumnInt64(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int64
 ```
 - 描述: 获取sql结果指定Int64类型列的值
 - 参数:
@@ -3262,7 +3438,7 @@ public static func sqlColumnInt64(ppStmt: CPointer<CPointer<Unit>>, i: Int32): I
 
 #### func sqlColumnDouble
 ```
-public static func sqlColumnDouble(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Float64
+static func sqlColumnDouble(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Float64
 ```
 - 描述: 获取sql结果指定Float64类型列的值
 - 参数:
@@ -3271,7 +3447,7 @@ public static func sqlColumnDouble(ppStmt: CPointer<CPointer<Unit>>, i: Int32): 
 
 #### func sqlColumnBlob
 ```
-public static func sqlColumnBlob(ppStmt: CPointer<CPointer<Unit>>, i: Int32): CPointer<Unit>
+static func sqlColumnBlob(ppStmt: CPointer<CPointer<Unit>>, i: Int32): CPointer<Unit>
 ```
 - 描述: 获取sql结果blob类型列的值
 - 参数:
@@ -3280,7 +3456,7 @@ public static func sqlColumnBlob(ppStmt: CPointer<CPointer<Unit>>, i: Int32): CP
 
 #### func sqlColumnCount
 ```
-public static func sqlColumnCount(ppStmt: CPointer<CPointer<Unit>>): Int32
+static func sqlColumnCount(ppStmt: CPointer<CPointer<Unit>>): Int32
 ```
 - 描述: 获取sql结果列数
 - 参数:
@@ -3288,7 +3464,7 @@ public static func sqlColumnCount(ppStmt: CPointer<CPointer<Unit>>): Int32
 
 #### func sqlColumnName
 ```
-public static func sqlColumnName(ppStmt: CPointer<CPointer<Unit>>, n: Int32): String
+static func sqlColumnName(ppStmt: CPointer<CPointer<Unit>>, n: Int32): String
 ```
 - 描述: 获取sql结果指定列名
 - 参数:
@@ -3297,7 +3473,7 @@ public static func sqlColumnName(ppStmt: CPointer<CPointer<Unit>>, n: Int32): St
 
 #### func sqlColumnDecltype
 ```
-public static func sqlColumnDecltype(ppStmt: CPointer<CPointer<Unit>>, i: Int32): String
+static func sqlColumnDecltype(ppStmt: CPointer<CPointer<Unit>>, i: Int32): String
 ```
 - 描述: 获取sql结果指定列声明的数据类型
 - 参数:
@@ -3306,7 +3482,7 @@ public static func sqlColumnDecltype(ppStmt: CPointer<CPointer<Unit>>, i: Int32)
 
 #### func sqlReset
 ```
-public static func sqlReset(ppStmt: CPointer<CPointer<Unit>>): Int32
+static func sqlReset(ppStmt: CPointer<CPointer<Unit>>): Int32
 ```
 - 描述: 重置sql语句
 - 参数:
@@ -3314,32 +3490,32 @@ public static func sqlReset(ppStmt: CPointer<CPointer<Unit>>): Int32
 
 #### func sqlBusyTimeout
 ```
-public static func sqlBusyTimeout(ppDb: CPointer<CPointer<Unit>>, ms: Int32): Int32
+static func sqlBusyTimeout(ppDb: CPointer<CPointer<Unit>>, ms: Int32): Int32
 ```
 - 描述: 设置超时毫秒数
 - 参数:
-  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库指针
+  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库连接指针
   - `ms`: `Int32`, 超时毫秒数
 
 #### func sqlChanges
 ```
-public static func sqlChanges(ppDb: CPointer<CPointer<Unit>>): Int32
+static func sqlChanges(ppDb: CPointer<CPointer<Unit>>): Int32
 ```
 - 描述: 获取最近执行的sql语句的修改数量
 - 参数:
-  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库指针
+  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库连接指针
 
 #### func sqlLastInsertRowid
 ```
-public static func sqlLastInsertRowid(ppDb: CPointer<CPointer<Unit>>): Int64
+static func sqlLastInsertRowid(ppDb: CPointer<CPointer<Unit>>): Int64
 ```
 - 描述: 获取最近插入行的ID
 - 参数:
-  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库指针
+  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库连接指针
 
 #### func sqlSoftHeapLimit
 ```
-public static func sqlSoftHeapLimit(n: Int32): Unit
+static func sqlSoftHeapLimit(n: Int32): Unit
 ```
 - 描述: 设置堆内存上限
 - 参数:
@@ -3347,7 +3523,7 @@ public static func sqlSoftHeapLimit(n: Int32): Unit
 
 #### func sqlBindParameterCount
 ```
-public static func sqlBindParameterCount(ppStmt: CPointer<CPointer<Unit>>): Int32
+static func sqlBindParameterCount(ppStmt: CPointer<CPointer<Unit>>): Int32
 ```
 - 描述: 获取sql语句绑定参数数量
 - 参数:
@@ -3355,7 +3531,7 @@ public static func sqlBindParameterCount(ppStmt: CPointer<CPointer<Unit>>): Int3
 
 #### func sqlBindNull
 ```
-public static func sqlBindNull(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int32
+static func sqlBindNull(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int32
 ```
 - 描述: 绑定空值到sql语句指定参数
 - 参数:
@@ -3364,7 +3540,7 @@ public static func sqlBindNull(ppStmt: CPointer<CPointer<Unit>>, i: Int32): Int3
 
 #### func sqlBindInt
 ```
-public static func sqlBindInt(ppStmt: CPointer<CPointer<Unit>>, i: Int32, iValue: Int32): Int32
+static func sqlBindInt(ppStmt: CPointer<CPointer<Unit>>, i: Int32, iValue: Int32): Int32
 ```
 - 描述: 绑定Int32值到sql语句指定参数
 - 参数:
@@ -3374,7 +3550,7 @@ public static func sqlBindInt(ppStmt: CPointer<CPointer<Unit>>, i: Int32, iValue
 
 #### func sqlBindInt64
 ```
-public static func sqlBindInt64(ppStmt: CPointer<CPointer<Unit>>, i: Int32, iValue: Int64): Int32
+static func sqlBindInt64(ppStmt: CPointer<CPointer<Unit>>, i: Int32, iValue: Int64): Int32
 ```
 - 描述: 绑定Int64值到sql语句指定参数
 - 参数:
@@ -3384,7 +3560,7 @@ public static func sqlBindInt64(ppStmt: CPointer<CPointer<Unit>>, i: Int32, iVal
 
 #### func sqlBindDouble
 ```
-public static func sqlBindDouble(ppStmt: CPointer<CPointer<Unit>>, i: Int32, rValue: Float64): Int32
+static func sqlBindDouble(ppStmt: CPointer<CPointer<Unit>>, i: Int32, rValue: Float64): Int32
 ```
 - 描述: 绑定Float64值到sql语句指定参数
 - 参数:
@@ -3394,7 +3570,7 @@ public static func sqlBindDouble(ppStmt: CPointer<CPointer<Unit>>, i: Int32, rVa
 
 #### func sqlBindText
 ```
-public static func sqlBindText(ppStmt: CPointer<CPointer<Unit>>, i: Int32, data: String)
+static func sqlBindText(ppStmt: CPointer<CPointer<Unit>>, i: Int32, data: String)
 ```
 - 描述: 绑定文本值到sql语句指定参数
 - 参数:
@@ -3404,7 +3580,7 @@ public static func sqlBindText(ppStmt: CPointer<CPointer<Unit>>, i: Int32, data:
 
 #### func sqlClearBindings
 ```
-public static func sqlClearBindings(ppStmt: CPointer<CPointer<Unit>>): Int32
+static func sqlClearBindings(ppStmt: CPointer<CPointer<Unit>>): Int32
 ```
 - 描述: 解除sql语句绑定参数
 - 参数:
@@ -3412,24 +3588,24 @@ public static func sqlClearBindings(ppStmt: CPointer<CPointer<Unit>>): Int32
 
 #### func sqlExec
 ```
-public static func sqlExec(ppDb: CPointer<CPointer<Unit>>, sql: String)
+static func sqlExec(ppDb: CPointer<CPointer<Unit>>, sql: String)
 ```
 - 描述: 指定数据库执行sql命令
 - 参数:
-  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库指针
-  - `sql`: `String`, 要执行的SQL命令
+  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库连接指针
+  - `sql`: `String`, 要执行的SQL语句
 
 #### func sqlClose
 ```
-public static func sqlClose(ppDb: CPointer<CPointer<Unit>>): Int32
+static func sqlClose(ppDb: CPointer<CPointer<Unit>>): Int32
 ```
 - 描述: 关闭数据库连接
 - 参数:
-  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库指针
+  - `ppDb`: `CPointer<CPointer<Unit>>`, 数据库连接指针
 
 #### func sqlFinalize
 ```
-public static func sqlFinalize(ppStmt: CPointer<CPointer<Unit>>): Int32
+static func sqlFinalize(ppStmt: CPointer<CPointer<Unit>>): Int32
 ```
 - 描述: 销毁sql语句对象，释放内存
 - 参数:
@@ -3471,9 +3647,9 @@ override public func next(): Option<String>
 ```
 func toJS(context: JSContext): JSValue
 ```
-- 描述: 将当前对象转换为JSValue对象
+- 描述: 将当前对象转换为JavaScript对象
 - 参数:
-  - `context`: `JSContext`, JS上下文环境
+  - `context`: `JSContext`, JavaScript上下文，用于执行转换操作
 
 
 ### interface JS2CJ
@@ -3522,7 +3698,7 @@ load(filePath: String): FaissVectorDatabase
 ```
 addVector(vector: Vector): Unit
 ```
-- 描述: 向Faiss向量数据库中添加向量
+- 描述: 向Faiss向量数据库中添加一个向量
 - 参数:
   - `vector`: `Vector`, 要添加的向量
 
@@ -3542,35 +3718,35 @@ search(queryVec: Vector, number: Int64 = 5, minDistance: Float64 = 0.6): Array<I
 ```
 func addVector(vector: Vector): Unit
 ```
-- 描述: 向内存中的向量数据库添加一个向量。
+- 描述: 向内存中的向量数据库添加一个向量
 - 参数:
-  - `vector`: `Vector`, 要添加的向量。
+  - `vector`: `Vector`, 要添加的向量
 
 #### func search
 ```
 func search(queryVec: Vector, number: Int64 = 5, minDistance: Float64 = 0.6): Array<Int64>
 ```
-- 描述: 在内存中的向量数据库中搜索与查询向量最相似的向量。
+- 描述: 在内存中的向量数据库中搜索与查询向量最相似的向量
 - 参数:
-  - `queryVec`: `Vector`, 查询向量。
-  - `number`: `Int64`, 返回的最相似向量的数量。
-  - `minDistance`: `Float64`, 最小相似度阈值。
+  - `queryVec`: `Vector`, 查询向量
+  - `number`: `Int64`, 返回的最相似向量的数量
+  - `minDistance`: `Float64`, 最小相似度阈值
 
 #### func save
 ```
 func save(filePath: String): Unit
 ```
-- 描述: 保存内存中的向量数据库到文件。
+- 描述: 保存内存中的向量数据库到文件
 - 参数:
-  - `filePath`: `String`, 文件路径。
+  - `filePath`: `String`, 文件路径
 
 #### func load
 ```
 func load(filePath: String): InMemoryVectorDatabase
 ```
-- 描述: 从文件加载内存中的向量数据库。
+- 描述: 从文件加载内存中的向量数据库
 - 参数:
-  - `filePath`: `String`, 文件路径。
+  - `filePath`: `String`, 文件路径
 
 
 ### interface IndexMap
@@ -3607,7 +3783,7 @@ static func load(filePath: String): Self
   - `filePath`: `String`, 文件加载路径。
 
 
-### class JsonlIndexMap
+### class JsonlIndexMap<T>
 #### func add
 ```
 func add(content: T): Unit
@@ -3628,17 +3804,17 @@ func get(index: Int64): T
 ```
 func save(filePath: String): Unit
 ```
-- 描述: 将索引映射保存到文件中
+- 描述: 将索引映射保存到指定文件路径
 - 参数:
-  - `filePath`: `String`, 文件路径
+  - `filePath`: `String`, 文件保存路径
 
 #### func load
 ```
-func load(filePath: String): JsonlIndexMap<T>
+static func load(filePath: String): JsonlIndexMap<T>
 ```
-- 描述: 从文件中加载索引映射
+- 描述: 从指定文件路径加载索引映射
 - 参数:
-  - `filePath`: `String`, 文件路径
+  - `filePath`: `String`, 文件加载路径
 
 
 ### class SemanticMap
@@ -3656,7 +3832,7 @@ public let indexMap: IMAP
 
 #### func init
 ```
-public init(vectorDB!: VDB, indexMap!: IMAP, embeddingModel!: Option<EmbeddingModel> = None)
+public init(vectorDB: VDB, indexMap: IMAP, embeddingModel: Option<EmbeddingModel> = None)
 ```
 - 描述: 初始化SemanticMap实例
 - 参数:
@@ -3674,14 +3850,14 @@ public mut prop embeddingModel: EmbeddingModel
 ```
 public func put(key: String, value: T): Unit
 ```
-- 描述: 将键值对存入向量数据库和索引映射
+- 描述: 将键值对存入SemanticMap
 - 参数:
   - `key`: `String`, 键
   - `value`: `T`, 值
 
 #### func search
 ```
-public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T>
+public func search(query: String, number: Int64 = 5, minDistance: Float64 = 0.3): Array<T>
 ```
 - 描述: 查找相似数据
 - 参数:
@@ -3699,7 +3875,7 @@ public func asRetriever(): Retriever
 ```
 public func save(dirPath: String): Unit
 ```
-- 描述: 保存向量数据库和索引映射到指定目录
+- 描述: 保存SemanticMap到指定目录
 - 参数:
   - `dirPath`: `String`, 目录路径
 
@@ -3707,7 +3883,7 @@ public func save(dirPath: String): Unit
 ```
 public static func load(dirPath: String): SemanticMap<VDB, IMAP, T>
 ```
-- 描述: 从指定目录加载向量数据库和索引映射
+- 描述: 从指定目录加载SemanticMap
 - 参数:
   - `dirPath`: `String`, 目录路径
 
@@ -3717,11 +3893,11 @@ public static func load(dirPath: String): SemanticMap<VDB, IMAP, T>
 ```
 public init(vectorDB!: VDB, indexMap!: IMAP, embeddingModel!: Option<EmbeddingModel> = None)
 ```
-- 描述: 初始化SemanticSet对象
+- 描述: 初始化SemanticSet实例
 - 参数:
   - `vectorDB`: `VDB`, 向量数据库实例
   - `indexMap`: `IMAP`, 索引映射实例
-  - `embeddingModel`: `Option<EmbeddingModel>`, 嵌入模型实例，可选参数，默认为None
+  - `embeddingModel`: `Option<EmbeddingModel>`, 嵌入模型，可选参数，默认为None
 
 #### prop embeddingModel
 ```
@@ -3751,7 +3927,7 @@ public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.
 ```
 public func asRetriever(): Retriever
 ```
-- 描述: 将SemanticSet转换为Retriever对象
+- 描述: 将SemanticSet转换为Retriever实例
 
 #### func save
 ```
@@ -3765,7 +3941,7 @@ public func save(dirPath: String): Unit
 ```
 public static func load(dirPath: String): SemanticSet<VDB, IMAP, T>
 ```
-- 描述: 从指定目录加载SemanticSet对象
+- 描述: 从指定目录加载SemanticSet实例
 - 参数:
   - `dirPath`: `String`, 加载目录路径
 
@@ -3783,7 +3959,7 @@ override public func add(content: String): Unit
 ```
 override public func get(index: Int64): String
 ```
-- 描述: 根据索引获取对应的内容
+- 描述: 根据索引获取内容
 - 参数:
   - `index`: `Int64`, 要获取内容的索引
 
@@ -3805,17 +3981,17 @@ public static func deserialize(dm: DataModel): SimpleIndexMap
 ```
 override public func save(filePath: String): Unit
 ```
-- 描述: 将索引映射保存到指定文件路径
+- 描述: 将索引映射保存到文件中
 - 参数:
-  - `filePath`: `String`, 文件保存路径
+  - `filePath`: `String`, 文件路径
 
 #### func load
 ```
-redef public static func load(filePath: String): SimpleIndexMap
+redef public static func load(filePath:String): SimpleIndexMap
 ```
-- 描述: 从指定文件路径加载索引映射
+- 描述: 从文件中加载索引映射
 - 参数:
-  - `filePath`: `String`, 文件加载路径
+  - `filePath`: `String`, 文件路径
 
 
 ### class Vector
@@ -3831,7 +4007,7 @@ init(vec: Array<Float64>)
 ```
 - 描述: 初始化向量对象
 - 参数:
-  - `vec`: `Array<Float64>`, 用于初始化向量的数组
+  - `vec`: `Array<Float64>`, 用于初始化向量的浮点数数组
 
 
 ### class VectorBuilder
@@ -3839,9 +4015,9 @@ init(vec: Array<Float64>)
 ```
 func createEmbeddingVector(content: String): Vector
 ```
-- 描述: 根据输入的内容生成嵌入向量
+- 描述: 根据输入的内容生成嵌入向量。
 - 参数:
-  - `content`: `String`, 用于生成嵌入向量的文本内容
+  - `content`: `String`, 用于生成嵌入向量的文本内容。
 
 
 ### interface VectorDatabase
@@ -3860,7 +4036,7 @@ func search(queryVec: Vector, number!: Int64, minDistance!: Float64): Array<Int6
 - 描述: 查询数据库并找到相似数据的索引
 - 参数:
   - `queryVec`: `Vector`, 查询向量
-  - `number!`: `Int64`, 返回的相似数据的数量
+  - `number!`: `Int64`, 要返回的相似数据的数量
   - `minDistance!`: `Float64`, 最小距离阈值
 
 #### func save

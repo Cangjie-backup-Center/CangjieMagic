@@ -310,7 +310,7 @@ class Parameter <: ToString {
 }
 
 @agent[
-    model: "deepseek:deepseek-chat",
+    model: "ark:ep-20250208095956-5ttg5",
     executor: "naive",
 ]
 class DocAgent {
