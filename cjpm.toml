@@ -46,6 +46,10 @@
   output-type = "executable"
 [package.package-configuration."magic.examples.quick_start"]
   output-type = "executable"
+[package.package-configuration."magic.examples.mcp_server"]
+  output-type = "executable"
+[package.package-configuration."magic.examples.mcp_client"]
+  output-type = "executable"
 
 [profile.test.build]
   compile-option = "-Woff unused --cfg \"faiss=disable,sqlite=disable,llamacpp=disable,http=curl\" "

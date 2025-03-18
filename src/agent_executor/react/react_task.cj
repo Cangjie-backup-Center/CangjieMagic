@@ -9,6 +9,7 @@ import magic.core.message.{ChatMessage, Dialog}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.utils.sleep2
+
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
         super(agent, request)

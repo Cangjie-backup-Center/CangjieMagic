@@ -112,6 +112,8 @@ import magic.prelude.*
 | `health_monitor` | 一个Mock的健康监测助手 |
 | `quick_start` | 本文档中的示例程序 |
 | `file_assistant` | 文件管理助手，接入开源 MCP 工具 |
+| `mcp_server` | 展示如何编写 Agent 并作为 MCP Server |
+| `mcp_client` | 展示如何接入自己编写的 MCP Server |
 
 可以通过 `cjpm run --name magic.examples.<name>` 运行。
 
