@@ -36,9 +36,9 @@ public class ReactExecutor <: AgentExecutor {
     }
 }
 
-private class IteratorWrapper <: Iterator<String> {
-    IteratorWrapper(
-        private let task: ReactTask,
+protected class IteratorWrapper <: Iterator<String> {
+    protected IteratorWrapper(
+        private let task: AgentTask,
         private let workerFut: Future<Iterator<String>>
     ) { }
 

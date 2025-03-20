@@ -6,6 +6,7 @@ package magic.agent_executor
 import magic.core.agent.AgentExecutor
 import magic.agent_executor.naive.NaiveExecutor
 import magic.agent_executor.react.ReactExecutor
+import magic.agent_executor.plan_react.PlanReactExecutor
 
 import std.collection.ArrayList
 import magic.core.agent.AgentExecutionException
@@ -39,6 +40,8 @@ public struct AgentExecutorManager {
             return NaiveExecutor()
         } else if (name == "react") {
             return ReactExecutor()
+        } else if (name == "plan-react") {
+            return PlanReactExecutor()
         }
         for (builder in AGENT_EXECUTOR_BUILDS) {
             if (builder.checkFn(name)) {
