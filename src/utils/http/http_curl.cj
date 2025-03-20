@@ -55,8 +55,8 @@ internal func httpPostCurl(url: String,
         removeIfExists(tempPath)
     }
     if (rtnCode != 0) {
-        LogUtils.error("curl ${url} with data :${body.toJsonString()} failed")
-        LogUtils.error("Error: ${err}")
+        LogUtils.error("curl ${url} with data: ${body.toJsonString()} failed")
+        LogUtils.error("Error: ${out}; ${err}")
         return None
     } else {
         LogUtils.debug("Raw http response: ${out}")

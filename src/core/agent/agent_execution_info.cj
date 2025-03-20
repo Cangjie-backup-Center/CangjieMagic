@@ -64,12 +64,17 @@ public class AgentExecutionInfo {
  */
 protected class SimpleChannel <: Iterator<String> {
     private static const EOF = "__SIMPLE_CHANNEL_EOF__"
+    private var finished = false
 
     private let queue = BlockingQueue<String>()
 
     public func next(): Option<String> {
+        if (finished) {
+            return None
+        }
         let msg = this.queue.dequeue()
         if (msg == EOF) {
+            finished = true
             return None
         } else {
             return msg

@@ -27,10 +27,6 @@ extend String <: StringExt {
             throw ex
         }
     }
-
-    public func withColor(color: Color): String {
-        return "${BEGIN}${color}m${this}${RESET}"
-    }
 }
 
 @When[cjc_version >= "0.56.4"]
@@ -51,9 +47,5 @@ extend String <: StringExt {
 
     public func trimAsciiRight(): String {
         return this.trimAsciiEnd()
-    }
-
-    public func withColor(color: Color): String {
-        return "${BEGIN}${color}m${this}${RESET}"
     }
 }

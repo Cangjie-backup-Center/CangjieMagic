@@ -543,6 +543,7 @@ agent.toolManager.addTools(client.getTools())
 |---|---|
 | `naive`  | 直接问答  |
 | `react` | Agent 每次选择使用一个工具完成一个求解步骤，然后根据工具的执行结果判断是否执行完成，不断迭代上述过程直至任务求解完成 |
+| `plan-react` | 首先完成一次任务规划，然后对每个规划出来的子任务使用 React 模式进行求解 |
 
 **示例：配置规划方法**
 
