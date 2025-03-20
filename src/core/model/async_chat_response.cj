@@ -53,10 +53,6 @@ public class AsyncChatResponse <: Iterator<String> & ToString {
         throw UnsupportedException("Unreachable")
     }
 
-    public prop stream: Iterator<String> {
-        get() { this }
-    }
-
     public prop usage: Option<ChatUsage> {
         get() {
             if (!finished.load()) {

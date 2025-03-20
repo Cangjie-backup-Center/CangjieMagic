@@ -5,10 +5,13 @@ package magic.agent_executor.react
 
 protected interface ReactTag { }
 
-const THOUGHT_TAG = "[Thought]"
+protected const THOUGHT_TAG = "[Thought]"
 const ACTION_TAG = "[Action]"
 const OBSERVATION_TAG = "[Observation]"
 const ANSWER_TAG = "[Final Answer]"
+protected const INFO_TAG = "[INFO]" // Not in react
+protected const PLAN_TAG = "[PLAN]" // Not in react
+let ALL_TAGS = [THOUGHT_TAG, ACTION_TAG, OBSERVATION_TAG, ANSWER_TAG, INFO_TAG, PLAN_TAG]
 
 private func getTagSymbol(tag: String): (String, String) {
     if (tag.startsWith("[")) {
@@ -30,7 +33,7 @@ extend String <: ReactTag {
         throw Exception("Invalid tag name `${this}`")
     }
 
-    func withTag(tag: String): String {
+    public func withTag(tag: String): String {
         let (left, right) = getTagSymbol(tag)
 
         let tagName = if (tag.startsWith(left) && tag.endsWith(right)) {

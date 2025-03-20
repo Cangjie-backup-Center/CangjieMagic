@@ -145,6 +145,8 @@ protected class ReactTask <: AgentTask {
             return None
         } else if (tag == ANSWER_TAG) {
             if (this.request.verbose) {
+                this.execInfo.verboseChannel.put("\n")
+                this.execInfo.verboseChannel.put(ANSWER_TAG.getCloseTag())
                 this.execInfo.verboseChannel.close()
                 asyncReactStep.reader.enableVerbose = false
             }

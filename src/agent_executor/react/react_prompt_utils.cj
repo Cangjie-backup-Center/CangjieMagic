@@ -12,7 +12,7 @@ import magic.prompt.Template
 import std.collection.{map, collectArray}
 
 // Modified from https://smith.langchain.com/hub/hwchase17/react
-private let REACT_SYSTEM_PROMPT = """
+protected let REACT_SYSTEM_PROMPT = """
 # Guidelines
 Use the following format to accomplish user's request:
 [Thought] think about what to do next to solve the question [/Thought]

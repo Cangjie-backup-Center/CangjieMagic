@@ -77,13 +77,13 @@ class AsyncReactStepReader {
             }
             // Check whether the current content starts with a tag
             let content = this.currContent.trimAscii()
-            for (tag in [THOUGHT_TAG, ACTION_TAG, OBSERVATION_TAG, ANSWER_TAG]) {
+            for (tag in ALL_TAGS) {
                 if (content.startsWith(tag)) {
                     return tag
                 }
             }
             if (!content.isEmpty()) {
-                throw AgentExecutionException("React content has unparsed parts `${this.currContent}`")
+                throw AgentExecutionException("Fail to peek react tag. Invalid content: `${this.currContent}`")
             }
             return None
         }
@@ -136,6 +136,7 @@ class AsyncReactStepReader {
                 throw AgentExecutionException("Fail to read async react ${tag} content. Rest: `${rest}`")
             } else {
                 finished = true
+                this.resetBuffer("")
                 return (content.trimAsciiRight(), true)
             }
         } else {
