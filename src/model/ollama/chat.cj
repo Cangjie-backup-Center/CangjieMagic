@@ -143,7 +143,7 @@ public class OllamaChatModel <: ChatModel {
 
     override public func create(chatReq: ChatRequest): ChatResponse {
         let (header, req) = prepareHeaderAndRequest(chatReq, stream: false)
-        match (httpPost("${this.baseURL}/api/chat", header, req)) {
+        match (HttpUtils.post("${this.baseURL}/api/chat", header, req)) {
             case Some(body) =>
                 let resp = OllamaChatResponse.fromJsonValue(JsonValue.fromStr(body))
                 let msg = resp.message
@@ -157,7 +157,7 @@ public class OllamaChatModel <: ChatModel {
 
     override public func asyncCreate(chatReq: ChatRequest): AsyncChatResponse {
         let (header, req) = prepareHeaderAndRequest(chatReq, stream: true)
-        let httpStream = asyncHttpPost("${this.baseURL}/api/chat", header, req)
+        let httpStream = HttpUtils.asyncPost("${this.baseURL}/api/chat", header, req)
         let chunkStream = AsyncChatChunkStream(httpStream)
         return AsyncChatResponse(model, chunkStream)
     }

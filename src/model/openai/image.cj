@@ -59,7 +59,7 @@ public class OpenAIImageModel <: ImageModel {
             ("Content-Type", "application/json"),
             ("Authorization", "Bearer ${this.apiKey}")
         ])
-        match (httpPost("${this.baseURL}/images/generations", header, req, verify: false)) {
+        match (HttpUtils.post("${this.baseURL}/images/generations", header, req, verify: false)) {
             case Some(body) =>
                 let resp = OpenAIImageResponse.fromJsonValue(JsonValue.fromStr(body))
                 let image = resp.data[0] // Currently, we just return the first image
