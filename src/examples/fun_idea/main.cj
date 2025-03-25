@@ -119,16 +119,8 @@ func getAmapWeather(city: String, extensions!: String = "base"): String {
 }
 
 func inputStreamToString(input: InputStream): String {
-    let byteStream = ByteArrayStream()
-    let buffer = Array<Byte>(4096, item: 0)
-    
-    var readLen = input.read(buffer)
-    while (readLen != 0) {
-        byteStream.write(buffer[..readLen])
-        readLen = input.read(buffer)
-    }
-    
-    return String.fromUtf8(byteStream.readToEnd())
+    let reader = StringReader(input)
+    return reader.readToEnd()
 }
 
 // 格式化天气信息
