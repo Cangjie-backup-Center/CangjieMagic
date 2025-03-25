@@ -61,7 +61,7 @@ public class DashscopeEmbeddingModel <: EmbeddingModel {
     }
 
     public func create(embeddingReq: EmbeddingRequest):EmbeddingResponse {
-        let heads = HashMap<String, String>([
+        let header = HashMap<String, String>([
             ("Content-Type", "application/json"),
             ("Authorization", "Bearer ${this.apiKey}")
         ])
@@ -81,7 +81,7 @@ public class DashscopeEmbeddingModel <: EmbeddingModel {
         }
         req.put("parameters", parameters)
 
-        match (httpPost("${this.baseURL}/services/embeddings/text-embedding/text-embedding", heads, req)) {
+        match (HttpUtils.post("${this.baseURL}/services/embeddings/text-embedding/text-embedding", header, req)) {
             case Some(body) =>
                 let resp = DashscopeResponse.fromJsonValue(JsonValue.fromStr(body))
                 return EmbeddingResponse(resp.output.embeddings[0].embedding)

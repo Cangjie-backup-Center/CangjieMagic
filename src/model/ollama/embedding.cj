@@ -46,7 +46,7 @@ public class OllamaEmbeddingModel <: EmbeddingModel {
         let req = JsonObject()
         req.put("model", JsonString(model))
         req.put("input", JsonString(embeddingReq.prompt))
-        match (httpPost("${this.baseURL}/api/embed", this.head, req)) {
+        match (HttpUtils.post("${this.baseURL}/api/embed", this.head, req)) {
             case Some(body) =>
                 let resp = OllamaEmbeddingResponse.fromJsonValue(JsonObject.fromStr(body))
                 return EmbeddingResponse(resp.embeddings[0])

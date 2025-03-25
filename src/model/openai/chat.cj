@@ -164,7 +164,7 @@ public class OpenAIChatModel <: ChatModel {
         let (header, req) = prepareHeaderAndRequest(chatReq, stream: false)
         let start = DateTime.now()
 
-        match (httpPost("${this.baseURL}/chat/completions", header, req)) {
+        match (HttpUtils.post("${this.baseURL}/chat/completions", header, req)) {
             case Some(body) =>
                 if (body == "") {
                     throw ModelException("Http response body is empty")
@@ -253,7 +253,7 @@ public class OpenAIChatModel <: ChatModel {
 
     override public func asyncCreate(chatReq: ChatRequest): AsyncChatResponse {
         let (header, req) = prepareHeaderAndRequest(chatReq, stream: true)
-        let httpStream = asyncHttpPost("${this.baseURL}/chat/completions", header, req)
+        let httpStream = HttpUtils.asyncPost("${this.baseURL}/chat/completions", header, req)
         let chunkStream = AsyncChatChunkStream(httpStream)
         return AsyncChatResponse(model, chunkStream)
     }
