@@ -363,7 +363,7 @@ class Foo {
 - 每个元素必须是 `String` 类型，
 - `description` 属性用于解释元素，不会影响最终提示词。
 
-提示词模式类型必须实现 `toString` 方法，改方法用于构建提示词。
+提示词模式类型必须实现 `toString` 方法，该方法用于构建提示词。
 
 **示例：自定义提示词模式**
 
@@ -387,7 +387,7 @@ class APE {
 
 ## Agent 交互方法
 
-由 `@agent` 定义的 Agent 都有一个默认方法 `func chat(question: ToString): String` 作为与交互入口。
+由 `@agent` 定义的 Agent 都有一个默认方法 `func chat(question: ToString): String` 作为交互入口。
 
 ```cangjie
 @agent class Foo { ... }
@@ -424,7 +424,7 @@ class MyDate {
 class Foo { }
 
 let agent = Foo()
-let date = agent.chatGet<MyDateTime>("华为创建时间")
+let date = agent.chatGet<MyDate>("华为创建时间")
 println(date.year)
 println(date.month)
 ```
