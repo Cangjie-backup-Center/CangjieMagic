@@ -24,7 +24,7 @@ protected open class Parser {
     protected func assertCurrToken(kind: TokenKind) {
         if (currToken.kind != kind) {
             currToken.dump()
-            throw DslException("Assert the current token kind failure")
+            throw DslException("Fail to assert the current token kind. Expected: ${kind}")
         }
     }
 

@@ -22,6 +22,7 @@ func multiply(a: Int64, b: Int64): Int64 {
 
 @agent[
     model: "deepseek:deepseek-chat",
+    description: "小学算术计算器",
     tools: [add, multiply]
 ]
 class Calculator {

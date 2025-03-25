@@ -5,7 +5,7 @@ macro package magic.dsl
 
 import std.sort.SortExtension
 import std.convert.Parsable
-import std.collection.{ArrayList, HashMap}
+import std.collection.{ArrayList, HashMap, map, collectArrayList}
 import std.ast.*
 
 class AgentAttr <: Attr {
@@ -474,24 +474,55 @@ func buildAgentMemoryProp(agentAttr: AgentAttr): Tokens {
 //============================================================================================
 
 private struct McpAttr {
-    McpAttr(
-        let command: String,
-        let args: ArrayList<Token>) { }
+    let isCommand: Bool
+    let command: String
+    let args: ArrayList<Token>
+    let env: HashMap<String, Token>
+    let url: String
+
+    init(command: String, args: ArrayList<Token>, env: HashMap<String, Token>) {
+        this.isCommand = true
+        this.command = command
+        this.args = args
+        this.env = env
+        this.url = ""
+    }
+
+    init(url: String) {
+        this.isCommand = false
+        this.command = ""
+        this.args = ArrayList<Token>()
+        this.env = HashMap<String, Token>()
+        this.url = url
+    }
 
     static func parse(rawAttr: HashMap<String, Tokens>): McpAttr {
         McpAttr.checkAttr(rawAttr)
-        let command: String = rawAttr.get("command").getOrThrow()[0].value
-        let args = ArrayParser(rawAttr.get("args") ?? Tokens()).parseArrayOf(TokenKind.STRING_LITERAL)
-        return McpAttr(command, args)
+        if (let Some(command) <- rawAttr.get("command")) {
+            let args = ArrayParser(rawAttr.get("args") ?? quote([])).parseArrayOf(TokenKind.STRING_LITERAL)
+            let env = MapParser(rawAttr.get("env") ?? quote({})).parseMapOf(TokenKind.STRING_LITERAL)
+            return McpAttr(command[0].value, args, env)
+        } else {
+            let url = rawAttr.get("url").getOrThrow()[0]
+            return McpAttr(url.value)
+        }
     }
 
     static func checkAttr(rawAttr: HashMap<String, Tokens>): Unit {
-        if (!rawAttr.contains("command")) {
-            throw DslException("MCP must has a command")
-        }
-        let commandAttr = rawAttr["command"]
-        if (commandAttr.size != 1 || commandAttr[0].kind != TokenKind.STRING_LITERAL) {
-            throw DslException("MCP command has invalid value `${commandAttr}`")
+        if (rawAttr.contains("command") && rawAttr.contains("url")) {
+            throw DslException("MCP cannot have a command and a URL")
+        } else if (!rawAttr.contains("command") && !rawAttr.contains("url")) {
+            throw DslException("MCP must have a command or a URL")
+        } else if (rawAttr.contains("command")) {
+            let commandAttr = rawAttr["command"]
+            if (commandAttr.size != 1 || commandAttr[0].kind != TokenKind.STRING_LITERAL) {
+                throw DslException("MCP command has invalid value `${commandAttr}`")
+            }
+        } else if (rawAttr.contains("url")) {
+            let urlAttr = rawAttr["url"]
+            if (urlAttr.size != 1 || urlAttr[0].kind != TokenKind.STRING_LITERAL) {
+                throw DslException("MCP url has invalid value `${urlAttr}`")
+            }
         }
     }
 }
@@ -530,15 +561,35 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
     for (i in 0..agentAttr.mcp.size) {
         let mcpRawAttr = agentAttr.mcp[i]
         let mcpAttr = McpAttr.parse(mcpRawAttr)
-        let command = newLiteralToken(mcpAttr.command)
-        let args = joinTokens(mcpAttr.args, Token(TokenKind.COMMA))
-        let client = newIdentifierToken("client_${i}")
-        addTools.append(
-            quote(
-                let $client = MCPClient($command, [$args])
-                tm.addTools($client.getTools())
+        if (mcpAttr.isCommand) {
+            let command = newLiteralToken(mcpAttr.command)
+            let args = joinTokens(mcpAttr.args, Token(TokenKind.COMMA))
+            let env = joinTokens(
+                mcpAttr.env.iterator() |>
+                    map { tuple: (String, Token) =>
+                        let key = newLiteralToken(tuple[0])
+                        let value = tuple[1]
+                        return quote( ($key, $value) )
+                    } |>
+                    collectArrayList,
+                Token(TokenKind.COMMA))
+            let client = newIdentifierToken("client_${i}")
+            addTools.append(
+                quote(
+                    let $client = StdioMCPClient($command, [$args], env: [$env])
+                    tm.addTools($client.getTools())
+                )
             )
-        )
+        } else {
+            let url = newLiteralToken(mcpAttr.url)
+            let client = newIdentifierToken("client_${i}")
+            addTools.append(
+                quote(
+                    let $client = SseMCPClient($url)
+                    tm.addTools($client.getTools())
+                )
+            )
+        }
     }
 
     return quote(

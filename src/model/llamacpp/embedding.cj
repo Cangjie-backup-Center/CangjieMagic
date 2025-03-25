@@ -20,7 +20,7 @@ private class LlamaCppResponse {
 
 public class LlamacppEmbeddingModel <: EmbeddingModel {
     private let baseURL: String
-    private let head = HashMap<String, String>([("Content-Type", "application/json")])
+    private let header = HashMap<String, String>([("Content-Type", "application/json")])
 
     override public prop service: String {
         get() { "llamacpp" }
@@ -39,7 +39,7 @@ public class LlamacppEmbeddingModel <: EmbeddingModel {
     public func create(embeddingReq: EmbeddingRequest):EmbeddingResponse {
         let req = JsonObject()
         req.put("content", JsonString(embeddingReq.prompt))
-        match (httpPost("${this.baseURL}/embedding", this.head, req)) {
+        match (HttpUtils.post("${this.baseURL}/embedding", this.header, req)) {
             case Some(body) =>
                 let resp = LlamaCppResponse.fromJsonValue(JsonObject.fromStr(body))
                 return EmbeddingResponse(resp.embedding)
