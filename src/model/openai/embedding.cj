@@ -63,9 +63,9 @@ public class OpenAIEmbeddingModel <: EmbeddingModel {
         if (embeddingReq.dimensions.isSome()) {
             req.put("dimensions", JsonInt(embeddingReq.dimensions ?? 0))
         }
-        let heads = HashMap<String, String>(
+        let header = HashMap<String, String>(
             [("Content-Type", "application/json"), ("Authorization", "Bearer ${this.apiKey}")])
-        match (httpPost("${this.baseURL}/embeddings", heads, req)) {
+        match (HttpUtils.post("${this.baseURL}/embeddings", header, req)) {
             case Some(body) =>
                 let resp = OpenAIEmbeddingResponse.fromJsonValue(JsonValue.fromStr(body))
                 return EmbeddingResponse(resp.data[0].embedding)

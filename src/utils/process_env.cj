@@ -20,6 +20,8 @@ import std.os.getEnv as stdGetEnv
 @When[cjc_version < "0.56.4"]
 import std.os.setEnv as stdSetEnv
 
+import std.collection.HashMap
+
 @When[cjc_version < "0.56.4"]
 protected func getEnv(envVarName: String): Option<String> {
     stdGetEnv(envVarName)
@@ -38,10 +40,13 @@ protected func setEnv(envVarName: String, value: String): Unit {
     Process.current.setEnv(envVarName, value)
 }
 
-protected func newProcess(name: String, args: Array<String>, redirectErr!: Bool = true): SubProcess {
+protected func newProcess(name: String, args: Array<String>, env!: Array<(String, String)> = [], redirectErr!: Bool = true): SubProcess {
+    let allEnv = HashMap(Process.current.environment)
+    allEnv.putAll(env)
     if (redirectErr) {
         return Process.start(
             name, args,
+            environment: allEnv,
             stdIn: ProcessRedirect.Pipe,
             stdOut: ProcessRedirect.Pipe,
             stdErr: ProcessRedirect.Pipe
@@ -49,6 +54,7 @@ protected func newProcess(name: String, args: Array<String>, redirectErr!: Bool 
     } else {
         return Process.start(
             name, args,
+            environment: allEnv,
             stdIn: ProcessRedirect.Pipe,
             stdOut: ProcessRedirect.Pipe
         )

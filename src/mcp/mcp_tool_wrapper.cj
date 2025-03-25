@@ -8,6 +8,9 @@ import magic.jsonable.*
 
 import std.collection.HashMap
 
+/**
+ * Wrap the MCP client as a tool
+ */
 protected class MCPToolWrapper <: Tool {
     private let client: MCPClient
     private let mcpTool: MCPTool

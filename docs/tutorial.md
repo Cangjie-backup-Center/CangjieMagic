@@ -490,7 +490,7 @@ class Foo { }
 @agent
 class A {
     @tool[description: "...",
-          parameters = { str: "..." }]
+          parameters: { str: "..." }]
     func internalTool(str: String): String {
         return ...
     }
@@ -511,13 +511,17 @@ class A {
 
 ### MCP 协议服务器
 
-在上述自定义的函数作为工具外，Agent 也能使用开源的 MCP 工具。通过 `mcp` 属性可以进行设置。该属性接收多个 MCP 服务器的设置，每个 MCP 服务器都由 `command`（启动命令）和 `args`（启动参数）构成。
+在上述自定义的函数作为工具外，Agent 也能使用开源的 MCP 工具。通过 `mcp` 属性可以进行设置。该属性接收多个 MCP 服务器的设置，当前支持两种传输方式的服务器：
+
+- `stdio` 传输，配置方式为：由 `command`（启动命令）和 `args`（启动参数）构成，并可选设置启动的环境变量  `env`。
+- `HTTP SSE` 传输，配置方式为：通过 `url` 指定 MCP 服务器的地址
 
 ```cangjie
 @agent[
     mcp: [
         { command: "node", args: [ "index.js", "args" ] },
-        { command: "python", args: [ "main.py", "args" ] }
+        { command: "python", args: [ "main.py", "args" ], env: { SOME_API_KEY: "xxx" } },
+        { url: "http://abc.mcp.server.com" }
     ]
 ]
 class Foo { ... }
@@ -533,7 +537,7 @@ let agent = SomeAgent()
 agent.toolManager.addTools(client.getTools())
 ```
 
-⚠️注意：目前仅支持 stdio 传输的 MCP 服务器，并且仅支持工具相关的 MCP 协议。
+⚠️注意：目前 MCP 服务器仅支持工具相关的 MCP 协议。
 
 ## 规划
 
