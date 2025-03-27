@@ -121,4 +121,4 @@ import magic.prelude.*
 
 欢迎加入官方开发者讨论者群组，一起交流碰撞创意想法，构建最具创意的Agent应用！
 
-![开发者群二维码](https://cdn-img.gitcode.com/ee/bd/9729ee2520024bdee7e58f184a27ddc80cb1c0520928cc634fc7f86a0f97cb12.jpg)
+![开发者群组群聊3.jpg](https://cdn-img.gitcode.com/ae/da/9a1ed4a7bf9cde0e0a2c747e07920096e344b80c67abff4de1319e7c6297eb97.jpg '开发者群组群聊3.jpg')
