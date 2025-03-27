@@ -46,7 +46,9 @@
   output-type = "executable"
 [package.package-configuration."magic.examples.quick_start"]
   output-type = "executable"
-[package.package-configuration."magic.examples.mcp_server"]
+[package.package-configuration."magic.examples.mcp_server.calculator"]
+  output-type = "executable"
+[package.package-configuration."magic.examples.mcp_server.filesystem"]
   output-type = "executable"
 [package.package-configuration."magic.examples.mcp_client"]
   output-type = "executable"

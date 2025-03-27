@@ -182,5 +182,13 @@ public class MCPServer {
         let server = MCPServer(allTools.toArray())
         server.start()
     }
+
+    /**
+     * Start a MCP server for tools
+     */
+    static public func startWith(tools: Array<Tool>): Unit {
+        let server = MCPServer(tools)
+        server.start()
+    }
 }
 
