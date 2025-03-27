@@ -64,10 +64,11 @@ protected struct ToolUsage {
         }
         messages.append(ChatMessage.assistant(observation.withTag(OBSERVATION_TAG)))
         if (task.request.verbose) {
-            let verboseContent = if (observation.size < 100) {
+            let runes = observation.toRuneArray()
+            let verboseContent = if (runes.size < 100) {
                 observation.withTag(OBSERVATION_TAG)
             } else {
-                "${observation[..100]}...".withTag(OBSERVATION_TAG)
+                "${String(runes[..100])}...".withTag(OBSERVATION_TAG)
             }
             task.execInfo.verboseChannel.put(verboseContent)
         }
