@@ -1,0 +1,1 @@
+package magic.examples.mcp_server

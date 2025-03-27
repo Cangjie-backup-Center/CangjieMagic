@@ -29,6 +29,7 @@ protected class PlanReactExecutor <: AgentExecutor {
         }
         // Summarize the result
         let result = resultSummarize(planTask)
+        LogUtils.info(agent.name, "Summarized answer: ${result}")
         return AgentResponse(result)
     }
 

@@ -26,8 +26,7 @@ public class StdioMCPClient <: AbsMCPClient {
 
     public init(command: String, args: Array<String>, env!: Array<(String, String)> = []) {
         // Start the MCP server process
-        println(command)
-        println(args)
+        LogUtils.info("Start MCP Server: `${command} ${String.join(args, delimiter: " ")}`")
         server = newProcess(command, args, env: env, redirectErr: false)
         writer = StringWriter(server.stdIn)
         reader = StringReader(server.stdOut)

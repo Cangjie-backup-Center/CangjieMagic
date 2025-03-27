@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.examples.mcp_server
+package magic.examples.mcp_server.calculator
 
 import magic.dsl.*
 import magic.prelude.*
