@@ -122,3 +122,6 @@ import magic.prelude.*
 欢迎加入官方开发者讨论者群组，一起交流碰撞创意想法，构建最具创意的Agent应用！
 
 ![开发者群组群聊3.jpg](https://cdn-img.gitcode.com/ae/da/9a1ed4a7bf9cde0e0a2c747e07920096e344b80c67abff4de1319e7c6297eb97.jpg '开发者群组群聊3.jpg')
+
+## 大家可以在B站学习东北大学 张引 老师分享的教程
+https://www.bilibili.com/video/BV1hQQzYAEHL/?spm_id_from=333.337.search-card.all.click&vd_source=ac4d1bb6a8e4a3751bba687720bd6fd9
