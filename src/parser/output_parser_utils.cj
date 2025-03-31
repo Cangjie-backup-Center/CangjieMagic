@@ -3,6 +3,11 @@
  */
 package magic.parser
 
+import magic.core.tool.ToolRequest
+import magic.jsonable.JsonUtils
+
+import encoding.json.*
+
 public struct OutputParserUtils {
     public static func extractLastCode(str: String, lang: String): Option<String> {
         let langStartMark = "```${lang}"
@@ -52,7 +57,12 @@ public struct OutputParserUtils {
         return None  // The target section is not found
     }
 
-    public static func parseToolCall(str: String): (toolName: String, arguments: Array<String>) {
-        return parseToolCallImpl(str)
+    public static func parseToolRequest(str: String): ToolRequest {
+        let json = JsonValue.fromStr(str)
+        let name = JsonUtils.getString(json, "name").getOrThrow({
+            => ParserException("Failed to parse tool request: there is no name")
+        })
+        let args = (JsonUtils.getJsonObject(json, "arguments") ?? JsonObject()).getFields()
+        return ToolRequest(name: name, args: args)
     }
 }

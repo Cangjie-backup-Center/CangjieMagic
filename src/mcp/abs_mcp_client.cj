@@ -7,6 +7,7 @@ import magic.core.tool.Tool
 import magic.utils.newProcess
 import magic.jsonable.*
 import magic.log.LogUtils
+import magic.core.ToolResponse
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import encoding.json.{JsonValue, JsonObject}
@@ -51,7 +52,8 @@ public abstract class AbsMCPClient <: MCPClient {
         return result.toArray()
     }
 
-    override public func callTool(name: String, args: Array<(String, ToJsonValue)>): CallToolResult {
+    override public func callTool(name: String, args: Array<(String, ToJsonValue)>): ToolResponse {
+        // Prepare the request
         let arguments = HashMap<String, JsonValue>()
         for (arg in args) {
             arguments.put(arg[0], arg[1].toJsonValue())
@@ -62,12 +64,24 @@ public abstract class AbsMCPClient <: MCPClient {
                 arguments: if (args.isEmpty()) { None } else { JsonObject(arguments) }
             )
         )
+        // Send the request and receive its response
         this.send(req)
         let resp = this.recvResponse<CallToolResponse>()
         if (req.id != resp.id) {
             LogUtils.error("Received invalid response with mismatched id: ${resp.toJsonValue().toJsonString()}")
         }
-        return resp.result
+        // Merge all result content
+        let result = resp.result
+        let strBuilder = StringBuilder()
+        for (content in result.content) {
+            strBuilder.append(content.getValue())
+            strBuilder.append("\n")
+        }
+        if ((result.isError ?? false)) {
+            return ToolResponse(strBuilder.toString(), isError: true)
+        } else {
+            return ToolResponse(strBuilder.toString(), isError: false)
+        }
     }
 
     private func send<T>(request: T): Unit where T <: Jsonable<T> {

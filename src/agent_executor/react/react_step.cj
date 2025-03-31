@@ -6,9 +6,11 @@ package magic.agent_executor.react
 import magic.core.agent.{Agent, AgentTask, AgentExecutionException}
 import magic.core.tool.{Tool, ToolManager, ToolException}
 import magic.model.ModelUtils
-import magic.parser.OutputParserUtils
+import magic.parser.{OutputParserUtils, ParserException}
 import magic.core.message.ChatMessage
+import magic.core.tool.ToolRequest
 import magic.jsonable.{JsonUtils, Jsonable, ToJsonValue}
+import magic.instrumentor.Instrumentor
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import encoding.json.JsonValue
@@ -19,12 +21,11 @@ protected enum FailureLevel {
     | Fatal
 }
 
-protected struct ToolUsage {
-    protected ToolUsage(
-        protected let thought!: String, // Thoughts of choosing the tool
-        protected let tool!: String,    // Tool name
-        protected let args!: HashMap<String, JsonValue>, // Tool arguments
-        protected let invocation!: String // The original tool invocation representation
+protected struct ToolCall {
+    protected ToolCall(
+        protected let thought!: String,      // Thoughts of choosing the tool
+        protected let request!: ToolRequest, // Tool call request
+        protected let text!: String          // The original tool call representation
     ) { }
 
     /**
@@ -36,31 +37,38 @@ protected struct ToolUsage {
         if (this.thought != "") {
             messages.append(ChatMessage.assistant(this.thought.withTag(THOUGHT_TAG)))
         }
-        messages.append(ChatMessage.assistant(this.invocation.withTag(ACTION_TAG)))
+        messages.append(ChatMessage.assistant(this.text.withTag(ACTION_TAG)))
 
         var observation: String = ""
         // Special treatment for the retriever tool
-        if (this.tool == "__retriever__tool___") {
+        if (this.request.name == "__retriever__tool___") {
             // See RetrieverTool
-            let query = this.args["query"].asString().getValue()
+            let query = this.request.args["query"].asString().getValue()
             let retrieval = task.agent.retriever.getOrThrow().search(query)
             task.execInfo.addRetrieval(query, retrieval)
             observation = retrieval.toPrompt()
-        } else if (let Some(foundTool) <- toolManager.findTool(this.tool)) {
+        } else if (let Some(foundTool) <- toolManager.findTool(this.request.name)) {
             try {
+                // Arguments are of type JsonValue, we should convert them as ToJsonValue
                 let convertedArgs = HashMap<String, ToJsonValue>()
-                for ((argName, argValue) in this.args) {
+                for ((argName, argValue) in this.request.args) {
                     convertedArgs.put(argName, argValue)
                 }
-                observation = foundTool.invoke(convertedArgs).content
+                var toolResponse = if (let Some(resp) <- Instrumentor.doInstrumentBeforeToolCall(task.agent, this.request)) {
+                    resp
+                } else {
+                    foundTool.invoke(convertedArgs)
+                }
+                toolResponse = Instrumentor.doInstrumentAfterToolCall(task.agent, this.request, toolResponse)
+                observation = toolResponse.content
             } catch (ex: ToolException) {
-                observation = "Fail to invoke the tool `${this.tool}`. Reason: ${ex.reason}"
+                observation = "Fail to invoke the tool `${this.request.name}`. Reason: ${ex.reason}"
             } catch (_: Exception) {
-                observation = "Fail to invoke the tool `${this.tool}`"
+                observation = "Fail to invoke the tool `${this.request.name}`"
             }
         } else {
             let names = toolManager.getTools() |> map { t: Tool => t.name } |> collectArray
-            observation = "Tool `${this.tool}` not found in ${names}"
+            observation = "Tool `${this.request.name}` not found in ${names}"
         }
         messages.append(ChatMessage.assistant(observation.withTag(OBSERVATION_TAG)))
         if (task.request.verbose) {
@@ -93,14 +101,14 @@ protected struct FailureInfo {
 }
 
 protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
-    | Action(ToolUsage)
+    | Action(ToolCall)
     | Thought(String)
     | Answer(FinalAnswer)
     | Failure(FailureInfo)
 
     public func hashCode(): Int64 {
         return match (this) {
-            case ReactStep.Action(tu) => tu.invocation.hashCode()
+            case ReactStep.Action(tc) => tc.text.hashCode()
             case ReactStep.Thought(t) => t.hashCode()
             case ReactStep.Answer(a) => a.content.hashCode()
             case ReactStep.Failure(f) => f.reason.hashCode()
@@ -109,8 +117,8 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
 
     public operator func ==(rhs: ReactStep): Bool {
         match ((this, rhs)) {
-            case (ReactStep.Action(tu1), ReactStep.Action(tu2)) =>
-                return tu1.invocation == tu2.invocation
+            case (ReactStep.Action(tc1), ReactStep.Action(tc2)) =>
+                return tc1.text == tc2.text
             case (ReactStep.Thought(t1), ReactStep.Thought(t2)) =>
                 return t1 == t2
             case (ReactStep.Answer(a1), ReactStep.Answer(a2)) =>
@@ -127,7 +135,7 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
 
     public func toString(): String {
         return match (this) {
-            case ReactStep.Action(tu) => "[Thought] ${tu.thought} [/Thought]; [Action] ${tu.invocation} [/Action]"
+            case ReactStep.Action(tc) => "[Thought] ${tc.thought} [/Thought]; [Action] ${tc.text} [/Action]"
             case ReactStep.Thought(t) => "[Thought] ${t} [/Thought]"
             case ReactStep.Answer(a) => "[Thought] ${a.thought} [/Thought]; [Final Answer] ${a.content} [/Final Answer]"
             case ReactStep.Failure(f) => "[Failure] Original message: ${f.message}; \n Reason: ${f.reason} [/Failure]"
@@ -145,28 +153,24 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
         let actionSection = OutputParserUtils.extractLastSection(content, ACTION_TAG)
         match ((thoughtSection, actionSection)) {
             case (_, Some(action)) =>
-                let json = JsonValue.fromStr(
-                    OutputParserUtils.extractLastCode(action, "json").getOrThrow({
-                        => AgentExecutionException("Failed to parse the action: no json object")
-                    })
-                )
-                let toolName = JsonUtils.getString(json, "name").getOrThrow({
-                    => AgentExecutionException("Failed to parse the action: no `name`")
+                let json = OutputParserUtils.extractLastCode(action, "json").getOrThrow({
+                    => AgentExecutionException("Failed to parse the action: no json object")
                 })
-                let args = (JsonUtils.getJsonObject(json, "arguments") ?? JsonObject()).getFields()
-                if (toolName == "") { // "" means parsing tool-call failed and args[0] stores the failure message
+                try {
+                    let request = OutputParserUtils.parseToolRequest(json)
+                    return ReactStep.Action(
+                        ToolCall(
+                            text: action,
+                            thought: thoughtSection ?? "",
+                            request: request
+                        )
+                    )
+                } catch (_: ParserException) {
                     return ReactStep.Failure(
                         FailureInfo(FailureLevel.Repairable,
                                     message: content,
                                     reason: "Tool invocation has invalid syntax",
                                     suggestion: "You must follow the required tool invocation syntax.")
-                    )
-                } else {
-                    return ReactStep.Action(
-                        ToolUsage(invocation: action,
-                                  thought: thoughtSection ?? "",
-                                  tool: toolName,
-                                  args: args)
                     )
                 }
             case (Some(thought), None) =>

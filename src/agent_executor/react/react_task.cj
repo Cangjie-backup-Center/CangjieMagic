@@ -38,8 +38,8 @@ protected class ReactTask <: AgentTask {
         match (step) {
             case ReactStep.Thought(thought) =>
                 this.addAndLogMessage(ChatMessage.assistant(thought.withTag(THOUGHT_TAG)))
-            case ReactStep.Action(tu) =>
-                for (msg in tu.invoke(this)) {
+            case ReactStep.Action(tc) =>
+                for (msg in tc.invoke(this)) {
                     this.addAndLogMessage(msg)
                 }
             case ReactStep.Answer(answer) =>
