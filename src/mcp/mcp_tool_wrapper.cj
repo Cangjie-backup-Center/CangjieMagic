@@ -41,18 +41,13 @@ protected class MCPToolWrapper <: Tool {
     }
 
     override public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
-        let callToolResult = this.client.callTool(this.name, args.toArray())
-        // Merge all result content
-        let strBuilder = StringBuilder()
-        for (content in callToolResult.content) {
-            strBuilder.append(content.getValue())
-            strBuilder.append("\n")
-        }
+        let toolResponse = this.client.callTool(this.name, args.toArray())
         // If the content is error messages, truncate it
-        if ((callToolResult.isError ?? false) && strBuilder.size > 100) {
-            return ToolResponse(strBuilder.toString()[..100])
+        let runes = toolResponse.content.toRuneArray()
+        if ((toolResponse.isError) && runes.size > 100) {
+            return ToolResponse("${String(runes[..100])}...", isError: true)
         } else {
-            return ToolResponse(strBuilder.toString())
+            return toolResponse
         }
         // throw ToolException("Fail to invoke the mcp function.")
     }

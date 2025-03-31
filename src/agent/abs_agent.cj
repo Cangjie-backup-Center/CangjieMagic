@@ -33,11 +33,12 @@ public abstract class AbsAgent <: Agent {
                 interceptor.doBypass(request)
             }
         }
-        // Begin the chat model request session
-        // All model requests in the session will be scheduled
-        Instrumentor.doInstrumentBeforeAgentRun(this, request)
-        let resp = this.executor.run(this, request)
-        Instrumentor.doInstrumentAfterAgentRun(this, request)
+        var resp = if (let Some(r) <- Instrumentor.doInstrumentBeforeAgentRun(this, request)) {
+            r
+        } else {
+            this.executor.run(this, request)
+        }
+        resp = Instrumentor.doInstrumentAfterAgentRun(this, request, resp)
         if (let Some(memory) <- this.memory) {
             if (let Some(info) <- resp.execInfo) {
                 memory.update(info.dialog.toString()) // Update the agent memory

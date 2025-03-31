@@ -3,7 +3,7 @@
  */
 package magic.mcp
 
-import magic.core.tool.Tool
+import magic.core.tool.{Tool, ToolResponse}
 import magic.utils.newProcess
 import magic.jsonable.*
 import magic.log.LogUtils
@@ -15,5 +15,5 @@ import magic.log.LogUtils
 public interface MCPClient {
     func getTools(): Array<Tool>
 
-    func callTool(name: String, args: Array<(String, ToJsonValue)>): CallToolResult
+    func callTool(name: String, args: Array<(String, ToJsonValue)>): ToolResponse
 }

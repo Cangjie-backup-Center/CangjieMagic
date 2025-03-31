@@ -8,8 +8,10 @@ package magic.core.tool
  */
 public struct ToolResponse {
     public let content: String
+    public let isError: Bool
 
-    public init(content: String) {
+    public init(content: String, isError!: Bool = false) {
         this.content = content
+        this.isError = isError
     }
 }

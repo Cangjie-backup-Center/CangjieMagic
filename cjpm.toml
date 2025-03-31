@@ -50,6 +50,8 @@
   output-type = "executable"
 [package.package-configuration."magic.examples.mcp_server.filesystem"]
   output-type = "executable"
+[package.package-configuration."magic.examples.mcp_server.fetcher"]
+  output-type = "executable"
 [package.package-configuration."magic.examples.mcp_client"]
   output-type = "executable"
 [package.package-configuration."magic.examples.fun_idea"]
