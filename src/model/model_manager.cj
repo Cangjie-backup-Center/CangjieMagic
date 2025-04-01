@@ -45,6 +45,9 @@ private let DEFAULT_SERVICE_MAP = HashMap<String, ServiceConfig>([
     ("zhipuai",   ServiceConfig("ZHIPU_BASE_URL", // openai-compatible
                                 "https://open.bigmodel.cn/api/paas/v4",
                                 "ZHIPU_API_KEY")),
+    ("maas",   ServiceConfig("MAAS_BASE_URL", // openai-compatible
+                             "",
+                            "MAAS_API_KEY")),
     ("ollama",    ServiceConfig("OLLAMA_BASE_URL",
                                 "http://localhost:11434",
                                 "")),
@@ -69,12 +72,17 @@ func checkService(service: String): Bool {
 private func getDefaultBaseURL(service: String, kind: String): String {
     let config = DEFAULT_SERVICE_MAP[service]
     let envVarName = config.urlEnvVar
-    var envVarValue = config.urlEnvValue
-    // Specical case
-    if (kind == "embedding" && service == "dashscope") {
-        envVarValue = "https://dashscope.aliyuncs.com/api/v1"
+    // Special cases of default values
+    let defaultValue = if (kind == "embedding" && service == "dashscope") {
+        "https://dashscope.aliyuncs.com/api/v1"
+    } else if (service == "maas") {
+        match (getEnv(envVarName)) {
+            case Some(v) => v
+            case None => throw Exception("Fail to get env variable ${envVarName}.")
+        }
+    } else {
+        config.urlEnvValue
     }
-    let defaultValue = envVarValue
     return getEnv(envVarName) ?? defaultValue
 }
 
@@ -161,7 +169,7 @@ public struct ModelManager {
 
     public static func createChatModel(modelConfig: ModelConfig, temperature!: Option<Float64> = None): ChatModel {
         match (modelConfig.service) {
-            case "openai" | "dashscope" | "ark" | "deepseek" | "siliconflow" | "zhipuai" =>
+            case "openai" | "dashscope" | "ark" | "deepseek" | "siliconflow" | "zhipuai" | "maas" =>
                 return OpenAIChatModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL, temperature: temperature)
             case "ollama" =>
                 return OllamaChatModel(modelConfig.name, baseURL: modelConfig.baseURL, temperature: temperature)

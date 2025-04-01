@@ -7,14 +7,35 @@ import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
 
 import std.sync.AtomicBool
 
-public struct AsyncChatChunk {
-    public AsyncChatChunk(
-        let message!: ChatMessage,
+public struct AsyncChatChunk <: ToString {
+    protected AsyncChatChunk(
+        public let message!: ChatMessage,
         let done!: Bool = false,
         let usage!: Option<ChatUsage> = None) { }
+
+    override public func toString(): String {
+        let strBuilder = StringBuilder()
+        strBuilder.append("AsyncChatChunk: Usage[${usage.toString()}]\n")
+        strBuilder.append("${this.message}")
+        strBuilder.toString()
+    }
 }
 
-public class AsyncChatResponse <: Iterator<String> & ToString {
+/**
+ * Wrap the async chat chunks as a string iterator
+ */
+private class ContentIterator <: Iterator<String> {
+    ContentIterator(private let asyncChatResp: AsyncChatResponse) { }
+
+    override public func next(): Option<String> {
+        return match (this.asyncChatResp.next()) {
+            case Some(chunk) => chunk.message.reasoningContent ?? chunk.message.content
+            case None => None
+        }
+    }
+}
+
+public class AsyncChatResponse <: Iterator<AsyncChatChunk> & ToString {
     public let model: String
     public let chunks: Iterator<AsyncChatChunk>
     // The following fields will be set when the response stream is finished
@@ -25,12 +46,12 @@ public class AsyncChatResponse <: Iterator<String> & ToString {
     private var role = ChatMessageRole.Assistant
     private let content = StringBuilder()
 
-    public init(model: String, chunks: Iterator<AsyncChatChunk>) {
+    protected init(model: String, chunks: Iterator<AsyncChatChunk>) {
         this.model = model
         this.chunks = chunks
     }
 
-    override public func next(): Option<String> {
+    override public func next(): Option<AsyncChatChunk> {
         if (finished.load()) {
             return None
         }
@@ -47,10 +68,16 @@ public class AsyncChatResponse <: Iterator<String> & ToString {
                 finished.store(true)
                 return None
             } else {
-                return chunk.message.content
+                return chunk
             }
         }
         throw UnsupportedException("Unreachable")
+    }
+
+    public prop contentIter: Iterator<String> {
+        get() {
+            ContentIterator(this)
+        }
     }
 
     public prop usage: Option<ChatUsage> {
