@@ -49,20 +49,36 @@ public class ChatMessage <: ToString {
     public let role: ChatMessageRole // role of the sender
     public let content: String
     public let image: Option<String> // url or base64
+    public let reasoningContent: Option<String> // A reply message from a reason model, like deepseek-r1
 
-    public init(role: ChatMessageRole, content: String, name!: String = "", image!: Option<String> = None) {
+    public init(
+        role: ChatMessageRole, content: String,
+        name!: String = "",
+        image!: Option<String> = None,
+        reasoningContent!: Option<String> = None) {
         this.name = name
         this.role = role
         this.content = content
         this.image = image
+        this.reasoningContent = reasoningContent
     }
 
     public func toString(): String {
-        "${role}: ${content}"
+        let reason = if (let Some(rc) <- this.reasoningContent) {
+            "**reasoning**: `${rc}`;"
+        } else {
+            ""
+        }
+        return "${role}: ${reason}**content**: `${content}`"
     }
 
     public func toLogString(): String {
-        "ChatMessage<${role}>: ${content}"
+        let reason = if (let Some(rc) <- this.reasoningContent) {
+            ". Reasoning content: ${rc}"
+        } else {
+            ""
+        }
+        "ChatMessage<${role}>: ${content}${reason}"
     }
 
     public static func system(content: String): ChatMessage {

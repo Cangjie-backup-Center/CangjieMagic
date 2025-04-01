@@ -52,7 +52,5 @@ func asyncResultSummarize(planTask: PlanTask): Iterator<String> {
         ChatMessage.user(userPrompt)
     ]
     LogUtils.info(planTask.agent.name, messages)
-    return planTask.agent.model.asyncCreate(
-        ChatRequest(messages)
-    )
+    return planTask.agent.model.asyncCreate(ChatRequest(messages)).contentIter
 }

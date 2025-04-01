@@ -8,6 +8,7 @@ import magic.core.rag.{Retrieval, RetrievalInfo}
 
 import std.collection.ArrayList
 import std.collection.concurrent.BlockingQueue
+import std.sync.ReentrantMutex
 
 /**
  * Bookkeeping information during the agent execution
@@ -41,12 +42,15 @@ public class AgentExecutionInfo {
      * A communication channel to transfer verbose information during the agent execution
      */
     protected var _verboseChannel: Option<SimpleChannel> = None
+    private let mutex = ReentrantMutex()
     protected prop verboseChannel: SimpleChannel {
         get() {
-            if (let Some(ch) <- _verboseChannel) { return ch }
-            let ch = SimpleChannel()
-            _verboseChannel = ch
-            return ch
+            synchronized(this.mutex) {
+                if (let Some(ch) <- _verboseChannel) { return ch }
+                let ch = SimpleChannel()
+                _verboseChannel = ch
+                return ch
+            }
         }
     }
 

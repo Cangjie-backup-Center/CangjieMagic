@@ -65,6 +65,9 @@ public class NaiveExecutor <: AgentExecutor {
         let asyncChatResp = agent.model.asyncCreate(
             ChatRequest(dialog, temperature: agent.temperature)
         )
-        return AsyncAgentResponse(asyncChatResp, execInfo: task.execInfo)
+        if (request.verbose) {
+            task.execInfo.verboseChannel.close()
+        }
+        return AsyncAgentResponse(asyncChatResp.contentIter, execInfo: task.execInfo)
     }
 }
