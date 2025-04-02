@@ -56,7 +56,7 @@ public class SemanticMap<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
     public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T> {
         let queryVec = this.vecBuilder.createEmbeddingVector(query)
         vectorDB.search(queryVec, number: number, minDistance: minDistance) |>
-            map { index: Int64 => indexMap.get(index) } |>
+            map { sr: SearchResult => indexMap.get(sr.index) } |>
             collectArray
     }
 

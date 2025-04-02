@@ -16,15 +16,12 @@ public class SimpleIndexMap <: IndexMap<SimpleIndexMap, String> &Serializable<Si
     // Since we use DataModel to serialize the map, its key should also be String
     var map = HashMap<String, String>()
 
-    private func add(index: Int64, content: String): Unit {
-        if (map.contains(index.toString())) {
-            throw VectorDatabaseException("Add content to index map error: index existed")
-        }
+    public func set(index: Int64, content: String): Unit {
         map.put(index.toString(), content)
     }
 
     override public func add(content: String): Unit {
-        add(map.size, content)
+        set(map.size, content)
     }
 
     override public func get(index: Int64): String {

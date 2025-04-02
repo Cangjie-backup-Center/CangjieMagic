@@ -46,7 +46,7 @@ class TestVDB {
 
         let result = faissDB2.search(vecBuilder.createEmbeddingVector(query), number: 2, minDistance: 0.0)
         @Assert(result.size == 2)
-        @Assert(result[0] + result[1] == 3)
+        @Assert(result[0].index + result[1].index == 3)
 
         faissDB2.save(vdbPath.toString())
         indexMap2.save(indexPath.toString())

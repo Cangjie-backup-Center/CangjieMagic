@@ -9,6 +9,15 @@ class VectorDatabaseException <: Exception {
     init(msg: String) { super(msg) }
 }
 
+public struct SearchResult {
+    public let index: Int64
+    public let dist: Float64
+    public init(index: Int64, dist: Float64) {
+        this.index = index
+        this.dist = dist
+    }
+}
+
 public interface VectorDatabase<Self> {
     /**
      * Add the vector to the database
@@ -19,7 +28,7 @@ public interface VectorDatabase<Self> {
     /**
      * Query the database and find indexes of similar data
      */
-    func search(queryVec: Vector, number!: Int64, minDistance!: Float64): Array<Int64>
+    func search(queryVec: Vector, number!: Int64, minDistance!: Float64): Array<SearchResult>
 
     /**
      * Save to the file
@@ -31,4 +40,3 @@ public interface VectorDatabase<Self> {
      */
     static func load(filePath: String): Self
 }
-
