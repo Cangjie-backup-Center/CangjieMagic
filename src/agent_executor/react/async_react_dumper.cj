@@ -5,6 +5,7 @@ package magic.agent_executor.react
 
 import magic.core.agent.AsyncAgentResponse
 import magic.utils.{Color, Colorful}
+import std.console.Console
 
 /**
  * Dumper the verbose react internal information for debugging
@@ -37,16 +38,16 @@ public class ReactDumper {
             if (tag == THOUGHT_TAG || tag == ACTION_TAG ||
                 tag == OBSERVATION_TAG || tag == INFO_TAG || tag == PLAN_TAG) {
                 let tagColor = getTagColor(tag)
-                println(tag.withColor(tagColor))
+                Console.stdOut.writeln(tag.withColor(tagColor))
                 this.reader.removeTag(tag)
                 while (let Some((content, isClosed)) <- this.reader.readPartContentBefore(tag)) {
-                    print(content)
+                    Console.stdOut.write(content)
                     if (isClosed) { break }
                 }
-                println()
-                println(tag.getCloseTag().withColor(tagColor))
+                Console.stdOut.write("\n")
+                Console.stdOut.writeln(tag.getCloseTag().withColor(tagColor))
                 if (tag == INFO_TAG) {
-                    println("---------------------------------")
+                    Console.stdOut.writeln("---------------------------------")
                 }
             } else if (tag == ANSWER_TAG) {
                 // ANSWER_TAG is redundant
@@ -54,7 +55,7 @@ public class ReactDumper {
                 while (let Some((content, isClosed)) <- this.reader.readPartContentBefore(tag)) {
                     if (isClosed) { break }
                 }
-                println("...")
+                Console.stdOut.writeln("...")
             } else {
                 throw Exception("Unreachable")
             }

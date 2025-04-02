@@ -19,8 +19,12 @@ private func prepareCurlArgs(method: String, url: String, header: HashMap<String
     let args = ArrayList<String>()
     args.append("-X")
     args.append(method)
-    args.append("-N")
-    args.append("-fsSL")
+    args.append("--write-out")  // Defines a custom output format
+    args.append("\n%{http_code}")
+    args.append("--no-buffer")  // Disable output buffering
+    args.append("--silent")     // Disables curl's default progress
+    args.append("--show-error") // Show error messages (but keeps other output silent)
+    args.append("--location")
     args.append("${url}")
     args.append("--noproxy")
     args.append("localhost,127.0.0.1")
@@ -46,6 +50,15 @@ private func prepareCurlArgs(method: String, url: String, header: HashMap<String
 
 @When[ohos != "true" && http == "curl"]
 protected struct HttpUtilsImpl {
+
+    static private func parseOutput(output: String): (String, String) {
+        // Split the last line (status code) from the rest (response body)
+        let lines = output.trimAscii().split("\n")
+        let response = String.join(lines[0..(lines.size-1)], delimiter: "\n") // All lines except last
+        let status = lines[lines.size-1].trimAscii()  // Last line is the status code
+        return (response, status)
+    }
+
     static protected func send(method: String,
                                url: String,
                                header: HashMap<String, String>,
@@ -55,21 +68,20 @@ protected struct HttpUtilsImpl {
         let args = prepareCurlArgs(method, url, header, body, verify)
         let subProcess = newProcess("curl", args)
         let outReader = StringReader<InputStream>(subProcess.stdOut)
-        let errReader = StringReader<InputStream>(subProcess.stdErr)
         let out = outReader.readToEnd()
-        let err = errReader.readToEnd()
-        let rtnCode = subProcess.wait(timeout: Duration.minute * 10)
+        subProcess.wait(timeout: Duration.minute * 1)
         if (body.isSome() && !Config.saveModelRequest) {
             let tempPath = args[args.size-1].removePrefix("@")
             removeIfExists(tempPath)
         }
-        if (rtnCode != 0) {
+        let (resp, status) = HttpUtilsImpl.parseOutput(out)
+        LogUtils.debug("Raw http response: ${out}")
+        if (status != "200") {
             LogUtils.error("curl ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
-            LogUtils.error("Error: ${out}; ${err}")
+            LogUtils.error("Error: ${status}. ${resp}")
             return None
         } else {
-            LogUtils.debug("Raw http response: ${out}")
-            return out
+            return resp
         }
     }
 
@@ -84,26 +96,27 @@ protected struct HttpUtilsImpl {
             let args = prepareCurlArgs(method, url, header, body, verify)
             let subProcess = newProcess("curl", args.toArray())
             let outReader = StringReader<InputStream>(subProcess.stdOut)
-            let errReader = StringReader<InputStream>(subProcess.stdErr)
             // Each line is a chunk response from chat models
+            // The last line is the status code
+            var status = ""
             while (let Some(line) <- outReader.readln()) {
                 LogUtils.debug("Receive http stream: `${line}`")
                 httpStream.put(line)
+                status = line
             }
-            let rtnCode = subProcess.wait(timeout: Duration.minute * 10)
+            subProcess.wait(timeout: Duration.minute * 1)
             if (body.isSome() && !Config.saveModelRequest) {
                 let tempPath = args[args.size-1].removePrefix("@")
                 removeIfExists(tempPath)
             }
-            if (rtnCode != 0) {
-                let err = errReader.readToEnd()
+            if (status.trimAscii() != "200") {
                 LogUtils.error("curl ${url} with data :${(body ?? JsonObject()).toJsonString()} failed")
-                LogUtils.error(err)
                 httpStream.markError()
+            } else {
+                // Put the termination mark
+                httpStream.markEOF()
+                LogUtils.debug("End http stream")
             }
-            // Put the termination mark
-            httpStream.markEOF()
-            LogUtils.debug("End http stream")
         }
         return httpStream
     }

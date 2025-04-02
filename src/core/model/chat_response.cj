@@ -18,7 +18,7 @@ public struct ChatResponse <: ToString {
 
     public func toString(): String {
         let strBuilder = StringBuilder()
-        strBuilder.append("ChatResponse: model[${model}] usage[${usage.toString()}]")
+        strBuilder.append("ChatResponse:\n  model[${model}]\n  usage[${usage.toString()}]\n")
         for (msg in dialog) {
             strBuilder.append("  ")
             strBuilder.append(msg.toString())
