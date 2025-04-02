@@ -173,7 +173,7 @@ protected class ReactTask <: AgentTask {
         } else {
             None
         }
-        let reader = AsyncReactStepReader(asyncChatResp, verboseFn: verboseFn)
+        let reader = AsyncReactStepReader(asyncChatResp.contentIter, verboseFn: verboseFn)
         reader.enableVerbose = this.request.verbose
         return AsyncReactStep(reader)
     }

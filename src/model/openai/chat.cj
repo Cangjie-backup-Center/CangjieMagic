@@ -39,6 +39,7 @@ private class Choice {
 private class Message {
     let content: String
     let role: String
+    let reasoning_content: Option<String>
     // let tool_calls: Array<ToolCall>
 }
 
@@ -73,10 +74,12 @@ private class ChunkChoice {
 private class Delta {
     let role: Option<String>
     let content: String
+    let reasoning_content: Option<String>
 }
 
 private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
     AsyncChatChunkStream(let httpStream: HttpStream) { }
+
     let start = DateTime.now()
     private var role: Option<String> = None
     private var usage: Option<ChatUsage> = None
@@ -84,41 +87,51 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
     override public func next(): Option<AsyncChatChunk> {
         while (let Some(data) <- httpStream.next()) {
             if (data.isEmpty()) { continue }
-            let msg = parseData(data)
-            if (msg == ": keep-alive") { continue }
-            if (msg == "[DONE]") {
+            let (reasoningContent, content) = parseData(data)
+            if (content == ": keep-alive") { continue }
+            if (content == "[DONE]") {
                 return AsyncChatChunk(
                     message: ChatMessage(ChatMessageRole.fromStr(this.role.getOrThrow()), ""),
                     done: true,
                     usage: this.usage
                 )
             } else {
+                let rc: Option<String> = if (reasoningContent.isEmpty()) {
+                    None
+                } else {
+                    reasoningContent
+                }
                 return AsyncChatChunk(
-                    message: ChatMessage(ChatMessageRole.fromStr(this.role.getOrThrow()), msg)
+                    message: ChatMessage(
+                        ChatMessageRole.fromStr(this.role.getOrThrow()),
+                        content,
+                        reasoningContent: rc)
                 )
             }
         }
         return None
     }
 
-    private func parseData(data: String): String {
+    private func parseData(data: String): (String, String) {
         let content = data.removePrefix("data:").trimAscii()
         if (content == "[DONE]" || content == ": keep-alive") {
-            return content
+            return ("", content)
         }
         let chunkResp = try {
             ChunkResponse.fromJsonValue(content.asJsonValue())
         } catch(ex: JsonException) {
             throw ModelException("Fail to parse http chunk data response `${data}`")
         }
-        // Merge the chunk content
-        let strBuilder = StringBuilder()
+        // Merge the reasoning_content and content of chunks
+        let reasoningContentBuilder = StringBuilder()
+        let contentBuilder = StringBuilder()
         for (chunkChoice in chunkResp.choices) {
             let delta = chunkChoice.delta
             if (let Some(role) <- delta.role) {
                 this.role = role
             }
-            strBuilder.append(delta.content)
+            reasoningContentBuilder.append(delta.reasoning_content ?? "")
+            contentBuilder.append(delta.content)
         }
         // Check whether this chunk contains the usage
         if (let Some(respUsage) <- chunkResp.usage) {
@@ -130,7 +143,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
                 timeCost: duration
             )
         }
-        return strBuilder.toString()
+        return (reasoningContentBuilder.toString(), contentBuilder.toString())
     }
 }
 
@@ -240,7 +253,13 @@ public class OpenAIChatModel <: ChatModel {
         let dialog = Dialog()
         for (choice in resp.choices) {
             let msg = choice.message
-            dialog.addMessage(ChatMessage(ChatMessageRole.fromStr(msg.role), msg.content))
+            dialog.addMessage(
+                ChatMessage(
+                    ChatMessageRole.fromStr(msg.role),
+                    msg.content,
+                    reasoningContent: msg.reasoning_content
+                )
+            )
         }
         let usage = ChatUsage(
             promptTokens: resp.usage.prompt_tokens,
