@@ -18,7 +18,11 @@ struct VectorWithIndex {
 public class InMemoryVectorDatabase <: VectorDatabase<InMemoryVectorDatabase> {
     let vectorBuffer = ArrayList<VectorWithIndex>()
 
-    override public func addVector(vector: Vector): Unit {
+    public func setVector(index:Int64, vector: Vector): Unit {
+        vectorBuffer.set(index, VectorWithIndex(index, vector))
+    }
+
+    public override func addVector(vector: Vector): Unit {
         let index = vectorBuffer.size
         vectorBuffer.append(VectorWithIndex(index, vector))
         // return index
@@ -27,39 +31,40 @@ public class InMemoryVectorDatabase <: VectorDatabase<InMemoryVectorDatabase> {
     /*
      *  query: the query string
      *  number: number of most similar vectors to be returned
-    */
-    override public func search(queryVec: Vector, number!: Int64 = 5, minDistance!: Float64 = 0.6): Array<Int64> {
+     */
+    public override func search(queryVec: Vector, number!: Int64 = 5, minDistance!: Float64 = 0.6): Array<SearchResult> {
         if (vectorBuffer.isEmpty()) {
             LogUtils.info("Vector buffer is empty")
             return []
         }
         let tempList = vectorBuffer.clone()
-        tempList.sortBy(stable: true) { a: VectorWithIndex, b: VectorWithIndex =>
-            if(a.vector.cosineSimilarity(queryVec) > b.vector.cosineSimilarity(queryVec)) {
+        tempList.sortBy(stable: true) {
+            a: VectorWithIndex, b: VectorWithIndex =>
+            if (a.vector.cosineSimilarity(queryVec) > b.vector.cosineSimilarity(queryVec)) {
                 return Ordering.LT
             }
-            if(a.vector.cosineSimilarity(queryVec) < b.vector.cosineSimilarity(queryVec)) {
+            if (a.vector.cosineSimilarity(queryVec) < b.vector.cosineSimilarity(queryVec)) {
                 return Ordering.GT
             }
             return Ordering.EQ
         }
-        let result = ArrayList<Int64>()
-        for(i in 0..min(number, tempList.size)) {
+        let result = ArrayList<SearchResult>()
+        for (i in 0..min(number, tempList.size)) {
             let dist = tempList[i].vector.cosineSimilarity(queryVec)
             if (dist < minDistance) {
                 break
             }
             LogUtils.debug("Query distance: ${dist}")
-            result.append(tempList[i].index)
+            result.append(SearchResult(tempList[i].index, dist))
         }
         return result.toArray()
     }
 
-    override public func save(filePath: String): Unit {
+    public override func save(filePath: String): Unit {
         throw UnsupportedException()
     }
 
-    redef public static func load(filePath: String): InMemoryVectorDatabase {
+    public static redef func load(filePath: String): InMemoryVectorDatabase {
         throw UnsupportedException()
     }
 }
