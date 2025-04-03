@@ -44,6 +44,7 @@ public class HttpStream <: Iterator<String> {
     private var finished = false
 
     public func put(data: String): Unit {
+        // LogUtils.debug("put data: `${data}`")
         queue.enqueue(Item.Data(data))
     }
 
@@ -68,6 +69,7 @@ public class HttpStream <: Iterator<String> {
                 LogUtils.debug("Async http stream finished")
                 return None
             case Item.Data(data) =>
+                // LogUtils.debug("get data: `${data}`")
                 return data
         }
     }

@@ -9,6 +9,7 @@ import magic.utils.StringExt
 import magic.core.message.*
 import magic.dsl.jsonable
 import magic.jsonable.*
+import magic.log.LogUtils
 
 import std.collection.ArrayList
 import std.collection.HashMap
@@ -86,8 +87,9 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
 
     override public func next(): Option<AsyncChatChunk> {
         while (let Some(data) <- httpStream.next()) {
-            if (data.isEmpty()) { continue }
-            let (reasoningContent, content) = parseData(data)
+            LogUtils.debug("To parse line: ${data}")
+            if (data.trimAscii().isEmpty()) { continue }
+            let (reasoningContent, content) = parseData(data.trimAscii())
             if (content == ": keep-alive") { continue }
             if (content == "[DONE]") {
                 return AsyncChatChunk(
@@ -105,7 +107,8 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
                     message: ChatMessage(
                         ChatMessageRole.fromStr(this.role.getOrThrow()),
                         content,
-                        reasoningContent: rc)
+                        reasoningContent: rc),
+                    done: false
                 )
             }
         }
@@ -120,6 +123,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
         let chunkResp = try {
             ChunkResponse.fromJsonValue(content.asJsonValue())
         } catch(ex: JsonException) {
+            LogUtils.error("Fail to parse http chunk data response `${data}`")
             throw ModelException("Fail to parse http chunk data response `${data}`")
         }
         // Merge the reasoning_content and content of chunks
