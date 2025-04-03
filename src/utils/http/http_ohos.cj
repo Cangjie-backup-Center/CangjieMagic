@@ -84,8 +84,8 @@ protected struct HttpUtilsImpl {
             let str = String.fromUtf8(data)
             LogUtils.debug("Receive http stream: ${str}")
             // Each line is a chunk response from chat models, so we split the data here
-            for (lines in str.split("\n", removeEmpty: true)) {
-                httpStream.put(lines)
+            for (line in str.split("\n", removeEmpty: true)) {
+                httpStream.put(line)
             }
         })
         httpRequest.onDataEnd({ =>
