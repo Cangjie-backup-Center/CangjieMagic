@@ -141,10 +141,10 @@ private func formatWeather(data: AMapWeatherDataLive): String {
 }
 
 
-func chat(agent: AgentProxy, question: String) {
+func chat(agent: Agent, question: String) {
     println("\n")
     println("Q: ${question}")
-    println("A: ${agent.chat(question)}")
+    println("A: ${agent.chat(AgentRequest(question)).content}")
 }
 
 // 注册自定义工具
