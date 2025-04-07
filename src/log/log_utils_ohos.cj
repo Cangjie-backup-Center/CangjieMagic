@@ -55,7 +55,7 @@ public struct LogUtils {
     }
 
     public static func error(msg: String): Unit {
-        AppLog.error(msg)
+        AppLog.info(msg)
     }
 
     public static func error(name: String, msg: String): Unit {

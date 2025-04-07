@@ -29,7 +29,7 @@ private class ContentIterator <: Iterator<String> {
 
     override public func next(): Option<String> {
         return match (this.asyncChatResp.next()) {
-            case Some(chunk) => chunk.message.reasoningContent ?? chunk.message.content
+            case Some(chunk) => chunk.message.reason ?? chunk.message.content
             case None => None
         }
     }
