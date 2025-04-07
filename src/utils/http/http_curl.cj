@@ -91,7 +91,7 @@ protected struct HttpUtilsImpl {
                                     body: Option<JsonObject>,
                                     verify!: Bool): HttpStream {
         logHttpInfo(method, url, header, body, async: true)
-        let httpStream = HttpStream()
+        let httpStream = HttpStringStream()
         let fut = spawn {
             let args = prepareCurlArgs(method, url, header, body, verify)
             let subProcess = newProcess("curl", args.toArray())

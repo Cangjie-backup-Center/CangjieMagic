@@ -86,28 +86,51 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
     private var usage: Option<ChatUsage> = None
 
     override public func next(): Option<AsyncChatChunk> {
+        // A long response may be split as multiple parts, use a buffer to collect all of them.
+        let buffer = StringBuilder()
         while (let Some(data) <- httpStream.next()) {
-            LogUtils.debug("To parse line: ${data}")
-            if (data.trimAscii().isEmpty()) { continue }
-            let (reasoningContent, content) = parseData(data.trimAscii())
-            if (content == ": keep-alive") { continue }
-            if (content == "[DONE]") {
+            buffer.append(data)
+            let contentToParse = buffer.toString().trimAscii()
+            LogUtils.debug("To parse line: ${contentToParse}")
+            if (contentToParse.isEmpty()) { continue }
+            // Try to parse the data
+            let (reason, content) = try {
+                let (rc, c) = parseData(contentToParse)
+                buffer.reset()
+                (rc, c)
+            } catch (_: ModelException) {
+                // If parsing fails, the content is incomplete, read more parts
+                LogUtils.debug("Parsing data failure: the content incomplete")
+                continue
+            } catch (_: IllegalArgumentException) {
+                // JsonValue.fromStr may throw an IllegalArgumentException
+                // This also means the content is incomplete, read more parts
+                LogUtils.debug("Parsing JSON failure: the content incomplete")
+                continue
+            } catch(e: Exception) {
+                LogUtils.debug("Parsing data failure ${e}")
+                for (ste in e.getStackTrace()) {
+                    LogUtils.debug("${ste.methodName} ${ste.fileName}:${ste.lineNumber}")
+                }
+                throw e
+            }
+            LogUtils.debug("Parsed reasoning content: ${reason}")
+            LogUtils.debug("Parsed content: ${content}")
+            // Some special content
+            if (content == ": keep-alive") {
+                continue
+            } else if (content == "[DONE]") {
                 return AsyncChatChunk(
                     message: ChatMessage(ChatMessageRole.fromStr(this.role.getOrThrow()), ""),
                     done: true,
                     usage: this.usage
                 )
             } else {
-                let rc: Option<String> = if (reasoningContent.isEmpty()) {
-                    None
-                } else {
-                    reasoningContent
-                }
                 return AsyncChatChunk(
                     message: ChatMessage(
                         ChatMessageRole.fromStr(this.role.getOrThrow()),
                         content,
-                        reasoningContent: rc),
+                        reason: if (reason.isEmpty()) { None } else { reason}),
                     done: false
                 )
             }
@@ -261,7 +284,7 @@ public class OpenAIChatModel <: ChatModel {
                 ChatMessage(
                     ChatMessageRole.fromStr(msg.role),
                     msg.content,
-                    reasoningContent: msg.reasoning_content
+                    reason: msg.reasoning_content
                 )
             )
         }

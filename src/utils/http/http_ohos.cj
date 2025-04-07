@@ -77,16 +77,17 @@ protected struct HttpUtilsImpl {
                                     body: Option<JsonObject>,
                                     verify!: Bool): HttpStream {
         logHttpInfo(method, url, header, body, async: true)
-        let httpStream = HttpStream()
+        let httpStream = HttpByteStream()
         let httpRequest = createHttp()
         // Register callbacks
         httpRequest.onDataReceive({ data: Array<Byte> =>
-            let str = String.fromUtf8(data)
-            LogUtils.debug("Receive http stream: ${str}")
+            // let str = String.fromUtf8(data)
+            // LogUtils.debug("Receive http stream: ${str}")
             // Each line is a chunk response from chat models, so we split the data here
-            for (line in str.split("\n", removeEmpty: true)) {
-                httpStream.put(line)
-            }
+            // for (line in str.split("\n", removeEmpty: true)) {
+                // httpStream.put(line)
+            // }
+            httpStream.put(data)
         })
         httpRequest.onDataEnd({ =>
             LogUtils.debug("End http stream")
