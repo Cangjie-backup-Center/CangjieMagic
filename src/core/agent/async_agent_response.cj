@@ -11,7 +11,10 @@ import magic.core.message.ChatMessage
 public class AsyncAgentResponse <: Iterator<String> {
     private let chunks: Iterator<String>
 
-    private let _content = StringBuilder()
+    /**
+     * Merge all chunk content
+     */
+    private let buffer = StringBuilder()
 
     /**
      * Internal information during the execution
@@ -23,7 +26,7 @@ public class AsyncAgentResponse <: Iterator<String> {
         this.execInfo = None
     }
 
-    public init(chunks: Iterator<String>, execInfo!: AgentExecutionInfo) {
+    public init(chunks: Iterator<String>, execInfo!: Option<AgentExecutionInfo>) {
         this.chunks = chunks
         this.execInfo = execInfo
     }
@@ -36,17 +39,17 @@ public class AsyncAgentResponse <: Iterator<String> {
         get() {
             // Consume all chunks
             for (_ in this) { }
-            _content.toString()
+            buffer.toString()
         }
     }
 
     override public func next(): Option<String> {
         if (let Some(chunk) <- this.chunks.next()) {
-            _content.append(chunk)
+            buffer.append(chunk)
             return chunk
         } else {
             if (let Some(info) <- this.execInfo) {
-                info.dialog.addMessage(ChatMessage.assistant(_content.toString()))
+                info.dialog.addMessage(ChatMessage.assistant(buffer.toString()))
             }
             return None
         }

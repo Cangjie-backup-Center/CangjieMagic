@@ -199,7 +199,7 @@ func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): Tokens {
 
     // Compose all `Tokens`
     return quote(
-        $modifier class $classNameToken $genericTypeParamTokens $genericConstraintTokens <: AgentProxy {
+        $modifier class $classNameToken $genericTypeParamTokens $genericConstraintTokens <: UserDefinedAgent {
             $classDeclBody
             $systemPromptProp
             $modelProp
