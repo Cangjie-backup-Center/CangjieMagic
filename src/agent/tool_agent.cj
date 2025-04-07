@@ -30,8 +30,8 @@ public class ToolAgent<T> <: BaseAgent where T <: Jsonable<T> {
     }
 
     // U should satisfy T <: U or T == U; however, we cannot write down the constraint
-    public func chatGet<U>(question: String): Option<U> where U <: Jsonable<U> {
-        let obj = fn(question).toJsonValue()
-        return U.fromJsonValue(obj)
-    }
+    // public func chatGet<U>(question: String): Option<U> where U <: Jsonable<U> {
+    //     let obj = fn(question).toJsonValue()
+    //     return U.fromJsonValue(obj)
+    // }
 }
