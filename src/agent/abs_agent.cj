@@ -3,18 +3,41 @@
  */
 package magic.agent
 
-import magic.core.*
+import magic.core.agent.*
 import magic.core.message.ChatMessage
 import magic.core.model.ChatModel
+import magic.model.ModelUtils
+import magic.config.Config
 import magic.jsonable.Jsonable
 import std.collection.{HashMap, map, collectArray}
 import magic.instrumentor.Instrumentor
+import magic.log.LogUtils
+import magic.parser.OutputParserUtils
+import magic.prompt.Template
+
+import encoding.json.{JsonValue, JsonException}
+
+private let QUESTION_WITH_JSON_CONSTRAINT = """
+The output must be a valid JSON value wrapped by ```json and ```.
+For example,
+```json 1 ```
+```json "result" ```
+```json [1, 2, 3] ```
+```json ["abc", "opq", "xyz"] ```
+
+The json value must obey the type schema:
+"schema": {
+  { schema }
+}
+
+Question: { question }
+"""
 
 //------------------------------------------------
 // The agent type hierarchy:
 // Interface Agent
 //  |- AbsAgent
-//      |- AgentProxy
+//      |- UserDefinedAgent
 //          |- Agents defined by `@agent`
 //      |- BaseAgent
 //          |- Customized agents defined by APIs
@@ -47,7 +70,49 @@ public abstract class AbsAgent <: Agent {
         return resp
     }
 
+    public func asyncChat(question: String): AsyncAgentResponse {
+        return asyncChat(AgentRequest(question))
+    }
+
     override open public func asyncChat(request: AgentRequest): AsyncAgentResponse {
         return this.executor.asyncRun(this, request)
+    }
+
+    public func chatGet<T>(question: String): Option<T> where T <: Jsonable<T> {
+        return chatGet<T>(AgentRequest(question))
+    }
+
+    /**
+     * Query the agent, get a response of required schema,
+     * and convert the response content to the required type
+     */
+    public func chatGet<T>(request: AgentRequest): Option<T> where T <: Jsonable<T> {
+        let schema = T.getTypeSchema()
+        let fullQuestion = QUESTION_WITH_JSON_CONSTRAINT.format(
+            ("schema", schema),
+            ("question", request.question)
+        )
+
+        let resp = this.chat(AgentRequest(fullQuestion, dialog: request.dialog))
+        var (answer, dialog) = (resp.content, resp.execInfo.getOrThrow().dialog)
+        for (_ in 0..Config.outputRepairRetryNumber) {
+            // Convert the answer to a value of type T
+            try {
+                let jsonStr = OutputParserUtils.extractLastCode(answer, "json").getOrThrow({ => JsonException("Output does not contain JSON value")})
+                let jv = JsonValue.fromStr(jsonStr)
+                return T.fromJsonValue(jv)
+            } catch(_: JsonException) {
+                let userMsg = ChatMessage.user("Output does not obey the type schema.")
+                LogUtils.info(this.name, userMsg)
+                dialog.addMessage(userMsg)
+                // Continue to let the model repair the output
+                let assistantMsg = ModelUtils.makeChat(this.model, dialog).getOrThrow({ => AgentExecutionException("Fail to get chat model response") })
+                LogUtils.info(this.name, assistantMsg)
+                dialog.addMessage(assistantMsg)
+                answer = assistantMsg.content
+            }
+        }
+        LogUtils.error("${this.name}: Fail to generate an output obeying the type schema")
+        return None
     }
 }
