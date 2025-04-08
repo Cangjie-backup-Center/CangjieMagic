@@ -1,7 +1,8 @@
 package magic.tokenizer
 
 internal import magic.core.tokenizer.Tokenizer
-internal import magic.utils.readFile
+internal import magic.utils.{readFile, StringExt, exists}
+internal import magic.core.tokenizer.*
 internal import std.collection.*
 internal import std.regex.*
 internal import std.fs.*
@@ -10,10 +11,10 @@ internal import std.collection.*
 internal import std.fs.*
 internal import std.io.*
 internal import std.regex.*
-internal import magic.utils.readFile
-internal import magic.core.tokenizer.*
 internal import serialization.serialization.*
 internal import std.math.pow
+
+public let UINT32_MAX = UInt32(4294967295)
 
 public interface JsonDeserializable<T> <: Serializable<T> {
     func serialize(): DataModel {
@@ -443,6 +444,11 @@ public class Pair<T> <: Hashable & Equatable<Pair<T>> where T <: Hashable & Equa
             return false;
         }
     }
+
+    @When[cjc_version < "0.56.4"]
+    public operator func !=(other: Pair<T>): Bool {
+        !(this == other)
+    }
 }
 
 type BPERanks = HashMap<String, UInt32>
@@ -481,10 +487,10 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
     private func uniformSpecial(token: Token): String {
         var content = unexpectedNormalize(token._content)
         if (token._lstrip) {
-            content = content.trimAsciiStart()
+            content = content.trimAsciiLeft()
         }
         if (token._rstrip) {
-            content = content.trimAsciiEnd()
+            content = content.trimAsciiRight()
         }
         return content
     }
@@ -561,10 +567,12 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
 
         let matchDatas = this._pre_split_regex.matcher(text).findAll() ?? Array<MatchData>()
         var ids = ArrayList<UInt32>()
-        if (this._add_bos_token && let Some(bosToken) <- this._bos_token && let Some(bosId) <- this
-            ._vocab
-            .get(bosToken)) {
-            ids.append(bosId)
+        if (this._add_bos_token) {
+            if (let Some(bosToken) <- this._bos_token) {
+                if (let Some(bosId) <- this._vocab.get(bosToken)) {
+                    ids.append(bosId)
+                }
+            }
         }
         for (matchData in matchDatas) {
             let ms = matchData.matchPosition().start;
@@ -608,10 +616,12 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
                 }
             }
         }
-        if (this._add_eos_token && let Some(eosToken) <- this._eos_token && let Some(eosId) <- this
-            ._vocab
-            .get(eosToken)) {
-            ids.append(eosId)
+        if (this._add_eos_token) {
+            if (let Some(eosToken) <- this._eos_token) {
+                if (let Some(eosId) <- this._vocab.get(eosToken)) {
+                    ids.append(eosId)
+                }
+            }
         }
         return ids.toArray()
     }
@@ -627,11 +637,11 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         // records indices in pairs that were merged.
         while (finalTokens.size > 1) {
             let pairs: ArrayList<Pair<String>> = this.buildAdjacentConcatenations(finalTokens)
-            var minScore: UInt32 = UInt32.Max;
+            var minScore: UInt32 = UINT32_MAX;
             var toMerge: Int64 = -1;
             for ((i, pair) in enumerate(pairs)) {
                 // if pair i is not merged.
-                let score = this._bpe_ranks.get(pair.left + pair.right).getOrDefault({=> UInt32.Max})
+                let score = this._bpe_ranks.get(pair.left + pair.right).getOrDefault({=> UINT32_MAX})
                 if (score < minScore) {
                     minScore = score
                     toMerge = i

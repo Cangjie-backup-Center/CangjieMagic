@@ -3,15 +3,13 @@
  */
 package magic.utils
 
-import std.fs.{File, Path, Directory, FileInfo}
+import std.fs.{File, Path, Directory, FileInfo, OpenOption}
 import std.io.{StringWriter, IOException}
 import std.collection.*
 @When[cjc_version >= "0.56.4"]
-public import std.fs.{exists, removeIfExists, canonicalize}
+public import std.fs.{exists, removeIfExists, canonicalize, rename}
 @When[cjc_version >= "0.56.4"]
 public import std.io.readToEnd
-@When[cjc_version >= "0.56.4"]
-public import std.fs.OpenOption
 
 /**
  * Save the content to a temp file and return its path.
@@ -54,7 +52,7 @@ protected func removeIfExists(path: Path): Unit {
 
 @When[cjc_version < "0.56.4"]
 protected func removeIfExists(path: String): Unit {
-    return removeIfExists(Path(path))
+    removeIfExists(Path(path))
 }
 
 @When[cjc_version < "0.56.4"]
@@ -127,4 +125,19 @@ protected func readFile(path: Path): Array<Byte> {
         return readToEnd(file)
     }
     throw IOException("File ${path} dos not exists")
+}
+
+@When[cjc_version < "0.56.4"]
+protected func move(source: Path, to: Path, overwrite: Bool): Unit {
+    if (source.isFile()) {
+        File.move(source, to, overwrite)
+    }
+    if (source.isDirectory()) {
+        Directory.move(source, to, overwrite)
+    }
+}
+
+@When[cjc_version >= "0.56.4"]
+protected func move(source: Path, to: Path, overwrite: Bool): Unit {
+    rename(source, to:to, overwrite:overwrite)
 }

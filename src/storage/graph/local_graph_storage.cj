@@ -1,10 +1,10 @@
 package magic.storage.graph
 
 import magic.storage.LocalStorage
-import magic.utils.{readLines, writeLines}
+import magic.utils.{readLines, writeLines, move, removeIfExists, exists, directoryOf}
 import std.collection.*
 import std.collection.concurrent.*
-import std.fs.*
+import std.fs.{Path, File, Directory}
 import std.sync.*
 import serialization.serialization.*
 import encoding.json.*
@@ -76,9 +76,9 @@ public open class BaseLocalGraphStorage<V, E> <: LocalGraphStorage<V, E> where V
     }
 
     public func _commit(): Unit {
-        let backup = _storage_path.parent.join("${_collection}_graph.backup")
+        let backup = directoryOf(_storage_path).join("${_collection}_graph.backup")
         try {
-            rename(_storage_path, to: backup, overwrite: true)
+            move(_storage_path, backup, true)
             File.create(_storage_path)
             let nodes = _graph.getAllNodes()
             let vertexStrs = collectArray(nodes |> map({node => node.vertex.toJsonString()}))
@@ -96,7 +96,7 @@ public open class BaseLocalGraphStorage<V, E> <: LocalGraphStorage<V, E> where V
             }
         } catch (e: Exception) {
             removeIfExists(_storage_path)
-            rename(backup, to: _storage_path, overwrite: true)
+            move(backup, _storage_path, true)
             throw Exception("Graph Commit Failed!")
         } finally {
             removeIfExists(backup)
@@ -169,7 +169,7 @@ public open class BaseLocalGraphStorage<V, E> <: LocalGraphStorage<V, E> where V
         try {
             _lock.readMutex.lock()
             let allEdges = _graph.getEdges(srcId, tgtId)
-            collectArray(allEdges |> filter({edge => edge.eType == eType})).first
+            collectArray(allEdges |> filter({edge => edge.eType == eType})).get(0)
         } finally {
             _lock.readMutex.unlock()
         }

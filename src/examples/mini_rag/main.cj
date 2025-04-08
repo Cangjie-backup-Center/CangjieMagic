@@ -4,13 +4,13 @@ import magic.rag.graph.MiniRagBuilder
 import magic.rag.graph.MiniRag
 import magic.model.openai.OpenAIChatModel
 import magic.model.ollama.OllamaEmbeddingModel
+import magic.utils.readToEnd
 import magic.tokenizer.Cl100kTokenizer
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
 import log.LogLevel
 import std.fs.*
-import std.io.*
 
 @agent[model: "deepseek:deepseek-chat", 
  executor: "naive", 
@@ -27,7 +27,7 @@ Add sections and commentary to the response as appropriate for the length and fo
 """)
 }
 
-func instance(): MiniRag {
+func instantiate(): MiniRag {
     let model = ModelManager.createChatModel("deepseek:deepseek-chat")
     let embed = OllamaEmbeddingModel("bge-m3:567m", baseURL: "http://127.0.0.1:11434")
     let tokenizer = Cl100kTokenizer("tiktoken/cl100k_base.tiktoken")
@@ -35,12 +35,12 @@ func instance(): MiniRag {
 }
 
 func miniRagRetriever(): Retriever {
-    let miniRag = instance()
+    let miniRag = instantiate()
     miniRag.asRetriever()
 }
 
 func buildGraph(): Unit {
-    let miniRag = instance()
+    let miniRag = instantiate()
     let build = true
     if (build) {
         for (entry in Directory("./data")) {
@@ -50,10 +50,11 @@ func buildGraph(): Unit {
             }
         }
     }
+    miniRag.commit()
 }
 
 main(): Unit {
-    Config.env["ARK_API_KEY"] = "<your api key>"
+    Config.env["DEEPSEEK_API_KEY"] = "<your api key>"
     Config.logLevel = LogLevel.INFO
     // if graph is already built, turn it off
     var build = true

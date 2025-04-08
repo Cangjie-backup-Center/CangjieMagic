@@ -105,10 +105,10 @@ public class BPETokenizer <: AbstractBPETokenizer {
     private func uniformSpecial(token: Token): String {
         var content = unexpectedNormalize(token._content)
         if (token._lstrip) {
-            content = content.trimAsciiStart()
+            content = content.trimAsciiLeft()
         }
         if (token._rstrip) {
-            content = content.trimAsciiEnd()
+            content = content.trimAsciiRight()
         }
         return content
     }

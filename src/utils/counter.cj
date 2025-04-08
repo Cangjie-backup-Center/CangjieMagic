@@ -5,6 +5,8 @@
 package magic.utils
 
 import std.collection.*
+@When[cjc_version < "0.56.4"]
+import std.math.min
 
 public class Counter<T> where T <: Hashable & Equatable<T> {
     private var cntMap: HashMap<T, Float64> = HashMap()

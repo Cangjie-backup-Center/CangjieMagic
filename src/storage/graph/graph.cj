@@ -43,6 +43,11 @@ public class Vertex<V> <: Equatable<Vertex<V>> & Hashable & Serializable<Vertex<
         this.id == other.id
     }
 
+    @When[cjc_version < "0.56.4"]
+    public operator func !=(other: Vertex<V>): Bool {
+        this.id != other.id
+    }
+
     public func hashCode(): Int64 {
         var hasher = ObjectHasher()
         hasher.write(id)
@@ -140,6 +145,11 @@ public class Edge<E> <: Equatable<Edge<E>> & Hashable & Serializable<Edge<E>> wh
     public operator func ==(other: Edge<E>): Bool {
         this.srcId == other.srcId && this.tgtId == other.tgtId && this.eType == other.eType && this.weight == other
             .weight && this.data == other.data
+    }
+
+    @When[cjc_version < "0.56.4"]
+    public operator func !=(other: Edge<E>): Bool {
+        !(this == other)
     }
 
     public func hashCode(): Int64 {

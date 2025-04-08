@@ -5,8 +5,9 @@ import magic.core.model.EmbeddingModel
 import magic.storage.kv.*
 import magic.storage.LocalStorage
 import magic.core.rag.Document
+import magic.utils.{exists, removeIfExists}
 import std.sync.*
-import std.fs.*
+import std.fs.{Path, Directory}
 import std.collection.*
 import encoding.json.*
 import std.convert.Parsable
@@ -106,7 +107,7 @@ public class JsonMemroyVectorStorage <: LocalVectorStorage {
             let offsets = this._vdb.search(vec, number: topK, minDistance: threshold)
             collectArray(
                 offsets |> map({sr => this._index.get(sr.index)}) |> map(
-                {str => Document.fromJsonValue(JsonValue.fromStr(str))}))
+                    {str => Document.fromJsonValue(JsonValue.fromStr(str))}))
         } finally {
             _lock.readMutex.unlock()
         }
@@ -119,7 +120,7 @@ public class JsonMemroyVectorStorage <: LocalVectorStorage {
             let offsets = this._vdb.search(vec, number: topK, minDistance: threshold)
             collectArray(
                 offsets |> map({sr => (this._index.get(sr.index), sr.dist)}) |> map(
-                {tuple => (Document.fromJsonValue(JsonValue.fromStr(tuple[0])), tuple[1])}))
+                    {tuple => (Document.fromJsonValue(JsonValue.fromStr(tuple[0])), tuple[1])}))
         } finally {
             _lock.readMutex.unlock()
         }
