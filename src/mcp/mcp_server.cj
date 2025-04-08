@@ -172,7 +172,7 @@ public class MCPServer {
     /**
      * Merge all tools of each agent, and start a MCP server for these tools
      */
-    static public func startWith(agents: Array<Agent>): Unit {
+    public static func startWith(agents: Array<Agent>): Unit {
         let allTools = ArrayList<Tool>()
         for (agent in agents) {
             allTools.appendAll(agent.toolManager.getTools())
@@ -186,7 +186,7 @@ public class MCPServer {
     /**
      * Start a MCP server for tools
      */
-    static public func startWith(tools: Array<Tool>): Unit {
+    public static func startWith(tools: Array<Tool>): Unit {
         let server = MCPServer(tools)
         server.start()
     }

@@ -4,6 +4,7 @@
 package magic.agent_group
 
 import magic.core.agent.*
+import std.collection.ArrayList
 
 public enum FreeGroupMode {
     | Auto // The speaker will be selected by LLM automatically
