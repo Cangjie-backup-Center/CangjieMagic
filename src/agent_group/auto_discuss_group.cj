@@ -32,7 +32,7 @@ The following are agent involved in the discussion.
 
 ## Output Format
 1. If the problem is solved, there is no need to select the agent and return the final answer.
-   The output should be formatted as [Final Answer] ... [/Final Answer]
+   The output should be formatted as [Answer] ... [/Answer]
 1. If an agent select, The output should be formatted as [Selection] <agent-name> [/Selection]
 
 ## Discussion
@@ -74,10 +74,10 @@ class AutoDiscussGroup <: DiscussGroup {
 
         let msg = match (ModelUtils.makeChat(this.model, dialog)) {
             case Some(msg) => msg
-            case None => return Selection.Failure("LLM repsonse error")
+            case None => return Selection.Failure("LLM response error")
         }
         LogUtils.info(name, msg)
-        if (let Some(answer) <- OutputParserUtils.extractLastSection(msg.content, "[Final Answer]")) {
+        if (let Some(answer) <- OutputParserUtils.extractLastSection(msg.content, "[Answer]")) {
             return Selection.Summary(answer)
         }
 

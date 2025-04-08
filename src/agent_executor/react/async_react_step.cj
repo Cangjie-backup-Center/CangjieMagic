@@ -16,15 +16,15 @@ class AsyncReactFinalAnswer <: Iterator<String> {
     AsyncReactFinalAnswer(
         let reader: AsyncReactStepReader
     ) {
-        if ((this.reader.currTag ?? "") != ANSWER_TAG) {
+        if ((this.reader.currTag ?? "") != ReactTag.ANSWER) {
             throw AgentExecutionException("Invalid async react final answer. Content: ${this.reader.currContent}")
         }
         // Remove the prefix of tag
-        this.reader.removeTag(ANSWER_TAG)
+        this.reader.removeTag(ReactTag.ANSWER)
     }
 
     override public func next(): Option<String> {
-        if (let Some((content, _isClosed)) <- this.reader.readPartContentBefore(ANSWER_TAG)) {
+        if (let Some((content, _isClosed)) <- this.reader.readPartContentBefore(ReactTag.ANSWER)) {
             return content
         }
         return None
@@ -41,9 +41,9 @@ class AsyncReactStep {
 
     private func readThoughts(): Unit {
         while (let Some(tag) <- this.reader.currTag) {
-            if (tag == THOUGHT_TAG) {
-                thoughts.append(this.reader.readTagAndContent(THOUGHT_TAG))
-            } else if (tag == ACTION_TAG || tag == ANSWER_TAG) {
+            if (tag == ReactTag.THOUGHT) {
+                thoughts.append(this.reader.readTagAndContent(ReactTag.THOUGHT))
+            } else if (tag == ReactTag.ACTION || tag == ReactTag.ANSWER) {
                 break
             } else {
                 throw AgentExecutionException("Invalid react tag `${tag}`")
@@ -57,17 +57,17 @@ class AsyncReactStep {
         if (let Some(tag) <- this.reader.currTag) {
             return tag
         } else {
-            return THOUGHT_TAG
+            return ReactTag.THOUGHT
         }
     }
 
     func getStepOf(tag: String): ReactStep {
         try {
             let thought = String.join(this.thoughts.toArray(), delimiter: "\n")
-            let action = if (tag == THOUGHT_TAG) {
+            let action = if (tag == ReactTag.THOUGHT) {
                 ""
-            } else if (tag == ACTION_TAG) {
-                this.reader.readTagAndContent(ACTION_TAG)
+            } else if (tag == ReactTag.ACTION) {
+                this.reader.readTagAndContent(ReactTag.ACTION)
             } else {
                 throw AgentExecutionException("Unreachable")
             }
