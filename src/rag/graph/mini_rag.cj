@@ -19,7 +19,6 @@ import magic.agent_executor.naive.NaiveExecutor
 import magic.prompt.Template
 import magic.utils.{calMd5, ObjectHasher, splitByMarkers, regSearch, Counter}
 import magic.log.LogUtils
-import std.reflect.*
 import std.collection.*
 import std.sync.*
 import std.sort.*
@@ -379,6 +378,11 @@ public class Entity <: Serializable<Entity> & Equatable<Entity> & Hashable {
     public operator func ==(other: Entity): Bool {
         this.name == other.name && this.descs == other.descs && this.sources == other.sources
     }
+
+    @When[cjc_version < "0.56.4"]
+    public operator func !=(other: Entity): Bool {
+        !(this == other)
+    }
 }
 
 public class RelationShip <: Serializable<RelationShip> & Equatable<RelationShip> & Hashable {
@@ -460,6 +464,11 @@ public class RelationShip <: Serializable<RelationShip> & Equatable<RelationShip
     public operator func ==(other: RelationShip): Bool {
         this.descs == other.descs && this.keywords == other.keywords && this.sources == other.sources
     }
+
+    @When[cjc_version < "0.56.4"]
+    public operator func !=(other: RelationShip): Bool {
+        !(this==other)
+    }
 }
 
 public class MiniRagConfig {
@@ -494,15 +503,17 @@ public class MiniRagBuilder {
     public var _config: MiniRagConfig
     public var _workspace: String = ".storage"
     public var _collection: String = "default"
-    public var _kvStorageType: ClassTypeInfo = (ClassTypeInfo
-        .of<JsonKVStorage<Document>>() as ClassTypeInfo)
-        .getOrThrow()
-    public var _vectorStroageType: ClassTypeInfo = (ClassTypeInfo
-        .of<JsonMemroyVectorStorage>() as ClassTypeInfo)
-        .getOrThrow()
-    public var _graphStorageType: ClassTypeInfo = (ClassTypeInfo
-        .of<BaseLocalGraphStorage<Entity, RelationShip>>() as ClassTypeInfo)
-        .getOrThrow()
+    public var _kvStorageInstance: (workspace: String, collection: String) -> LocalKVStorage<Document> = {
+        workspace, collection => JsonKVStorage<Document>(workspace: workspace, collection: collection)
+    }
+    public var _vectorStroageInstance: (workspace: String, collection: String, embeddingModel: EmbeddingModel) -> LocalVectorStorage = {
+        workspace, collection, embeddingModel => JsonMemroyVectorStorage(embeddingModel, workspace: workspace,
+            collection: collection)
+    }
+    public var _graphStorageInstance: (workspace: String, collection: String) -> LocalGraphStorage<Entity, RelationShip> = {
+        workspace, collection => BaseLocalGraphStorage<Entity, RelationShip>(workspace: workspace,
+            collection: collection)
+    }
 
     public init(llm: ChatModel, embeddingModel: EmbeddingModel, tokenizer: Tokenizer, workspace!: String = ".storage",
         collection!: String = "default") {
@@ -518,33 +529,20 @@ public class MiniRagBuilder {
         this
     }
 
-    public func kvStorageType(kvStorageType: ClassTypeInfo): MiniRagBuilder {
-        if (kvStorageType.isSubtypeOf(ClassTypeInfo.of<KVStorage<Document>>())) {
-            this._kvStorageType = kvStorageType
-        } else {
-            throw IllegalArgumentException("kvStorageType must be a sub class of KVStorage<Document>!")
-        }
+    public func kvStorageInstance(kvStorageInstance: (workspace: String, collection: String) -> LocalKVStorage<Document>): MiniRagBuilder {
+        this._kvStorageInstance = kvStorageInstance
         this
     }
 
-    // Because of a known BUG of Generic-Type. Reflection is not supported here ，as the parameter "EmbeddingModel" is an Interface.
-    // TODO - fix in future versions
-    // Developer can change the source code when they need to use other kind of storage @MiniRag
-    public func vectorStroageType(vectorStroageType: ClassTypeInfo): MiniRagBuilder {
-        if (vectorStroageType.isSubtypeOf(ClassTypeInfo.of<VectorStorage>())) {
-            this._vectorStroageType = vectorStroageType
-        } else {
-            throw IllegalArgumentException("vectorStroageType must be a sub class of VectorStorage!")
-        }
+    public func vectorStroageInstance(
+        vectorStroageInstance: (workspace: String, collection: String, embeddingModel: EmbeddingModel) -> LocalVectorStorage): MiniRagBuilder {
+        this._vectorStroageInstance = vectorStroageInstance
         this
     }
 
-    public func graphStorageType(graphStorageType: ClassTypeInfo): MiniRagBuilder {
-        if (graphStorageType.isSubtypeOf(ClassTypeInfo.of<GraphStorage<Entity, RelationShip>>())) {
-            this._graphStorageType = graphStorageType
-        } else {
-            throw IllegalArgumentException("graphStorageType must be a sub class of GraphStorage<V,E>!")
-        }
+    public func graphStorageInstance(
+        graphStorageInstance: (workspace: String, collection: String) -> LocalGraphStorage<Entity, RelationShip>): MiniRagBuilder {
+        this._graphStorageInstance = graphStorageInstance
         this
     }
 
@@ -802,29 +800,17 @@ public class MiniRag {
     public init(builder: MiniRagBuilder) {
         this._agent = SimpleChatAgent(model: builder._config.llm)
         this._embedding_model = builder._config.embeddingModel
-        this._doc_kv = (builder
-            ._kvStorageType
-            .construct([builder._workspace, "${builder._collection}_doc"]) as LocalKVStorage<Document>)
-            .getOrThrow()
-        this._chunk_kv = (builder
-            ._kvStorageType
-            .construct([builder._workspace, "${builder._collection}_chunk"]) as LocalKVStorage<Document>)
-            .getOrThrow()
-        this._graph = (builder
-            ._graphStorageType
-            .construct([builder._workspace, "${builder._collection}_graph"]) as LocalGraphStorage<Entity, RelationShip>)
-            .getOrThrow()
-        // Because of a known BUG as Generic-Type. Reflection is not supported here ，as the parameter "EmbeddingModel" is an Interface.
-        // TODO - fix in future versions
-        // Developer can change the source code when they need to use other kind of storage.
-        this._entity_vdb = JsonMemroyVectorStorage(this._embedding_model, workspace: builder._workspace,
-            collection: "${builder._collection}_entity")
-        this._entity_name_vdb = JsonMemroyVectorStorage(this._embedding_model, workspace: builder._workspace,
-            collection: "${builder._collection}_entity_name")
-        this._relationship_vdb = JsonMemroyVectorStorage(this._embedding_model, workspace: builder._workspace,
-            collection: "${builder._collection}_relationship")
-        this._chunk_vdb = JsonMemroyVectorStorage(this._embedding_model, workspace: builder._workspace,
-            collection: "${builder._collection}_chunk")
+        this._doc_kv = builder._kvStorageInstance(builder._workspace, "${builder._collection}_doc")
+        this._chunk_kv = builder._kvStorageInstance(builder._workspace, "${builder._collection}_chunk")
+        this._graph = builder._graphStorageInstance(builder._workspace, "${builder._collection}_graph")
+        this._entity_vdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_entity",
+            this._embedding_model)
+        this._entity_name_vdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_entity_name",
+            this._embedding_model)
+        this._relationship_vdb = builder._vectorStroageInstance(builder._workspace,
+            "${builder._collection}_relationship", this._embedding_model)
+        this._chunk_vdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_chunk",
+            this._embedding_model)
         this._splitter = builder._config.splitter
         this._config = builder._config
         this._builder = builder
@@ -973,10 +959,10 @@ public class MiniRag {
     private func assembleEntityContext(crpMap: Map<String, CandidateReasoningPath>, queryParam: QueryParam): String {
         var entitySectionList: ArrayList<(String, Float64, String)> = collectArrayList(
             crpMap |> map(
-            {
-            entry => (entry[0], entry[1].score, String.join(entry[1].entity.data.getOrThrow().descs,
-                    delimiter: this._config.graphFieldDelimiter))
-        }))
+                {
+                    entry => (entry[0], entry[1].score, String.join(entry[1].entity.data.getOrThrow().descs,
+                            delimiter: this._config.graphFieldDelimiter))
+                }))
         entitySectionList.sortBy(stable: true) {
             lht: (String, Float64, String), rht: (String, Float64, String) =>
             if (lht[1] < rht[1]) {
@@ -991,9 +977,9 @@ public class MiniRag {
             {key: (String, Float64, String) => key[2]}, queryParam.maxTokenForEntity)
         toCSVString<(String, Float64, String)>(["entity", "score", "description"], entitySectionList.toArray(),
             {
-            index: Int64, tuple: (String, Float64, String) => [tuple[0], tuple[1].toString(),
-                "\"${tuple[2].replace("\"","\\\"")}\""]
-        })
+                index: Int64, tuple: (String, Float64, String) => [tuple[0], tuple[1].toString(),
+                    "\"${tuple[2].replace("\"","\\\"")}\""]
+            })
     }
 
     private func toCSVString<T>(title: Array<String>, data: Array<T>, dataToStringFunc: (Int64, T) -> Array<String>): String {
@@ -1034,7 +1020,13 @@ public class MiniRag {
                 let sources = ArrayList<String>()
                 let usedEdges = route.usedEdges
                 if (route.usedEdges.size > 0) {
-                    sources.appendAll(route.usedEdges.get(0).getOrThrow().data.getOrThrow().sources)
+                    sources.appendAll(route
+                        .usedEdges
+                        .get(0)
+                        .getOrThrow()
+                        .data
+                        .getOrThrow()
+                        .sources)
                 }
                 sources.appendAll(immediateEntity.sources)
                 for (i in 1..route.trace.size) {
@@ -1148,13 +1140,13 @@ public class MiniRag {
         let apeSet = HashSet<String>(appeardEntityIds)
         collectArray(
             edgeDocs |> filter(
-            {
-                doc =>
-                let srcId = doc.metadata.get("srcId").getOrThrow()
-                let tgtId = doc.metadata.get("tgtId").getOrThrow()
-                apeSet.contains(srcId) || apeSet.contains(tgtId)
-            }
-        ))
+                {
+                    doc =>
+                    let srcId = doc.metadata.get("srcId").getOrThrow()
+                    let tgtId = doc.metadata.get("tgtId").getOrThrow()
+                    apeSet.contains(srcId) || apeSet.contains(tgtId)
+                }
+            ))
     }
 
     /**
@@ -1368,7 +1360,7 @@ public class MiniRag {
             edgeDoc.metadata.put("eType", edge.eType)
             this._relationship_vdb.add(edgeDoc)
         } catch (e: Exception) {
-            LogUtils.error("Upsert Edge ${edge.toJsonString()} Failed.")
+            LogUtils.error("Upsert Edge ${edge.srcId}-${edge.tgtId} Failed.\n ${e}")
         }
     }
 
@@ -1463,7 +1455,12 @@ public class MiniRag {
         if (name.isEmpty()) {
             return None
         }
-        let vType = recordAttis.get(2).getOrThrow().trimAscii().replace('"', "").toAsciiLower()
+        let vType = recordAttis
+            .get(2)
+            .getOrThrow()
+            .trimAscii()
+            .replace('"', "")
+            .toAsciiLower()
         let description = recordAttis.get(3).getOrThrow().trimAscii().replace('"', "")
         let entity = Entity(name)
         entity.addDesc(description)
@@ -1493,14 +1490,14 @@ public class MiniRag {
     private func split(doc: Document): Array<Document> {
         collectArray(
             this._splitter.split(doc.content) |> inspect(
-            {
-                chunk =>
-                for ((k, v) in doc.metadata) {
-                    chunk.metadata.putIfAbsent(k, v)
+                {
+                    chunk =>
+                    for ((k, v) in doc.metadata) {
+                        chunk.metadata.putIfAbsent(k, v)
+                    }
+                    chunk.metadata.put("doc_id", doc.id)
                 }
-                chunk.metadata.put("doc_id", doc.id)
-            }
-        ) |> filter({chunk => this._chunk_kv.get(chunk.id).isNone()}))
+            ) |> filter({chunk => this._chunk_kv.get(chunk.id).isNone()}))
     }
 
     public func commit(): Unit {

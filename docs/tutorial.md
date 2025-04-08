@@ -43,7 +43,11 @@
       - [索引映射表](#索引映射表)
       - [语义数据结构](#语义数据结构)
       - [使用示例](#使用示例)
-
+    - [知识图谱](#知识图谱)
+      - [MiniRag](#minirag)
+        - [`实例化`](#实例化)
+        - [`知识图谱构建`](#知识图谱构建)
+        - [`知识图谱检索`](#知识图谱检索)
 <!-- /code_chunk_output -->
 
 Cangjie Agent DSL 是一个用于定义和管理 Agent 的专用语言。它允许开发人员通过结构化的系统提示词、工具和各类协作策略来增强 Agent 的功能。本手册将介绍如何使用 Cangjie Agent DSL 的各种功能，并通过实例帮助用户快速上手。
@@ -1353,3 +1357,51 @@ main() {
 let agent = FooAgent()
 agent.retriever = smap.asRetriever()
 ```
+
+### 知识图谱
+#### MiniRag
+基于MiniRag知识图谱的创建和使用，MiniRag使用到向量、kv和图存储，当前实现支持了本地存储。
+https://github.com/HKUDS/MiniRAG
+#### `实例化`
+使用`MiniRagBuilder`来实例化MiniRag对象，用于后续的知识图谱的构建和基于图谱的检索。
+实例化MiniRag需要设置LLM、Tokenizer、EmbeddingModel和workspace
+基于当前可用的tokenizer(详见api_reference.md)需要下载对应的tokenizer配置文件
+如:
+[OpenAI CL100K](https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken)需要下载cl100k_base.tiktoken文件
+[DeepSeek-V3](https://huggingface.co/deepseek-ai/DeepSeek-V3/tree/main)等开源模型需要下载对应的tokenizer.json和tokenizer_config.json文件
+```cangjie
+import magic.config.Config
+import magic.rag.graph.MiniRagBuilder
+import magic.rag.graph.MiniRag
+import magic.model.ollama.OllamaEmbeddingModel
+import magic.tokenizer.Cl100kTokenizer
+func instantiateMiniRag(): MiniRag {
+    Config.env["DEEPSEEK_API_KEY"] = "<your api key>"
+    let model = ModelManager.createChatModel("<LLM Model Name>")
+    let embed = OllamaEmbeddingModel("<Embedding Model Name>", baseURL: "<Embedding Model URL>")
+    let tokenizer = Cl100kTokenizer("<Your TickToken File Location>")
+    MiniRagBuilder(model, embed, tokenizer, workspace:<Your Local Dir>).build()
+}
+```
+#### `知识图谱构建`
+```cangjie
+func buildGraph(): Unit {
+    let miniRag:MiniRag = instantiateMiniRag()
+    let content:String = "<Text Read From File>"
+    miniRag.insert(content)
+    miniRag.commit()
+}
+```
+
+#### `知识图谱检索`
+```cangjie
+func search(query:String): String {
+    let miniRag = instantiateMiniRag()
+    let retriever = miniRag.asRetriever()
+    let response = retriever.search(query)
+    response.toPrompt()
+}
+```
+
+#### 使用示例
+[使用示例](../src/examples/mini_rag/main.cj)

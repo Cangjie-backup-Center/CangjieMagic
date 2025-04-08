@@ -1,9 +1,9 @@
 package magic.storage.kv
 
 import magic.storage.LocalStorage
-import magic.utils.{readLines, writeLines}
+import magic.utils.{readLines, writeLines, move, removeIfExists, exists, directoryOf}
 import serialization.serialization.*
-import std.fs.*
+import std.fs.{Path, File, Directory}
 import std.sync.*
 import std.collection.*
 import std.collection.concurrent.*
@@ -85,24 +85,24 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
     }
 
     private func _commit(): Unit {
-        let backup = _storage_path.parent.join("${_collection}_kv.back")
+        let backup = directoryOf(_storage_path).join("${_collection}_kv.back")
         try {
-            rename(_storage_path, to: backup, overwrite: true)
+            move(_storage_path, backup, true)
             File.create(_storage_path)
             var lines = collectArray(
                 _data |> map(
-                {
-                    item =>
-                    let dm = DataModelStruct()
-                    dm.add(field<String>("id", item[0]))
-                    dm.add(field<T>("data", item[1]))
-                    return dm.toJson().toString()
-                }
-            ))
+                    {
+                        item =>
+                        let dm = DataModelStruct()
+                        dm.add(field<String>("id", item[0]))
+                        dm.add(field<T>("data", item[1]))
+                        return dm.toJson().toString()
+                    }
+                ))
             writeLines(_storage_path, lines)
         } catch (e: Exception) {
             removeIfExists(_storage_path)
-            rename(backup, to: _storage_path, overwrite: true)
+            move(backup, _storage_path, true)
             throw Exception("Commit Failed!")
         } finally {
             removeIfExists(backup)
