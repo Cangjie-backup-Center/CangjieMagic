@@ -15,8 +15,8 @@ import std.collection.{map, collectArray}
 protected let REACT_SYSTEM_PROMPT = """
 # Guidelines
 Use the following format to accomplish user's request:
-[Thought] think about what to do next to solve the question [/Thought]
-[Action] use a tool, the action must be a json object wrapped by ```json and ```
+${ReactTag.THOUGHT} think about what to do next to solve the question ${ReactTag.THOUGHT.getCloseTag()}
+${ReactTag.ACTION} use a tool, the action must be a json object wrapped by ```json and ```
     ```json
     {
         "name": string, name of the tool, it must refer to one of available tools
@@ -34,17 +34,17 @@ Use the following format to accomplish user's request:
         }
     }
     ```
-[/Action]
-[Observation] the result of the action [/Observation]
+${ReactTag.ACTION.getCloseTag()}
+${ReactTag.OBSERVATION} the result of the action ${ReactTag.OBSERVATION.getCloseTag()}
 ... (Thought/Action/Observation may repeat N times to accomplish user's request)
-[Final Answer] the final answer to the original input question [/Final Answer]
+${ReactTag.ANSWER} the final answer to the original input question ${ReactTag.ANSWER.getCloseTag()}
 
-NEVER generate [Observation] yourself. This is an important requirement.
+NEVER generate ${ReactTag.OBSERVATION} yourself. This is an important requirement.
 
-You must generate either a pair of [Thought] and [Action] or a pair of [Thought] and [Final Answer]
+You must generate either a pair of ${ReactTag.THOUGHT} and ${ReactTag.ACTION} or a pair of ${ReactTag.THOUGHT} and ${ReactTag.ANSWER}
 Examples:
-Output: [Thought] I need to search the web to get related knowledge [/Thought] [Action] ... [/Action]
-Output: [Thought] I know the final answer now [/Thought] [Final Answer] ... [/Final Answer]
+Output: ${ReactTag.THOUGHT} I need to search the web to get related knowledge ${ReactTag.THOUGHT.getCloseTag()} ${ReactTag.ACTION} ... ${ReactTag.ACTION.getCloseTag()}
+Output: ${ReactTag.THOUGHT} I know the final answer now ${ReactTag.THOUGHT.getCloseTag()} ${ReactTag.ANSWER} ... ${ReactTag.ANSWER.getCloseTag()}
 
 - If there are no available tools, generate final answer directly.
 
@@ -59,19 +59,64 @@ Output: [Thought] I know the final answer now [/Thought] [Final Answer] ... [/Fi
 {dialog}
 """
 
+private let REACT_SUMMARIZE_SYSTEM_PROMPT = """
+# Instruction
+Given a question and a solving procedure for it, you should summarize an answer from them.
+The solving procedure consists of:
+  - ${ReactTag.THOUGHT} think about what to do next to solve the task ${ReactTag.THOUGHT.getCloseTag()}
+  - ${ReactTag.ACTION} use a tool, which is a function call ${ReactTag.ACTION.getCloseTag()}
+  - ${ReactTag.OBSERVATION} the result of the action ${ReactTag.OBSERVATION.getCloseTag()}
+  - ... (Thought/Action/Observation may repeat N times)
+
+The answer should be wrapped by ${ReactTag.ANSWER} and ${ReactTag.ANSWER.getCloseTag()} like
+${ReactTag.ANSWER}
+Cat is the answer, and ...
+${ReactTag.ANSWER.getCloseTag()}
+
+# Question
+{question}
+-----
+
+# Solving Procedure
+{procedure}
+-----
+
+# Some extra context to help answer the question
+{systemPrompt}
+
+{retrieval}
+
+{memory}
+
+{dialog}
+
+Now, summarize the answer. Remember you should wrap the output by ${ReactTag.ANSWER} and ${ReactTag.ANSWER.getCloseTag()}
+"""
+
 protected struct ReactPromptUtils {
     static func buildReactFullSystemPrompt(task: AgentTask): String {
-        let agent = task.agent
-        let request = task.request
-        let retrieval = if (let Some(RetrieverMode.Static) <- task.agent.retriever?.mode) {
-            ReactPromptUtils.buildAgentRetrievalPrompt(task)
-        } else {
-            ""
-        }
         return REACT_SYSTEM_PROMPT.format(
-            ("tools", ReactPromptUtils.buildAgentToolsPrompt(agent, request.question, enableToolSearch: agent.toolManager.enableToolSearch)),
-            ("retrieval", retrieval),
-            ("systemPrompt", agent.systemPrompt),
+            ("tools", ReactPromptUtils.buildAgentToolsPrompt(task.agent, task.request.question, enableToolSearch: task.agent.toolManager.enableToolSearch)),
+            ("retrieval", ReactPromptUtils.buildAgentRetrievalPrompt(task)),
+            ("systemPrompt", task.agent.systemPrompt),
+            ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task)),
+            ("dialog", ReactPromptUtils.buildAgentDialogPrompt(task))
+        ).trimAscii()
+    }
+
+    static func buildReactSummarizePrompt(task: AgentTask): String {
+        let strBuilder = StringBuilder()
+        for (msg in task.execInfo.dialog) {
+            // Only add messages with tags, like [Action]
+            if (msg.content.startsWith("[")) {
+                strBuilder.append("${msg.content}\n")
+            }
+        }
+        return REACT_SUMMARIZE_SYSTEM_PROMPT.format(
+            ("question", task.request.question),
+            ("procedure", strBuilder.toString()),
+            ("retrieval", ReactPromptUtils.buildAgentRetrievalPrompt(task)),
+            ("systemPrompt", task.agent.systemPrompt),
             ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task)),
             ("dialog", ReactPromptUtils.buildAgentDialogPrompt(task))
         ).trimAscii()
@@ -92,8 +137,10 @@ protected struct ReactPromptUtils {
     }
 
     protected static func buildAgentRetrievalPrompt(task: AgentTask): String {
-        let agent = task.agent
-        if (let Some(rt) <- agent.retriever) {
+        if (let Some(rt) <- task.agent.retriever) {
+            if (rt.mode == RetrieverMode.Dynamic) {
+                return ""
+            }
             let query = task.request.question
             let retrieval = rt.search(query)
             task.execInfo.addRetrieval(query, retrieval)

@@ -7,6 +7,8 @@ import magic.core.message.Dialog
 import magic.model.ModelUtils
 import magic.log.LogUtils
 
+import std.collection.ArrayList
+
 private let RR_SPEAKER_SELECT_PROMPT = """
 There are agents collaborate to solve questions, i.e., the topic.
 They solve the problem by discussion.
@@ -23,12 +25,11 @@ The following is the discussion content.
 {discussion}
 
 ## Output Format
-1. If the problem is solved, the output should be formatted as [Final Answer] ... [/Final Answer]
+1. If the problem is solved, the output should be formatted as [Answer] ... [/Answer]
 2. Otherwise, output NO-ANSWER
 """
 
 class RoundRobinDiscussGroup <: DiscussGroup {
-
     init(topic!: String, members!: ArrayList<Agent>) {
         super(topic, members)
     }
@@ -58,7 +59,7 @@ class RoundRobinDiscussGroup <: DiscussGroup {
             case None => return Selection.Failure("LLM model failed")
         }
         LogUtils.info(this.name, msg)
-        if (let Some(answer) <- OutputParserUtils.extractLastSection(msg.content, "[Final Answer]")) {
+        if (let Some(answer) <- OutputParserUtils.extractLastSection(msg.content, "[Answer]")) {
             return Selection.Summary(answer)
         } else {
             let selection = Selection.Speaker(members[currSpeakerIndex % members.size])

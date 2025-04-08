@@ -10,6 +10,7 @@ import magic.agent_executor.plan_react.PlanReactExecutor
 
 import std.collection.ArrayList
 import magic.core.agent.AgentExecutionException
+import std.convert.Parsable
 
 private struct AgentExecutorBuilder {
     AgentExecutorBuilder(
@@ -42,6 +43,15 @@ public struct AgentExecutorManager {
             return ReactExecutor()
         } else if (name == "plan-react") {
             return PlanReactExecutor()
+        }
+        // react with a loop number, like react:5
+        if (name.startsWith("react:")) {
+            let items = name.split(":")
+            if (items.size == 2) {
+                if (let Some(num) <- Int64.tryParse(items[1])) {
+                    return ReactExecutor(loop: num)
+                }
+            }
         }
         for (builder in AGENT_EXECUTOR_BUILDS) {
             if (builder.checkFn(name)) {

@@ -24,9 +24,9 @@ public class ReactDumper {
     }
 
     private func getTagColor(tag: String): Color {
-        if (tag == PLAN_TAG) {
+        if (tag == ReactTag.PLAN) {
             return Color.Red
-        } else if (tag == INFO_TAG) {
+        } else if (tag == ReactTag.INFO) {
             return Color.Green
         } else {
             return Color.Blue
@@ -35,8 +35,8 @@ public class ReactDumper {
 
     public func dump(): Unit {
         while (let Some(tag) <- this.reader.currTag) {
-            if (tag == THOUGHT_TAG || tag == ACTION_TAG ||
-                tag == OBSERVATION_TAG || tag == INFO_TAG || tag == PLAN_TAG) {
+            if (tag == ReactTag.THOUGHT || tag == ReactTag.ACTION ||
+                tag == ReactTag.OBSERVATION || tag == ReactTag.INFO || tag == ReactTag.PLAN) {
                 let tagColor = getTagColor(tag)
                 Console.stdOut.writeln(tag.withColor(tagColor))
                 this.reader.removeTag(tag)
@@ -46,11 +46,11 @@ public class ReactDumper {
                 }
                 Console.stdOut.write("\n")
                 Console.stdOut.writeln(tag.getCloseTag().withColor(tagColor))
-                if (tag == INFO_TAG) {
+                if (tag == ReactTag.INFO) {
                     Console.stdOut.writeln("---------------------------------")
                 }
-            } else if (tag == ANSWER_TAG) {
-                // ANSWER_TAG is redundant
+            } else if (tag == ReactTag.ANSWER) {
+                // ReactTag.ANSWER is redundant
                 this.reader.removeTag(tag)
                 while (let Some((content, isClosed)) <- this.reader.readPartContentBefore(tag)) {
                     if (isClosed) { break }
@@ -60,5 +60,16 @@ public class ReactDumper {
                 throw Exception("Unreachable")
             }
         }
+    }
+
+    public static func print(asyncResponse: AsyncAgentResponse, verbose!: Bool = false): Unit {
+        if (verbose) {
+            let dumper = ReactDumper(asyncResponse)
+            dumper.dump()
+        }
+        for (data in asyncResponse) {
+            Console.stdOut.write(data)
+        }
+        Console.stdOut.write("\n")
     }
 }
