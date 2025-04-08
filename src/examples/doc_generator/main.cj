@@ -231,10 +231,20 @@ class TypeDef <: ToString {
     override public func toString(): String {
         let sb = StringBuilder()
         sb.append("### ${kind} ${name}\n")
-        for (m in memberDefs) {
+        for (m in this.sortedMemberDefs) {
             sb.append("${m}\n\n")
         }
         return sb.toString()
+    }
+
+    prop sortedMemberDefs: Array<MemberDef> {
+        get() {
+            let members = ArrayList(this.memberDefs)
+            members.sortBy(comparator: { m1, m2 =>
+                return m1.name.compare(m2.name)
+            })
+            return members.toArray()
+        }
     }
 }
 
@@ -310,7 +320,7 @@ class Parameter <: ToString {
 }
 
 @agent[
-    model: "deepseek:deepseek-chat",
+    model: "ark:deepseek-v3-250324",
     executor: "naive",
 ]
 class DocAgent {
@@ -375,6 +385,38 @@ func buildFileDoc(allFiles: ArrayList<Path>): Unit {
     }
 }
 
+func buildPackageToc(packageName: String, typeDefs: ArrayList<TypeDef>): String {
+    let linkNameCount = HashMap<String, Int64>()
+    let createLinkName = { title: String =>
+        var linkName = "#" + title.toAsciiLower().replace(" ", "-")
+        if (linkNameCount.contains(linkName)) {
+            let count = linkNameCount[linkName]
+            linkName = "${linkName}-${count}"
+            linkNameCount.put(linkName, count + 1)
+        } else {
+            linkNameCount.put(linkName, 1)
+        }
+        return linkName
+    }
+
+    let sb = StringBuilder()
+    let packageTitle = "Package ${packageName}"
+    let packageLinkName = createLinkName(packageTitle)
+    sb.append("- [${packageTitle}](${packageLinkName})\n")
+
+    for (typeDef in typeDefs) {
+        let typeTitle = "${typeDef.kind} ${typeDef.name}"
+        let typeLinkName = createLinkName(typeTitle)
+        sb.append("  - [${typeTitle}](${typeLinkName})\n")
+        for (memberDef in typeDef.sortedMemberDefs) {
+            let memberTitle = "${memberDef.kind} ${memberDef.name}"
+            let memberLinkName = createLinkName(memberTitle)
+            sb.append("    - [${memberTitle}](${memberLinkName})\n")
+        }
+    }
+    return sb.toString()
+}
+
 func mergeDocs(dirPath: Path): Unit  {
     // Merge all type definitions according to their package names
     let allDocs = HashMap<String, ArrayList<TypeDef>>()
@@ -392,20 +434,33 @@ func mergeDocs(dirPath: Path): Unit  {
     // Dump as markdown file
     try (outfile = File(dirPath.join("api_reference.md"),
                         OpenOption.CreateOrTruncate(false))) {
+        let packageDocDir = dirPath.join("./package_docs")
+        if (!exists(packageDocDir)) {
+            Directory.create(packageDocDir, recursive: true)
+        }
         let writer = StringWriter(outfile)
+        writer.write("# API Reference\n\n")
         let allPackageNames = allDocs.keys().toArray()
         allPackageNames.sort()
         for (packageName in allPackageNames) {
+            let packageDocPath = packageDocDir.join("${packageName}.md")
             let typeDefs = allDocs[packageName]
             typeDefs.sortBy(comparator: { t1, t2 =>
                 return t1.name.compare(t2.name)
             })
 
-            writer.write("## Package ${packageName}\n")
-            for (typeDef in typeDefs) {
-                writer.write(typeDef.toString())
-                writer.write("\n")
+            try (outfile2 = File(packageDocPath, OpenOption.CreateOrTruncate(false))) {
+                let writer2 = StringWriter(outfile2)
+                writer2.write("## Package ${packageName}\n")
+                writer2.write(buildPackageToc(packageName, typeDefs))
+                writer2.write("\n")
+                for (typeDef in typeDefs) {
+                    writer2.write(typeDef.toString())
+                    writer2.write("\n")
+                }
+                writer2.flush()
             }
+            writer.write("- 📁 [${packageName}](./package_docs/${packageName}.md)\n")
             writer.flush()
         }
     }

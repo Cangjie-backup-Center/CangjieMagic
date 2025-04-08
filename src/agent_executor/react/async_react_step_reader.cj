@@ -72,12 +72,12 @@ class AsyncReactStepReader {
     prop currTag: Option<String> {
         get() {
             // The tag with the max length is [Final Answer]
-            while (this.currContent.trimAscii().size < ANSWER_TAG.size) {
+            while (this.currContent.trimAscii().size < ReactTag.longestTag.size) {
                 if (!this.readChunk()) { break }
             }
             // Check whether the current content starts with a tag
             let content = this.currContent.trimAscii()
-            for (tag in ALL_TAGS) {
+            for (tag in ReactTag.ALL_TAGS) {
                 if (content.startsWith(tag)) {
                     return tag
                 }
@@ -131,8 +131,8 @@ class AsyncReactStepReader {
         let (content, rest) = this.splitByCloseTag(closeTag)
         if (exhausted) {
             // When the full content is read, the close tag must exist
-            // ANSWER_TAG is special, the LLM may not generate its close tag
-            if (rest.trimAscii() != closeTag && tag != ANSWER_TAG) {
+            // ReactTag.ANSWER is special, the LLM may not generate its close tag
+            if (rest.trimAscii() != closeTag && tag != ReactTag.ANSWER) {
                 throw AgentExecutionException("Fail to read async react ${tag} content. Rest: `${rest}`")
             } else {
                 finished = true

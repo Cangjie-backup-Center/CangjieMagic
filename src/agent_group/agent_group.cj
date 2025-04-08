@@ -3,10 +3,7 @@
  */
 package magic.agent_group
 
-internal import std.collection.{map, collectArrayList, ArrayList}
-
 import magic.core.agent.{Agent, AgentRequest, AgentResponse}
-import magic.agent.BaseAgent
 
 public interface AgentGroup {
     /**

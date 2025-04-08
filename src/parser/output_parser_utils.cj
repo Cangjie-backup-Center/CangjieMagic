@@ -35,7 +35,7 @@ public struct OutputParserUtils {
         return None  // The target section is not found
     }
 
-    public static func extractLastSection(str: String, section: String): ?String {
+    public static func extractLastSection(str: String, section: String): Option<String> {
         let sectionName = if (section.startsWith("[") && section.endsWith("]")) {
             section[1..section.size-1]
         } else {
@@ -47,11 +47,6 @@ public struct OutputParserUtils {
             let contentStart = start + sectionStart.size
             if (let Some(end) <- str.indexOf(sectionEnd, contentStart)) {
                 return str[contentStart..end].trimAscii()
-            }
-            if (section == "[Final Answer]" || section == "[Tool]") {
-                // Special treatment for this section
-                // because LLM is prone to generate the final answer without [/Final Answer]
-                return str[contentStart..str.size].trimAscii()
             }
         }
         return None  // The target section is not found

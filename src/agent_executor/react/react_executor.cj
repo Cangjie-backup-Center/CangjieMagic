@@ -9,15 +9,20 @@ import magic.log.LogUtils
 import magic.config.Config
 
 public class ReactExecutor <: AgentExecutor {
+    public ReactExecutor(
+        private let loop!: Int64 = Config.maxReactNumber
+    ) { }
+
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         LogUtils.info("React executor runs ${agent.name}")
         let task = ReactTask(agent, request)
-        for (_ in 0..Config.maxReactNumber) {
+        for (_ in 0..this.loop) {
             if (let Some(resp) <- task.runOnce()) {
                 return resp
             }
         }
-        throw AgentExecutionException("Exceed the max react loop")
+        LogUtils.info("Exceed the max react loop")
+        return task.summarize()
     }
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
@@ -25,12 +30,13 @@ public class ReactExecutor <: AgentExecutor {
         let task = ReactTask(agent, request)
         // Create a thread to execute the react task
         let fut: Future<Iterator<String>> = spawn {
-            for (_ in 0..Config.maxReactNumber) {
+            for (_ in 0..this.loop) {
                 if (let Some(asyncAnswer) <- task.asyncRunOnce()) {
                     return asyncAnswer
                 }
             }
-            throw AgentExecutionException("Exceed the max react loop")
+            LogUtils.info("Exceed the max react loop")
+            return task.asyncSummarize()
         }
         return AsyncAgentResponse(IteratorWrapper(task, fut), execInfo: task.execInfo)
     }
@@ -53,7 +59,7 @@ protected class IteratorWrapper <: Iterator<String> {
         match (data) {
             case Some(v) => buffer.append(v)
             case None =>
-                LogUtils.info(this.task.agent.name, buffer.toString().withTag(ANSWER_TAG))
+                LogUtils.info(this.task.agent.name, buffer.toString().withTag(ReactTag.ANSWER))
         }
         return data
     }

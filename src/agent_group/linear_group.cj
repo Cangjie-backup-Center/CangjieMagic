@@ -3,6 +3,8 @@
  */
 package magic.agent_group
 
+import std.collection.ArrayList
+
 public class LinearGroup <: AgentGroup {
     private let members = ArrayList<Agent>()
 
