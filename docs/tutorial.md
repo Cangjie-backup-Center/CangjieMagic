@@ -549,6 +549,8 @@ agent.toolManager.addTools(client.getTools())
 | `react` | Agent 每次选择使用一个工具完成一个求解步骤，然后根据工具的执行结果判断是否执行完成，不断迭代上述过程直至任务求解完成 |
 | `plan-react` | 首先完成一次任务规划，然后对每个规划出来的子任务使用 React 模式进行求解 |
 
+其中，`react` 执行器可以通过形式 `react:<number>` 类指定迭代的最大次数，如 `react:5`。
+
 **示例：配置规划方法**
 
 ```cangjie
@@ -1266,7 +1268,7 @@ public class SemanticMap<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
     /**
      * 根据目录路径加载数据
      */
-    static public func load(dirPath: String): SemanticMap<VDB, IMAP, T>
+    public static func load(dirPath: String): SemanticMap<VDB, IMAP, T>
 }
 ```
 
@@ -1283,7 +1285,7 @@ public class SemanticSet<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
     public func put(value: T): Unit
     public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T>
     public func save(dirPath: String): Unit
-    static public func load(dirPath: String): SemanticSet<VDB, IMAP, T>
+    public static func load(dirPath: String): SemanticSet<VDB, IMAP, T>
 }
 ```
 
