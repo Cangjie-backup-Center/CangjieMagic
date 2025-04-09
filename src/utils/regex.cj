@@ -7,7 +7,7 @@ public func splitByMarkers(content: String, markers: Array<String>): Array<Strin
     if (markers.isEmpty()) {
         return [content]
     }
-    let re = Regex(String.join(collectArray(markers |> map({marker => escape(marker)})), delimiter: "|"))
+    let re = Regex(String.join(markers |> map({marker => escape(marker)})|> collectArray, delimiter: "|"))
     let matches = re.matcher(content).findAll() ?? Array<MatchData>()
     let splits = ArrayList<String>()
     var index = 0

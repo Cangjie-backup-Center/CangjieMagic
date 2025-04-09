@@ -89,8 +89,7 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
         try {
             move(_storage_path, backup, true)
             File.create(_storage_path)
-            var lines = collectArray(
-                _data |> map(
+            var lines = _data |> map(
                     {
                         item =>
                         let dm = DataModelStruct()
@@ -98,7 +97,7 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
                         dm.add(field<T>("data", item[1]))
                         return dm.toJson().toString()
                     }
-                ))
+                ) |>collectArray
             writeLines(_storage_path, lines)
         } catch (e: Exception) {
             removeIfExists(_storage_path)

@@ -81,17 +81,15 @@ public open class BaseLocalGraphStorage<V, E> <: LocalGraphStorage<V, E> where V
             move(_storage_path, backup, true)
             File.create(_storage_path)
             let nodes = _graph.getAllNodes()
-            let vertexStrs = collectArray(nodes |> map({node => node.vertex.toJsonString()}))
+            let vertexStrs = nodes |> map({node => node.vertex.toJsonString()}) |> collectArray
             writeLines(_storage_path, vertexStrs)
             let visisted = HashSet<Edge<E>>()
             for (node in nodes) {
-                var outgoingEdges = collectArray(
-                    nodes |> flatMap({node => node.outgoing}) |> filter({edge => !visisted.contains(edge)}) |> inspect(
-                    {edge => visisted.put(edge)}) |> map({edge: Edge<E> => edge.toJsonString()}))
+                var outgoingEdges = nodes |> flatMap({node => node.outgoing}) |> filter({edge => !visisted.contains(edge)}) |> inspect(
+                    {edge => visisted.put(edge)}) |> map({edge: Edge<E> => edge.toJsonString()})|> collectArray
                 writeLines(_storage_path, outgoingEdges)
-                var incomingEdges = collectArray(
-                    nodes |> flatMap({node => node.incoming}) |> filter({edge => !visisted.contains(edge)}) |> inspect(
-                    {edge => visisted.put(edge)}) |> map({edge: Edge<E> => edge.toJsonString()}))
+                var incomingEdges = nodes |> flatMap({node => node.incoming}) |> filter({edge => !visisted.contains(edge)}) |> inspect(
+                    {edge => visisted.put(edge)}) |> map({edge: Edge<E> => edge.toJsonString()})|> collectArray
                 writeLines(_storage_path, incomingEdges)
             }
         } catch (e: Exception) {

@@ -331,7 +331,7 @@ public class Entity <: Serializable<Entity> & Equatable<Entity> & Hashable {
 
     public prop sources: Array<String> {
         get() {
-            collectArray(this._sources)
+            this._sources.toArray()
         }
     }
 
@@ -370,8 +370,8 @@ public class Entity <: Serializable<Entity> & Equatable<Entity> & Hashable {
             case _ => throw Exception("this data is not DataModelStruct")
         }
         let name = String.deserialize(dms.get("_name"))
-        let descs = collectArrayList(Array<String>.deserialize(dms.get("_descs")))
-        var sources = collectArrayList(Array<String>.deserialize(dms.get("_sources")))
+        let descs = ArrayList(Array<String>.deserialize(dms.get("_descs")))
+        var sources = ArrayList(Array<String>.deserialize(dms.get("_sources")))
         return Entity(name, descs: descs, sources: sources)
     }
 
@@ -385,7 +385,7 @@ public class Entity <: Serializable<Entity> & Equatable<Entity> & Hashable {
     }
 }
 
-public class RelationShip <: Serializable<RelationShip> & Equatable<RelationShip> & Hashable {
+public class Relationship <: Serializable<Relationship> & Equatable<Relationship> & Hashable {
     private var _descs: ArrayList<String>
     private let _keywords: HashSet<String>
     private let _sources: ArrayList<String>
@@ -405,13 +405,13 @@ public class RelationShip <: Serializable<RelationShip> & Equatable<RelationShip
 
     public prop keywords: Array<String> {
         get() {
-            collectArray(this._keywords)
+            this._keywords |> collectArray
         }
     }
 
     public prop sources: Array<String> {
         get() {
-            collectArray(this._sources)
+            this._sources |> collectArray
         }
     }
 
@@ -446,28 +446,28 @@ public class RelationShip <: Serializable<RelationShip> & Equatable<RelationShip
         dm.add(field<Array<String>>("_descs", descs))
         dm.add(field<Array<String>>("_keywords", keywords))
         dm.add(field<Array<String>>("_sources", sources))
-        dm.add(field<String>("__class__", "RelationShip"))
+        dm.add(field<String>("__class__", "Relationship"))
         return dm
     }
 
-    public static func deserialize(dm: DataModel): RelationShip {
+    public static func deserialize(dm: DataModel): Relationship {
         var dms = match (dm) {
             case data: DataModelStruct => data
             case _ => throw Exception("this data is not DataModelStruct")
         }
-        let descs = collectArrayList(Array<String>.deserialize(dms.get("_descs")))
-        var keywords = collectHashSet(Array<String>.deserialize(dms.get("_keywords")))
-        var sources = collectArrayList(Array<String>.deserialize(dms.get("_sources")))
-        return RelationShip(descs: descs, keywords: keywords, sources: sources)
+        let descs = ArrayList(Array<String>.deserialize(dms.get("_descs")))
+        var keywords = HashSet(Array<String>.deserialize(dms.get("_keywords")))
+        var sources = ArrayList(Array<String>.deserialize(dms.get("_sources")))
+        return Relationship(descs: descs, keywords: keywords, sources: sources)
     }
 
-    public operator func ==(other: RelationShip): Bool {
+    public operator func ==(other: Relationship): Bool {
         this.descs == other.descs && this.keywords == other.keywords && this.sources == other.sources
     }
 
     @When[cjc_version < "0.56.4"]
-    public operator func !=(other: RelationShip): Bool {
-        !(this==other)
+    public operator func !=(other: Relationship): Bool {
+        !(this == other)
     }
 }
 
@@ -485,40 +485,47 @@ public class MiniRagConfig {
     public var recordDelimiter: String = "##"
     public var graphFieldDelimiter: String = "<SEP>"
     public var entityDescMaxTokens: Int64 = 400
-    public var llm: ChatModel
+    public var chatModel: ChatModel
     public var tokenizer: Tokenizer
     public var embeddingModel: EmbeddingModel
-
     // Max entityExtractContinue Times
     public var maxContinueTimes = 1
 
-    public init(llm: ChatModel, embeddingModel: EmbeddingModel, tokenizer: Tokenizer) {
-        this.llm = llm
+    public init(chatModel: ChatModel, embeddingModel: EmbeddingModel, tokenizer: Tokenizer) {
+        this.chatModel = chatModel
         this.embeddingModel = embeddingModel
         this.tokenizer = tokenizer
     }
 }
 
 public class MiniRagBuilder {
-    public var _config: MiniRagConfig
-    public var _workspace: String = ".storage"
-    public var _collection: String = "default"
-    public var _kvStorageInstance: (workspace: String, collection: String) -> LocalKVStorage<Document> = {
+    var _config: MiniRagConfig
+    var _workspace: String = ".storage"
+    var _collection: String = "mini"
+    var _kvStorageInstance: (workspace: String, collection: String) -> LocalKVStorage<Document> = {
         workspace, collection => JsonKVStorage<Document>(workspace: workspace, collection: collection)
     }
-    public var _vectorStroageInstance: (workspace: String, collection: String, embeddingModel: EmbeddingModel) -> LocalVectorStorage = {
+    var _vectorStroageInstance: (workspace: String, collection: String, embeddingModel: EmbeddingModel) -> LocalVectorStorage = {
         workspace, collection, embeddingModel => JsonMemroyVectorStorage(embeddingModel, workspace: workspace,
             collection: collection)
     }
-    public var _graphStorageInstance: (workspace: String, collection: String) -> LocalGraphStorage<Entity, RelationShip> = {
-        workspace, collection => BaseLocalGraphStorage<Entity, RelationShip>(workspace: workspace,
+    var _graphStorageInstance: (workspace: String, collection: String) -> LocalGraphStorage<Entity, Relationship> = {
+        workspace, collection => BaseLocalGraphStorage<Entity, Relationship>(workspace: workspace,
             collection: collection)
     }
 
-    public init(llm: ChatModel, embeddingModel: EmbeddingModel, tokenizer: Tokenizer, workspace!: String = ".storage",
-        collection!: String = "default") {
+    public init(config: MiniRagConfig) {
+        this._config = config
+    }
+
+    public func workspace(workspace: String): MiniRagBuilder {
         this._workspace = workspace
-        this._config = MiniRagConfig(llm, embeddingModel, tokenizer)
+        this
+    }
+
+    public func collection(collection: String): MiniRagBuilder {
+        this._collection = collection
+        this
     }
 
     public func entityTypes(entityTypes: Array<String>) {
@@ -541,7 +548,7 @@ public class MiniRagBuilder {
     }
 
     public func graphStorageInstance(
-        graphStorageInstance: (workspace: String, collection: String) -> LocalGraphStorage<Entity, RelationShip>): MiniRagBuilder {
+        graphStorageInstance: (workspace: String, collection: String) -> LocalGraphStorage<Entity, Relationship>): MiniRagBuilder {
         this._graphStorageInstance = graphStorageInstance
         this
     }
@@ -611,12 +618,12 @@ public class MiniRagBuilder {
 }
 
 @jsonable
-class KeyWordsResponse {
-    let answer_type_keywords: Array<String>
-    let entities_from_query: Array<String>
+protected class KeyWordsResponse {
+    let answerTypeKeywords: Array<String>
+    let entitiesFromQuery: Array<String>
 }
 
-class MiniRagRetrival <: Retrieval {
+public class MiniRagRetrival <: Retrieval {
     protected MiniRagRetrival(
         private let docs: Array<Document>,
         private let context: String
@@ -633,7 +640,7 @@ class MiniRagRetrival <: Retrieval {
     }
 }
 
-public class MiniRagRetriever <: Retriever {
+protected class MiniRagRetriever <: Retriever {
     private var _mode: RetrieverMode
     private let _description: String
     private let _miniRag: MiniRag
@@ -660,8 +667,8 @@ public class MiniRagRetriever <: Retriever {
     }
 
     public override func search(query: String): Retrieval {
-        let (context, resources) = this._miniRag.query(query)
-        MiniRagRetrival(resources, context)
+        let (context, sources) = this._miniRag.query(query)
+        MiniRagRetrival(sources, context)
     }
 }
 
@@ -679,7 +686,7 @@ class Route {
     var entityScore: Int64 = 0
     var relationScore: Int64 = 0
     var trace: ArrayList<String> = ArrayList()
-    var usedEdges: ArrayList<Edge<RelationShip>> = ArrayList()
+    var usedEdges: ArrayList<Edge<Relationship>> = ArrayList()
 
     public init() {}
     public init(trace: ArrayList<String>) {
@@ -786,28 +793,28 @@ class SimpleChatAgent <: AgentProxy {
 public class MiniRag {
     private let _agent: SimpleChatAgent
     private let _embedding_model: EmbeddingModel
-    private let _doc_kv: LocalKVStorage<Document>
-    private let _chunk_kv: LocalKVStorage<Document>
-    private let _graph: LocalGraphStorage<Entity, RelationShip>
-    private let _entity_vdb: LocalVectorStorage
-    private let _entity_name_vdb: LocalVectorStorage
-    private let _relationship_vdb: LocalVectorStorage
-    private let _chunk_vdb: LocalVectorStorage
+    private let _docKv: LocalKVStorage<Document>
+    private let _chunkKv: LocalKVStorage<Document>
+    private let _graph: LocalGraphStorage<Entity, Relationship>
+    private let _entityVdb: LocalVectorStorage
+    private let _entityNameVdb: LocalVectorStorage
+    private let _relationshipVdb: LocalVectorStorage
+    private let _chunkVdb: LocalVectorStorage
     private let _config: MiniRagConfig
     private let _builder: MiniRagBuilder
     private let _splitter: Splitter
     private let _lock: ReentrantReadWriteMutex = ReentrantReadWriteMutex()
     public init(builder: MiniRagBuilder) {
-        this._agent = SimpleChatAgent(model: builder._config.llm)
+        this._agent = SimpleChatAgent(model: builder._config.chatModel)
         this._embedding_model = builder._config.embeddingModel
-        this._doc_kv = builder._kvStorageInstance(builder._workspace, "${builder._collection}_doc")
-        this._chunk_kv = builder._kvStorageInstance(builder._workspace, "${builder._collection}_chunk")
+        this._docKv = builder._kvStorageInstance(builder._workspace, "${builder._collection}_doc")
+        this._chunkKv = builder._kvStorageInstance(builder._workspace, "${builder._collection}_chunk")
         this._graph = builder._graphStorageInstance(builder._workspace, "${builder._collection}_graph")
-        this._entity_vdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_entity",
+        this._entityVdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_entity",
             this._embedding_model)
-        this._entity_name_vdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_entity_name",
+        this._entityNameVdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_entity_name",
             this._embedding_model)
-        this._relationship_vdb = builder._vectorStroageInstance(builder._workspace,
+        this._relationshipVdb = builder._vectorStroageInstance(builder._workspace,
             "${builder._collection}_relationship", this._embedding_model)
         this._chunk_vdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_chunk",
             this._embedding_model)
@@ -831,7 +838,7 @@ public class MiniRag {
         this.insert(doc)
     }
 
-    public func asRetriever(description!: String = "A garph Retriever"): MiniRagRetriever {
+    public func asRetriever(description!: String = "A garph Retriever"): Retriever {
         MiniRagRetriever(RetrieverMode.Static, description, this)
     }
 
@@ -859,13 +866,12 @@ public class MiniRag {
             ._config
             .query2KeywordTemplate
             .format(("query", query), ("type_pool", eTypes.toArray()))
-        let res = this._agent.chatGet<KeyWordsResponse>(query2keywordPrompt)
-        let kwResponse: KeyWordsResponse = match (res) {
-            case Some(js) => js
-            case None => throw AgentExecutionException("Get Keywords Failed!")
-        }
-        let answerTypes = collectArray(kwResponse.answer_type_keywords |> inspect({keyword => keyword.toAsciiLower()}))
-        let entitiesFromQuery = kwResponse.entities_from_query
+        let kwResponse = this
+            ._agent
+            .chatGet<KeyWordsResponse>(query2keywordPrompt)
+            .getOrThrow({=> AgentExecutionException("Get Keywords Failed!")})
+        let answerTypes = kwResponse.answerTypeKeywords |> inspect({keyword => keyword.toAsciiLower()}) |> collectArray
+        let entitiesFromQuery = kwResponse.entitiesFromQuery
         return (answerTypes, entitiesFromQuery)
     }
 
@@ -878,16 +884,16 @@ public class MiniRag {
         let docsWithScoreFromQuery = ArrayList<(Document, Float64)>()
         for (entityName in entitiesFromQuery) {
             let docsWithScore = this
-                ._entity_name_vdb
+                ._entityNameVdb
                 .queryWithScore(entityName, queryParam.topK, threshold: queryParam.threshold)
             docsWithScoreFromQuery.appendAll(docsWithScore)
-            entitiesFromQueryMap.putIfAbsent(entityName, collectArrayList(docsWithScore |> map {ds => ds[0].content}))
+            entitiesFromQueryMap.putIfAbsent(entityName, docsWithScore |> map {ds => ds[0].content} |> collectArrayList)
         }
         // structure:{entityName: {score:0.0, routes:[]}}
         let crpMap = HashMap<String, CandidateReasoningPath>()
         // (EntityNameDoc,Score) => (entityName,CandidateReasoningPath)
-        docsWithScoreFromQuery |> filter({ds => this._graph.hasVertex(ds[0].content)}) |> forEach(
-            {ds => fillCandidateRouteMap(ds, crpMap)})
+        docsWithScoreFromQuery |> filter({ds => this._graph.hasVertex(ds[0].content)}) |>
+            forEach {ds => fillCandidateRouteMap(ds, crpMap)}
         // fill 2hops of entity
         for ((entityName, crp) in crpMap) {
             crp.routes.appendAll(this.queryNeighborsWithinKHops(entityName, 2))
@@ -895,7 +901,7 @@ public class MiniRag {
         }
 
         let answerVertexCandidates = this.getVerticesFromTypes(answerTypes)
-        let entityIdsFromAnswer = collectArray(answerVertexCandidates |> map({vertex => vertex.id}))
+        let entityIdsFromAnswer = answerVertexCandidates |> map({vertex => vertex.id}) |> collectArray
         appeardEntityIds.appendAll(entityIdsFromAnswer)
         calEntityScore(crpMap, entityIdsFromAnswer)
 
@@ -930,17 +936,16 @@ public class MiniRag {
         let chunkDocs = this
             ._chunk_vdb
             .query(queryParam.query, Int64(queryParam.topK / 2), threshold: queryParam.threshold / 2.0)
-        let chunkMap = collectHashMap(chunkDocs |> map({chunkDoc => (chunkDoc.id, chunkDoc)}))
+        let chunkMap = chunkDocs |> map({chunkDoc => (chunkDoc.id, chunkDoc)}) |> collectHashMap
         let finalChunkIds = Counter<String>()
         for ((keyword, entityNames) in keywordsMap) {
             let curChunkIds = Counter<String>()
             for ((i, entityName) in enumerate(entityNames)) {
                 if (let Some(reasoningPath) <- crpMap.get(entityName)) {
-                    var score = 0.0
-                    if (i == 0) {
-                        score += 2.0 * reasoningPath.score
+                    var score = if (i == 0) {
+                        2.0 * reasoningPath.score
                     } else {
-                        score += reasoningPath.score
+                        reasoningPath.score
                     }
                     for ((j, chunkId) in enumerate(reasoningPath.chunkIds)) {
                         if (j == 0 && chunkMap.contains(chunkId)) {
@@ -953,16 +958,15 @@ public class MiniRag {
             finalChunkIds.merge(curChunkIds)
         }
         let topChunks = finalChunkIds.getMostCommon(queryParam.topK / 2)
-        return collectArray(topChunks |> map({cid => this._chunk_kv.get(cid).getOrThrow()}))
+        return topChunks |> map({cid => this._chunkKv.get(cid).getOrThrow()}) |> collectArray
     }
 
     private func assembleEntityContext(crpMap: Map<String, CandidateReasoningPath>, queryParam: QueryParam): String {
-        var entitySectionList: ArrayList<(String, Float64, String)> = collectArrayList(
-            crpMap |> map(
-                {
-                    entry => (entry[0], entry[1].score, String.join(entry[1].entity.data.getOrThrow().descs,
-                            delimiter: this._config.graphFieldDelimiter))
-                }))
+        var entitySectionList: ArrayList<(String, Float64, String)> = crpMap |> map(
+            {
+            entry => (entry[0], entry[1].score, String.join(entry[1].entity.data.getOrThrow().descs,
+                    delimiter: this._config.graphFieldDelimiter))
+        }) |> collectArrayList
         entitySectionList.sortBy(stable: true) {
             lht: (String, Float64, String), rht: (String, Float64, String) =>
             if (lht[1] < rht[1]) {
@@ -977,9 +981,9 @@ public class MiniRag {
             {key: (String, Float64, String) => key[2]}, queryParam.maxTokenForEntity)
         toCSVString<(String, Float64, String)>(["entity", "score", "description"], entitySectionList.toArray(),
             {
-                index: Int64, tuple: (String, Float64, String) => [tuple[0], tuple[1].toString(),
-                    "\"${tuple[2].replace("\"","\\\"")}\""]
-            })
+            index: Int64, tuple: (String, Float64, String) => [tuple[0], tuple[1].toString(),
+                "\"${tuple[2].replace("\"","\\\"")}\""]
+        })
     }
 
     private func toCSVString<T>(title: Array<String>, data: Array<T>, dataToStringFunc: (Int64, T) -> Array<String>): String {
@@ -1020,13 +1024,7 @@ public class MiniRag {
                 let sources = ArrayList<String>()
                 let usedEdges = route.usedEdges
                 if (route.usedEdges.size > 0) {
-                    sources.appendAll(route
-                        .usedEdges
-                        .get(0)
-                        .getOrThrow()
-                        .data
-                        .getOrThrow()
-                        .sources)
+                    sources.appendAll(route.usedEdges.get(0).getOrThrow().data.getOrThrow().sources)
                 }
                 sources.appendAll(immediateEntity.sources)
                 for (i in 1..route.trace.size) {
@@ -1037,7 +1035,7 @@ public class MiniRag {
                         continue
                     }
                     if (let Some(entity) <- this._graph.getVertex(entityName)) {
-                        immediateSources = getIntermediateSrouces(entity.data.getOrThrow(), queryParam.query)
+                        immediateSources = getIntermediateSources(entity.data.getOrThrow(), queryParam.query)
                     } else {
                         immediateSources = []
                     }
@@ -1060,7 +1058,7 @@ public class MiniRag {
      * if desc is not summarized. choose top 5 chunks
      * if desc is summarized. just return the org sources
      */
-    private func getIntermediateSrouces(entity: Entity, query: String): Array<String> {
+    private func getIntermediateSources(entity: Entity, query: String): Array<String> {
         let descs = entity.descs
         let sources = entity.sources
         if (descs.size != sources.size) {
@@ -1068,7 +1066,7 @@ public class MiniRag {
         }
         if (sources.size > 5) {
             let consideredIds = calculateSimilarity(query, descs, 5)
-            return collectArray(consideredIds |> map({id => sources.get(id).getOrThrow()}))
+            return consideredIds |> map({id => sources.get(id).getOrThrow()}) |> collectArray
         }
         return sources
     }
@@ -1095,7 +1093,7 @@ public class MiniRag {
             }
             return Ordering.EQ
         }
-        return collectArray(scores[0..max] |> map({item => item[0]}))
+        return scores[0..max] |> map({item => item[0]}) |> collectArray
     }
 
     /**
@@ -1103,8 +1101,8 @@ public class MiniRag {
      * When the CandidateReasoningPath contains one edge, edge score + 1
      */
     private func edgeVoteCandidate(crpMap: Map<String, CandidateReasoningPath>, edgeDocs: Array<Document>): Unit {
-        let edges = collectArray(
-            edgeDocs |> map({doc => (doc.metadata.get("srcId").getOrThrow(), doc.metadata.get("tgtId").getOrThrow())}))
+        let edges = edgeDocs |> map(
+            {doc => (doc.metadata.get("srcId").getOrThrow(), doc.metadata.get("tgtId").getOrThrow())}) |> collectArray
         for (reasoingPath in crpMap.values()) {
             for (route in reasoingPath.routes) {
                 calRelationScore(route, edges)
@@ -1134,19 +1132,18 @@ public class MiniRag {
     private func searchEdgeDocs(queryParam: QueryParam, entitiesFromQuery: Array<String>,
         appeardEntityIds: ArrayList<String>): Array<Document> {
         let edgeDocs = this
-            ._relationship_vdb
+            ._relationshipVdb
             .query(queryParam.query, Int64(entitiesFromQuery.size * queryParam.topK),
                 threshold: queryParam.threshold / 2.0)
         let apeSet = HashSet<String>(appeardEntityIds)
-        collectArray(
-            edgeDocs |> filter(
-                {
-                    doc =>
-                    let srcId = doc.metadata.get("srcId").getOrThrow()
-                    let tgtId = doc.metadata.get("tgtId").getOrThrow()
-                    apeSet.contains(srcId) || apeSet.contains(tgtId)
-                }
-            ))
+        edgeDocs |> filter(
+            {
+                doc =>
+                let srcId = doc.metadata.get("srcId").getOrThrow()
+                let tgtId = doc.metadata.get("tgtId").getOrThrow()
+                apeSet.contains(srcId) || apeSet.contains(tgtId)
+            }
+        ) |> collectArray
     }
 
     /**
@@ -1194,7 +1191,7 @@ public class MiniRag {
                 traces.appendAll(mergedTraces)
             }
         }
-        return collectArray(traces |> map({trace => Route(trace)}))
+        return traces |> map({trace => Route(trace)}) |> collectArray
     }
 
     /**
@@ -1221,42 +1218,41 @@ public class MiniRag {
     }
 
     private func getRoutes(vertexId: String): ArrayList<ArrayList<String>> {
-        collectArrayList(this._graph.getOutgoingEdgesOf(vertexId) |> map({edge => ArrayList([edge.srcId, edge.tgtId])}))
+        this._graph.getOutgoingEdgesOf(vertexId) |> map({edge => ArrayList([edge.srcId, edge.tgtId])}) |>
+            collectArrayList
     }
 
     private func _insert(doc: Document): Unit {
-        if (let Some(curDoc) <- this._doc_kv.get(doc.id)) {
+        if (let Some(curDoc) <- this._docKv.get(doc.id)) {
             if (curDoc == doc) {
                 LogUtils.info("[Doc] Duplicated Doc:${doc.id}.")
                 return
             }
             if (curDoc.content == doc.content) {
-                this._doc_kv.upsert(doc.id, doc)
+                this._docKv.upsert(doc.id, doc)
                 LogUtils.info("[Doc] Duplicated Doc:${doc.id}.")
                 return
             }
         }
-        this._doc_kv.upsert(doc.id, doc)
+        this._docKv.upsert(doc.id, doc)
         LogUtils.info("[Doc] New Doc:${doc.id} Inserted.")
 
         let chunks = split(doc)
         if (chunks.size == 0) {
             return
         }
-        chunks |> forEach(
-            {
-                chunk =>
-                this._chunk_kv.upsert(chunk.id, chunk)
-                this._chunk_vdb.add(chunk)
-            }
-        )
+        chunks |> forEach {
+            chunk =>
+            this._chunkKv.upsert(chunk.id, chunk)
+            this._chunk_vdb.add(chunk)
+        }
         LogUtils.info("[Chunk] ${chunks.size} New Chunks Inserted.")
         this._insert_graph(chunks)
     }
 
     private func _insert_graph(chunks: Array<Document>): Unit {
         let entityMap = HashMap<String, ArrayList<Vertex<Entity>>>()
-        let relationMap = HashMap<String, ArrayList<Edge<RelationShip>>>()
+        let relationMap = HashMap<String, ArrayList<Edge<Relationship>>>()
         for (chunk in chunks) {
             let (vertices, edges) = this.extractEntities(chunk)
             for (vertex in vertices) {
@@ -1310,16 +1306,16 @@ public class MiniRag {
         let realDescs = summarizeDescription(vId, allDescs)
         let vertex = Vertex<Entity>(vId, vType: vType, data: Entity(vId))
         let entity = vertex.data.getOrThrow()
-        allSources |> forEach({source => entity.addSource(source)})
-        realDescs |> forEach({desc => entity.addDesc(desc)})
+        allSources |> forEach {source => entity.addSource(source)}
+        realDescs |> forEach {desc => entity.addDesc(desc)}
         this._graph.upsertVertex(vertex)
-        this._entity_name_vdb.add(Document(entity.name))
+        this._entityNameVdb.add(Document(entity.name))
         this
-            ._entity_vdb
+            ._entityVdb
             .add(Document("${entity.name}\n${String.join(entity.descs,delimiter:this._config.graphFieldDelimiter)}"))
     }
 
-    private func mergeRelationShipAndUpsert(relations: ArrayList<Edge<RelationShip>>): Unit {
+    private func mergeRelationShipAndUpsert(relations: ArrayList<Edge<Relationship>>): Unit {
         if (relations.isEmpty()) {
             return
         }
@@ -1345,11 +1341,11 @@ public class MiniRag {
         let allDescs = allDescriptions.toArray()
         allDescs.sort()
         let realDescs = summarizeDescription("(${srcId},${tgtId})", allDescs)
-        let edge = Edge<RelationShip>(srcId, tgtId, eType: eType, weight: sumWeights(allWeights), data: RelationShip())
+        let edge = Edge<Relationship>(srcId, tgtId, eType: eType, weight: sumWeights(allWeights), data: Relationship())
         let relationShip = edge.data.getOrThrow()
-        allSources |> forEach({source => relationShip.addSource(source)})
-        realDescs |> forEach({desc => relationShip.addDesc(desc)})
-        allKeywords |> forEach({keyword => relationShip.addKeyword(keyword)})
+        allSources |> forEach {source => relationShip.addSource(source)}
+        realDescs |> forEach {desc => relationShip.addDesc(desc)}
+        allKeywords |> forEach {keyword => relationShip.addKeyword(keyword)}
         try {
             this._graph.upsertEdge(edge)
             let edgeDoc = Document(
@@ -1358,7 +1354,7 @@ public class MiniRag {
             edgeDoc.metadata.put("srcId", edge.srcId)
             edgeDoc.metadata.put("tgtId", edge.tgtId)
             edgeDoc.metadata.put("eType", edge.eType)
-            this._relationship_vdb.add(edgeDoc)
+            this._relationshipVdb.add(edgeDoc)
         } catch (e: Exception) {
             LogUtils.error("Upsert Edge ${edge.srcId}-${edge.tgtId} Failed.\n ${e}")
         }
@@ -1396,7 +1392,7 @@ public class MiniRag {
         return counter.getBest(preferType)
     }
 
-    private func extractEntities(chunk: Document): (Array<Vertex<Entity>>, Array<Edge<RelationShip>>) {
+    private func extractEntities(chunk: Document): (Array<Vertex<Entity>>, Array<Edge<Relationship>>) {
         let extractTemplate = this._config.entityExtractTemplate
         let continuePrompt = this._config.entityExtractContinueTemplate
         let judgePrompt = this._config.entityExtractJudgeTemplate
@@ -1425,10 +1421,10 @@ public class MiniRag {
         return parseResult(chunk.id, finalResult)
     }
 
-    private func parseResult(source: String, result: String): (Array<Vertex<Entity>>, Array<Edge<RelationShip>>) {
+    private func parseResult(source: String, result: String): (Array<Vertex<Entity>>, Array<Edge<Relationship>>) {
         let records = splitByMarkers(result, [this._config.recordDelimiter, this._config.completionDelimiter])
         let entityVertexs = ArrayList<Vertex<Entity>>()
-        let relationEdges = ArrayList<Edge<RelationShip>>()
+        let relationEdges = ArrayList<Edge<Relationship>>()
         for (record in records) {
             let roption = regSearch(record.trimAscii(), "\\((.*)\\)", group: 1)
             if (roption.isNone()) {
@@ -1455,12 +1451,7 @@ public class MiniRag {
         if (name.isEmpty()) {
             return None
         }
-        let vType = recordAttis
-            .get(2)
-            .getOrThrow()
-            .trimAscii()
-            .replace('"', "")
-            .toAsciiLower()
+        let vType = recordAttis.get(2).getOrThrow().trimAscii().replace('"', "").toAsciiLower()
         let description = recordAttis.get(3).getOrThrow().trimAscii().replace('"', "")
         let entity = Entity(name)
         entity.addDesc(description)
@@ -1469,7 +1460,7 @@ public class MiniRag {
         vertex
     }
 
-    private func instanceRelationShip(source: String, recordAttis: Array<String>): Option<Edge<RelationShip>> {
+    private func instanceRelationShip(source: String, recordAttis: Array<String>): Option<Edge<Relationship>> {
         if (recordAttis.size < 5 || recordAttis.get(0).getOrThrow().toAsciiLower() != '"relationship"') {
             return None
         }
@@ -1477,38 +1468,37 @@ public class MiniRag {
         let tgt = recordAttis.get(2).getOrThrow().trimAscii().replace('"', "")
         let description = recordAttis.get(3).getOrThrow().trimAscii().replace('"', "")
         let keywords = recordAttis.get(4).getOrThrow().trimAscii().replace('"', "")
-        let relationship = RelationShip()
+        let relationship = Relationship()
         relationship.addDesc(description)
         for (keyword in keywords.split(",")) {
             relationship.addKeyword(keyword.trimAscii())
         }
         relationship.addSource(source)
-        let edge = Edge<RelationShip>(src, tgt, data: relationship)
+        let edge = Edge<Relationship>(src, tgt, data: relationship)
         edge
     }
 
     private func split(doc: Document): Array<Document> {
-        collectArray(
-            this._splitter.split(doc.content) |> inspect(
-                {
-                    chunk =>
-                    for ((k, v) in doc.metadata) {
-                        chunk.metadata.putIfAbsent(k, v)
-                    }
-                    chunk.metadata.put("doc_id", doc.id)
+        this._splitter.split(doc.content) |> inspect(
+            {
+                chunk =>
+                for ((k, v) in doc.metadata) {
+                    chunk.metadata.putIfAbsent(k, v)
                 }
-            ) |> filter({chunk => this._chunk_kv.get(chunk.id).isNone()}))
+                chunk.metadata.put("doc_id", doc.id)
+            }
+        ) |> filter({chunk => this._chunkKv.get(chunk.id).isNone()}) |> collectArray
     }
 
     public func commit(): Unit {
         try {
             this._lock.writeMutex.lock()
-            _doc_kv.commit()
-            _chunk_kv.commit()
+            _docKv.commit()
+            _chunkKv.commit()
             _graph.commit()
-            _entity_vdb.commit()
-            _entity_name_vdb.commit()
-            _relationship_vdb.commit()
+            _entityVdb.commit()
+            _entityNameVdb.commit()
+            _relationshipVdb.commit()
             _chunk_vdb.commit()
         } finally {
             this._lock.writeMutex.unlock()
@@ -1519,12 +1509,12 @@ public class MiniRag {
         try {
             this._lock.writeMutex.lock()
             this.commit()
-            _doc_kv.close()
-            _chunk_kv.close()
+            _docKv.close()
+            _chunkKv.close()
             _graph.close()
-            _entity_vdb.close()
-            _entity_name_vdb.close()
-            _relationship_vdb.close()
+            _entityVdb.close()
+            _entityNameVdb.close()
+            _relationshipVdb.close()
             _chunk_vdb.close()
         } finally {
             this._lock.writeMutex.unlock()
@@ -1534,12 +1524,12 @@ public class MiniRag {
     public func reset(): Unit {
         try {
             this._lock.writeMutex.lock()
-            _doc_kv.reset()
-            _chunk_kv.reset()
+            _docKv.reset()
+            _chunkKv.reset()
             _graph.reset()
-            _entity_vdb.reset()
-            _entity_name_vdb.reset()
-            _relationship_vdb.reset()
+            _entityVdb.reset()
+            _entityNameVdb.reset()
+            _relationshipVdb.reset()
             _chunk_vdb.reset()
         } finally {
             this._lock.writeMutex.unlock()

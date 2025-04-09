@@ -105,9 +105,8 @@ public class JsonMemroyVectorStorage <: LocalVectorStorage {
             _lock.readMutex.lock()
             let vec = this._vector_builder.createEmbeddingVector(query)
             let offsets = this._vdb.search(vec, number: topK, minDistance: threshold)
-            collectArray(
-                offsets |> map({sr => this._index.get(sr.index)}) |> map(
-                    {str => Document.fromJsonValue(JsonValue.fromStr(str))}))
+            offsets |> map({sr => this._index.get(sr.index)}) |> map(
+                {str => Document.fromJsonValue(JsonValue.fromStr(str))}) |> collectArray
         } finally {
             _lock.readMutex.unlock()
         }
@@ -118,9 +117,8 @@ public class JsonMemroyVectorStorage <: LocalVectorStorage {
             _lock.readMutex.lock()
             let vec = this._vector_builder.createEmbeddingVector(query)
             let offsets = this._vdb.search(vec, number: topK, minDistance: threshold)
-            collectArray(
-                offsets |> map({sr => (this._index.get(sr.index), sr.dist)}) |> map(
-                    {tuple => (Document.fromJsonValue(JsonValue.fromStr(tuple[0])), tuple[1])}))
+            offsets |> map({sr => (this._index.get(sr.index), sr.dist)}) |> map(
+                {tuple => (Document.fromJsonValue(JsonValue.fromStr(tuple[0])), tuple[1])}) |> collectArray
         } finally {
             _lock.readMutex.unlock()
         }

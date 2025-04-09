@@ -20,7 +20,7 @@ public class RecursiveCharacterTextSplitter <: AbsCharacterSplitter {
         }
         var separators = ArrayList<String>(_separators)
         let chunks = recursiveSplit(text, separators)
-        return collectArray(chunks |> map({chunk => Document(chunk)}))
+        return chunks |> map({chunk => Document(chunk)})|> collectArray
     }
 
     private func recursiveSplit(text: String, separators: ArrayList<String>): ArrayList<String> {

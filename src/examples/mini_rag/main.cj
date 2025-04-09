@@ -1,7 +1,6 @@
 package magic.examples.mini_rag
 
-import magic.rag.graph.MiniRagBuilder
-import magic.rag.graph.MiniRag
+import magic.rag.graph.{MiniRagBuilder, MiniRagConfig, MiniRag}
 import magic.model.openai.OpenAIChatModel
 import magic.model.ollama.OllamaEmbeddingModel
 import magic.utils.readToEnd
@@ -31,7 +30,7 @@ func instantiate(): MiniRag {
     let model = ModelManager.createChatModel("deepseek:deepseek-chat")
     let embed = OllamaEmbeddingModel("bge-m3:567m", baseURL: "http://127.0.0.1:11434")
     let tokenizer = Cl100kTokenizer("tiktoken/cl100k_base.tiktoken")
-    MiniRagBuilder(model, embed, tokenizer).build()
+    MiniRagBuilder(MiniRagConfig(model, embed, tokenizer)).build()
 }
 
 func miniRagRetriever(): Retriever {

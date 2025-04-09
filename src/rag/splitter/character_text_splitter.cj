@@ -24,6 +24,6 @@ public class CharacterTextSplitter <: AbsCharacterSplitter {
         }
         let res: Iterator<String> = text.lazySplit(this.separator, this.chunkSize)
         let chunks = mergeSplit(res, this.separator)
-        return collectArray(chunks |> map {chunk => Document(chunk)})
+        return chunks |> map {chunk => Document(chunk)}|> collectArray
     }
 }
