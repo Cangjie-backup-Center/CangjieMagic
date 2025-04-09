@@ -28,9 +28,9 @@ Add sections and commentary to the response as appropriate for the length and fo
 
 func instantiate(): MiniRag {
     let model = ModelManager.createChatModel("deepseek:deepseek-chat")
-    let embed = OllamaEmbeddingModel("bge-m3:567m", baseURL: "http://127.0.0.1:11434")
+    let embeddingModel = OllamaEmbeddingModel("bge-m3:567m", baseURL: "http://127.0.0.1:11434")
     let tokenizer = Cl100kTokenizer("tiktoken/cl100k_base.tiktoken")
-    MiniRagBuilder(MiniRagConfig(model, embed, tokenizer)).build()
+    MiniRagBuilder(MiniRagConfig(model, embeddingModel, tokenizer)).build()
 }
 
 func miniRagRetriever(): Retriever {
@@ -40,13 +40,10 @@ func miniRagRetriever(): Retriever {
 
 func buildGraph(): Unit {
     let miniRag = instantiate()
-    let build = true
-    if (build) {
-        for (entry in Directory("./data")) {
-            try (file = File.openRead(entry.path)) {
-                let content = String.fromUtf8(readToEnd(file))
-                miniRag.insert(content)
-            }
+    for (entry in Directory("./data")) {
+        try (file = File.openRead(entry.path)) {
+            let content = String.fromUtf8(readToEnd(file))
+            miniRag.insert(content)
         }
     }
     miniRag.commit()

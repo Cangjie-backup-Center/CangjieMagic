@@ -26,14 +26,14 @@ public interface GraphStorage<V, E> where V <: Serializable<V> & Equatable<V> & 
     func getAllVertices(): Array<Vertex<V>>
 }
 
-public abstract class LocalGraphStorage<V, E> <: GraphStorage<V, E> & LocalStorage where V <: Serializable<V> & Equatable<V> & Hashable,
+public interface LocalGraphStorage<V, E> <: GraphStorage<V, E> & LocalStorage where V <: Serializable<V> & Equatable<V> & Hashable,
     E <: Serializable<E> & Equatable<E> & Hashable {}
 
 public open class BaseLocalGraphStorage<V, E> <: LocalGraphStorage<V, E> where V <: Serializable<V> & Equatable<V> & Hashable,
     E <: Serializable<E> & Equatable<E> & Hashable {
     private let _workspace: String
     private let _collection: String
-    private let _storage_path: Path
+    private let _storagePath: Path
     private let _graph: BaseGraph<V, E>
     private let _lock = ReentrantReadWriteMutex()
 
@@ -41,15 +41,15 @@ public open class BaseLocalGraphStorage<V, E> <: LocalGraphStorage<V, E> where V
         this._graph = BaseGraph<V, E>()
         this._workspace = workspace
         this._collection = collection.toAsciiLower()
-        this._storage_path = Path(this._workspace).join("${this._collection}_graph.jsonl")
+        this._storagePath = Path(this._workspace).join("${this._collection}_graph.jsonl")
         // initalize and load
         if (!exists(_workspace)) {
             Directory.create(_workspace, recursive: true)
         }
-        if (!exists(_storage_path)) {
-            File.create(_storage_path)
+        if (!exists(_storagePath)) {
+            File.create(_storagePath)
         }
-        var lines = readLines(_storage_path)
+        var lines = readLines(_storagePath)
         for (line in lines) {
             if (line.isEmpty()) {
                 continue
@@ -76,25 +76,25 @@ public open class BaseLocalGraphStorage<V, E> <: LocalGraphStorage<V, E> where V
     }
 
     public func _commit(): Unit {
-        let backup = directoryOf(_storage_path).join("${_collection}_graph.backup")
+        let backup = directoryOf(_storagePath).join("${_collection}_graph.backup")
         try {
-            move(_storage_path, backup, true)
-            File.create(_storage_path)
+            move(_storagePath, backup, true)
+            File.create(_storagePath)
             let nodes = _graph.getAllNodes()
             let vertexStrs = nodes |> map({node => node.vertex.toJsonString()}) |> collectArray
-            writeLines(_storage_path, vertexStrs)
+            writeLines(_storagePath, vertexStrs)
             let visisted = HashSet<Edge<E>>()
             for (node in nodes) {
                 var outgoingEdges = nodes |> flatMap({node => node.outgoing}) |> filter({edge => !visisted.contains(edge)}) |> inspect(
                     {edge => visisted.put(edge)}) |> map({edge: Edge<E> => edge.toJsonString()})|> collectArray
-                writeLines(_storage_path, outgoingEdges)
+                writeLines(_storagePath, outgoingEdges)
                 var incomingEdges = nodes |> flatMap({node => node.incoming}) |> filter({edge => !visisted.contains(edge)}) |> inspect(
                     {edge => visisted.put(edge)}) |> map({edge: Edge<E> => edge.toJsonString()})|> collectArray
-                writeLines(_storage_path, incomingEdges)
+                writeLines(_storagePath, incomingEdges)
             }
         } catch (e: Exception) {
-            removeIfExists(_storage_path)
-            move(backup, _storage_path, true)
+            removeIfExists(_storagePath)
+            move(backup, _storagePath, true)
             throw Exception("Graph Commit Failed!")
         } finally {
             removeIfExists(backup)

@@ -29,7 +29,7 @@ public interface JsonDeserializable<T> <: Serializable<T> {
 struct Token <: JsonDeserializable<Token> {
     let _id: UInt32
     let _content: String
-    let _single_word: Bool
+    let _singleWord: Bool
     let _lstrip: Bool
     let _rstrip: Bool
     let _normalized: Bool
@@ -38,7 +38,7 @@ struct Token <: JsonDeserializable<Token> {
     private init(
         id: UInt32,
         content: String,
-        single_word: Bool,
+        singleWord: Bool,
         lstrip: Bool,
         rstrip: Bool,
         normalized: Bool,
@@ -46,7 +46,7 @@ struct Token <: JsonDeserializable<Token> {
     ) {
         this._id = id
         this._content = content
-        this._single_word = single_word
+        this._singleWord = singleWord
         this._lstrip = lstrip
         this._rstrip = rstrip
         this._normalized = normalized
@@ -107,9 +107,9 @@ struct Process <: JsonDeserializable<Process> {
     // Union ByteLevel and SplitTokenizer
     let _type: String
     // use for ByteLevel: decoder/post_processor
-    let _add_prefix_space: Option<Bool>
-    let _trim_offsets: Option<Bool>
-    let _use_regex: Option<Bool>
+    let _addPrefixSpace: Option<Bool>
+    let _trimOffsets: Option<Bool>
+    let _useRegex: Option<Bool>
     // actived when split tokenizer
     let _pattern: Option<Pattern>
     let _behavior: Option<String>
@@ -117,36 +117,36 @@ struct Process <: JsonDeserializable<Process> {
 
     // construct for decode/post_preprossor
     private init(
-        p_type: String,
-        add_prefix_space: Bool,
-        trim_offsets: Bool,
-        use_regex: Bool
+        pType: String,
+        addPrefixSpace: Bool,
+        trimOffsets: Bool,
+        useRegex: Bool
     ) {
-        this._type = p_type
+        this._type = pType
         if (this._type != "ByteLevel") {
             throw Exception("this construction function only suppport ByteLevel type");
         }
-        this._add_prefix_space = Some(add_prefix_space)
-        this._trim_offsets = Some(trim_offsets)
-        this._use_regex = Some(use_regex)
+        this._addPrefixSpace = Some(addPrefixSpace)
+        this._trimOffsets = Some(trimOffsets)
+        this._useRegex = Some(useRegex)
         this._pattern = None
         this._behavior = None
         this._invert = None
     }
 
     private init(
-        p_type: String,
+        pType: String,
         pattern: Pattern,
         behavior: String,
         invert: Bool
     ) {
-        this._type = p_type
-        if (p_type != "Split") {
+        this._type = pType
+        if (pType != "Split") {
             throw Exception("this construction function only support Split type")
         }
-        this._add_prefix_space = None
-        this._trim_offsets = None
-        this._use_regex = None
+        this._addPrefixSpace = None
+        this._trimOffsets = None
+        this._useRegex = None
         this._pattern = Some(pattern)
         this._behavior = Some(behavior)
         this._invert = Some(invert)
@@ -187,8 +187,8 @@ struct Process <: JsonDeserializable<Process> {
 struct PreTokenizer <: JsonDeserializable<PreTokenizer> {
     let _type: String
     let _pretokenizers: ArrayList<Process>
-    private init(p_type: String, pretokenizers: ArrayList<Process>) {
-        this._type = p_type
+    private init(pType: String, pretokenizers: ArrayList<Process>) {
+        this._type = pType
         this._pretokenizers = pretokenizers
     }
 
@@ -213,16 +213,16 @@ struct Model <: JsonDeserializable<Model> {
     // perform no merges, so the result will just be characters.
     let _dropout: Option<Float32>
     // The unknown token to be used when we encounter an unknown char
-    let _unk_token: Option<String>
+    let _unkToken: Option<String>
     // An optional prefix to use on any subword that exist only behind another one
-    let _continuing_subword_prefix: String
+    let _continuingSubwordPrefix: String
     // An optional suffix to caracterize and end-of-word subword
-    let _end_of_word_suffix: String
+    let _endOfWordSuffix: String
     // Do multiple unk tokens get fused
-    let _fuse_unk: Bool
+    let _fuseUnk: Bool
     // Byte fallback from sentence pieces, instead of UNK, uses `"<0x00>"`
     // for each byte in the unk token
-    let _byte_fallback: Bool
+    let _byteFallback: Bool
     let _vocab: HashMap<String, UInt32>
     let _merges: ArrayList<String>
 
@@ -231,11 +231,11 @@ struct Model <: JsonDeserializable<Model> {
         dropout: Option<Float32>,
         vocab: HashMap<String, UInt32>,
         merges: ArrayList<String>,
-        unk_token!: Option<String> = None,
-        continuing_subword_prefix!: String = "",
-        end_of_word_suffix!: String = "",
-        fuse_unk!: Bool = false,
-        byte_fallback!: Bool = false
+        unkToken!: Option<String> = None,
+        continuingSubwordPrefix!: String = "",
+        endOfWordSuffix!: String = "",
+        fuseUnk!: Bool = false,
+        byteFallback!: Bool = false
     ) {
         this._type = _type
         if (dropout.isSome()) {
@@ -245,11 +245,11 @@ struct Model <: JsonDeserializable<Model> {
             }
         }
         this._dropout = dropout
-        this._unk_token = unk_token
-        this._continuing_subword_prefix = continuing_subword_prefix
-        this._end_of_word_suffix = end_of_word_suffix
-        this._fuse_unk = fuse_unk
-        this._byte_fallback = byte_fallback
+        this._unkToken = unkToken
+        this._continuingSubwordPrefix = continuingSubwordPrefix
+        this._endOfWordSuffix = endOfWordSuffix
+        this._fuseUnk = fuseUnk
+        this._byteFallback = byteFallback
         this._vocab = vocab
         this._merges = merges
     }
@@ -268,9 +268,9 @@ struct Model <: JsonDeserializable<Model> {
         let endOfWordSuffix = Option<String>.deserialize(dms.get("end_of_word_suffix"))
         let fuseUnk = Bool.deserialize(dms.get("fuse_unk"))
         let byteFallback = Bool.deserialize(dms.get("byte_fallback"))
-        return Model(_type, dropout, vocab, merges, unk_token: unkToken,
-            continuing_subword_prefix: continuingSubwordPrefix.getOrDefault({=> ""}),
-            end_of_word_suffix: endOfWordSuffix.getOrDefault({=> ""}), byte_fallback: byteFallback)
+        return Model(_type, dropout, vocab, merges, unkToken: unkToken,
+            continuingSubwordPrefix: continuingSubwordPrefix.getOrDefault({=> ""}),
+            endOfWordSuffix: endOfWordSuffix.getOrDefault({=> ""}), byteFallback: byteFallback)
     }
 }
 
@@ -278,7 +278,7 @@ public struct TokenizerJson <: JsonDeserializable<TokenizerJson> {
     let _version: String
     let _truncation: Option<String>
     let _padding: Option<String>
-    let _added_tokens: ArrayList<Token>
+    let _addedTokens: ArrayList<Token>
     let _normalizer: Normalizer
     let _pre_tokenizer: PreTokenizer
     let _post_processor: Process
@@ -289,7 +289,7 @@ public struct TokenizerJson <: JsonDeserializable<TokenizerJson> {
         version: String,
         truncation: Option<String>,
         padding: Option<String>,
-        added_tokens: ArrayList<Token>,
+        addedTokens: ArrayList<Token>,
         normalizer: Normalizer,
         pre_tokenizer: PreTokenizer,
         post_processor: Process,
@@ -299,7 +299,7 @@ public struct TokenizerJson <: JsonDeserializable<TokenizerJson> {
         this._version = version
         this._truncation = truncation
         this._padding = padding
-        this._added_tokens = added_tokens
+        this._addedTokens = addedTokens
         this._normalizer = normalizer
         this._pre_tokenizer = pre_tokenizer
         this._post_processor = post_processor
@@ -328,33 +328,33 @@ public struct TokenizerJson <: JsonDeserializable<TokenizerJson> {
 }
 
 public struct BPETokenizerConfig <: JsonDeserializable<BPETokenizerConfig> {
-    let _add_bos_token: Bool
-    let _add_eos_token: Bool
-    let _bos_token: Option<String>
-    let _eos_token: Option<String>
-    let _pad_token: Option<String>
-    let _unk_token: Option<String>
-    let _model_max_length: UInt32
-    let _tokenizer_class: String
+    let _addBosToken: Bool
+    let _addEosToken: Bool
+    let _bosToken: Option<String>
+    let _eosToken: Option<String>
+    let _padToken: Option<String>
+    let _unkToken: Option<String>
+    let _modelMaxLength: UInt32
+    let _tokenizerClass: String
 
     private init(
-        add_bos_token: Bool,
-        add_eos_token: Bool,
-        bos_token: Option<String>,
-        eos_token: Option<String>,
-        pad_token: Option<String>,
-        unk_token: Option<String>,
-        model_max_length: UInt32,
-        tokenizer_class: String
+        addBosToken: Bool,
+        addEosToken: Bool,
+        bosToken: Option<String>,
+        eosToken: Option<String>,
+        padToken: Option<String>,
+        unkToken: Option<String>,
+        modelMaxLength: UInt32,
+        tokenizerClass: String
     ) {
-        this._add_bos_token = add_bos_token
-        this._add_eos_token = add_eos_token
-        this._bos_token = bos_token
-        this._eos_token = eos_token
-        this._pad_token = pad_token
-        this._unk_token = unk_token
-        this._model_max_length = model_max_length
-        this._tokenizer_class = tokenizer_class
+        this._addBosToken = addBosToken
+        this._addEosToken = addEosToken
+        this._bosToken = bosToken
+        this._eosToken = eosToken
+        this._padToken = padToken
+        this._unkToken = unkToken
+        this._modelMaxLength = modelMaxLength
+        this._tokenizerClass = tokenizerClass
     }
 
     public static func deserialize(dm: DataModel): BPETokenizerConfig {
@@ -362,10 +362,10 @@ public struct BPETokenizerConfig <: JsonDeserializable<BPETokenizerConfig> {
             case data: DataModelStruct => data
             case _ => throw Exception("this data is not DataModelStruct")
         }
-        let add_bos_token = Option<Bool>.deserialize(dms.get("add_bos_token"))
-        let add_eos_token = Option<Bool>.deserialize(dms.get("add_eos_token"))
+        let addBosToken = Option<Bool>.deserialize(dms.get("add_bos_token"))
+        let addEosToken = Option<Bool>.deserialize(dms.get("add_eos_token"))
         let _ = Option<Bool>.deserialize(dms.get("_"))
-        let bos_token: Option<String> = match (dms.get("bos_token")) {
+        let bosToken: Option<String> = match (dms.get("bos_token")) {
             case data: DataModelString => Option<String>.deserialize(data)
             case data: DataModelStruct => match (data.get("content")) {
                 case innerData: DataModelString => Option<String>.deserialize(innerData)
@@ -373,7 +373,7 @@ public struct BPETokenizerConfig <: JsonDeserializable<BPETokenizerConfig> {
             }
             case _ => None
         }
-        let eos_token: Option<String> = match (dms.get("eos_token")) {
+        let eosToken: Option<String> = match (dms.get("eos_token")) {
             case data: DataModelString => Option<String>.deserialize(data)
             case data: DataModelStruct => match (data.get("content")) {
                 case innerData: DataModelString => Option<String>.deserialize(innerData)
@@ -381,7 +381,7 @@ public struct BPETokenizerConfig <: JsonDeserializable<BPETokenizerConfig> {
             }
             case _ => None
         }
-        let pad_token: Option<String> = match (dms.get("pad_token")) {
+        let padToken: Option<String> = match (dms.get("pad_token")) {
             case data: DataModelString => Option<String>.deserialize(data)
             case data: DataModelStruct => match (data.get("content")) {
                 case innerData: DataModelString => Option<String>.deserialize(innerData)
@@ -389,7 +389,7 @@ public struct BPETokenizerConfig <: JsonDeserializable<BPETokenizerConfig> {
             }
             case _ => None
         }
-        let unk_token: Option<String> = match (dms.get("unk_token")) {
+        let unkToken: Option<String> = match (dms.get("unk_token")) {
             case data: DataModelString => Option<String>.deserialize(data)
             case data: DataModelStruct => match (data.get("content")) {
                 case innerData: DataModelString => Option<String>.deserialize(innerData)
@@ -397,11 +397,11 @@ public struct BPETokenizerConfig <: JsonDeserializable<BPETokenizerConfig> {
             }
             case _ => None
         }
-        let model_max_length = UInt32.deserialize(dms.get("model_max_length"))
-        let tokenizer_class = String.deserialize(dms.get("tokenizer_class"))
+        let modelMaxLength = UInt32.deserialize(dms.get("model_max_length"))
+        let tokenizerClass = String.deserialize(dms.get("tokenizer_class"))
 
-        return BPETokenizerConfig(add_bos_token.getOrDefault({=> false}), add_eos_token.getOrDefault({=> false}),
-            bos_token, eos_token, pad_token, unk_token, model_max_length, tokenizer_class)
+        return BPETokenizerConfig(addBosToken.getOrDefault({=> false}), addEosToken.getOrDefault({=> false}),
+            bosToken, eosToken, padToken, unkToken, modelMaxLength, tokenizerClass)
     }
 }
 
@@ -459,30 +459,30 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
     // The _vocabulary assigns a number to each token.
     var _vocab: HashMap<String, UInt32> = HashMap()
     // Reversed _vocabulary, to rebuild sentences.
-    var _vocab_r: HashMap<UInt32, String> = HashMap()
+    var _vocabR: HashMap<UInt32, String> = HashMap()
     // Contains the mapping between Pairs and their (rank, new_id).
     var _merges: MergeMap = MergeMap()
-    var _bpe_ranks: BPERanks = BPERanks()
-    var _unk_token_id: Option<UInt32> = None
+    var _bpeRanks: BPERanks = BPERanks()
+    var _unkTokenId: Option<UInt32> = None
     /// Whether or not to direct output words if they are part of the _vocab.
-    var _ignore_merges: Bool = false;
+    var _ignoreMerges: Bool = false;
     // cache
     var _cache: HashMap<String, Array<String>> = HashMap()
     // the key is uniformed special token, and value is the origin token
     // See - func unexpectedNormalize and unexpectedRestore
-    var _special_tokens: HashMap<String, String> = HashMap()
-    var _special_ids: HashSet<UInt32> = HashSet()
+    var _specialTokens: HashMap<String, String> = HashMap()
+    var _specialIds: HashSet<UInt32> = HashSet()
     var _byte2rune: HashMap<UInt8, Rune> = HashMap()
     var _rune2byte: HashMap<Rune, UInt8> = HashMap()
-    var _special_regex: Regex = Regex("")
-    // use fix pre_split_regex as default
+    var _specialRegex: Regex = Regex("")
+    // use fix preSplitRegex as default
     // same reason as func unexpectedNormalize and unexpectedRestore
-    var _pre_split_regex: Regex = Regex(
+    var _preSplitRegex: Regex = Regex(
         "('s|'t|'re|'ve|'m|'ll|'d| ?[[:punct:]]?[[:alpha:]]+| ?[[:punct:]]?[[:digit:]]+| ?[[:punct:]]?[^\\s\\w]+|\\s+)")
-    var _add_bos_token: Bool = false
-    var _add_eos_token: Bool = false
-    var _bos_token: Option<String> = None
-    var _eos_token: Option<String> = None
+    var _addBosToken: Bool = false
+    var _addEosToken: Bool = false
+    var _bosToken: Option<String> = None
+    var _eosToken: Option<String> = None
 
     private func uniformSpecial(token: Token): String {
         var content = unexpectedNormalize(token._content)
@@ -510,26 +510,26 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
      * This function should be removed in the future.
      */
     func unexpectedRestore(token: String): String {
-        return this._special_tokens.get(token).getOrDefault({=> token})
+        return this._specialTokens.get(token).getOrDefault({=> token})
     }
 
     func buildSepcialRegex() {
         var sb: StringBuilder = StringBuilder()
         sb.append("(")
-        for ((i, spToken) in enumerate(this._special_tokens.keys())) {
-            if (i < this._special_tokens.size - 1) {
+        for ((i, spToken) in enumerate(this._specialTokens.keys())) {
+            if (i < this._specialTokens.size - 1) {
                 sb.append(spToken.replace("|", "\\|") + "|")
             } else {
                 sb.append(spToken.replace("|", "\\|") + ")")
             }
         }
-        this._special_regex = Regex(sb.toString())
+        this._specialRegex = Regex(sb.toString())
     }
 
     public func decode(tokens: Array<UInt32>): String {
         let strList = ArrayList<String>()
         for ((i, tokenId) in enumerate(tokens)) {
-            strList.append(this._vocab_r.get(tokenId).getOrThrow())
+            strList.append(this._vocabR.get(tokenId).getOrThrow())
         }
         let datas = ArrayList<UInt8>()
         for (str in strList) {
@@ -546,7 +546,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         var uniformed = unexpectedNormalize(input)
         let specialTokenMap = HashMap<Int64, UInt32>()
         let specialTokenIndexes = HashSet<Pair<Int64>>()
-        let specMathDatas = this._special_regex.matcher(uniformed).findAll() ?? Array<MatchData>()
+        let specMathDatas = this._specialRegex.matcher(uniformed).findAll() ?? Array<MatchData>()
         var text = uniformed;
         // replace special tokens with empty blank
         for (specMd in specMathDatas) {
@@ -565,10 +565,10 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             text = text.replace(specialToken, space)
         }
 
-        let matchDatas = this._pre_split_regex.matcher(text).findAll() ?? Array<MatchData>()
+        let matchDatas = this._preSplitRegex.matcher(text).findAll() ?? Array<MatchData>()
         var ids = ArrayList<UInt32>()
-        if (this._add_bos_token) {
-            if (let Some(bosToken) <- this._bos_token) {
+        if (this._addBosToken) {
+            if (let Some(bosToken) <- this._bosToken) {
                 if (let Some(bosId) <- this._vocab.get(bosToken)) {
                     ids.append(bosId)
                 }
@@ -579,7 +579,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             let me = matchData.matchPosition().end;
             let orgStr = uniformed[ms..me]
             // find special token
-            if (this._special_tokens.contains(orgStr)) {
+            if (this._specialTokens.contains(orgStr)) {
                 ids.append(this._vocab[orgStr])
                 continue
             }
@@ -609,15 +609,15 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             this._cache.put(runeLevelStr, mergeVocabs)
             for (mv in mergeVocabs) {
                 try {
-                    let id = this._vocab.get(mv).getOrDefault({=> this._unk_token_id.getOrThrow()})
+                    let id = this._vocab.get(mv).getOrDefault({=> this._unkTokenId.getOrThrow()})
                     ids.append(id)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
         }
-        if (this._add_eos_token) {
-            if (let Some(eosToken) <- this._eos_token) {
+        if (this._addEosToken) {
+            if (let Some(eosToken) <- this._eosToken) {
                 if (let Some(eosId) <- this._vocab.get(eosToken)) {
                     ids.append(eosId)
                 }
@@ -641,7 +641,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             var toMerge: Int64 = -1;
             for ((i, pair) in enumerate(pairs)) {
                 // if pair i is not merged.
-                let score = this._bpe_ranks.get(pair.left + pair.right).getOrDefault({=> UINT32_MAX})
+                let score = this._bpeRanks.get(pair.left + pair.right).getOrDefault({=> UINT32_MAX})
                 if (score < minScore) {
                     minScore = score
                     toMerge = i
