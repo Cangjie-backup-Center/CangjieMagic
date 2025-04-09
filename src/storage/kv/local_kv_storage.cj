@@ -9,6 +9,6 @@ public interface KVStorage<T> where T <: Serializable<T> {
     func upsert(id: String, value: T): Unit
 }
 
-public abstract class LocalKVStorage<T> <: KVStorage<T> & LocalStorage where T <: Serializable<T> {
+public interface LocalKVStorage<T> <: KVStorage<T> & LocalStorage where T <: Serializable<T> {
     
 }

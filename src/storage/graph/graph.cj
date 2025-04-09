@@ -88,16 +88,16 @@ public class Vertex<V> <: Equatable<Vertex<V>> & Hashable & Serializable<Vertex<
 }
 
 public class Edge<E> <: Equatable<Edge<E>> & Hashable & Serializable<Edge<E>> where E <: Serializable<E> & Equatable<E> & Hashable {
-    private var _src_id: String
-    private var _tgt_id: String
+    private var _srcId: String
+    private var _tgtId: String
     private var _eType: String
     private var _weight: Float64
     private var _data: Option<E>
 
     public init(srcId: String, tgtId: String, eType!: String = "DEFAULT", weight!: Float64 = 1.0,
         data!: Option<E> = None) {
-        this._src_id = srcId
-        this._tgt_id = tgtId
+        this._srcId = srcId
+        this._tgtId = tgtId
         this._eType = eType
         this._data = data
         this._weight = weight
@@ -120,13 +120,13 @@ public class Edge<E> <: Equatable<Edge<E>> & Hashable & Serializable<Edge<E>> wh
 
     public prop srcId: String {
         get() {
-            _src_id
+            _srcId
         }
     }
 
     public prop tgtId: String {
         get() {
-            _tgt_id
+            _tgtId
         }
     }
 

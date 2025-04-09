@@ -143,16 +143,16 @@ You are a helpful assistant tasked with identifying both answer-type and low-lev
 ---Goal---
 
 Given the query, list both answer-type and low-level keywords.
-answer_type_keywords focus on the type of the answer to the certain query, while low-level keywords focus on specific entities, details, or concrete terms.
-The answer_type_keywords must be selected from Answer type pool.
+"answer type keywords" focus on the type of the answer to the certain query, while low-level keywords focus on specific entities, details, or concrete terms.
+The "answer type keywords" must be selected from Answer type pool.
 This pool is in the form of a dictionary, where the key represents the Type you should choose from and the value represents the example samples.
 
 ---Instructions---
 
 - Output the keywords in JSON format.
 - The JSON should have three keys:
-  - "answer_type_keywords" for the types of the answer. In this list, the types with the highest likelihood should be placed at the forefront. No more than 3.
-  - "entities_from_query" for specific entities or details. It must be extracted from the query.
+  - "answer type keywords" for the types of the answer. In this list, the types with the highest likelihood should be placed at the forefront. No more than 3.
+  - "entities from query" for specific entities or details. It must be extracted from the query.
 ######################
 -Examples-
 ######################
@@ -180,8 +180,8 @@ Answer type pool: {
 ################
 Output:
 {
-  "answer_type_keywords": ["STRATEGY","PERSONAL LIFE"],
-  "entities_from_query": ["Trade agreements", "Tariffs", "Currency exchange", "Imports", "Exports"]
+  "answerTypeKeywords": ["STRATEGY","PERSONAL LIFE"],
+  "entitiesFromQuery": ["Trade agreements", "Tariffs", "Currency exchange", "Imports", "Exports"]
 }
 #############################
 Example 2:
@@ -211,8 +211,8 @@ Answer type pool: {
 ################
 Output:
 {
-  "answer_type_keywords": ["DATE AND TIME", "ORGANIZATION", "PLAN"],
-  "entities_from_query": ["SpaceX", "Rocket launch", "Aerospace", "Power Recovery"]
+  "answerTypeKeywords": ["DATE AND TIME", "ORGANIZATION", "PLAN"],
+  "entitiesFromQuery": ["SpaceX", "Rocket launch", "Aerospace", "Power Recovery"]
 
 }
 #############################
@@ -241,8 +241,8 @@ Answer type pool: {
 ################
 Output:
 {
-  "answer_type_keywords": ["STRATEGY", "PERSON"],
-  "entities_from_query": ["School access", "Literacy rates", "Job training", "Income inequality"]
+  "answerTypeKeywords": ["STRATEGY", "PERSON"],
+  "entitiesFromQuery": ["School access", "Literacy rates", "Job training", "Income inequality"]
 }
 #############################
 Example 4:
@@ -270,8 +270,8 @@ Answer type pool: {
 ################
 Output:
 {
-  "answer_type_keywords": ["LOCATION"],
-  "entities_from_query": ["capital of the United States", "Washington", "New York"]
+  "answerTypeKeywords": ["LOCATION"],
+  "entitiesFromQuery": ["capital of the United States", "Washington", "New York"]
 }
 #############################
 
@@ -705,93 +705,8 @@ class CandidateReasoningPath {
     }
 }
 
-class SimpleChatAgent <: AgentProxy {
-    protected var _name: String = "SimpleChatAgent"
-    protected var _description: String = "SimpleChatAgent"
-    protected var _temperature: Option<Float64> = None
-    protected var _systemPrompt: String = ""
-    protected var _toolManager: ToolManager = SimpleToolManager()
-    protected var _model: ChatModel
-    protected var _executor: Option<AgentExecutor> = NaiveExecutor()
-    protected var _retriever: Option<Retriever> = None
-    protected var _memory: Option<Memory> = None
-    protected var _interceptor: Option<Interceptor> = None
-
-    public init(
-        model!: ChatModel,
-        temperature!: Option<Float64> = None,
-        memory!: Option<Memory> = None
-    ) {
-        this._model = model
-    }
-
-    public override prop name: String {
-        get() {
-            _name
-        }
-    }
-    public override prop description: String {
-        get() {
-            _description
-        }
-    }
-    public mut override prop temperature: Option<Float64> {
-        get() {
-            _temperature
-        }
-        set(v) {
-            _temperature = v
-        }
-    }
-    public mut override prop systemPrompt: String {
-        get() {
-            _systemPrompt
-        }
-        set(v) {
-            _systemPrompt = v
-        }
-    }
-    public override prop toolManager: ToolManager {
-        get() {
-            _toolManager
-        }
-    }
-    public mut override prop model: ChatModel {
-        get() {
-            _model
-        }
-        set(m) {
-            _model = m
-        }
-    }
-    public mut override prop executor: AgentExecutor {
-        get() {
-            _executor.getOrThrow()
-        }
-        set(e) {
-            _executor = e
-        }
-    }
-    public mut override prop retriever: Option<Retriever> {
-        get() {
-            _retriever
-        }
-        set(v) {
-            _retriever = v
-        }
-    }
-    public mut override prop memory: Option<Memory> {
-        get() {
-            _memory
-        }
-        set(m) {
-            _memory = m
-        }
-    }
-}
-
 public class MiniRag {
-    private let _agent: SimpleChatAgent
+    private let _agent: BaseAgent
     private let _embedding_model: EmbeddingModel
     private let _docKv: LocalKVStorage<Document>
     private let _chunkKv: LocalKVStorage<Document>
@@ -805,7 +720,7 @@ public class MiniRag {
     private let _splitter: Splitter
     private let _lock: ReentrantReadWriteMutex = ReentrantReadWriteMutex()
     public init(builder: MiniRagBuilder) {
-        this._agent = SimpleChatAgent(model: builder._config.chatModel)
+        this._agent = BaseAgent(model: builder._config.chatModel, executor: NaiveExecutor())
         this._embedding_model = builder._config.embeddingModel
         this._docKv = builder._kvStorageInstance(builder._workspace, "${builder._collection}_doc")
         this._chunkKv = builder._kvStorageInstance(builder._workspace, "${builder._collection}_chunk")
@@ -814,9 +729,9 @@ public class MiniRag {
             this._embedding_model)
         this._entityNameVdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_entity_name",
             this._embedding_model)
-        this._relationshipVdb = builder._vectorStroageInstance(builder._workspace,
-            "${builder._collection}_relationship", this._embedding_model)
-        this._chunk_vdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_chunk",
+        this._relationshipVdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_relationship",
+            this._embedding_model)
+        this._chunkVdb = builder._vectorStroageInstance(builder._workspace, "${builder._collection}_chunk",
             this._embedding_model)
         this._splitter = builder._config.splitter
         this._config = builder._config
@@ -934,7 +849,7 @@ public class MiniRag {
     private func kwdToChunk(crpMap: Map<String, CandidateReasoningPath>, queryParam: QueryParam,
         keywordsMap: Map<String, ArrayList<String>>): Array<Document> {
         let chunkDocs = this
-            ._chunk_vdb
+            ._chunkVdb
             .query(queryParam.query, Int64(queryParam.topK / 2), threshold: queryParam.threshold / 2.0)
         let chunkMap = chunkDocs |> map({chunkDoc => (chunkDoc.id, chunkDoc)}) |> collectHashMap
         let finalChunkIds = Counter<String>()
@@ -1244,13 +1159,13 @@ public class MiniRag {
         chunks |> forEach {
             chunk =>
             this._chunkKv.upsert(chunk.id, chunk)
-            this._chunk_vdb.add(chunk)
+            this._chunkVdb.add(chunk)
         }
         LogUtils.info("[Chunk] ${chunks.size} New Chunks Inserted.")
-        this._insert_graph(chunks)
+        this._insertGraph(chunks)
     }
 
-    private func _insert_graph(chunks: Array<Document>): Unit {
+    private func _insertGraph(chunks: Array<Document>): Unit {
         let entityMap = HashMap<String, ArrayList<Vertex<Entity>>>()
         let relationMap = HashMap<String, ArrayList<Edge<Relationship>>>()
         for (chunk in chunks) {
@@ -1499,7 +1414,7 @@ public class MiniRag {
             _entityVdb.commit()
             _entityNameVdb.commit()
             _relationshipVdb.commit()
-            _chunk_vdb.commit()
+            _chunkVdb.commit()
         } finally {
             this._lock.writeMutex.unlock()
         }
@@ -1515,7 +1430,7 @@ public class MiniRag {
             _entityVdb.close()
             _entityNameVdb.close()
             _relationshipVdb.close()
-            _chunk_vdb.close()
+            _chunkVdb.close()
         } finally {
             this._lock.writeMutex.unlock()
         }
@@ -1530,7 +1445,7 @@ public class MiniRag {
             _entityVdb.reset()
             _entityNameVdb.reset()
             _relationshipVdb.reset()
-            _chunk_vdb.reset()
+            _chunkVdb.reset()
         } finally {
             this._lock.writeMutex.unlock()
         }

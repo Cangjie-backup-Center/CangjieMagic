@@ -9,11 +9,11 @@ import std.collection.*
 import std.math.min
 
 public class Counter<T> where T <: Hashable & Equatable<T> {
-    private var cntMap: HashMap<T, Float64> = HashMap()
-    private var baseScore: Float64
+    private var _cntMap: HashMap<T, Float64> = HashMap()
+    private var _baseScore: Float64
 
     public init(baseScore!: Float64 = 1.0) {
-        this.baseScore = baseScore
+        this._baseScore = baseScore
     }
 
     public init(eles: Collection<T>, baseScore: Float64) {
@@ -22,15 +22,15 @@ public class Counter<T> where T <: Hashable & Equatable<T> {
     }
 
     public func add(ele: T): Unit {
-        this.add(ele, this.baseScore)
+        this.add(ele, this._baseScore)
     }
 
     public func add(ele: T, score: Float64): Unit {
-        cntMap.put(ele, cntMap.get(ele).getOrDefault({=> 0.0}) + score)
+        _cntMap.put(ele, _cntMap.get(ele).getOrDefault({=> 0.0}) + score)
     }
 
     public func addAll(eles: Collection<T>): Unit {
-        addAll(eles, this.baseScore)
+        addAll(eles, this._baseScore)
     }
 
     public func addAll(eles: Collection<T>, score: Float64): Unit {
@@ -40,13 +40,13 @@ public class Counter<T> where T <: Hashable & Equatable<T> {
     }
 
     public func merge(counter: Counter<T>): Unit {
-        for ((ele, cnt) in counter.cntMap) {
-            cntMap.put(ele, cntMap.get(ele).getOrDefault({=> 0.0}) + cnt)
+        for ((ele, cnt) in counter._cntMap) {
+            _cntMap.put(ele, _cntMap.get(ele).getOrDefault({=> 0.0}) + cnt)
         }
     }
 
     public func isEmpty(): Bool {
-        this.cntMap.isEmpty()
+        _cntMap.isEmpty()
     }
 
     public func getMostCommon(cnt: Int64): Array<T> {
@@ -69,9 +69,9 @@ public class Counter<T> where T <: Hashable & Equatable<T> {
         }
         match (prefer) {
             case Some(_prefer) =>
-                let entryList = this.cntMap |> collectArrayList
+                let entryList = _cntMap |> collectArrayList
                 let first = entryList.get(0).getOrThrow()
-                if (let Some(pScore) <- this.cntMap.get(_prefer)) {
+                if (let Some(pScore) <- this._cntMap.get(_prefer)) {
                     if (pScore >= first[1]) {
                         return _prefer
                     } else {
@@ -91,7 +91,7 @@ public class Counter<T> where T <: Hashable & Equatable<T> {
 
     private prop sortedEntryList: ArrayList<(T, Float64)> {
         get() {
-            let entryList = this.cntMap |> collectArrayList
+            let entryList = _cntMap |> collectArrayList
             entryList.sortBy(stable: true) {
                 lht: (T, Float64), rht: (T, Float64) => if (lht[1] == rht[1]) {
                     return Ordering.EQ

@@ -12,14 +12,14 @@ import encoding.json.*
 public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
     private let _workspace: String
     private let _collection: String
-    private let _storage_path: Path
+    private let _storagePath: Path
     private let _lock = ReentrantReadWriteMutex()
     private var _data = HashMap<String, T>()
 
     public init(workspace!: String = ".storage", collection!: String = "default") {
         this._workspace = workspace
         this._collection = collection.toAsciiLower()
-        this._storage_path = Path(this._workspace).join("${this._collection}_kv.jsonl")
+        this._storagePath = Path(this._workspace).join("${this._collection}_kv.jsonl")
         this.load()
     }
 
@@ -85,10 +85,10 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
     }
 
     private func _commit(): Unit {
-        let backup = directoryOf(_storage_path).join("${_collection}_kv.back")
+        let backup = directoryOf(_storagePath).join("${_collection}_kv.back")
         try {
-            move(_storage_path, backup, true)
-            File.create(_storage_path)
+            move(_storagePath, backup, true)
+            File.create(_storagePath)
             var lines = _data |> map(
                     {
                         item =>
@@ -98,10 +98,10 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
                         return dm.toJson().toString()
                     }
                 ) |>collectArray
-            writeLines(_storage_path, lines)
+            writeLines(_storagePath, lines)
         } catch (e: Exception) {
-            removeIfExists(_storage_path)
-            move(backup, _storage_path, true)
+            removeIfExists(_storagePath)
+            move(backup, _storagePath, true)
             throw Exception("Commit Failed!")
         } finally {
             removeIfExists(backup)
@@ -112,10 +112,10 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
         if (!exists(this._workspace)) {
             Directory.create(this._workspace, recursive: true)
         }
-        if (!exists(this._storage_path)) {
-            File.create(this._storage_path)
+        if (!exists(this._storagePath)) {
+            File.create(this._storagePath)
         }
-        var lines = readLines(_storage_path)
+        var lines = readLines(_storagePath)
         for (line in lines) {
             if (line.isEmpty()) {
                 continue

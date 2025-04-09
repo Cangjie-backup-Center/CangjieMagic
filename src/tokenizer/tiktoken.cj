@@ -51,16 +51,16 @@ public class Cl100kTokenizer <: AbstractBPETokenizer {
         for (add_token in this._config._added_tokens) {
             this._vocab.put(add_token[0], add_token[1])
             // All add tokens are seemed as special in current version
-            this._special_tokens.put(add_token[0], add_token[0])
-            this._special_ids.put(add_token[1])
+            this._specialTokens.put(add_token[0], add_token[0])
+            this._specialIds.put(add_token[1])
         }
         for ((token, id) in this._vocab) {
-            this._vocab_r.put(id, token)
+            this._vocabR.put(id, token)
         }
         let rankArr = ranks.toArray()
         stableSort<String>(rankArr)
         for ((i, token) in enumerate(rankArr)) {
-            this._bpe_ranks.put(token, UInt32(i))
+            this._bpeRanks.put(token, UInt32(i))
         }
         this.buildSepcialRegex()
     }
