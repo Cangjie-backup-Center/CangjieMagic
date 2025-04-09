@@ -99,9 +99,8 @@ public class FaissVectorStorage <: LocalVectorStorage {
             _lock.readMutex.lock()
             let vec = this._vector_builder.createEmbeddingVector(query)
             let offsets = this._vdb.search(vec, number: topK, minDistance: threshold)
-            collectArray(
-                offsets |> map({idx => this._index.get(idx)}) |> map(
-                {str => Document.fromJsonValue(JsonValue.fromStr(str))}))
+            offsets |> map({idx => this._index.get(idx)}) |> map(
+                {str => Document.fromJsonValue(JsonValue.fromStr(str))}) |> collectArray
         } finally {
             _lock.readMutex.unlock()
         }

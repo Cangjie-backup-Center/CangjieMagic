@@ -51,7 +51,7 @@ public class Counter<T> where T <: Hashable & Equatable<T> {
 
     public func getMostCommon(cnt: Int64): Array<T> {
         let entryList = this.sortedEntryList
-        collectArray(entryList[0..min(entryList.size, cnt)] |> map({entry => entry[0]}))
+        entryList[0..min(entryList.size, cnt)] |> map({entry => entry[0]}) |> collectArray
     }
 
     /**
@@ -69,7 +69,7 @@ public class Counter<T> where T <: Hashable & Equatable<T> {
         }
         match (prefer) {
             case Some(_prefer) =>
-                let entryList = collectArrayList(this.cntMap)
+                let entryList = this.cntMap |> collectArrayList
                 let first = entryList.get(0).getOrThrow()
                 if (let Some(pScore) <- this.cntMap.get(_prefer)) {
                     if (pScore >= first[1]) {
@@ -91,7 +91,7 @@ public class Counter<T> where T <: Hashable & Equatable<T> {
 
     private prop sortedEntryList: ArrayList<(T, Float64)> {
         get() {
-            let entryList = collectArrayList(this.cntMap)
+            let entryList = this.cntMap |> collectArrayList
             entryList.sortBy(stable: true) {
                 lht: (T, Float64), rht: (T, Float64) => if (lht[1] == rht[1]) {
                     return Ordering.EQ

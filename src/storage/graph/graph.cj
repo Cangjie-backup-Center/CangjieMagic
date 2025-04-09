@@ -298,7 +298,7 @@ public class BaseGraph<V, E> where V <: Serializable<V> & Equatable<V> & Hashabl
     }
 
     public func getVertexTypes(): Set<String> {
-        collectHashSet(_vertexTypes |> filter({item => item[1] >= 0}) |> map({item => item[0]}))
+        this._vertexTypes |> filter({item => item[1] >= 0}) |> map({item => item[0]})|> collectHashSet
     }
 
     public func upsertEdge(e: Edge<E>): Unit {
@@ -323,7 +323,7 @@ public class BaseGraph<V, E> where V <: Serializable<V> & Equatable<V> & Hashabl
             edgeSet.retainAll(edgeSetIncome)
             return collectArray<Edge<E>>(edgeSet)
         }
-        return Array()
+        return []
     }
 
     public func hasEdge(srcId: String, tgtId: String): Bool {
@@ -332,16 +332,16 @@ public class BaseGraph<V, E> where V <: Serializable<V> & Equatable<V> & Hashabl
 
     public func getIncomingEdgesOf(id: String): Array<Edge<E>> {
         if (let Some(nc) <- _vertexMap.get(id)) {
-            return collectArray(nc.incoming)
+            return nc.incoming |> collectArray
         }
-        return Array()
+        return []
     }
 
     public func getOutgoingEdgesOf(id: String): Array<Edge<E>> {
         if (let Some(nc) <- _vertexMap.get(id)) {
-            return collectArray(nc.outgoing)
+            return nc.outgoing |> collectArray
         }
-        return Array()
+        return []
     }
 
     public func removeEdge(e: Edge<E>): Unit {

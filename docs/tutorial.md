@@ -1364,23 +1364,24 @@ agent.retriever = smap.asRetriever()
 https://github.com/HKUDS/MiniRAG
 #### `实例化`
 使用`MiniRagBuilder`来实例化MiniRag对象，用于后续的知识图谱的构建和基于图谱的检索。
-实例化MiniRag需要设置LLM、Tokenizer、EmbeddingModel和workspace
+实例化MiniRag需要指定ChatModel、Tokenizer、EmbeddingModel
 基于当前可用的tokenizer(详见api_reference.md)需要下载对应的tokenizer配置文件
 如:
 [OpenAI CL100K](https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken)需要下载cl100k_base.tiktoken文件
 [DeepSeek-V3](https://huggingface.co/deepseek-ai/DeepSeek-V3/tree/main)等开源模型需要下载对应的tokenizer.json和tokenizer_config.json文件
+其他配置见`MiniRagBuilder`接口文档。
 ```cangjie
 import magic.config.Config
-import magic.rag.graph.MiniRagBuilder
-import magic.rag.graph.MiniRag
+import magic.rag.graph.{MiniRagBuilder, MiniRagConfig, MiniRag}
 import magic.model.ollama.OllamaEmbeddingModel
 import magic.tokenizer.Cl100kTokenizer
 func instantiateMiniRag(): MiniRag {
     Config.env["DEEPSEEK_API_KEY"] = "<your api key>"
-    let model = ModelManager.createChatModel("<LLM Model Name>")
+    let model = ModelManager.createChatModel("<Chat Model Name>")
     let embed = OllamaEmbeddingModel("<Embedding Model Name>", baseURL: "<Embedding Model URL>")
     let tokenizer = Cl100kTokenizer("<Your TickToken File Location>")
-    MiniRagBuilder(model, embed, tokenizer, workspace:<Your Local Dir>).build()
+    let config = MiniRagConfig(model, embed, tokenizer)
+    MiniRagBuilder(config).build()
 }
 ```
 #### `知识图谱构建`
