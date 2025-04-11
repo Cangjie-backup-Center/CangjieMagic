@@ -60,8 +60,8 @@ public class OpenAIEmbeddingModel <: EmbeddingModel {
         req.put("input", JsonString(embeddingReq.prompt))
         req.put("model", JsonString(model))
         req.put("encoding_format", JsonString("float"))
-        if (embeddingReq.dimensions.isSome()) {
-            req.put("dimensions", JsonInt(embeddingReq.dimensions ?? 0))
+        if (let Some(d) <- embeddingReq.dimensions) {
+            req.put("dimensions", JsonInt(d))
         }
         let header = HashMap<String, String>(
             [("Content-Type", "application/json"), ("Authorization", "Bearer ${this.apiKey}")])

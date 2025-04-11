@@ -15,6 +15,7 @@
     - [构建选项](#构建选项)
   - [示例程序](#示例程序)
   - [CangjieMagic官方开发者讨论群组](#cangjiemagic官方开发者讨论群组)
+  - [教程](#教程)
 
 <!-- /code_chunk_output -->
 
@@ -117,11 +118,15 @@ import magic.prelude.*
 
 可以通过 `cjpm run --name magic.examples.<name>` 运行。
 
+MCP Server 集合示例：https://gitcode.com/Cangjie-TPC/CangjieMagic-MCPServer
+
 ## CangjieMagic官方开发者讨论群组
 
 欢迎加入官方开发者讨论者群组，一起交流碰撞创意想法，构建最具创意的Agent应用！
 
 ![开发者群组群聊4.jpg](https://cdn-img.gitcode.com/aa/dc/aa48994d965c9db9d057d75faa65f38561dc9d03e6b570775f737c9c769318f7.jpg '开发者群组群聊4.jpg')
 
-## 大家可以在B站学习东北大学 张引 老师分享的教程
+## 教程
+
+大家可以在B站学习东北大学 张引 老师分享的教程
 https://www.bilibili.com/video/BV1hQQzYAEHL/?spm_id_from=333.337.search-card.all.click&vd_source=ac4d1bb6a8e4a3751bba687720bd6fd9
