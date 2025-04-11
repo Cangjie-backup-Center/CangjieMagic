@@ -195,7 +195,7 @@ public struct ModelManager {
 
     public static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel {
         match (modelConfig.service) {
-            case "openai" | "siliconflow" =>
+            case "openai" | "ark" | "siliconflow" =>
                 return OpenAIEmbeddingModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
             case "dashscope" =>
                 return DashscopeEmbeddingModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)

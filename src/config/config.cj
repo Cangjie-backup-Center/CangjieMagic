@@ -20,7 +20,7 @@ public struct EnvWrapper {
 
 public class Config {
     public static var logLevel = LogLevel.ERROR
-    public static var logFile: String = "stdout"
+    public static var logFile: String = "stderr"
 
     public static var enableAgentLog = false
     public static var agentLogDir = "./logs/agent-logs"

@@ -66,6 +66,8 @@ public struct LogUtils {
                 case None =>
                     let logger = if (Config.logFile == "stdout") {
                         buildSimpleLogger(Console.stdOut)
+                    } else if (Config.logFile == "stderr") {
+                        buildSimpleLogger(Console.stdErr)
                     } else {
                         let file = File(Config.logFile, OpenOption.CreateOrTruncate(false))
                         buildSimpleLogger(file)
