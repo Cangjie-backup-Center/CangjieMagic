@@ -1150,19 +1150,22 @@ public class MiniRag {
             }
         }
         this._docKv.upsert(doc.id, doc)
-        LogUtils.info("[Doc] New Doc:${doc.id} Inserted.")
+        LogUtils.info("[Doc] New Doc:${doc.id} Build Graph Start.")
 
         let chunks = split(doc)
         if (chunks.size == 0) {
             return
         }
+        LogUtils.info("[Chunk] ${chunks.size} New Chunks Found.")
         chunks |> forEach {
             chunk =>
             this._chunkKv.upsert(chunk.id, chunk)
             this._chunkVdb.add(chunk)
+            LogUtils.info("[Chunk] New Chunk ${chunk.id} Inserted.")
         }
-        LogUtils.info("[Chunk] ${chunks.size} New Chunks Inserted.")
+
         this._insertGraph(chunks)
+        LogUtils.info("[Doc] New Doc:${doc.id} Build Graph End.")
     }
 
     private func _insertGraph(chunks: Array<Document>): Unit {
