@@ -12,7 +12,7 @@ import log.LogLevel
 @agent[
     model: "deepseek:deepseek-chat",
     mcp: [
-        { command: "cjpm", args: ["run", "--skip-build", "--name", "magic.examples.mcp_server.calculator"] }
+        { command: "cjpm", args: ["run", "--skip-build", "--name", "magic.examples.mcp_server"] }
     ]
 ]
 class HomeworkAssistant {
