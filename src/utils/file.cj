@@ -131,8 +131,7 @@ protected func readFile(path: Path): Array<Byte> {
 protected func move(source: Path, to: Path, overwrite: Bool): Unit {
     if (source.isFile()) {
         File.move(source, to, overwrite)
-    }
-    if (source.isDirectory()) {
+    } else if (source.isDirectory()) {
         Directory.move(source, to, overwrite)
     }
 }
