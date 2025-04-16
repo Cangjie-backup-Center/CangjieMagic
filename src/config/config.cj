@@ -75,4 +75,14 @@ public class Config {
      * The max retry number when failing to generate outputs of required json schema
      */
     public static var outputRepairRetryNumber = 3
+
+    /**
+     * The max connection timeout in http requests. MS
+     */
+     public static var httpConnectTimeout = 60000 // ms
+
+    /**
+     * The max read timeout in http requests. MS
+     */
+     public static var httpReadTimeout = 60000 // ms
 }
