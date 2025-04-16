@@ -118,6 +118,17 @@ static var saveModelRequest = false
 ```
 - 描述: 是否保存模型请求
 
+#### var httpConnectTimeout
+```
+static var httpConnectTimeout = 60000
+```
+- 描述: HTTP 建立连接的超时设置
+
+#### var httpReadTimeout
+```
+static var httpReadTimeout = 60000
+```
+- 描述: HTTP 读取数据的超时设置
 
 ### struct EnvWrapper
 #### func operator []
