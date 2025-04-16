@@ -4,6 +4,7 @@
 package magic.utils.http
 
 import magic.log.LogUtils
+import magic.config.Config
 
 import std.collection.HashMap
 import encoding.json.*
@@ -21,13 +22,17 @@ private func buildRequestOptions(method: String, header: HashMap<String, String>
             method: m,
             extraData: HttpData.STRING_DATA(b.toJsonString()),
             expectDataType: HttpDataType.STRING,
-            header: header
+            header: header,
+            readTimeout: UInt32(Config.httpReadTimeout),
+            connectTimeout: UInt32(Config.httpConnectTimeout),
         )
     } else {
         return HttpRequestOptions(
             method: m,
             expectDataType: HttpDataType.STRING,
-            header: header
+            header: header,
+            readTimeout: UInt32(Config.httpReadTimeout),
+            connectTimeout: UInt32(Config.httpConnectTimeout),
         )
     }
 }
