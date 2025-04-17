@@ -33,14 +33,15 @@ public class StdioMCPClient <: AbsMCPClient {
         this.initialize()
     }
 
-    override protected func send(req: JsonObject): Unit {
+    override protected func doSend(req: JsonObject): Bool {
         let msg = req.toJsonValue().toString()
         LogUtils.info("Send: ${msg}")
         writer.writeln(msg)
         writer.flush()
+        return true
     }
 
-    override protected func recv(): Option<String> {
+    override protected func doRecv(): Option<String> {
         let msg = reader.readln()
         LogUtils.info("Recv: ${msg ?? ''}")
         return msg

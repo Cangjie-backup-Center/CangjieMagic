@@ -21,6 +21,20 @@ class HomeworkAssistant {
     )
 }
 
+//------------------------------------------------------------------------
+@agent[
+    model: "deepseek:deepseek-chat",
+    executor: "react",
+    mcp: [
+        { url: "https://mcp.amap.com/sse?key=<your key>" }
+    ]
+]
+class TravelAgent {
+    @prompt(
+        "你是超级旅行助手，快帮用户解决他们的问题吧"
+    )
+}
+
 main() {
     Config.logLevel = LogLevel.INFO
     Config.logFile = "./logs/mcp-client.log"

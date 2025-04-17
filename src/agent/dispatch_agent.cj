@@ -19,6 +19,22 @@ public class DispatchAgent <: BaseAgent {
     }
 
     override public func chat(request: AgentRequest): AgentResponse {
+        if (let Some(agent) <- this.doSelect(request)) {
+            return agent.chat(request)
+        } else {
+            return AgentResponse("Unknown Question")
+        }
+    }
+
+    override public func asyncChat(request: AgentRequest): AsyncAgentResponse {
+        if (let Some(agent) <- this.doSelect(request)) {
+            return agent.asyncChat(request)
+        } else {
+            return AsyncAgentResponse(["Unknown Question"].iterator())
+        }
+    }
+
+    private func doSelect(request: AgentRequest): Option<Agent> {
         // Tools are updated when building the leader group, so we build the prompt every time
         let selectAgent = ToolSelectAgent(this.model, this.toolManager.getTools())
         if (let Some(toolRequest) <- selectAgent.select(request.question)) {
@@ -27,13 +43,11 @@ public class DispatchAgent <: BaseAgent {
                 // All tools are agents
                 // Pass LLM generated arguments or the original request?
                 // tool.invoke(toolRequest.args)
-                let agent = (tool as AgentAsTool).getOrThrow().agent
-                return agent.chat(request)
+                return (tool as AgentAsTool).getOrThrow().agent
             } else {
-                throw AgentExecutionException("Fail to find the tool `${name}`")
+                throw AgentExecutionException("Fail to find the agent `${name}`")
             }
-        } else {
-            return AgentResponse("Unknown Question")
         }
+        return None
     }
 }

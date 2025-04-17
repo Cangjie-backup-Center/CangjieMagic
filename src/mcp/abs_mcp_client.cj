@@ -16,9 +16,19 @@ import encoding.json.{JsonValue, JsonObject}
  * MCP client via the stdio transport
  */
 public abstract class AbsMCPClient <: MCPClient {
-    protected func send(req: JsonObject): Unit
+    protected func doSend(req: JsonObject): Bool
 
-    protected func recv(): Option<String>
+    protected func doRecv(): Option<String>
+
+    protected func send(req: JsonObject): Unit {
+        if (!doSend(req)) {
+            throw MCPException("Fail to send request")
+        }
+    }
+
+    protected func recv(): String {
+        return doRecv().getOrThrow({ => MCPException("Fail to get MCP response") })
+    }
 
     protected func initialize(): Unit {
         let initRequest = InitialRequest(
@@ -89,7 +99,7 @@ public abstract class AbsMCPClient <: MCPClient {
     }
 
     private func recvResponse<T>(): T where T <: Jsonable<T> {
-        let msg = this.recv().getOrThrow({ => MCPException("Fail to get MCP response") })
+        let msg = this.recv()
         return T.fromJsonValue(JsonValue.fromStr(msg))
     }
 }
