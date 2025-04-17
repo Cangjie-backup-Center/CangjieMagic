@@ -1,9 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent_group
-
-import magic.core.agent.{Agent, AgentRequest, AgentResponse}
+package magic.core.agent
 
 public interface AgentGroup {
     /**

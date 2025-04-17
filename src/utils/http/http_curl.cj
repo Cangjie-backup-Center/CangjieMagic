@@ -82,7 +82,7 @@ protected struct HttpUtilsImpl {
         LogUtils.debug("Raw http response: ${out}")
         if (status != "200") {
             LogUtils.error("curl ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
-            LogUtils.error("Error: ${status}. ${resp}")
+            LogUtils.error("Status: ${status}. Response: ${resp}")
             return None
         } else {
             return resp

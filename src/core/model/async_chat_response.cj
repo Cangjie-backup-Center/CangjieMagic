@@ -25,11 +25,19 @@ public struct AsyncChatChunk <: ToString {
  * Wrap the async chat chunks as a string iterator
  */
 private class ContentIterator <: Iterator<String> {
-    ContentIterator(private let asyncChatResp: AsyncChatResponse) { }
+    ContentIterator(
+        private let asyncChatResp: AsyncChatResponse,
+        private let withReason: Bool
+    ) { }
 
     override public func next(): Option<String> {
         return match (this.asyncChatResp.next()) {
-            case Some(chunk) => chunk.message.reason ?? chunk.message.content
+            case Some(chunk) =>
+                if (withReason) {
+                    chunk.message.reason ?? chunk.message.content
+                } else {
+                    chunk.message.content
+                }
             case None => None
         }
     }
@@ -74,10 +82,8 @@ public class AsyncChatResponse <: Iterator<AsyncChatChunk> & ToString {
         throw UnsupportedException("Unreachable")
     }
 
-    public prop contentIter: Iterator<String> {
-        get() {
-            ContentIterator(this)
-        }
+    public func iter(withReason!: Bool = true): Iterator<String> {
+        ContentIterator(this, withReason)
     }
 
     public prop usage: Option<ChatUsage> {

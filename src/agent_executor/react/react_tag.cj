@@ -6,15 +6,15 @@ package magic.agent_executor.react
 protected struct ReactTag {
     protected static const THOUGHT = "[Thought]"
 
-    static const ACTION = "[Action]"
+    protected static const ACTION = "[Action]"
 
-    static const OBSERVATION = "[Observation]"
+    protected static const OBSERVATION = "[Observation]"
 
-    static const ANSWER = "[Final Answer]"
+    protected static const ANSWER = "[Final Answer]"
 
-    static protected const INFO = "[INFO]" // Not in react
+    protected static const INFO = "[INFO]" // Not in react
 
-    static protected const PLAN = "[PLAN]" // Not in react
+    protected static const PLAN = "[PLAN]" // Not in react
 
     static let ALL_TAGS = [
         ReactTag.THOUGHT,
