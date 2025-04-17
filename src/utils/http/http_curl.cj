@@ -80,7 +80,7 @@ protected struct HttpUtilsImpl {
         }
         let (resp, status) = HttpUtilsImpl.parseOutput(out)
         LogUtils.debug("Raw http response: ${out}")
-        if (status != "200") {
+        if (status != "200" && status != "202") {
             LogUtils.error("curl ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
             LogUtils.error("Status: ${status}. Response: ${resp}")
             return None
@@ -113,7 +113,7 @@ protected struct HttpUtilsImpl {
                 let tempPath = args[args.size-1].removePrefix("@")
                 removeIfExists(tempPath)
             }
-            if (status.trimAscii() != "200") {
+            if (status.trimAscii() != "200" && status.trimAscii() != "202") {
                 LogUtils.error("curl ${url} with data :${(body ?? JsonObject()).toJsonString()} failed")
                 httpStream.markError()
             } else {
