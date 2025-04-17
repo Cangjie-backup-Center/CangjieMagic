@@ -96,7 +96,7 @@ Now, summarize the answer. Remember you should wrap the output by ${ReactTag.ANS
 protected struct ReactPromptUtils {
     static func buildReactFullSystemPrompt(task: AgentTask): String {
         return REACT_SYSTEM_PROMPT.format(
-            ("tools", ReactPromptUtils.buildAgentToolsPrompt(task.agent, task.request.question, enableToolSearch: task.agent.toolManager.enableToolSearch)),
+            ("tools", ReactPromptUtils.buildAgentToolsPrompt(task)),
             ("retrieval", ReactPromptUtils.buildAgentRetrievalPrompt(task)),
             ("systemPrompt", task.agent.systemPrompt),
             ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task)),
@@ -122,11 +122,11 @@ protected struct ReactPromptUtils {
         ).trimAscii()
     }
 
-    protected static func buildAgentToolsPrompt(agent: Agent, question: String, enableToolSearch!: Bool): String {
-        let allTools = if (enableToolSearch) {
-            agent.toolManager.searchTool(question, number: 5)
+    protected static func buildAgentToolsPrompt(task: AgentTask): String {
+        let allTools = if (task.agent.toolManager.enableToolSearch) {
+            task.agent.toolManager.searchTool(task.request.question, number: 5)
         } else {
-            agent.toolManager.getTools()
+            task.agent.toolManager.getTools()
         }
         if (allTools.size == 0) {
             return "# Available Tools\nNo tools"

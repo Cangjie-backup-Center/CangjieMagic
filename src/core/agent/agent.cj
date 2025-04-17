@@ -20,7 +20,7 @@ public interface Agent {
     prop description: String
 
     /**
-     * Temerature the agent will pass to the LLM
+     * Temperature the agent will pass to the LLM
      */
     mut prop temperature: Option<Float64>
 

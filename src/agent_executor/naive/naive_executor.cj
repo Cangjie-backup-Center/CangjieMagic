@@ -68,6 +68,6 @@ public class NaiveExecutor <: AgentExecutor {
         if (request.verbose) {
             task.execInfo.verboseChannel.close()
         }
-        return AsyncAgentResponse(asyncChatResp.contentIter, execInfo: task.execInfo)
+        return AsyncAgentResponse(asyncChatResp.iter(), execInfo: task.execInfo)
     }
 }
