@@ -31,7 +31,7 @@ protected struct ToolCall {
     /**
      * Run the tool and return observation messages
      */
-    func invoke(task: AgentTask): Array<ChatMessage> {
+    protected func invoke(task: AgentTask): Array<ChatMessage> {
         let toolManager = task.agent.toolManager
         let messages = ArrayList<ChatMessage>()
         if (this.thought != "") {

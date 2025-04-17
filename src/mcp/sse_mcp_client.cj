@@ -23,13 +23,15 @@ public class SseMCPClient <: AbsMCPClient {
     private let endpoint: String
 
     public init(url: String) {
-        this.url = url
-        this.sseStream = HttpUtils.sseConnect("${url}/sse")
+        let items = url.split("/sse") // Split the URl to get the domain base URL
+        this.url = items[0]
+        this.sseStream = HttpUtils.sseConnect("${url}")
         if (let Some(event) <- this.sseStream.next()) {
             if (event.event != "endpoint") {
                 throw MCPException("Invalid endpoint event: ${event}")
             }
             this.endpoint = event.data
+            LogUtils.info("Found endpoint: ${this.endpoint}")
         } else {
             throw MCPException("Fail to make SSE connection: ${url}")
         }
@@ -37,12 +39,13 @@ public class SseMCPClient <: AbsMCPClient {
         this.initialize()
     }
 
-    override protected func send(req: JsonObject): Unit {
+    override protected func doSend(req: JsonObject): Bool {
         let header = HashMap<String, String>()
-        HttpUtils.post("${this.url}${this.endpoint}", header, req, verify: false)
+        let resp = HttpUtils.post("${this.url}${this.endpoint}", header, req, verify: false)
+        return !resp.isNone()
     }
 
-    override protected func recv(): Option<String> {
+    override protected func doRecv(): Option<String> {
         if (let Some(event) <- this.sseStream.next()) {
             LogUtils.info("Recv: ${event}")
             if (event.event != "message") {

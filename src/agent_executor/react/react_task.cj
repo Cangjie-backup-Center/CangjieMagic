@@ -191,7 +191,7 @@ protected class ReactTask <: AgentTask {
         } else {
             None
         }
-        let reader = AsyncReactStepReader(asyncChatResp.contentIter, verboseFn: verboseFn)
+        let reader = AsyncReactStepReader(asyncChatResp.iter(withReason: false), verboseFn: verboseFn)
         reader.enableVerbose = this.request.verbose
         return AsyncReactStep(reader)
     }
@@ -204,7 +204,7 @@ protected class ReactTask <: AgentTask {
             ChatMessage.system(ReactPromptUtils.buildReactSummarizePrompt(this))
         ]
         let asyncChatResp = agent.model.asyncCreate(ChatRequest(messages))
-        let reader = AsyncReactStepReader(asyncChatResp.contentIter)
+        let reader = AsyncReactStepReader(asyncChatResp.iter())
         let asyncReactStep = AsyncReactStep(reader)
         if (this.request.verbose) {
             // Put a pair of close tags but does not put the answer

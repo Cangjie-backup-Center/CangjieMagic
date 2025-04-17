@@ -199,7 +199,7 @@ protected class ArrayParser <: Parser {
         while (currPos < tokens.size) {
             if (currToken.kind == TokenKind.COMMA && depth == 0) {
                 if (currTokens.size == 0) {
-                    eprintln("Array contains empty value")
+                    eprintln("Array contains empty value: ${tokens}")
                 } else {
                     result.append(currTokens)
                     currTokens = Tokens() // clear current tokens
@@ -207,7 +207,7 @@ protected class ArrayParser <: Parser {
                 forwardPosition() // ','
             } else if (currToken.kind == TokenKind.RSQUARE && depth == 0) {
                 if (currTokens.size == 0) {
-                    eprintln("Array contains empty value")
+                    eprintln("Array contains empty value: ${tokens}")
                 } else {
                     result.append(currTokens)
                 }
