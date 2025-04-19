@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "dev" ]
 
 jobs:
 
@@ -13,6 +13,8 @@ jobs:
     runs-on: euleros-2.10.1
 
     steps:
-    - uses: checkout-action@0.0.1
     - name: Build the Docker image
-      run: ls
+      uses: checkout-action@0.0.1
+      with:
+        ref: dev
+    - run: ls
