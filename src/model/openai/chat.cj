@@ -82,16 +82,20 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
     AsyncChatChunkStream(let httpStream: HttpStream) { }
 
     let start = DateTime.now()
-    private var role: Option<String> = None
+    private var role: Option<ChatMessageRole> = None
     private var usage: Option<ChatUsage> = None
+    private var finished = false
 
     override public func next(): Option<AsyncChatChunk> {
+        if (finished) {
+            return None
+        }
         // A long response may be split as multiple parts, use a buffer to collect all of them.
         let buffer = StringBuilder()
         while (let Some(data) <- httpStream.next()) {
             buffer.append(data)
             let contentToParse = buffer.toString().trimAscii()
-            LogUtils.debug("To parse line: ${contentToParse}")
+            LogUtils.debug("To parse line: `${contentToParse}`")
             if (contentToParse.isEmpty()) { continue }
             // Try to parse the data
             let (reason, content) = try {
@@ -120,22 +124,29 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
             if (content == ": keep-alive") {
                 continue
             } else if (content == "[DONE]") {
+                finished = true
                 return AsyncChatChunk(
-                    message: ChatMessage(ChatMessageRole.fromStr(this.role.getOrThrow()), ""),
+                    message: ChatMessage(this.role.getOrThrow(), ""),
                     done: true,
                     usage: this.usage
                 )
             } else {
                 return AsyncChatChunk(
                     message: ChatMessage(
-                        ChatMessageRole.fromStr(this.role.getOrThrow()),
+                        this.role.getOrThrow(),
                         content,
                         reason: if (reason.isEmpty()) { None } else { reason}),
                     done: false
                 )
             }
         }
-        return None
+        // Some model services may not return "[DONE]" and finish the http stream directly?
+        finished = true
+        return AsyncChatChunk(
+            message: ChatMessage(this.role.getOrThrow(), ""),
+            done: true,
+            usage: this.usage
+        )
     }
 
     private func parseData(data: String): (String, String) {
@@ -155,7 +166,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
         for (chunkChoice in chunkResp.choices) {
             let delta = chunkChoice.delta
             if (let Some(role) <- delta.role) {
-                this.role = role
+                this.role = ChatMessageRole.fromStr(role)
             }
             reasoningContentBuilder.append(delta.reasoning_content ?? "")
             contentBuilder.append(delta.content)
