@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent_executor.react
+package magic.parser
 
 import magic.core.*
 import magic.core.agent.AgentTask
@@ -13,17 +13,22 @@ import magic.utils.{StringExt, sleep2}
 import std.collection.{ArrayList, map, collectArray}
 
 /**
- * Wrap the async chat response as a chunk stream of a react step
+ * Parsing a sequence of tagged content
+ * Each tagged content is of form [tag] ... [/tag]
+ * ATTENTION: the tag name must be of less than 20 letters!
  */
-class AsyncReactStepReader {
-    var enableVerbose = false
+protected class TagStreamParser {
+    private static const MAX_TAG_NAME_SIZE = 20
 
-    AsyncReactStepReader(
+    protected TagStreamParser(
+        /**
+         * Data chunks of the tag sequence
+        */
         private let chunks: Iterator<String>,
         /**
         * Callback function used to print internal messages
         */
-        private let verboseFn!: Option<(String)->Unit> = None
+        protected var onChunkFn!: Option<(String) -> Unit> = None
     ) { }
 
     private var finished = false
@@ -39,10 +44,8 @@ class AsyncReactStepReader {
     private func readChunk(): Bool {
         if (let Some(chunk) <- this.chunks.next()) {
             buffer.append(chunk)
-            if (enableVerbose) {
-                if (let Some(fn) <- this.verboseFn) {
-                    fn(chunk)
-                }
+            if (let Some(fn) <- this.onChunkFn) {
+                fn(chunk)
             }
             return true
         }
@@ -58,38 +61,37 @@ class AsyncReactStepReader {
         }
     }
 
-    func resetBuffer(content: String): Unit {
+    protected func resetBuffer(content: String): Unit {
         this.buffer.reset()
         this.buffer.append(content)
     }
 
-    prop currContent: String {
+    protected prop currContent: String {
         get() {
             buffer.toString()
         }
     }
 
-    prop currTag: Option<String> {
+    protected prop currTag: Option<String> {
         get() {
-            // The tag with the max length is [Final Answer]
-            while (this.currContent.trimAscii().size < ReactTag.longestTag.size) {
+            while (this.currContent.trimAscii().size < Tag.longestTag.size) {
                 if (!this.readChunk()) { break }
             }
             // Check whether the current content starts with a tag
             let content = this.currContent.trimAscii()
-            for (tag in ReactTag.ALL_TAGS) {
+            for (tag in Tag.ALL_TAGS) {
                 if (content.startsWith(tag)) {
                     return tag
                 }
             }
             if (!content.isEmpty()) {
-                throw AgentExecutionException("Fail to peek react tag. Invalid content: `${this.currContent}`")
+                throw Exception("Fail to peek tag. Invalid content: `${this.currContent}`")
             }
             return None
         }
     }
 
-    func readTagAndContent(tag: String): String {
+    protected func readTagAndContent(tag: String): String {
         let closeTag = tag.getCloseTag()
         while (true) {
             let content = this.currContent.trimAscii()
@@ -105,10 +107,10 @@ class AsyncReactStepReader {
                 if (!this.readChunk()) { break }
             }
         }
-        throw AgentExecutionException("Fail to parse react ${tag}")
+        throw Exception("Fail to parse tag ${tag}")
     }
 
-    func removeTag(tag: String): Unit {
+    protected func removeTag(tag: String): Unit {
         this.readChunk() // Read one more chunk to trim empty spaces
         let content = this.currContent
         let pivot = content.indexOf(tag).getOrThrow()
@@ -118,10 +120,10 @@ class AsyncReactStepReader {
     /**
      * Return part content and whether the close tag is read
      */
-    func readPartContentBefore(tag: String): Option<(String, Bool)> {
+    protected func readPartContentBefore(tag: String): Option<(String, Bool)> {
         if (finished) {
             if (this.readChunk()) {
-                LogUtils.debug("Async react step is finished but the chat stream is not finished")
+                LogUtils.debug("Tag stream is finished but the stream is not finished")
             }
             return None
         }
@@ -130,9 +132,9 @@ class AsyncReactStepReader {
         let exhausted = !this.readChunk()
         let (content, rest) = this.splitByCloseTag(closeTag)
         if (exhausted) {
-            // When the full content is read, the close tag must exist
-            // ReactTag.ANSWER is special, the LLM may not generate its close tag
-            if (rest.trimAscii() != closeTag && tag != ReactTag.ANSWER) {
+            // When the stream is over, the close tag must exist
+            // [Final Answer] is special, the LLM may not generate its close tag
+            if (rest.trimAscii() != closeTag && tag != Tag.ANSWER) {
                 throw AgentExecutionException("Fail to read async react ${tag} content. Rest: `${rest}`")
             } else {
                 finished = true
@@ -140,7 +142,7 @@ class AsyncReactStepReader {
                 return (content.trimAsciiRight(), true)
             }
         } else {
-            // If the rest starts with the full close tag, remove it
+            // If the rest starts with the complete close tag, remove it
             if (rest.trimAscii().startsWith(closeTag)) {
                 this.resetBuffer(rest[(rest.indexOf(closeTag).getOrThrow() + closeTag.size)..])
                 return (content.trimAsciiRight(), true)

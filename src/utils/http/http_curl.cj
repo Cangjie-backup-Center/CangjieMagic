@@ -102,24 +102,27 @@ protected struct HttpUtilsImpl {
             let outReader = StringReader<InputStream>(subProcess.stdOut)
             // Each line is a chunk response from chat models
             // The last line is the status code
-            var status = ""
+            var prevLine = ""
             while (let Some(line) <- outReader.readln()) {
                 LogUtils.debug("Receive http stream: `${line}`")
-                httpStream.put(line)
-                status = line
+                if (!prevLine.isEmpty()) {
+                    httpStream.put(prevLine)
+                }
+                prevLine = line
             }
             subProcess.wait(timeout: Duration.minute * 1)
             if (body.isSome() && !Config.saveModelRequest) {
                 let tempPath = args[args.size-1].removePrefix("@")
                 removeIfExists(tempPath)
             }
+            let status = prevLine // The last line is the status code
             if (status.trimAscii() != "200" && status.trimAscii() != "202") {
-                LogUtils.error("curl ${url} with data :${(body ?? JsonObject()).toJsonString()} failed")
+                LogUtils.error("curl ${url} failed. Data :${(body ?? JsonObject()).toJsonString()}")
                 httpStream.markError()
             } else {
                 // Put the termination mark
                 httpStream.markEOF()
-                LogUtils.debug("End http stream")
+                LogUtils.debug("End http stream. Status: ${status}")
             }
         }
         return httpStream

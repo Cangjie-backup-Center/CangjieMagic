@@ -7,6 +7,7 @@ import magic.core.*
 import magic.model.ModelManager
 import magic.log.LogUtils
 import magic.tool.AgentAsTool
+import magic.parser.{Tag, WithTag}
 
 /**
  * This agent is used to dispatch user question to other agents.
@@ -28,6 +29,11 @@ public class DispatchAgent <: BaseAgent {
 
     override public func asyncChat(request: AgentRequest): AsyncAgentResponse {
         if (let Some(agent) <- this.doSelect(request)) {
+            if (request.verbose) {
+                let execInfo = AgentExecutionInfo()
+                execInfo.verboseChannel.put("Dispatch to the agent: ${agent.name}".withTag(Tag.INFO))
+                request.execInfo = execInfo
+            }
             return agent.asyncChat(request)
         } else {
             return AsyncAgentResponse(["Unknown Question"].iterator())

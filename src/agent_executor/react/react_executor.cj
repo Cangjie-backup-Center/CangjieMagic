@@ -7,6 +7,7 @@ import magic.core.agent.*
 import magic.core.rag.RetrieverMode
 import magic.log.LogUtils
 import magic.config.Config
+import magic.parser.WithTag
 
 public class ReactExecutor <: AgentExecutor {
     public ReactExecutor(
@@ -59,7 +60,7 @@ protected class IteratorWrapper <: Iterator<String> {
         match (data) {
             case Some(v) => buffer.append(v)
             case None =>
-                LogUtils.info(this.task.agent.name, buffer.toString().withTag(ReactTag.ANSWER))
+                LogUtils.info(this.task.agent.name, buffer.toString().withTag(Tag.ANSWER))
         }
         return data
     }

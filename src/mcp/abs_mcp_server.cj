@@ -8,35 +8,24 @@ import magic.core.tool.Tool
 import magic.jsonable.*
 import magic.log.LogUtils
 
-import std.console.{Console, ConsoleReader, ConsoleWriter}
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import encoding.json.{JsonValue, JsonObject}
-import magic.tool.AgentAsTool
 
 /**
  * MCP server via the stdio transport
  */
-public class MCPServer {
-    let reader: ConsoleReader
-    let writer: ConsoleWriter
+public abstract class AbsMCPServer {
+    protected func send(msg: String): Unit
+
+    protected func recv(): Option<String>
 
     private let tools: Array<Tool>
 
-    public init(tools: Array<Tool>) {
-        this.reader = Console.stdIn
-        this.writer = Console.stdOut
+    protected init(tools: Array<Tool>) {
         this.tools = tools
     }
 
-    /**
-     * Start the server
-     */
-    public func start(): Unit {
-        this.initialize()
-        this.loop()
-    }
-
-    private func initialize(): Unit {
+    protected func initialize(): Unit {
         var hasInit = false
         while (!hasInit) {
             try {
@@ -65,39 +54,44 @@ public class MCPServer {
         }
     }
 
+    public func loop(): Unit {
+        while (let Some(msg) <- this.recv()) {
+            let resp = this.handleRequestMessage(msg)
+            this.send(resp)
+        }
+    }
+
     /**
      * Currently, only tool list and call requests are supported.
      */
-    private func loop(): Unit {
-        while (let Some(msg) <- this.recv()) {
-            let req = MCPRequest.fromJsonValue(JsonValue.fromStr(msg))
-            let response: ToJsonValue = match (req.method) {
-                case "tools/list" =>
-                    let mcpTools = this.tools |>
-                        map { tool: Tool =>
-                            MCPTool.fromJsonValue(JsonValue.fromStr(tool.toString()).asObject())
-                        } |>
-                        collectArray
-                    ListToolsResponse(
-                        id: req.id,
-                        result: ListToolsResult(
-                            tools: mcpTools
-                        )
-                    )
-                case "tools/call" =>
-                    this.handleCallTool(
-                        CallToolRequest.fromJsonValue(JsonValue.fromStr(msg))
-                    )
-                case _ => MCPError(
+    protected func handleRequestMessage(msg: String): ToJsonValue {
+        let req = MCPRequest.fromJsonValue(JsonValue.fromStr(msg))
+        let response: ToJsonValue = match (req.method) {
+            case "tools/list" =>
+                let mcpTools = this.tools |>
+                    map { tool: Tool =>
+                        MCPTool.fromJsonValue(JsonValue.fromStr(tool.toString()).asObject())
+                    } |>
+                    collectArray
+                ListToolsResponse(
                     id: req.id,
-                    error: ErrorContent(
-                        code: INVALID_REQUEST,
-                        message: "Server does not support ${req.method}"
+                    result: ListToolsResult(
+                        tools: mcpTools
                     )
                 )
-            }
-            this.send(response)
+            case "tools/call" =>
+                this.handleCallTool(
+                    CallToolRequest.fromJsonValue(JsonValue.fromStr(msg))
+                )
+            case _ => MCPError(
+                id: req.id,
+                error: ErrorContent(
+                    code: INVALID_REQUEST,
+                    message: "Server does not support ${req.method}"
+                )
+            )
         }
+        return response
     }
 
     private func handleCallTool(callToolRequest: CallToolRequest): ToJsonValue {
@@ -151,44 +145,9 @@ public class MCPServer {
         this.send(response.toJsonValue().toString())
     }
 
-    private func send(msg: String): Unit {
-        LogUtils.info("Send: ${msg}")
-        writer.writeln(msg)
-        writer.flush()
-    }
-
-    private func recv(): Option<String> {
-        let msg = reader.readln()
-        LogUtils.info("Recv: ${msg ?? ''}")
-        return msg
-    }
-
     private func recvRequest<T>(): T where T <: Jsonable<T> {
         let msg = this.recv().getOrThrow({ => MCPException("Fail to get MCP response") })
         return T.fromJsonValue(JsonValue.fromStr(msg))
-    }
-
-    //-----------------------------------------------------------------------------------
-    /**
-     * Merge all tools of each agent, and start a MCP server for these tools
-     */
-    public static func startWith(agents: Array<Agent>): Unit {
-        let allTools = ArrayList<Tool>()
-        for (agent in agents) {
-            allTools.appendAll(agent.toolManager.getTools())
-            // The agent itself is also a tool
-            allTools.append(AgentAsTool(agent))
-        }
-        let server = MCPServer(allTools.toArray())
-        server.start()
-    }
-
-    /**
-     * Start a MCP server for tools
-     */
-    public static func startWith(tools: Array<Tool>): Unit {
-        let server = MCPServer(tools)
-        server.start()
     }
 }
 

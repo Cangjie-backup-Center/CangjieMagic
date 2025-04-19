@@ -5,7 +5,8 @@ package magic.agent_executor.plan_react
 
 import magic.core.agent.*
 import magic.utils.*
-import magic.agent_executor.react.{ReactPromptUtils, IteratorWrapper, ReactTag, WithTag}
+import magic.agent_executor.react.{ReactPromptUtils, IteratorWrapper}
+import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
 import magic.core.message.{ChatMessage, Dialog}
 import magic.core.model.ChatRequest
@@ -64,12 +65,12 @@ private func workFn(planTask: PlanTask): Iterator<String> {
             strBuilder.append(subtask.toMarkdown())
             strBuilder.append("\n")
         }
-        planTask.execInfo.verboseChannel.put(strBuilder.toString().withTag(ReactTag.PLAN))
+        planTask.execInfo.verboseChannel.put(strBuilder.toString().withTag(Tag.PLAN))
     }
     // Solve each subtask
     for (subtask in subtasks) {
         if (request.verbose) {
-            planTask.execInfo.verboseChannel.put("Solve the subtask: ${subtask.name}".withTag(ReactTag.PLAN))
+            planTask.execInfo.verboseChannel.put("Solve the subtask: ${subtask.name}".withTag(Tag.PLAN))
         }
         let worker = ReactWorker(planTask)
         let asyncResp = worker.asyncSolve(subtask, verbose: request.verbose)
@@ -81,7 +82,7 @@ private func workFn(planTask: PlanTask): Iterator<String> {
         }
         subtask.result = asyncResp.content
         if (request.verbose) {
-            planTask.execInfo.verboseChannel.put("# Subtask DONE!\n${subtask.toMarkdown()}".withTag(ReactTag.INFO))
+            planTask.execInfo.verboseChannel.put("# Subtask DONE!\n${subtask.toMarkdown()}".withTag(Tag.INFO))
         }
     }
     if (request.verbose) {
