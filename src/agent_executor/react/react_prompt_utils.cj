@@ -8,6 +8,7 @@ import magic.core.agent.AgentTask
 import magic.core.message.*
 import magic.log.LogUtils
 import magic.prompt.Template
+internal import magic.parser.WithTag
 
 import std.collection.{map, collectArray}
 
@@ -15,8 +16,8 @@ import std.collection.{map, collectArray}
 protected let REACT_SYSTEM_PROMPT = """
 # Guidelines
 Use the following format to accomplish user's request:
-${ReactTag.THOUGHT} think about what to do next to solve the question ${ReactTag.THOUGHT.getCloseTag()}
-${ReactTag.ACTION} use a tool, the action must be a json object wrapped by ```json and ```
+${Tag.THOUGHT} think about what to do next to solve the question ${Tag.THOUGHT.getCloseTag()}
+${Tag.ACTION} use a tool, the action must be a json object wrapped by ```json and ```
     ```json
     {
         "name": string, name of the tool, it must refer to one of available tools
@@ -34,17 +35,17 @@ ${ReactTag.ACTION} use a tool, the action must be a json object wrapped by ```js
         }
     }
     ```
-${ReactTag.ACTION.getCloseTag()}
-${ReactTag.OBSERVATION} the result of the action ${ReactTag.OBSERVATION.getCloseTag()}
+${Tag.ACTION.getCloseTag()}
+${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.getCloseTag()}
 ... (Thought/Action/Observation may repeat N times to accomplish user's request)
-${ReactTag.ANSWER} the final answer to the original input question ${ReactTag.ANSWER.getCloseTag()}
+${Tag.ANSWER} the final answer to the original input question ${Tag.ANSWER.getCloseTag()}
 
-NEVER generate ${ReactTag.OBSERVATION} yourself. This is an important requirement.
+NEVER generate ${Tag.OBSERVATION} yourself. This is an important requirement.
 
-You must generate either a pair of ${ReactTag.THOUGHT} and ${ReactTag.ACTION} or a pair of ${ReactTag.THOUGHT} and ${ReactTag.ANSWER}
+You must generate either a pair of ${Tag.THOUGHT} and ${Tag.ACTION} or a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}
 Examples:
-Output: ${ReactTag.THOUGHT} I need to search the web to get related knowledge ${ReactTag.THOUGHT.getCloseTag()} ${ReactTag.ACTION} ... ${ReactTag.ACTION.getCloseTag()}
-Output: ${ReactTag.THOUGHT} I know the final answer now ${ReactTag.THOUGHT.getCloseTag()} ${ReactTag.ANSWER} ... ${ReactTag.ANSWER.getCloseTag()}
+Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.getCloseTag()} ${Tag.ACTION} ... ${Tag.ACTION.getCloseTag()}
+Output: ${Tag.THOUGHT} I know the final answer now ${Tag.THOUGHT.getCloseTag()} ${Tag.ANSWER} ... ${Tag.ANSWER.getCloseTag()}
 
 - If there are no available tools, generate final answer directly.
 
@@ -63,15 +64,15 @@ private let REACT_SUMMARIZE_SYSTEM_PROMPT = """
 # Instruction
 Given a question and a solving procedure for it, you should summarize an answer from them.
 The solving procedure consists of:
-  - ${ReactTag.THOUGHT} think about what to do next to solve the task ${ReactTag.THOUGHT.getCloseTag()}
-  - ${ReactTag.ACTION} use a tool, which is a function call ${ReactTag.ACTION.getCloseTag()}
-  - ${ReactTag.OBSERVATION} the result of the action ${ReactTag.OBSERVATION.getCloseTag()}
+  - ${Tag.THOUGHT} think about what to do next to solve the task ${Tag.THOUGHT.getCloseTag()}
+  - ${Tag.ACTION} use a tool, which is a function call ${Tag.ACTION.getCloseTag()}
+  - ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.getCloseTag()}
   - ... (Thought/Action/Observation may repeat N times)
 
-The answer should be wrapped by ${ReactTag.ANSWER} and ${ReactTag.ANSWER.getCloseTag()} like
-${ReactTag.ANSWER}
+The answer should be wrapped by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()} like
+${Tag.ANSWER}
 Cat is the answer, and ...
-${ReactTag.ANSWER.getCloseTag()}
+${Tag.ANSWER.getCloseTag()}
 
 # Question
 {question}
@@ -90,7 +91,7 @@ ${ReactTag.ANSWER.getCloseTag()}
 
 {dialog}
 
-Now, summarize the answer. Remember you should wrap the output by ${ReactTag.ANSWER} and ${ReactTag.ANSWER.getCloseTag()}
+Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}
 """
 
 protected struct ReactPromptUtils {

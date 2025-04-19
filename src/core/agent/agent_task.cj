@@ -8,10 +8,11 @@ public open class AgentTask {
     public let request: AgentRequest
     // Information during the execution
     public var step = 0
-    public let execInfo = AgentExecutionInfo()
+    public let execInfo: AgentExecutionInfo
 
     protected init(agent: Agent, request: AgentRequest) {
         this.agent = agent
         this.request = request
+        this.execInfo = request.execInfo ?? AgentExecutionInfo()
     }
 }

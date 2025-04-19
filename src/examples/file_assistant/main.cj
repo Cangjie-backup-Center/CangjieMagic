@@ -8,7 +8,7 @@ import log.LogLevel
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
-import magic.agent_executor.react.ReactDumper
+import magic.agent_executor.react.ConsoleReactPrinter
 
 const MARKDOWNIFY_DIR = "<path-to-markdownify-mcp>"
 const MOUNT_DIR = "<path-to-mount>"
@@ -51,7 +51,7 @@ main() {
     )
 
     // 打印中间信息
-    let dumper = ReactDumper(asyncResp.execInfo.getOrThrow().verboseInfo)
+    let dumper = ConsoleReactPrinter(asyncResp.execInfo.getOrThrow().verboseInfo)
     dumper.dump()
 
     // 打印结果

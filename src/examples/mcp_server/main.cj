@@ -6,7 +6,7 @@ package magic.examples.mcp_server
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
-import magic.mcp.MCPServer
+import magic.mcp.StdioMCPServer
 
 import log.LogLevel
 
@@ -37,5 +37,5 @@ main() {
     Config.logFile = "./logs/mcp-server.log"
 
     let agent = Calculator()
-    MCPServer.startWith([agent])
+    StdioMCPServer.startWith([agent])
 }
