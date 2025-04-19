@@ -17,5 +17,5 @@ jobs:
       uses: checkout-action@0.0.1
       with:
         ref: dev
-    - run: ls
+    - run: cd repo_workspace && ls
     - run: echo ' ================== flag1 ================== '
