@@ -35,9 +35,9 @@ protected struct ToolCall {
         let toolManager = task.agent.toolManager
         let messages = ArrayList<ChatMessage>()
         if (this.thought != "") {
-            messages.append(ChatMessage.assistant(this.thought.withTag(ReactTag.THOUGHT)))
+            messages.append(ChatMessage.assistant(this.thought.withTag(Tag.THOUGHT)))
         }
-        messages.append(ChatMessage.assistant(this.text.withTag(ReactTag.ACTION)))
+        messages.append(ChatMessage.assistant(this.text.withTag(Tag.ACTION)))
 
         var observation: String = ""
         // Special treatment for the retriever tool
@@ -70,13 +70,13 @@ protected struct ToolCall {
             let names = toolManager.getTools() |> map { t: Tool => t.name } |> collectArray
             observation = "Tool `${this.request.name}` not found in ${names}"
         }
-        messages.append(ChatMessage.assistant(observation.withTag(ReactTag.OBSERVATION)))
+        messages.append(ChatMessage.assistant(observation.withTag(Tag.OBSERVATION)))
         if (task.request.verbose) {
             let runes = observation.toRuneArray()
             let verboseContent = if (runes.size < 100) {
-                observation.withTag(ReactTag.OBSERVATION)
+                observation.withTag(Tag.OBSERVATION)
             } else {
-                "${String(runes[..100])}...".withTag(ReactTag.OBSERVATION)
+                "${String(runes[..100])}...".withTag(Tag.OBSERVATION)
             }
             task.execInfo.verboseChannel.put(verboseContent)
         }
@@ -135,22 +135,22 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
 
     public func toString(): String {
         return match (this) {
-            case ReactStep.Action(tc) => "${ReactTag.THOUGHT} ${tc.thought} ${ReactTag.THOUGHT.getCloseTag()}; ${ReactTag.ACTION} ${tc.text} ${ReactTag.ACTION.getCloseTag()}"
-            case ReactStep.Thought(t) => "${ReactTag.THOUGHT} ${t} ${ReactTag.THOUGHT.getCloseTag()}"
-            case ReactStep.Answer(a) => "${ReactTag.THOUGHT} ${a.thought} ${ReactTag.THOUGHT.getCloseTag()}; ${ReactTag.ANSWER} ${a.content} ${ReactTag.ANSWER.getCloseTag()}"
+            case ReactStep.Action(tc) => "${Tag.THOUGHT} ${tc.thought} ${Tag.THOUGHT.getCloseTag()}; ${Tag.ACTION} ${tc.text} ${Tag.ACTION.getCloseTag()}"
+            case ReactStep.Thought(t) => "${Tag.THOUGHT} ${t} ${Tag.THOUGHT.getCloseTag()}"
+            case ReactStep.Answer(a) => "${Tag.THOUGHT} ${a.thought} ${Tag.THOUGHT.getCloseTag()}; ${Tag.ANSWER} ${a.content} ${Tag.ANSWER.getCloseTag()}"
             case ReactStep.Failure(f) => "[Failure] Original message: ${f.message}; \n Reason: ${f.reason} [/Failure]"
         }
     }
 
     static func fromStr(content: String): ReactStep {
-        let thought = ReactTag.extract(content, ReactTag.THOUGHT)
-        if (let Some(answer) <- ReactTag.extract(content, ReactTag.ANSWER)) {
+        let thought = Tag.extract(content, Tag.THOUGHT)
+        if (let Some(answer) <- Tag.extract(content, Tag.ANSWER)) {
             return ReactStep.Answer(
                 FinalAnswer(thought: thought ?? "",
                             content: answer)
             )
         }
-        let action = ReactTag.extract(content, ReactTag.ACTION)
+        let action = Tag.extract(content, Tag.ACTION)
         match ((thought, action)) {
             case (_, Some(_action)) =>
                 let json = OutputParserUtils.extractLastCode(_action, "json").getOrThrow({
@@ -181,7 +181,7 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
                         FailureLevel.Repairable,
                         message: content,
                         reason: "Output format is invalid.",
-                        suggestion: "You should generate ${ReactTag.ACTION} or ${ReactTag.ANSWER}"
+                        suggestion: "You should generate ${Tag.ACTION} or ${Tag.ANSWER}"
                     )
                 )
         }

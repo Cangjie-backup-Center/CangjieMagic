@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent_executor.react
+package magic.parser
 
 protected struct Tag {
     protected static const THOUGHT = "[Thought]"
@@ -56,7 +56,7 @@ protected struct Tag {
     }
 }
 
-private func getTagSymbol(tag: String): (String, String) {
+func getTagSymbol(tag: String): (String, String) {
     if (tag.startsWith("[")) {
         return ("[", "]")
     } else if (tag.startsWith("<")) {

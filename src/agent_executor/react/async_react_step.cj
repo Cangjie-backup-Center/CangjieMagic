@@ -9,22 +9,23 @@ import magic.core.message.{ChatMessage, Dialog}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.utils.{StringExt, sleep2}
+import magic.parser.TagStreamParser
 
 import std.collection.{ArrayList, map, collectArray}
 
 class AsyncReactFinalAnswer <: Iterator<String> {
     AsyncReactFinalAnswer(
-        let reader: AsyncReactStepReader
+        let parser: TagStreamParser
     ) {
-        if ((this.reader.currTag ?? "") != ReactTag.ANSWER) {
-            throw AgentExecutionException("Invalid async react final answer. Content: ${this.reader.currContent}")
+        if ((this.parser.currTag ?? "") != Tag.ANSWER) {
+            throw AgentExecutionException("Invalid async react final answer. Content: ${this.parser.currContent}")
         }
         // Remove the prefix of tag
-        this.reader.removeTag(ReactTag.ANSWER)
+        this.parser.removeTag(Tag.ANSWER)
     }
 
     override public func next(): Option<String> {
-        if (let Some((content, _isClosed)) <- this.reader.readPartContentBefore(ReactTag.ANSWER)) {
+        if (let Some((content, _isClosed)) <- this.parser.readPartContentBefore(Tag.ANSWER)) {
             return content
         }
         return None
@@ -33,17 +34,17 @@ class AsyncReactFinalAnswer <: Iterator<String> {
 
 class AsyncReactStep {
     AsyncReactStep(
-        let reader: AsyncReactStepReader
+        let parser: TagStreamParser
     ) { }
 
     // Each react step has [Thought], so we parse thoughts and save them
     private let thoughts = ArrayList<String>()
 
     private func readThoughts(): Unit {
-        while (let Some(tag) <- this.reader.currTag) {
-            if (tag == ReactTag.THOUGHT) {
-                thoughts.append(this.reader.readTagAndContent(ReactTag.THOUGHT))
-            } else if (tag == ReactTag.ACTION || tag == ReactTag.ANSWER) {
+        while (let Some(tag) <- this.parser.currTag) {
+            if (tag == Tag.THOUGHT) {
+                thoughts.append(this.parser.readTagAndContent(Tag.THOUGHT))
+            } else if (tag == Tag.ACTION || tag == Tag.ANSWER) {
                 break
             } else {
                 throw AgentExecutionException("Invalid react tag `${tag}`")
@@ -54,20 +55,20 @@ class AsyncReactStep {
    func peekTag(): String {
         this.readThoughts()
         // If there are no tags, this step is a single [Thought]
-        if (let Some(tag) <- this.reader.currTag) {
+        if (let Some(tag) <- this.parser.currTag) {
             return tag
         } else {
-            return ReactTag.THOUGHT
+            return Tag.THOUGHT
         }
     }
 
     func getStepOf(tag: String): ReactStep {
         try {
             let thought = String.join(this.thoughts.toArray(), delimiter: "\n")
-            let action = if (tag == ReactTag.THOUGHT) {
+            let action = if (tag == Tag.THOUGHT) {
                 ""
-            } else if (tag == ReactTag.ACTION) {
-                this.reader.readTagAndContent(ReactTag.ACTION)
+            } else if (tag == Tag.ACTION) {
+                this.parser.readTagAndContent(Tag.ACTION)
             } else {
                 throw AgentExecutionException("Unreachable")
             }
@@ -88,6 +89,6 @@ class AsyncReactStep {
 
     func getAsyncFinalAnswer(): (String, AsyncReactFinalAnswer) {
         let thought = String.join(this.thoughts.toArray(), delimiter: "\n")
-        (thought, AsyncReactFinalAnswer(this.reader))
+        (thought, AsyncReactFinalAnswer(this.parser))
     }
 }
