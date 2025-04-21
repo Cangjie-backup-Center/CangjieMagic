@@ -4,15 +4,9 @@
 package magic.core.model
 
 public struct ImageResponse {
-    public let b64Json: String
-    public let url: String
-    public let revisedPrompt: String
-
-    public init(b64Json!: String = "",
-                url!: String = "",
-                revisedPrompt!: String = "") {
-        this.b64Json = b64Json
-        this.url = url
-        this.revisedPrompt = revisedPrompt
+    public ImageResponse(
+        protected let url!: String = "",
+        // protected let b64Json: Option<String> = None
+        protected let revisedPrompt!: String = "") {
     }
 }

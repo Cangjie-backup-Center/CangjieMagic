@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.model.openai
+package magic.model.siliconflow
 
 import magic.core.model.*
 import magic.utils.http.*
@@ -11,20 +11,19 @@ import magic.jsonable.*
 import encoding.json.*
 import std.collection.{HashMap, ArrayList}
 
+// See doc: https://docs.siliconflow.cn/cn/api-reference/images/images-generations
 @jsonable
-private class OpenAIImageResponse {
-    let created: String
-    let data: Array<OpenAIImageData>
+private class SiliconflowImageResponse {
+    let seed: Int64
+    let images: Array<SiliconflowImage>
 }
 
 @jsonable
-private class OpenAIImageData {
+private class SiliconflowImage {
     let url: String
-    let b64_json: Option<String>
-    let revised_prompt: String
 }
 
-public class OpenAIImageModel <: ImageModel {
+public class SiliconflowImageModel <: ImageModel {
     private let model: String
     private let baseURL: String
     public let apiKey: String
@@ -40,7 +39,7 @@ public class OpenAIImageModel <: ImageModel {
     }
 
     override public prop service: String {
-        get() { "openai" }
+        get() { "siliconflow" }
     }
 
     override public prop name: String {
@@ -51,22 +50,19 @@ public class OpenAIImageModel <: ImageModel {
         let req = JsonObject()
         req.put("model", JsonString(model))
         req.put("prompt", JsonString(imageReq.prompt))
-        req.put("quality", JsonString("standard"))
-        req.put("response_format", JsonString("url"))
-        req.put("size", JsonString(imageReq.size))
-        req.put("style", JsonString("natural"))
+        req.put("image_size", JsonString(imageReq.size))
+        req.put("batch_size", JsonInt(1))
         let header = HashMap<String, String>([
             ("Content-Type", "application/json"),
             ("Authorization", "Bearer ${this.apiKey}")
         ])
         match (HttpUtils.post("${this.baseURL}/images/generations", header, req, verify: false)) {
             case Some(body) =>
-                let resp = OpenAIImageResponse.fromJsonValue(JsonValue.fromStr(body))
-                let image = resp.data[0] // Currently, we just return the first image
+                let resp = SiliconflowImageResponse.fromJsonValue(JsonValue.fromStr(body))
+                let image = resp.images[0] // Currently, we just return the first image
                 return ImageResponse(
-                    url: image.url,
+                    url: image.url
                     // b64Json: image.b64_json ?? "",
-                    revisedPrompt: image.revised_prompt
                 )
             case None => throw ModelException("Fail to get image http response")
         }
