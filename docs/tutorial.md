@@ -746,6 +746,20 @@ func foo(topic: String): String {
 
 模型配置不仅可以在 `@agent` 的 `model` 属性中使用，还可以直接通过 `ModelManager` 的静态成员方法来直接构造模型实例：`static func createChatModel(modelName: String): ChatModel`。
 
+**模型支持列表**
+
+|   | Chat | Embedding | Image |
+|---|---|---|---|
+| 阿里云 | ✔️ | ✔️ | ❌ |
+| DeepSeek | ✔️ | ❌️ | ❌ |
+| 火山方舟 | ✔️ | ✔️ | ❌ |
+| Llama.cpp | ✔️ | ✔️ | ❌ |
+| Ollama | ✔️ | ✔️ | ❌ |
+| OpenAI | ✔️ | ✔️ | ✔️ |
+| SiliconFlow | ✔️ | ✔️ | ✔️ |
+| 智谱 AI | ✔️ | ❌ | ❌ |
+
+
 如果需要接入新的模型，可参考直接使用 API 设置（见下文）。
 
 ## 常用 API 介绍
