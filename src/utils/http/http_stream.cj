@@ -89,6 +89,7 @@ protected class HttpByteStream <: HttpStream {
             if (!this.lineBuffer.isEmpty()) {
                 let line = this.lineBuffer[0]
                 this.lineBuffer.remove(0)
+                LogUtils.debug("Http byte stream recv: `${line}`")
                 return line
             }
             // otherwise, read more bytes

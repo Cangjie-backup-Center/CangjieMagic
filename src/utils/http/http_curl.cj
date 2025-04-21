@@ -24,10 +24,10 @@ private func prepareCurlArgs(method: String, url: String, header: HashMap<String
     args.append("--no-buffer")  // Disable output buffering
     args.append("--silent")     // Disables curl's default progress
     args.append("--show-error") // Show error messages (but keeps other output silent)
-    args.append("--connect-timeout")
-    args.append("${Config.httpConnectTimeout / 1000}")
-    args.append("--max-time")
-    args.append("${(Config.httpConnectTimeout + Config.httpReadTimeout) / 1000}")
+    // args.append("--connect-timeout") // Do not set the timeout currently
+    // args.append("${Config.httpConnectTimeout / 1000}")
+    // args.append("--max-time")
+    // args.append("${(Config.httpConnectTimeout + Config.httpReadTimeout) / 1000}")
     args.append("--location")
     args.append("${url}")
     args.append("--noproxy")
