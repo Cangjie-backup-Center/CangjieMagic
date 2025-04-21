@@ -138,6 +138,7 @@ protected class SSEventStream <: Iterator<SSEvent> {
 
     override public func next(): Option<SSEvent> {
         while (true) {
+            // Receive the pair of event and data
             var event = ""
             var data = ""
             if (let Some(line) <- httpStream.next()) {
@@ -148,11 +149,13 @@ protected class SSEventStream <: Iterator<SSEvent> {
                 }
                 event = line.removePrefix("event:").trimAscii()
             } else {
+                LogUtils.debug("SSE stream finished")
                 return None
             }
             if (let Some(line) <- httpStream.next()) {
                 data = line.removePrefix("data:").trimAscii()
             } else {
+                LogUtils.debug("SSE stream finished")
                 return None
             }
             return SSEvent(event, data)
