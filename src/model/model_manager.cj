@@ -12,6 +12,7 @@ import magic.model.openai.{OpenAIChatModel, OpenAIEmbeddingModel, OpenAIImageMod
 import magic.model.ollama.{OllamaChatModel, OllamaEmbeddingModel}
 import magic.model.dashscope.DashscopeEmbeddingModel
 import magic.model.llamacpp.LlamacppEmbeddingModel
+import magic.model.siliconflow.SiliconflowImageModel
 import magic.instrumentor.Instrumentor
 
 import std.collection.HashMap
@@ -227,6 +228,8 @@ public struct ModelManager {
         match (modelConfig.service) {
             case "openai" =>
                 return OpenAIImageModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
+            case "siliconflow" =>
+                return SiliconflowImageModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
             case _ =>
                 throw UnsupportedException("Unreachable")
         }
