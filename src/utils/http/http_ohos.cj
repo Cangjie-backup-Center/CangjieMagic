@@ -95,7 +95,7 @@ protected struct HttpUtilsImpl {
             httpStream.put(data)
         })
         httpRequest.onDataEnd({ =>
-            LogUtils.debug("End http stream")
+            LogUtils.debug("End the http stream of ${url}")
             httpStream.markEOF()
             httpRequest.offDataReceive()
             httpRequest.offDataEnd()

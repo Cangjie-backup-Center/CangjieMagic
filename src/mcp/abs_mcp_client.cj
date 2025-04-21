@@ -20,6 +20,8 @@ public abstract class AbsMCPClient <: MCPClient {
 
     protected func doRecv(): Option<String>
 
+    open protected func doBeforeRequest(): Unit { }
+
     protected func send(req: JsonObject): Unit {
         if (!doSend(req)) {
             throw MCPException("Fail to send request")
@@ -55,6 +57,7 @@ public abstract class AbsMCPClient <: MCPClient {
     }
 
     override public func getTools(): Array<Tool> {
+        this.doBeforeRequest()
         let result = ArrayList<Tool>()
         for (t in this.listTools().tools) {
             result.append(MCPToolWrapper(this, t))
@@ -63,6 +66,7 @@ public abstract class AbsMCPClient <: MCPClient {
     }
 
     override public func callTool(name: String, args: Array<(String, ToJsonValue)>): ToolResponse {
+        this.doBeforeRequest()
         // Prepare the request
         let arguments = HashMap<String, JsonValue>()
         for (arg in args) {
