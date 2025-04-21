@@ -124,6 +124,8 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
             if (content == ": keep-alive") {
                 continue
             } else if (content == "[DONE]") {
+                // Consume and close the http stream
+                while (let Some(_) <- httpStream.next()) { }
                 finished = true
                 return AsyncChatChunk(
                     message: ChatMessage(this.role.getOrThrow(), ""),

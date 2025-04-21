@@ -14,6 +14,12 @@ public struct LogUtils {
         AppLog.info(msg) // AppLog.debug has no effects?
     }
 
+    public static func debug(ex: Exception): Unit {
+        for (ste in ex.getStackTrace()) {
+            AppLog.info("${ste.fileName}:${ste.lineNumber} ${ste.methodName}")
+        }
+    }
+
     public static func info(msg: String): Unit {
         AppLog.info(msg)
     }

@@ -31,13 +31,20 @@ public class ReactExecutor <: AgentExecutor {
         let task = ReactTask(agent, request)
         // Create a thread to execute the react task
         let fut: Future<Iterator<String>> = spawn {
-            for (_ in 0..this.loop) {
-                if (let Some(asyncAnswer) <- task.asyncRunOnce()) {
-                    return asyncAnswer
+            try {
+                for (_ in 0..this.loop) {
+                    if (let Some(asyncAnswer) <- task.asyncRunOnce()) {
+                        return asyncAnswer
+                    }
                 }
+                LogUtils.info("Exceed the max react loop")
+                return task.asyncSummarize()
+            } catch (e: Exception) {
+                if (request.verbose) {
+                    task.execInfo.verboseChannel.close()
+                }
+                throw e
             }
-            LogUtils.info("Exceed the max react loop")
-            return task.asyncSummarize()
         }
         return AsyncAgentResponse(IteratorWrapper(task, fut), execInfo: task.execInfo)
     }
