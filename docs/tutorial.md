@@ -11,8 +11,9 @@
     - [自定义提示词模式](#自定义提示词模式)
   - [Agent 交互方法](#agent-交互方法)
     - [输入模板](#输入模板)
-  - [工具](#工具)
-    - [MCP 协议服务器](#mcp-协议服务器)
+  - [MCP 协议和工具](#mcp-协议和工具)
+    - [工具函数编写](#工具函数编写)
+    - [使用工具和 MCP 服务器](#使用工具和-mcp-服务器)
   - [规划](#规划)
   - [外部知识](#外部知识)
   - [示例](#示例)
@@ -460,12 +461,18 @@ let area = agent.chat(
 )
 ```
 
-## 工具
+## MCP 协议和工具
 
-工具函数在 Agent 执行期间会被自动调用。宏 `@tool` 用于修饰**顶层函数**或 **Agent 类的内部方法**，它有如下的属性：
+工具可以理解为 Agent 执行过程中能够执行的代码。当前 Agent 工具有两个来源：
+- 使用 DSL 直接编写的工具函数
+- 由 MCP 服务器提供的工具（MCP 服务器可视为*一组工具的集合*）。
 
-- `description` 属性描述了工具的功能
-- `parameters` 属性描述了函数参数的含义，它接收 `<parameter-name>: <parameter-description>` 的键值对
+### 工具函数编写
+
+宏 `@tool` 用于修饰**顶层函数**或 **Agent 类的内部方法**，它有如下的属性：
+
+- `description` 属性描述了工具的功能【必选】
+- `parameters` 属性描述了函数参数的含义，它接收 `<parameter-name>: <parameter-description>` 的键值对【可选】
 
 如果工具函数是全局函数，那么需要在 `tools` 属性中显式指定才能让 Agent 使用工具。
 
@@ -474,15 +481,9 @@ let area = agent.chat(
 ```cangjie
 @tool[description: "...",
       parameters: { arg: "..."}]
-func globalTool(arg: String): String {
-    return ...
-}
-
-@agent[tools: [globalTool]]
-class Foo { }
+func foo(arg: String): String { ... }
 ```
 
-如果工具被定义在 Agent 类的内部，那么它能被其所属的 Agent 自动使用，即**无需**在 `tools` 属性中显式指定。
 
 **示例：定义内部工具**
 
@@ -491,9 +492,7 @@ class Foo { }
 class A {
     @tool[description: "...",
           parameters: { str: "..." }]
-    func internalTool(str: String): String {
-        return ...
-    }
+    func bar(str: String): String { ... }
 }
 ```
 
@@ -509,19 +508,21 @@ class A {
 - 当前工具函数的形参类型必须是基础类型
 - 工具函数的返回值必须满足 `ToString` 接口，该接口方法的返回值将作为工具调用的返回值
 
-### MCP 协议服务器
+### 使用工具和 MCP 服务器
 
-在上述自定义的函数作为工具外，Agent 也能使用开源的 MCP 工具。通过 `mcp` 属性可以进行设置。该属性接收多个 MCP 服务器的设置，当前支持两种传输方式的服务器：
+Agent 通过 `mcp` 属性可以配置使用的 MCP 服务器。该属性接收多个 MCP 服务器配置，每个配置可采用如下的语法：
 
-- `stdio` 传输，配置方式为：由 `command`（启动命令）和 `args`（启动参数）构成，并可选设置启动的环境变量  `env`。
-- `HTTP SSE` 传输，配置方式为：通过 `url` 指定 MCP 服务器的地址
+- `stdio` 传输协议的 MCP 服务器，`stdio(<command>, <env-kv-pair>*)`，编写启动 MCP 服务器的命令行以及可选的环境变量设置。例如，`stdio("command and arguments", ENV_1: "value1", ENV_2, "value2")`。
+- `http/sse` 传输协议的 MCP 服务器，`http(<url>)`，编写 MCP 服务器的地址。例如，  `http("https://abc.com/mcp")`。
+- `tools` 将需要使用的工具函数聚集为一个“虚拟的 MCP 服务器”，`tools(<func-id>+)`。例如，`tools(foo, bar)`。注意 ⚠️：如果工具被定义在 Agent 类的内部，那么它能被其所属的 Agent 直接使用，即**无需**在 `tools` 属性中显式指定。
 
 ```cangjie
 @agent[
     mcp: [
-        { command: "node", args: [ "index.js", "args" ] },
-        { command: "python", args: [ "main.py", "args" ], env: { SOME_API_KEY: "xxx" } },
-        { url: "http://abc.mcp.server.com" }
+        stdio("node index.js args" ),
+        stdio("python main.py args", SOME_API_KEY: "xxx"),
+        http("http://abc.mcp.server.com"),
+        tools(toolA, toolB)
     ]
 ]
 class Foo { ... }
@@ -538,6 +539,33 @@ agent.toolManager.addTools(client.getTools())
 ```
 
 ⚠️注意：目前 MCP 服务器仅支持工具相关的 MCP 协议。
+
+**以下是过时的工具和 MCP 配置语法**（即将废弃）：
+
+工具函数配置语法：在 `@agent` 宏的 `tools` 属性中配置，该属性接收一个列表。
+
+```cangjie
+@agent[
+    tools: [toolA, toolB]
+]
+class Foo { ... }
+```
+
+MCP 配置语法在 `@agent` 宏的 `mcp` 属性中配置，该属性接收一个列表。
+
+- `stdio` 传输，配置方式为：由 `command`（启动命令）和 `args`（启动参数）构成，并可选设置启动的环境变量  `env`。
+- `HTTP SSE` 传输，配置方式为：通过 `url` 指定 MCP 服务器的地址
+
+```cangjie
+@agent[
+    mcp: [
+        { command: "node", args: [ "index.js", "args" ] },
+        { command: "python", args: [ "main.py", "args" ], env: { SOME_API_KEY: "xxx" } },
+        { url: "http://abc.mcp.server.com" }
+    ]
+]
+class Foo { ... }
+```
 
 ## 规划
 
