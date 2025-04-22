@@ -15,8 +15,16 @@ protected func exists(path: String): Bool {
     return File.exists(path) || Directory.exists(path)
 }
 
-protected func newIdentifierToken(s: String): Token {
-    return Token(TokenKind.IDENTIFIER, s)
+protected func newIdentifierToken(id: String): Token {
+    return Token(TokenKind.IDENTIFIER, id)
+}
+
+protected func newArrayOfIdentifierToken(ids: Array<String>): Array<Token> {
+    let result = ArrayList<Token>()
+    for (id in ids) {
+        result.append(newIdentifierToken(id))
+    }
+    return result.toArray()
 }
 
 protected func newLiteralToken(v: Bool): Token {
@@ -29,6 +37,14 @@ protected func newLiteralToken(v: Int64): Token {
 
 protected func newLiteralToken(v: String): Token {
     return Token(TokenKind.STRING_LITERAL, v)
+}
+
+protected func newArrayOfLiteralToken(values: Array<String>): Array<Token> {
+    let result = ArrayList<Token>()
+    for (v in values) {
+        result.append(newLiteralToken(v))
+    }
+    return result.toArray()
 }
 
 protected func newMultilineStringLiteralToken(v: String): Token {
@@ -61,7 +77,7 @@ protected func joinTokens(tokensList: ArrayList<Tokens>, separator: Token): Toke
     }
 }
 
-protected func joinTokens(tokenList: ArrayList<Token>, separator: Token): Tokens {
+protected func joinTokens(tokenList: Array<Token>, separator: Token): Tokens {
     if (tokenList.isEmpty()) {
         return Tokens()
     } else if (tokenList.size == 1) {
@@ -73,6 +89,10 @@ protected func joinTokens(tokenList: ArrayList<Token>, separator: Token): Tokens
         }
         return ret
     }
+}
+
+protected func joinTokens(tokenList: ArrayList<Token>, separator: Token): Tokens {
+    return joinTokens(tokenList.toArray(), separator)
 }
 
 protected func isTokenOfKind(token: Token, kinds: Array<TokenKind>): Bool {

@@ -146,6 +146,9 @@ protected open class AttrParser <: Parser {
                     throw DslException("Fail to parse attributes. Expecting '=' or ':'.")
                 }
                 let value = extractValue()
+                if (map.contains(key)) {
+                    throw DslException("Duplicated attributes of `${key}`")
+                }
                 map.put(key, value)
             } else if (currToken.kind == TokenKind.COMMA) {
                 forwardPosition() // ','
@@ -164,27 +167,40 @@ protected open class AttrParser <: Parser {
 }
 
 protected class ArrayParser <: Parser {
-    protected init(tokens: Tokens) { super(tokens) }
+    private let beginSymbol: TokenKind
+    private let endSymbol: TokenKind
+
+    protected init(tokens: Tokens) {
+        super(tokens)
+        this.beginSymbol = TokenKind.LSQUARE
+        this.endSymbol = TokenKind.RSQUARE
+    }
+
+    protected init(tokens: Tokens, beginSymbol!: TokenKind, endSymbol!: TokenKind) {
+        super(tokens)
+        this.beginSymbol = beginSymbol
+        this.endSymbol = endSymbol
+    }
 
     /**
      * Parse an array of specified tokens
      */
     protected func parseArrayOf(kind: TokenKind): ArrayList<Token> {
         let result = ArrayList<Token>()
-        skipCurrToken(TokenKind.LSQUARE)
+        skipCurrToken(this.beginSymbol)
         while (currPos < tokens.size) {
             if (currToken.kind == kind) {
                 result.append(currToken)
                 forwardPosition()
             } else if (currToken.kind == TokenKind.COMMA) {
                 forwardPosition() // ','
-            } else if (currToken.kind == TokenKind.RSQUARE) {
+            } else if (currToken.kind == this.endSymbol) {
                 break
             } else {
                 throw DslException("Unknown token ${currToken.value} when parsing array")
             }
         }
-        skipCurrToken(TokenKind.RSQUARE)
+        skipCurrToken(this.endSymbol)
         return result
     }
 
@@ -213,9 +229,13 @@ protected class ArrayParser <: Parser {
                 }
                 break
             } else {
-                if (currToken.kind == TokenKind.LCURL || currToken.kind == TokenKind.LSQUARE) {
+                if (currToken.kind == TokenKind.LCURL ||
+                    currToken.kind == TokenKind.LSQUARE ||
+                    currToken.kind == TokenKind.LPAREN) {
                     depth += 1
-                } else if (currToken.kind == TokenKind.RCURL || currToken.kind == TokenKind.RSQUARE) {
+                } else if (currToken.kind == TokenKind.RCURL ||
+                           currToken.kind == TokenKind.RSQUARE ||
+                           currToken.kind == TokenKind.RPAREN) {
                     depth -= 1
                 }
                 currTokens.append(currToken)
@@ -265,7 +285,7 @@ protected class MapParser <: Parser {
             } else if (currToken.kind == TokenKind.RCURL) {
                 break
             } else {
-                throw DslException("Unknown token ${currToken.value} when parsing map")
+                throw DslException("Unknown token ${currToken.value} when parsing map. `${this.tokens}`")
             }
         }
         skipCurrToken(TokenKind.RCURL)

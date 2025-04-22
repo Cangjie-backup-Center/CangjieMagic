@@ -64,7 +64,9 @@ public class SseMCPClient <: AbsMCPClient {
     }
 
     override protected func doSend(req: JsonObject): Bool {
-        let header = HashMap<String, String>()
+        let header = HashMap<String, String>([
+            ("Content-Type", "application/json")
+        ])
         let resp = HttpUtils.post("${this.baseURL}${this.endpoint}", header, req, verify: false)
         return !resp.isNone()
     }
