@@ -59,6 +59,7 @@ public class SseMCPClient <: AbsMCPClient {
         // Before sending the request, initialize the MCP
         let dur = DateTime.now() - this.lastInitTime
         if (dur.toMilliseconds() > (Config.httpReadTimeout - 10000)) {
+            this.sseStream.close()
             this.doInit()
         }
     }
@@ -73,7 +74,7 @@ public class SseMCPClient <: AbsMCPClient {
 
     override protected func doRecv(): Option<String> {
         if (let Some(event) <- this.sseStream.next()) {
-            LogUtils.info("Recv: ${event}")
+            LogUtils.debug("Recv: ${event}")
             if (event.event != "message") {
                 throw MCPException("Invalid message event: ${event}")
             }

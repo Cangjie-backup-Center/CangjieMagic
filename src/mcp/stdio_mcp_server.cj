@@ -34,14 +34,14 @@ public class StdioMCPServer <: AbsMCPServer {
     }
 
     override protected func send(msg: String): Unit {
-        LogUtils.info("Send: ${msg}")
+        LogUtils.debug("Send: ${msg}")
         writer.writeln(msg)
         writer.flush()
     }
 
     override protected func recv(): Option<String> {
         let msg = reader.readln()
-        LogUtils.info("Recv: ${msg ?? ''}")
+        LogUtils.debug("Recv: ${msg ?? ''}")
         return msg
     }
 

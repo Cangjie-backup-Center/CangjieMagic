@@ -5,6 +5,7 @@ package magic.core.agent
 
 import magic.core.message.Dialog
 import magic.core.rag.{Retrieval, RetrievalInfo}
+import magic.parser.TagChannel
 
 import std.collection.ArrayList
 import std.collection.concurrent.BlockingQueue
@@ -41,13 +42,13 @@ public class AgentExecutionInfo {
     /**
      * A communication channel to transfer verbose information during the agent execution
      */
-    protected var _verboseChannel: Option<SimpleChannel> = None
+    protected var _verboseChannel: Option<TagChannel> = None
     private let mutex = ReentrantMutex()
-    protected prop verboseChannel: SimpleChannel {
+    protected prop verboseChannel: TagChannel {
         get() {
             synchronized(this.mutex) {
                 if (let Some(ch) <- _verboseChannel) { return ch }
-                let ch = SimpleChannel()
+                let ch = TagChannel()
                 _verboseChannel = ch
                 return ch
             }
@@ -61,36 +62,6 @@ public class AgentExecutionInfo {
         get() {
             this.verboseChannel
         }
-    }
-}
-/**
- * A simple channel to transfer verbose information between threads
- */
-protected class SimpleChannel <: Iterator<String> {
-    private static const EOF = "__SIMPLE_CHANNEL_EOF__"
-    private var finished = false
-
-    private let queue = BlockingQueue<String>()
-
-    public func next(): Option<String> {
-        if (finished) {
-            return None
-        }
-        let msg = this.queue.dequeue()
-        if (msg == EOF) {
-            finished = true
-            return None
-        } else {
-            return msg
-        }
-    }
-
-    protected func put(msg: String): Unit {
-        this.queue.enqueue(msg)
-    }
-
-    protected func close(): Unit {
-        this.queue.enqueue(EOF)
     }
 }
 

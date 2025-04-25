@@ -17,25 +17,35 @@ import std.collection.{filter, collectArray}
 
 public struct ModelUtils {
     private static func parseChatResponse(response: ChatResponse): Option<ChatMessage> {
-        let assistantMessages = response.dialog |>
+        let messages = response.dialog |>
             filter { msg: ChatMessage =>
                 msg.role == ChatMessageRole.Assistant && !msg.content.isEmpty()
             } |>
             collectArray
-        LogUtils.debug("#Response-Message: ${response.dialog.size}; #Assistant-Message: ${assistantMessages.size}")
-        if (assistantMessages.isEmpty()) {
+        LogUtils.debug("#Response-Message: ${response.dialog.size}; #Assistant-Message: ${messages.size}")
+        if (messages.isEmpty()) {
+            LogUtils.error("The chat model did not reply a valid assistant message")
             return None
-        } else if (assistantMessages.size > 1) {
+        } else if (messages.size > 1) {
             throw ModelException("There are multiple assistant reply messages")
         }
-        var content = assistantMessages[0].content
+        let msg = messages[0]
+        var content = msg.content
+        // If the reasoning content and result content is merged,
+        // we may filter the reasoning content if necessary.
         if (Config.filterThink) {
             let tag = "</think>"
-            if (let Some(idx) <- content.lastIndexOf("</think>")) {
+            if (let Some(idx) <- msg.content.lastIndexOf(tag)) {
                 content = content[(idx + tag.size)..]
             }
         }
-        return ChatMessage.assistant(content)
+        return ChatMessage(
+            msg.role,
+            content,
+            name: msg.name,
+            image: msg.image,
+            reason: msg.reason
+        )
     }
 
     private static func makeChatImpl(model: ChatModel, request: ChatRequest, who!: Option<String> = None): Option<ChatMessage> {

@@ -5,8 +5,8 @@ package magic.core.model
 
 public struct ImageResponse {
     public ImageResponse(
-        protected let url!: String = "",
+        public let url!: String = "",
         // protected let b64Json: Option<String> = None
-        protected let revisedPrompt!: String = "") {
+        public let revisedPrompt!: String = "") {
     }
 }

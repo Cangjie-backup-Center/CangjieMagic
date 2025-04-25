@@ -3,14 +3,8 @@
  */
 package magic.parser
 
-import magic.core.*
-import magic.core.agent.AgentTask
-import magic.core.message.{ChatMessage, Dialog}
 import magic.log.LogUtils
-import magic.model.ModelUtils
-import magic.utils.{StringExt, sleep2}
-
-import std.collection.{ArrayList, map, collectArray}
+import magic.utils.{StringExt}
 
 /**
  * Parsing a sequence of tagged content
@@ -111,7 +105,6 @@ protected class TagStreamParser {
     }
 
     protected func removeTag(tag: String): Unit {
-        this.readChunk() // Read one more chunk to trim empty spaces
         let content = this.currContent
         let pivot = content.indexOf(tag).getOrThrow()
         this.resetBuffer(content[(pivot + tag.size)..].trimAsciiLeft())
@@ -133,14 +126,17 @@ protected class TagStreamParser {
         let (content, rest) = this.splitByCloseTag(closeTag)
         if (exhausted) {
             // When the stream is over, the close tag must exist
-            // [Final Answer] is special, the LLM may not generate its close tag
-            if (rest.trimAscii() != closeTag && tag != Tag.ANSWER) {
-                throw AgentExecutionException("Fail to read async react ${tag} content. Rest: `${rest}`")
-            } else {
+            // The answer tag is special, the LLM may not generate its close tag
+            if (!rest.trimAscii().startsWith(closeTag) && tag != Tag.ANSWER) {
+                throw ParserException("Fail to read async react ${tag} content. Rest: `${rest}`")
+            }
+            if (rest.trimAscii().size == closeTag.size) {
                 finished = true
                 this.resetBuffer("")
-                return (content.trimAsciiRight(), true)
+            } else {
+                this.resetBuffer(rest[(rest.indexOf(closeTag).getOrThrow() + closeTag.size)..])
             }
+            return (content.trimAsciiRight(), true)
         } else {
             // If the rest starts with the complete close tag, remove it
             if (rest.trimAscii().startsWith(closeTag)) {

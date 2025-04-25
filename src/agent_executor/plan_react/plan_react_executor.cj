@@ -46,7 +46,7 @@ protected class PlanReactExecutor <: AgentExecutor {
             }
             throw UnsupportedException("Unreachable")
         }
-        return AsyncAgentResponse(IteratorWrapper(planTask, fut), execInfo: planTask.execInfo)
+        return AsyncAgentResponse(IteratorWrapper(agent, fut), execInfo: planTask.execInfo)
     }
 }
 

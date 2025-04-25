@@ -31,14 +31,8 @@ protected struct ToolCall {
     /**
      * Run the tool and return observation messages
      */
-    protected func invoke(task: AgentTask): Array<ChatMessage> {
+    protected func invoke(task: AgentTask): String {
         let toolManager = task.agent.toolManager
-        let messages = ArrayList<ChatMessage>()
-        if (this.thought != "") {
-            messages.append(ChatMessage.assistant(this.thought.withTag(Tag.THOUGHT)))
-        }
-        messages.append(ChatMessage.assistant(this.text.withTag(Tag.ACTION)))
-
         var observation: String = ""
         // Special treatment for the retriever tool
         if (this.request.name == "__retriever__tool___") {
@@ -70,17 +64,7 @@ protected struct ToolCall {
             let names = toolManager.getTools() |> map { t: Tool => t.name } |> collectArray
             observation = "Tool `${this.request.name}` not found in ${names}"
         }
-        messages.append(ChatMessage.assistant(observation.withTag(Tag.OBSERVATION)))
-        if (task.request.verbose) {
-            let runes = observation.toRuneArray()
-            let verboseContent = if (runes.size < 100) {
-                observation.withTag(Tag.OBSERVATION)
-            } else {
-                "${String(runes[..100])}...".withTag(Tag.OBSERVATION)
-            }
-            task.execInfo.verboseChannel.put(verboseContent)
-        }
-        return messages.toArray()
+        return observation
     }
 }
 

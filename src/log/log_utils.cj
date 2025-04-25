@@ -98,6 +98,10 @@ public struct LogUtils {
         LOGGER.debug(msg)
     }
 
+    public static func debug(name: String, msg: String): Unit {
+        debug("${name}: ${msg}")
+    }
+
     public static func info(msg: String): Unit {
         LOGGER.info(msg)
     }

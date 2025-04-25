@@ -10,7 +10,7 @@ protected struct Tag {
 
     protected static const OBSERVATION = "[Observation]"
 
-    protected static const ANSWER = "[Final Answer]"
+    protected static const ANSWER = "[Answer]"
 
     protected static const INFO = "[INFO]" // Not in react
 
@@ -27,7 +27,7 @@ protected struct Tag {
 
     static prop longestTag: String {
         get() {
-            var result = Tag.THOUGHT
+            var result = Tag.ALL_TAGS[0]
             var maxLength = result.toString().size
             for (t in Tag.ALL_TAGS) {
                 let l = t.toString().size
@@ -40,6 +40,9 @@ protected struct Tag {
         }
     }
 
+    /**
+     * Extract the tag and content from a string
+     */
     public static func extract(str: String, tag: String): Option<String> {
         if (let Some(start) <- str.lastIndexOf(tag)) {
             let contentStart = start + tag.size

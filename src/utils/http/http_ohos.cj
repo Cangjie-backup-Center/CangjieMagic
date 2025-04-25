@@ -82,8 +82,10 @@ protected struct HttpUtilsImpl {
                                     body: Option<JsonObject>,
                                     verify!: Bool): HttpStream {
         logHttpInfo(method, url, header, body, async: true)
-        let httpStream = HttpByteStream()
         let httpRequest = createHttp()
+        let httpStream = HttpByteStream(closeFn: { =>
+            httpRequest.destroy()
+        })
         // Register callbacks
         httpRequest.onDataReceive({ data: Array<Byte> =>
             // let str = String.fromUtf8(data)
@@ -107,7 +109,7 @@ protected struct HttpUtilsImpl {
             url,
             { err, code =>
                 if (let Some(e) <- err) {
-                    LogUtils.error("Http stream request failed. Exception: ${e.message}")
+                    LogUtils.error("Http stream request for ${url} failed: ${e.message}")
                     httpStream.markError()
                     httpStream.markEOF()
                 }
