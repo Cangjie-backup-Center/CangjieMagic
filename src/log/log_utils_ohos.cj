@@ -8,10 +8,38 @@ import magic.core.message.Dialog
 @When[ohos == "true"]
 import ohos.base.AppLog
 
+import std.collection.ArrayList
+
 @When[ohos == "true"]
 public struct LogUtils {
+    /**
+     * AppLog.info will truncate a log message, so we split it as multiple messages
+     */
+    private static func splitMessages(msg: String): Array<String> {
+        let result = ArrayList<String>()
+        let runes = msg.toRuneArray()
+        var start = 0
+        let SIZE = 1500
+        while (true) {
+            if (start + SIZE <= runes.size) {
+                result.append(String(runes[start..(start + SIZE)]))
+                start += SIZE
+            } else {
+                result.append(String(runes[start..]))
+                break
+            }
+        }
+        return result.toArray()
+    }
+
     public static func debug(msg: String): Unit {
-        AppLog.info(msg) // AppLog.debug has no effects?
+        for (line in splitMessages(msg)) {
+            info(line)  // AppLog.debug has no effects?
+        }
+    }
+
+    public static func debug(name: String, msg: String): Unit {
+        debug("${name}: ${msg}")
     }
 
     public static func debug(ex: Exception): Unit {
@@ -20,8 +48,11 @@ public struct LogUtils {
         }
     }
 
+
     public static func info(msg: String): Unit {
-        AppLog.info(msg)
+        for (line in splitMessages(msg)) {
+            AppLog.info(line)
+        }
     }
 
     public static func info(name: String, msg: String): Unit {

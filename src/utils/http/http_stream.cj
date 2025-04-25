@@ -45,6 +45,13 @@ protected abstract class HttpStream <: Iterator<String> {
     public func markError(): Unit {
         queue.enqueue(Item.Error)
     }
+
+    public func doClose(): Unit
+
+    public func close(): Unit {
+        this.markEOF()
+        doClose()
+    }
 }
 
 /**
@@ -70,13 +77,23 @@ protected class HttpStringStream <: HttpStream {
                 throw HttpException("Http string stream error")
         }
     }
+
+    override public func doClose(): Unit {
+        // Do nothing
+    }
 }
 
 /**
  * The blocking queue stores raw bytes.
  */
 protected class HttpByteStream <: HttpStream {
+    private let closeFn: Option<() -> Unit>
+
     private let lineBuffer = ArrayList<String>()
+
+    init(closeFn!: Option<() -> Unit> = None) {
+        this.closeFn = closeFn
+    }
 
     override public func next(): Option<String> {
         if (finished) {
@@ -122,84 +139,10 @@ protected class HttpByteStream <: HttpStream {
         }
         throw UnsupportedException("Unreachable")
     }
-}
 
-protected struct SSEvent <: ToString {
-    SSEvent(protected let event: String,
-            protected let data: String) { }
-
-    override public func toString(): String {
-        return "event: ${event}\ndata: ${data}"
-    }
-}
-
-protected class SSEventStream <: Iterator<SSEvent> {
-    SSEventStream(private let httpStream: HttpStream) { }
-
-    override public func next(): Option<SSEvent> {
-        while (true) {
-            // Receive the pair of event and data
-            var event = ""
-            var data = ""
-            if (let Some(line) <- httpStream.next()) {
-                if (line.trimAscii().isEmpty()) {
-                    continue
-                } else if (line.startsWith(": ping")) {
-                    continue
-                }
-                event = line.removePrefix("event:").trimAscii()
-            } else {
-                LogUtils.debug("SSE stream finished")
-                return None
-            }
-            if (let Some(line) <- httpStream.next()) {
-                data = line.removePrefix("data:").trimAscii()
-            } else {
-                LogUtils.debug("SSE stream finished")
-                return None
-            }
-            return SSEvent(event, data)
+    override public func doClose(): Unit {
+        if (let Some(fn) <- this.closeFn) {
+            fn()
         }
-        throw UnsupportedException("Unreachable")
-    }
-}
-
-protected struct HttpUtils {
-    static protected func get(url: String,
-                              header: HashMap<String, String>,
-                              body: Option<JsonObject>,
-                              verify!: Bool = false): Option<String> {
-        return HttpUtilsImpl.send("GET", url, header, body, verify: verify)
-    }
-
-    static protected func post(url: String,
-                               header: HashMap<String, String>,
-                               body: JsonObject,
-                               verify!: Bool = false): Option<String> {
-        return HttpUtilsImpl.send("POST", url, header, body, verify: verify)
-    }
-
-    static protected func asyncGet(url: String,
-                                   header: HashMap<String, String>,
-                                   body: Option<JsonObject>,
-                                   verify!: Bool = false): HttpStream {
-        return HttpUtilsImpl.asyncSend("GET", url, header, body, verify: verify)
-    }
-
-    static protected func asyncPost(url: String,
-                                    header: HashMap<String, String>,
-                                    body: JsonObject,
-                                    verify!: Bool = false): HttpStream {
-        return HttpUtilsImpl.asyncSend("POST", url, header, body, verify: verify)
-    }
-
-    /**
-    * HTTP Server-Sent Events
-    */
-    static protected func sseConnect(url: String, verify!: Bool = false): SSEventStream {
-        let header = HashMap<String, String>()
-        header.put("Accept", "text/event-stream")
-        let httpStream = HttpUtils.asyncGet(url, header, None, verify: verify)
-        return SSEventStream(httpStream)
     }
 }
