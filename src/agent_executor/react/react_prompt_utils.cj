@@ -8,7 +8,7 @@ import magic.core.agent.AgentTask
 import magic.core.message.*
 import magic.log.LogUtils
 import magic.prompt.Template
-internal import magic.parser.WithTag
+internal import magic.parser.{Tag, WithTag}
 
 import std.collection.{map, collectArray}
 

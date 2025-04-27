@@ -9,10 +9,15 @@ import magic.jsonable.JsonUtils
 import encoding.json.*
 
 public struct OutputParserUtils {
-    public static func extractLastCode(str: String, lang: String): Option<String> {
+    private static func extractCode(str: String, lang: String, last!: Bool): Option<String> {
         let langStartMark = "```${lang}"
         let langEndMark = "```"
-        if (let Some(start) <- str.lastIndexOf(langStartMark)) {
+        let found = if (last) {
+            str.lastIndexOf(langStartMark)
+        } else {
+            str.indexOf(langStartMark)
+        }
+        if (let Some(start) <- found) {
             let contentStart = start + langStartMark.size
             var nested = 0
             var currStart = contentStart
@@ -33,6 +38,14 @@ public struct OutputParserUtils {
             }
         }
         return None  // The target section is not found
+    }
+
+    public static func extractLastCode(str: String, lang: String): Option<String> {
+        return extractCode(str, lang, last: true)
+    }
+
+    public static func extractFirstCode(str: String, lang: String): Option<String> {
+        return extractCode(str, lang, last: false)
     }
 
     public static func extractLastSection(str: String, section: String): Option<String> {

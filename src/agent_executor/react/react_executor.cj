@@ -46,13 +46,13 @@ public class ReactExecutor <: AgentExecutor {
                 throw e
             }
         }
-        return AsyncAgentResponse(IteratorWrapper(task, fut), execInfo: task.execInfo)
+        return AsyncAgentResponse(IteratorWrapper(agent, fut), execInfo: task.execInfo)
     }
 }
 
 protected class IteratorWrapper <: Iterator<String> {
     protected IteratorWrapper(
-        private let task: AgentTask,
+        private let agent: Agent,
         private let workerFut: Future<Iterator<String>>
     ) { }
 
@@ -67,7 +67,7 @@ protected class IteratorWrapper <: Iterator<String> {
         match (data) {
             case Some(v) => buffer.append(v)
             case None =>
-                LogUtils.info(this.task.agent.name, buffer.toString().withTag(Tag.ANSWER))
+                LogUtils.info(this.agent.name, buffer.toString().withTag(Tag.ANSWER))
         }
         return data
     }

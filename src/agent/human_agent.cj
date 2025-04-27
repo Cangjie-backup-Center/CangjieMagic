@@ -9,7 +9,7 @@ import magic.core.model.ChatModel
 import std.console.Console
 
 private func consoleUI(question: String): String {
-    println("Question: ${question}")
+    Console.stdOut.writeln("Question: ${question}")
     Console.stdOut.write("> ")
     Console.stdOut.flush()
     let answer = Console.stdIn.readln().getOrThrow()

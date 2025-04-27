@@ -612,20 +612,20 @@ func buildAgentMemoryProp(agentAttr: AgentAttr): Tokens {
 
 func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
     let addTools = Tokens()
-    // Global tools
-    for (toolTks in agentAttr.tools) {
-        addTools.append(
-            quote(
-                tm.addTool($toolTks)
-            )
-        )
-    }
     // Internal tools
     for (name in agentAttr.internalTools) {
         let funcName = newIdentifierToken(name)
         addTools.append(
             quote(
                 tm.addTool($funcName)
+            )
+        )
+    }
+    // Global tools
+    for (toolTks in agentAttr.tools) {
+        addTools.append(
+            quote(
+                tm.addTool($toolTks)
             )
         )
     }

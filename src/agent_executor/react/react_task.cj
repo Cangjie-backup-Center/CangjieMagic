@@ -40,8 +40,14 @@ protected class ReactTask <: AgentTask {
             case ReactStep.Thought(thought) =>
                 this.addAndLogMessage(ChatMessage.assistant(thought.withTag(Tag.THOUGHT)))
             case ReactStep.Action(tc) =>
-                for (msg in tc.invoke(this)) {
-                    this.addAndLogMessage(msg)
+                if (tc.thought != "") {
+                    this.addAndLogMessage(ChatMessage.assistant(tc.thought.withTag(Tag.THOUGHT)))
+                }
+                this.addAndLogMessage(ChatMessage.assistant(tc.text.withTag(Tag.ACTION)))
+                let observation = tc.invoke(this)
+                this.addAndLogMessage(ChatMessage.assistant(observation.withTag(Tag.OBSERVATION)))
+                if (this.request.verbose) {
+                    this.execInfo.verboseChannel.putObservation(observation)
                 }
             case ReactStep.Answer(answer) =>
                 if (answer.thought != "") {
