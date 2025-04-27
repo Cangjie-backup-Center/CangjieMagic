@@ -42,7 +42,7 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
         }
     }
 
-    override public func save(filePath: String): Unit {
+    public override func save(filePath: String): Unit {
         unsafe {
             let cPath: CString = LibC.mallocCString(filePath)
             let status = faiss_write_index_fname(faissIndexPtr.read(), cPath)
@@ -53,14 +53,14 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
         }
     }
 
-    redef public static func load(filePath: String): FaissVectorDatabase {
+    public static redef func load(filePath: String): FaissVectorDatabase {
         let faissIndexPtr: CPointer<CPointer<Unit>>
         unsafe {
             faissIndexPtr = LibC.malloc<CPointer<Unit>>(count: 1)
             let cPath: CString = LibC.mallocCString(filePath)
             let ret = faiss_read_index_fname(cPath, 1, faissIndexPtr)
             LibC.free(cPath)
-            if(ret != 0) {
+            if (ret != 0) {
                 throw Exception("Failed to open faiss database.")
             }
             // let ntotal = faiss_Index_ntotal(faissIndexPtr.read())
@@ -69,14 +69,14 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
     }
 
     private func toFaissVector(source: Vector): VArray<Float32, $1536> {
-        var v = VArray<Float32, $1536>({ _: Int64 => 0.0 })
+        var v = VArray<Float32, $1536>({_: Int64 => 0.0})
         for (i in 0..source.vector.size) {
             v[i] = Float32(source.vector[i])
         }
         return v
     }
 
-    override public func addVector(vector: Vector): Unit {
+    public override func addVector(vector: Vector): Unit {
         var vec: VArray<Float32, $1536> = toFaissVector(vector)
         let ret = unsafe {
             faiss_Index_add(faissIndexPtr.read(), 1, inout vec)
@@ -84,9 +84,9 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
         // return Int64(ret)
     }
 
-    override public func search(queryVec: Vector, number!: Int64 = 5, minDistance!: Float64 = 0.6): Array<Int64> {
+    public override func search(queryVec: Vector, number!: Int64 = 5, minDistance!: Float64 = 0.6): Array<SearchResult> {
         var queryFaissVec = toFaissVector(queryVec)
-        let result = ArrayList<Int64>()
+        let result = ArrayList<SearchResult>()
         let N = 1 // number of querys
         unsafe {
             // Allocate memory
@@ -94,15 +94,16 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
             let indexPtr = LibC.malloc<Int64>(count: N * number)
             // Call the API
             let status = faiss_Index_search(faissIndexPtr.read(), N, inout queryFaissVec, number, distancePtr, indexPtr)
-            if(status != 0) {
+            if (status != 0) {
                 throw VectorDatabaseException("Failed to search faiss database.")
             }
-            for(i in 0..number) {
+            for (i in 0..number) {
                 let dist = distancePtr.read(i)
                 if (Float64(dist) < minDistance) {
                     break
                 }
-                result.append(indexPtr.read(i))
+                let index = indexPtr.read(i)
+                result.append(SearchResult(index, dist))
             }
             LibC.free(distancePtr)
             LibC.free(indexPtr)
