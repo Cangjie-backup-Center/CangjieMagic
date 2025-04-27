@@ -53,7 +53,8 @@ public class ChatMessage <: ToString {
                                       // a reason model, like deepseek-r1, may generate reasoning content or regular content
 
     public init(
-        role: ChatMessageRole, content: String,
+        role: ChatMessageRole,
+        content: String,
         name!: String = "",
         image!: Option<String> = None,
         reason!: Option<String> = None) {

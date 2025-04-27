@@ -7,6 +7,7 @@ import magic.core.agent.AgentExecutor
 import magic.agent_executor.naive.NaiveExecutor
 import magic.agent_executor.react.ReactExecutor
 import magic.agent_executor.plan_react.PlanReactExecutor
+import magic.agent_executor.tool_loop.ToolLoopExecutor
 
 import std.collection.ArrayList
 import magic.core.agent.AgentExecutionException
@@ -43,13 +44,19 @@ public struct AgentExecutorManager {
             return ReactExecutor()
         } else if (name == "plan-react") {
             return PlanReactExecutor()
+        } else if (name == "tool-loop") {
+            return ToolLoopExecutor()
         }
         // react with a loop number, like react:5
-        if (name.startsWith("react:")) {
+        if (name.startsWith("react:") || name.startsWith("tool-loop:")) {
             let items = name.split(":")
             if (items.size == 2) {
                 if (let Some(num) <- Int64.tryParse(items[1])) {
-                    return ReactExecutor(loop: num)
+                    if (items[0] == "react") {
+                        return ReactExecutor(loop: num)
+                    } else {
+                        return ToolLoopExecutor(loop: num)
+                    }
                 }
             }
         }

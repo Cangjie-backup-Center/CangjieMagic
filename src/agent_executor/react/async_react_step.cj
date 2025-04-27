@@ -9,23 +9,29 @@ import magic.core.message.{ChatMessage, Dialog}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.utils.{StringExt, sleep2}
-import magic.parser.TagStreamParser
+import magic.parser.{Tag, TagStreamParser}
 
 import std.collection.{ArrayList, map, collectArray}
 
 class AsyncReactFinalAnswer <: Iterator<String> {
+    private var finished = false
+
     AsyncReactFinalAnswer(
         let parser: TagStreamParser
     ) {
         if ((this.parser.currTag ?? "") != Tag.ANSWER) {
-            throw AgentExecutionException("Invalid async react final answer. Content: ${this.parser.currContent}")
+            throw AgentExecutionException("Invalid async react ${Tag.ANSWER}. Content: ${this.parser.currContent}")
         }
         // Remove the prefix of tag
         this.parser.removeTag(Tag.ANSWER)
     }
 
     override public func next(): Option<String> {
+        if (finished) {
+            return None
+        }
         if (let Some((content, _isClosed)) <- this.parser.readPartContentBefore(Tag.ANSWER)) {
+            finished = _isClosed
             return content
         }
         return None
