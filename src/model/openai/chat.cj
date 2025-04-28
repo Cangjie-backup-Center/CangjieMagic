@@ -163,14 +163,14 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
             throw ModelException("Fail to parse http chunk data response `${data}`")
         }
         // Merge the reasoning_content and content of chunks
-        let reasoningContentBuilder = StringBuilder()
+        let reasonContentBuilder = StringBuilder()
         let contentBuilder = StringBuilder()
         for (chunkChoice in chunkResp.choices) {
             let delta = chunkChoice.delta
             if (let Some(role) <- delta.role) {
                 this.role = ChatMessageRole.fromStr(role)
             }
-            reasoningContentBuilder.append(delta.reasoning_content ?? "")
+            reasonContentBuilder.append(delta.reasoning_content ?? "")
             contentBuilder.append(delta.content)
         }
         // Check whether this chunk contains the usage
@@ -183,7 +183,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
                 timeCost: duration
             )
         }
-        return (reasoningContentBuilder.toString(), contentBuilder.toString())
+        return (reasonContentBuilder.toString(), contentBuilder.toString())
     }
 }
 
