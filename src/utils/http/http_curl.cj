@@ -95,18 +95,18 @@ protected struct HttpUtilsImpl {
                                     body: Option<JsonObject>,
                                     verify!: Bool): HttpStream {
         logHttpInfo(method, url, header, body, async: true)
-        let httpStream = HttpStringStream()
+        let httpStream = HttpStream()
         let fut = spawn {
             let args = prepareCurlArgs(method, url, header, body, verify)
             let subProcess = newProcess("curl", args.toArray())
             let outReader = StringReader<InputStream>(subProcess.stdOut)
             // Each line is a chunk response from chat models
             // The last line is the status code
-            var prevLine = ""
+            var prevLine: Option<String> = None
             while (let Some(line) <- outReader.readln()) {
                 LogUtils.debug("Receive http stream: `${line}`")
-                if (!prevLine.isEmpty()) {
-                    httpStream.put(prevLine)
+                if (let Some(l) <- prevLine) {
+                    httpStream.put("${l}\n".toArray())
                 }
                 prevLine = line
             }
@@ -115,7 +115,7 @@ protected struct HttpUtilsImpl {
                 let tempPath = args[args.size-1].removePrefix("@")
                 removeIfExists(tempPath)
             }
-            let status = prevLine // The last line is the status code
+            let status = prevLine.getOrThrow() // The last line is the status code
             if (status.trimAscii() != "200" && status.trimAscii() != "202") {
                 LogUtils.error("curl ${url} failed. Data :${(body ?? JsonObject()).toJsonString()}")
                 httpStream.markError()

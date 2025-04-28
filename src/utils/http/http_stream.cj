@@ -9,10 +9,10 @@ import magic.utils.StringExt
 import std.collection.concurrent.BlockingQueue
 import std.collection.{HashMap, ArrayList}
 import encoding.json.JsonObject
+import std.io.{InputStream, StringReader}
 import magic.dsl.prompt
 
 enum Item {
-    | Str(String)
     | Bytes(Array<Byte>)
     | EOF
     | Error
@@ -22,15 +22,76 @@ enum Item {
  * A http stream is an iterator of strings
  * Wrap of a blocking queue to support streaming.
  */
-protected abstract class HttpStream <: Iterator<String> {
+protected class HttpStream <: Iterator<String> & InputStream {
     let queue = BlockingQueue<Item>()
+    let byteBuffer = ArrayList<Byte>()
 
     // Set when all data is consumed
     var finished = false
 
-    public func put(data: String): Unit {
-        // LogUtils.debug("put data: `${data}`")
-        queue.enqueue(Item.Str(data))
+    private let closeFn: Option<() -> Unit>
+
+    init(closeFn!: Option<() -> Unit> = None) {
+        this.closeFn = closeFn
+    }
+
+    private func readBytes(): Bool {
+        if (finished) {
+            return false
+        }
+        match (queue.dequeue()) {
+            case Error =>
+                throw HttpException("Http byte stream error")
+            case EOF =>
+                finished = true
+                LogUtils.debug("Http byte stream finished")
+                return false
+            case Bytes(bytes) =>
+                this.byteBuffer.appendAll(bytes)
+                return true
+        } 
+    }
+
+    override public func read(buffer: Array<Byte>): Int64 {
+        if (this.byteBuffer.isEmpty() && !this.readBytes()) {
+            return 0
+        }
+        let len = if (this.byteBuffer.size <= buffer.size) {
+            this.byteBuffer.size
+        } else {
+            buffer.size
+        }
+
+        unsafe {
+            let bytes = this.byteBuffer.getRawArray()
+            bytes.copyTo(buffer, 0, 0, len)
+        }
+
+        if (this.byteBuffer.size == len) {
+            this.byteBuffer.clear()
+        } else {
+            this.byteBuffer.remove(0..len)
+        }
+        return len
+    }
+
+    var _reader: Option<StringReader<HttpStream>> = None
+    private prop reader: StringReader<HttpStream> {
+        get() {
+            if (let Some(r) <- this._reader) {
+                return r
+            } else {
+                let r = StringReader(this)
+                this._reader = r
+                return r
+            }
+        }
+    }
+
+    override public func next(): Option<String> {
+        let line = this.reader.readln()
+        LogUtils.debug("Http byte stream read line: `${line}`")
+        return line
     }
 
     public func put(data: Array<Byte>): Unit {
@@ -39,108 +100,15 @@ protected abstract class HttpStream <: Iterator<String> {
     }
 
     public func markEOF(): Unit {
-        queue.enqueue(EOF)
+        queue.enqueue(Item.EOF)
     }
 
     public func markError(): Unit {
         queue.enqueue(Item.Error)
     }
 
-    public func doClose(): Unit
-
     public func close(): Unit {
         this.markEOF()
-        doClose()
-    }
-}
-
-/**
- * The blocking queue stores strings.
- */
-protected class HttpStringStream <: HttpStream {
-    override public func next(): Option<String> {
-        if (finished) {
-            LogUtils.error("Http string stream is finished.")
-            throw HttpException("Consume a finished http string stream")
-        }
-        match (queue.dequeue()) {
-            case Error =>
-                throw HttpException("Http string stream error")
-            case EOF =>
-                finished = true
-                LogUtils.debug("Http string stream finished")
-                return None
-            case Str(data) =>
-                // LogUtils.debug("get data: `${data}`")
-                return data
-            case Bytes(_) =>
-                throw HttpException("Http string stream error")
-        }
-    }
-
-    override public func doClose(): Unit {
-        // Do nothing
-    }
-}
-
-/**
- * The blocking queue stores raw bytes.
- */
-protected class HttpByteStream <: HttpStream {
-    private let closeFn: Option<() -> Unit>
-
-    private let lineBuffer = ArrayList<String>()
-
-    init(closeFn!: Option<() -> Unit> = None) {
-        this.closeFn = closeFn
-    }
-
-    override public func next(): Option<String> {
-        if (finished) {
-            LogUtils.error("Http byte stream is finished.")
-            throw HttpException("Consume a finished http byte stream")
-        }
-        let receivedBytes = ArrayList<Byte>()
-        while (true) {
-            // If the line buffer is not empty, just return the first line
-            if (!this.lineBuffer.isEmpty()) {
-                let line = this.lineBuffer[0]
-                this.lineBuffer.remove(0)
-                LogUtils.debug("Http byte stream recv: `${line}`")
-                return line
-            }
-            // otherwise, read more bytes
-            match (queue.dequeue()) {
-                case Error =>
-                    throw HttpException("Http byte stream error")
-                case EOF =>
-                    finished = true
-                    LogUtils.debug("Http byte stream finished")
-                    if (!this.lineBuffer.isEmpty()) {
-                        throw HttpException("Http byte stream finished with non-empty buffer")
-                    }
-                    return None
-                case Str(_) =>
-                    throw HttpException("Http byte stream error")
-                case Bytes(bytes) =>
-                    receivedBytes.appendAll(bytes)
-                    try {
-                        // Try to decode bytes as a string
-                        let content = String.fromUtf8(receivedBytes.toArray())
-                        for (line in content.split("\n", removeEmpty: true)) {
-                            LogUtils.debug("Http byte stream add: `${line}`")
-                            lineBuffer.append(line)
-                        }
-                    } catch (_: IllegalArgumentException) {
-                        // If decoding failed, read more bytes
-                        continue
-                    }
-            }
-        }
-        throw UnsupportedException("Unreachable")
-    }
-
-    override public func doClose(): Unit {
         if (let Some(fn) <- this.closeFn) {
             fn()
         }
