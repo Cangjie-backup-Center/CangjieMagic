@@ -28,6 +28,9 @@ protected class SSEventStream <: Iterator<SSEvent> {
                 if (line.trimAscii().isEmpty() || line.startsWith(": ping")) {
                     continue
                 }
+                if (!line.startsWith("event:")) {
+                    throw HttpException("Invalid sse event: `${line}`")
+                }
                 return line.removePrefix("event:").trimAscii()
             } else {
                 LogUtils.debug("SSE stream finished")
@@ -42,6 +45,9 @@ protected class SSEventStream <: Iterator<SSEvent> {
             if (let Some(line) <- this.httpStream.next()) {
                 if (line.trimAscii().isEmpty() || line.startsWith(": ping")) {
                     continue
+                }
+                if (!line.startsWith("data:")) {
+                    throw HttpException("Invalid sse data: `${line}`")
                 }
                 return line.removePrefix("data:").trimAscii()
             } else {

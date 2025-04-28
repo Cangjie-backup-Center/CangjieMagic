@@ -14,6 +14,7 @@ import std.collection.HashMap
 protected class MCPToolWrapper <: Tool {
     private let client: MCPClient
     private let mcpTool: MCPTool
+    private let _extra = HashMap<String, String>()
 
     public init(client: MCPClient, mcpTool: MCPTool) {
         this.client = client
@@ -38,6 +39,10 @@ protected class MCPToolWrapper <: Tool {
 
     public prop examples: Array<String> {
         get() { throw UnsupportedException() }
+    }
+
+    public prop extra: HashMap<String, String> {
+        get() { _extra }
     }
 
     override public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
