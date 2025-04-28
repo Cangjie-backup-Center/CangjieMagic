@@ -101,7 +101,7 @@ protected struct HttpUtilsImpl {
         // header.put("Accept", "text/event-stream")
         logHttpInfo(method, url, header, body, async: true)
         let (client, resp) = sendHttp(method, url, header, body, verify)
-        let httpStream = HttpStringStream()
+        let httpStream = HttpStream()
         if (resp.status != HttpStatusCode.STATUS_OK) {
             let err = readHttpBody(resp)
             LogUtils.error("Http ${method} ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
@@ -113,7 +113,7 @@ protected struct HttpUtilsImpl {
                 let reader = StringReader(resp.body)
                 while (let Some(line) <- reader.readln()) {
                     LogUtils.debug("Receive http stream: `${line}`")
-                    httpStream.put(line)
+                    httpStream.put(line.toArray())
                 }
                 client.close()
             }

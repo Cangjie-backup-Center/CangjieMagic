@@ -83,7 +83,7 @@ protected struct HttpUtilsImpl {
                                     verify!: Bool): HttpStream {
         logHttpInfo(method, url, header, body, async: true)
         let httpRequest = createHttp()
-        let httpStream = HttpByteStream(closeFn: { =>
+        let httpStream = HttpStream(closeFn: { =>
             httpRequest.destroy()
         })
         // Register callbacks
@@ -94,6 +94,8 @@ protected struct HttpUtilsImpl {
             // for (line in str.split("\n", removeEmpty: true)) {
                 // httpStream.put(line)
             // }
+
+            LogUtils.debug("Http stream received bytes from ${url}; size: ${data.size}")
             httpStream.put(data)
         })
         httpRequest.onDataEnd({ =>
