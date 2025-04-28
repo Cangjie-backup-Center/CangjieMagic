@@ -22,6 +22,7 @@ open public class NativeFuncTool <: AbsTool {
                 parameters!: Array<(String, String, TypeSchema)> = [],
                 retType!: TypeSchema = TypeSchema.Str,
                 examples!: Array<String> = [],
+                filterable!: Bool = true,
                 execFn!: Option<ExecFn> = None) {
         _name = name
         _description = description
@@ -33,6 +34,9 @@ open public class NativeFuncTool <: AbsTool {
         _examples = ArrayList<String>()
         _examples.appendAll(examples)
         _fnOpt = execFn
+        if (!filterable) {
+            this._extra.put("filterable", "false")
+        }
     }
 
     public prop name: String {

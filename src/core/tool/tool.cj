@@ -36,6 +36,11 @@ public interface Tool <: ToString {
     prop examples: Array<String>
 
     /**
+     * Extra customized attributes
+     */
+    prop extra: HashMap<String, String>
+
+    /**
      * Arguments and their values are grouped in a hash map
      */
     func invoke(args: HashMap<String, ToJsonValue>): ToolResponse

@@ -105,7 +105,8 @@ public class ToolLoopExecutor <: AgentExecutor {
         // Inject a special tool
         let idleTool = NativeFuncTool(
             name: "_idle_",
-            description: "A special tool to indicate you have completed all tasks and are about to enter idle state."
+            description: "A special tool to indicate you have completed all tasks and are about to enter idle state.",
+            filterable: false
         )
         agent.toolManager.addTool(idleTool)
 

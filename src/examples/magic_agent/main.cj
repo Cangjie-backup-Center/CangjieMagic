@@ -30,26 +30,56 @@ You operate in an agent loop, iteratively completing tasks through these steps:
 6. Enter Standby: Enter idle state when all tasks are completed or user explicitly requests to stop, and wait for new tasks
 """
 
+// Modified from https://github.com/modelcontextprotocol/servers/blob/main/src/sequentialthinking/index.ts
+const THINKING_TOOL_DESC = """
+A detailed tool for dynamic and reflective problem-solving through thoughts.
+This tool helps analyze problems through a flexible thinking process that can adapt and evolve.
+Each thought can build on, question, or revise previous insights as understanding deepens.
+
+When to use this tool:
+- Breaking down complex problems into steps
+- Planning and design with room for revision
+- Analysis that might need course correction
+- Problems where the full scope might not be clear initially
+- Problems that require a multi-step solution
+- Tasks that need to maintain context over multiple steps
+- Situations where irrelevant information needs to be filtered out
+
+Parameters explained:
+- thought: Your current thinking step, which can include:
+* Regular analytical steps
+* Revisions of previous thoughts
+* Questions about previous decisions
+* Realizations about needing more analysis
+* Changes in approach
+* Hypothesis generation
+* Hypothesis verification
+"""
+
 @agent[
     model: "ark:deepseek-v3-250324",
-    executor: "tool-loop"
+    executor: "tool-loop",
+    // executor: "react",
+    enableToolFilter: true,
+    mcp: [
+        // ...your mcp servers...
+    ]
 ]
 class MagicAgent {
     @prompt("""
         ${PROMPT}
-        """
+    """
     )
 
     @tool[
-        description: "Send a message to user without requiring a response. Use for acknowledging receipt of messages, providing progress updates, reporting task completion, or explaining changes in approach.",
+        description: "${THINKING_TOOL_DESC}",
         parameters: {
-            text: "Message text to display to user"
-        }
+            thought: "Your current thinking content"
+        },
+        filterable: false
     ]
-    func notifyUser(text: String): String {
-        Console.stdErr.writeln(text)
-        Console.stdErr.flush()
-        return "The user has been notified"
+    func thinking(thought: String): String {
+        return "Good job! Continue to work"
     }
 }
 

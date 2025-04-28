@@ -6,10 +6,16 @@ package magic.tool
 import magic.core.tool.*
 import magic.jsonable.JsonUtils
 
-import std.collection.{ArrayList}
+import std.collection.{ArrayList, HashMap}
 import encoding.json.{JsonValue, JsonObject, JsonString, JsonArray}
 
 public abstract class AbsTool <: Tool {
+    protected var _extra = HashMap<String, String>()
+
+    override public prop extra: HashMap<String, String> {
+        get() { _extra }
+    }
+
     public func toString(): String {
         let properties = JsonObject()
         let required = ArrayList<String>()
