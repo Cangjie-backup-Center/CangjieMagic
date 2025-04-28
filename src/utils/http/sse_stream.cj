@@ -6,6 +6,9 @@ package magic.utils.http
 import magic.log.LogUtils
 import magic.utils.StringExt
 
+import std.collection.ArrayList
+import encoding.json.{JsonValue, JsonException}
+
 protected struct SSEvent <: ToString {
     SSEvent(protected let event: String,
             protected let data: String) { }
@@ -18,28 +21,52 @@ protected struct SSEvent <: ToString {
 protected class SSEventStream <: Iterator<SSEvent> {
     SSEventStream(private let httpStream: HttpStream) { }
 
+    private func readEvent(): Option<String> {
+        while (true) {
+            // Receive the pair of event and data
+            if (let Some(line) <- this.httpStream.next()) {
+                if (line.trimAscii().isEmpty() || line.startsWith(": ping")) {
+                    continue
+                }
+                return line.removePrefix("event:").trimAscii()
+            } else {
+                LogUtils.debug("SSE stream finished")
+                return None
+            }
+        }
+        throw UnsupportedException("Unreachable")
+    }
+
+    private func readData(): Option<String> {
+        while (true) {
+            if (let Some(line) <- this.httpStream.next()) {
+                if (line.trimAscii().isEmpty() || line.startsWith(": ping")) {
+                    continue
+                }
+                return line.removePrefix("data:").trimAscii()
+            } else {
+                LogUtils.debug("SSE stream finished")
+                return None
+            }
+        }
+        throw UnsupportedException("Unreachable")
+    }
+
     override public func next(): Option<SSEvent> {
         while (true) {
             // Receive the pair of event and data
-            var event = ""
-            var data = ""
-            if (let Some(line) <- httpStream.next()) {
-                if (line.trimAscii().isEmpty()) {
-                    continue
-                } else if (line.startsWith(": ping")) {
-                    continue
-                }
-                event = line.removePrefix("event:").trimAscii()
+            let event = if (let Some(_event) <- this.readEvent()) {
+                _event
             } else {
-                LogUtils.debug("SSE stream finished")
                 return None
             }
-            if (let Some(line) <- httpStream.next()) {
-                data = line.removePrefix("data:").trimAscii()
+            LogUtils.debug("SSE stream read event: ${event}")
+            let data = if (let Some(_data) <- this.readData()) {
+                _data
             } else {
-                LogUtils.debug("SSE stream finished")
                 return None
             }
+            LogUtils.debug("SSE stream read data: ${data}")
             return SSEvent(event, data)
         }
         throw UnsupportedException("Unreachable")
