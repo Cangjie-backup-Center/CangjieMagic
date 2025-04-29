@@ -45,8 +45,10 @@
       - [使用示例](#使用示例)
     - [知识图谱](#知识图谱)
       - [MiniRag](#minirag)
-        - [`实例化`](#实例化)
-        - [`知识图谱构建`](#知识图谱构建)
+      - [`实例化`](#实例化)
+      - [`知识图谱构建`](#知识图谱构建)
+      - [`知识图谱检索`](#知识图谱检索)
+      - [使用示例](#使用示例-1)
         - [`知识图谱检索`](#知识图谱检索)
 <!-- /code_chunk_output -->
 
@@ -74,6 +76,7 @@ Cangjie Agent DSL 被设计为仓颉语言的 eDSL，即在仓颉语言中通过
 | `memory` |  `Bool` | 是否使用记忆，即保存 Agent 的多次问答记录（目前记忆仅支持 in-memory 非持久化数据）；默认为 `false` |
 | `executor` | `String` | 规划模式；默认为 `react` |
 | `temperature` | `Float` | Agent 使用 LLM 时的 temperature 值；默认为 `0.5` |
+| `enableToolFilter` | `Bool` | 启用工具过滤功能，Agent 在执行前会自动根据输入问题选择合适的工具集合；默认 `false` |
 | `dump` | `Bool` | 调试代码用，是否打印 Agent 变换后的 AST；默认为 `false` |
 
 ## 编写提示词
@@ -477,6 +480,7 @@ let area = agent.chat(
 
 - `description` 属性描述了工具的功能【必选】
 - `parameters` 属性描述了函数参数的含义，它接收 `<parameter-name>: <parameter-description>` 的键值对【可选】
+- `filterable` 是否可以被 Agent 过滤，配合 `@agent` 宏的 `enableToolFilter` 属性使用【可选】
 
 如果工具函数是全局函数，那么需要在 `tools` 属性中显式指定才能让 Agent 使用工具。
 

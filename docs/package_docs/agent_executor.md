@@ -8,15 +8,15 @@
 ### struct AgentExecutorManager
 #### func create
 ```
-public static func create(name: String): AgentExecutor
+static func create(name: String): AgentExecutor
 ```
-- 描述: 根据名称创建代理执行器
+- 描述: 根据名称创建对应的代理执行器
 - 参数:
   - `name`: `String`, 代理执行器的名称
 
 #### func register
 ```
-public static func register(name: String, buildFn: () -> AgentExecutor): Unit
+static func register(name: String, buildFn: () -> AgentExecutor): Unit
 ```
 - 描述: 注册一个指定名称的代理执行器构建器
 - 参数:
@@ -25,9 +25,9 @@ public static func register(name: String, buildFn: () -> AgentExecutor): Unit
 
 #### func register
 ```
-public static func register(checkFn: (String) -> Bool, buildFn: (String) -> AgentExecutor): Unit
+static func register(checkFn: (String) -> Bool, buildFn: (String) -> AgentExecutor): Unit
 ```
-- 描述: 注册一个代理执行器构建器
+- 描述: 注册一个代理执行器构建器，包含检查函数和构建函数
 - 参数:
   - `checkFn`: `(String) -> Bool`, 检查函数，用于判断是否使用该构建器
   - `buildFn`: `(String) -> AgentExecutor`, 构建函数，用于创建代理执行器

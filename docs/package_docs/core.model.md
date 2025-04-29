@@ -4,8 +4,8 @@
     - [func toString](#func-tostring)
   - [class AsyncChatResponse](#class-asyncchatresponse)
     - [let chunks](#let-chunks)
-    - [prop contentIter](#prop-contentiter)
     - [prop dialog](#prop-dialog)
+    - [func iter](#func-iter)
     - [let model](#let-model)
     - [func next](#func-next)
     - [func toString](#func-tostring-1)
@@ -47,17 +47,7 @@
   - [interface ImageModel](#interface-imagemodel)
     - [func create](#func-create-1)
   - [struct ImageRequest](#struct-imagerequest)
-    - [func init](#func-init-1)
-    - [let prompt](#let-prompt-1)
-    - [let quality](#let-quality)
-    - [let responseFormat](#let-responseformat)
-    - [let size](#let-size)
-    - [let style](#let-style)
   - [struct ImageResponse](#struct-imageresponse)
-    - [let b64Json](#let-b64json)
-    - [func init](#func-init-1)
-    - [let revisedPrompt](#let-revisedprompt)
-    - [let url](#let-url)
   - [interface Model](#interface-model)
     - [prop name](#prop-name)
     - [prop service](#prop-service)
@@ -69,7 +59,7 @@
 ```
 override public func toString(): String
 ```
-- 描述: 将AsyncChatChunk对象转换为字符串表示形式
+- 描述: 将AsyncChatChunk对象转换为字符串表示
 
 
 ### class AsyncChatResponse
@@ -79,23 +69,25 @@ public let chunks: Iterator<AsyncChatChunk>
 ```
 - 描述: 异步聊天块的迭代器
 
-#### prop contentIter
-```
-public prop contentIter: Iterator<String>
-```
-- 描述: 获取内容迭代器
-
 #### prop dialog
 ```
 public prop dialog: Dialog
 ```
-- 描述: 同步获取聊天对话框
+- 描述: 获取同步的聊天对话框
+
+#### func iter
+```
+public func iter(withReason!: Bool = true): Iterator<String>
+```
+- 描述: 获取聊天内容的迭代器
+- 参数:
+  - `withReason`: `Bool`, 是否包含原因
 
 #### let model
 ```
 public let model: String
 ```
-- 描述: 模型名称
+- 描述: 聊天模型名称
 
 #### func next
 ```
@@ -107,7 +99,7 @@ override public func next(): Option<AsyncChatChunk>
 ```
 public func toString(): String
 ```
-- 描述: 将AsyncChatResponse对象转换为字符串表示形式
+- 描述: 将AsyncChatResponse对象转换为字符串表示
 
 #### prop usage
 ```
@@ -145,7 +137,7 @@ let dialog: Dialog
 ```
 public init(message: String)
 ```
-- 描述: 通过消息初始化ChatRequest
+- 描述: 初始化ChatRequest，使用单条消息
 - 参数:
   - `message`: `String`, 用户消息
 
@@ -153,21 +145,21 @@ public init(message: String)
 ```
 public init(messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None)
 ```
-- 描述: 通过消息数组初始化ChatRequest
+- 描述: 初始化ChatRequest，使用消息数组
 - 参数:
-  - `messages`: `Array<ChatMessage>`, 聊天消息数组
-  - `temperature`: `Option<Float64>`, 温度参数
-  - `stop`: `Option<Array<String>>`, 停止条件
+  - `messages`: `Array<ChatMessage>`, 消息数组
+  - `temperature`: `Option<Float64>`, 温度参数，可选
+  - `stop`: `Option<Array<String>>`, 停止条件，可选
 
 #### func init
 ```
 public init(dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None)
 ```
-- 描述: 通过对话对象初始化ChatRequest
+- 描述: 初始化ChatRequest，使用Dialog对象
 - 参数:
   - `dialog`: `Dialog`, 对话对象
-  - `temperature`: `Option<Float64>`, 温度参数
-  - `stop`: `Option<Array<String>>`, 停止条件
+  - `temperature`: `Option<Float64>`, 温度参数，可选
+  - `stop`: `Option<Array<String>>`, 停止条件，可选
 
 #### let stop
 ```
@@ -191,7 +183,7 @@ public func toString(): String
 ### struct ChatResponse
 #### let dialog
 ```
-public let dialog: Dialog
+let dialog: Dialog
 ```
 - 描述: 对话内容
 
@@ -207,7 +199,7 @@ public init(dialog: Dialog, model: String, usage!: Option<ChatUsage> = None)
 
 #### let model
 ```
-public let model: String
+let model: String
 ```
 - 描述: 模型名称
 
@@ -219,7 +211,7 @@ public func toString(): String
 
 #### let usage
 ```
-public let usage: Option<ChatUsage>
+let usage: Option<ChatUsage>
 ```
 - 描述: 使用情况统计
 
@@ -235,12 +227,12 @@ public let completionTokens: Int64
 ```
 public init(promptTokens!: Int64, completionTokens!: Int64, totalTokens!: Int64, timeCost!: Option<Duration>)
 ```
-- 描述: 初始化ChatUsage实例
+- 描述: 初始化ChatUsage类的实例
 - 参数:
   - `promptTokens`: `Int64`, 提示令牌的数量
   - `completionTokens`: `Int64`, 完成令牌的数量
-  - `totalTokens`: `Int64`, 总令牌数量
-  - `timeCost`: `Option<Duration>`, 时间消耗，可能为空
+  - `totalTokens`: `Int64`, 总令牌的数量
+  - `timeCost`: `Option<Duration>`, 时间消耗的可选值
 
 #### let promptTokens
 ```
@@ -252,7 +244,7 @@ public let promptTokens: Int64
 ```
 public let timeCost: Option<Duration>
 ```
-- 描述: 表示时间消耗，可能为空
+- 描述: 表示时间消耗的可选值
 
 #### func toString
 ```
@@ -264,7 +256,7 @@ public func toString(): String
 ```
 public let totalTokens: Int64
 ```
-- 描述: 表示总令牌数量
+- 描述: 表示总令牌的数量
 
 
 ### interface EmbeddingModel
@@ -274,7 +266,7 @@ func create(request: EmbeddingRequest): EmbeddingResponse
 ```
 - 描述: 根据请求创建嵌入向量
 - 参数:
-  - `request`: `EmbeddingRequest`, 嵌入请求，包含需要嵌入的文本信息
+  - `request`: `EmbeddingRequest`, 嵌入请求，包含需要生成嵌入向量的文本
 
 
 ### struct EmbeddingRequest
@@ -282,16 +274,16 @@ func create(request: EmbeddingRequest): EmbeddingResponse
 ```
 let dimensions: Option<Int64>
 ```
-- 描述: 可选的嵌入维度
+- 描述: 可选的嵌入维度大小
 
 #### func init
 ```
-public init(prompt: String, dimensions!: Option<Int> = None)
+init(prompt: String, dimensions!: Option<Int> = None)
 ```
 - 描述: 初始化EmbeddingRequest结构体
 - 参数:
   - `prompt`: `String`, 输入的提示文本
-  - `dimensions`: `Option<Int>`, 可选的嵌入维度
+  - `dimensions`: `Option<Int>`, 可选的嵌入维度大小，默认为None
 
 #### let prompt
 ```
@@ -329,82 +321,12 @@ func create(request: ImageRequest): ImageResponse
 ```
 - 描述: 根据图像请求创建图像响应
 - 参数:
-  - `request`: `ImageRequest`, 图像请求参数
+  - `request`: `ImageRequest`, 包含图像生成所需参数的请求对象
 
 
 ### struct ImageRequest
-#### func init
-```
-init(prompt: String, quality: String = "standard", responseFormat: String = "url", size: String = "512x512", style: String = "natural")
-```
-- 描述: 初始化ImageRequest结构体
-- 参数:
-  - `prompt`: `String`, 生成图片的提示文本
-  - `quality`: `String`, 图片生成的质量标准，默认为standard
-  - `responseFormat`: `String`, 响应格式，默认为url
-  - `size`: `String`, 生成图片的尺寸，默认为512x512
-  - `style`: `String`, 图片的风格，默认为natural
-
-#### let prompt
-```
-let prompt: String
-```
-- 描述: 生成图片的提示文本
-
-#### let quality
-```
-let quality: String
-```
-- 描述: 图片生成的质量标准
-
-#### let responseFormat
-```
-let responseFormat: String
-```
-- 描述: 响应格式
-
-#### let size
-```
-let size: String
-```
-- 描述: 生成图片的尺寸
-
-#### let style
-```
-let style: String
-```
-- 描述: 图片的风格
-
 
 ### struct ImageResponse
-#### let b64Json
-```
-let b64Json: String
-```
-- 描述: Base64编码的图片数据
-
-#### func init
-```
-public init(b64Json!: String = "", url!: String = "", revisedPrompt!: String = "")
-```
-- 描述: 初始化ImageResponse结构体
-- 参数:
-  - `b64Json`: `String`, Base64编码的图片数据，默认为空字符串
-  - `url`: `String`, 图片的URL地址，默认为空字符串
-  - `revisedPrompt`: `String`, 修订后的提示文本，默认为空字符串
-
-#### let revisedPrompt
-```
-let revisedPrompt: String
-```
-- 描述: 修订后的提示文本
-
-#### let url
-```
-let url: String
-```
-- 描述: 图片的URL地址
-
 
 ### interface Model
 #### prop name

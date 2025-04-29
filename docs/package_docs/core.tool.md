@@ -3,6 +3,7 @@
   - [interface Tool](#interface-tool)
     - [prop description](#prop-description)
     - [prop examples](#prop-examples)
+    - [prop extra](#prop-extra)
     - [func invoke](#func-invoke)
     - [prop name](#prop-name)
     - [prop parameters](#prop-parameters)
@@ -15,20 +16,22 @@
     - [func addTools](#func-addtools)
     - [func clear](#func-clear)
     - [func delTool](#func-deltool)
-    - [prop enableFilter](#prop-enablesearch)
+    - [prop enableFilter](#prop-enablefilter)
+    - [func filterTool](#func-filtertool)
     - [func findTool](#func-findtool)
     - [func getTools](#func-gettools)
-    - [func filterTool](#func-filtertool)
   - [struct ToolParameter](#struct-toolparameter)
     - [let description](#let-description)
     - [func init](#func-init-1)
     - [let name](#let-name)
     - [let typeSchema](#let-typeschema)
   - [struct ToolRequest](#struct-toolrequest)
+    - [func toString](#func-tostring)
   - [struct ToolResponse](#struct-toolresponse)
     - [let content](#let-content)
     - [func init](#func-init-1)
     - [let isError](#let-iserror)
+  - [struct ToolSearchConfig](#struct-toolsearchconfig)
 
 ### interface Tool
 #### prop description
@@ -43,13 +46,19 @@ prop examples: Array<String>
 ```
 - 描述: 工具调用的示例，可选
 
+#### prop extra
+```
+prop extra: HashMap<String, String>
+```
+- 描述: 额外的自定义属性
+
 #### func invoke
 ```
 func invoke(args: HashMap<String, ToJsonValue>): ToolResponse
 ```
 - 描述: 参数及其值分组在哈希表中
 - 参数:
-  - `args`: `HashMap<String, ToJsonValue>`, 包含参数及其值的哈希表
+  - `args`: `HashMap<String, ToJsonValue>`, 参数及其值的哈希表
 
 #### prop name
 ```
@@ -123,28 +132,28 @@ prop enableFilter: Bool
 ```
 - 描述: 是否启用工具语义搜索
 
+#### func filterTool
+```
+func filterTool(question: String, config: ToolSearchConfig): Array<Tool>
+```
+- 描述: 根据问题搜索相关工具
+- 参数:
+  - `question`: `String`, 用户问题
+  - `config`: `ToolSearchConfig`, 搜索配置
+
 #### func findTool
 ```
 func findTool(name: String): Option<Tool>
 ```
 - 描述: 根据名称查找工具
 - 参数:
-  - `name`: `String`, 工具名称
+  - `name`: `String`, 要查找的工具名称
 
 #### func getTools
 ```
 func getTools(): Array<Tool>
 ```
 - 描述: 获取所有工具
-
-#### func filterTool
-```
-func filterTool(question: String, number!: Int64): Array<Tool>
-```
-- 描述: 根据问题搜索相关工具
-- 参数:
-  - `question`: `String`, 搜索问题
-  - `number!`: `Int64`, 返回结果数量
 
 
 ### struct ToolParameter
@@ -156,7 +165,7 @@ let description: String
 
 #### func init
 ```
-init(name: String, description: String, typeSchema: TypeSchema)
+public init(name: String, description: String, typeSchema: TypeSchema)
 ```
 - 描述: 初始化ToolParameter
 - 参数:
@@ -178,6 +187,12 @@ let typeSchema: TypeSchema
 
 
 ### struct ToolRequest
+#### func toString
+```
+override public func toString(): String
+```
+- 描述: 将ToolRequest对象转换为字符串表示形式
+
 
 ### struct ToolResponse
 #### let content
@@ -188,9 +203,9 @@ let content: String
 
 #### func init
 ```
-public init(content: String, isError: Bool = false)
+init(content: String, isError: Bool = false)
 ```
-- 描述: 初始化ToolResponse结构体
+- 描述: 初始化工具响应
 - 参数:
   - `content`: `String`, 工具调用的结果内容
   - `isError`: `Bool`, 指示工具调用是否出错，默认为false
@@ -201,4 +216,6 @@ let isError: Bool
 ```
 - 描述: 指示工具调用是否出错
 
+
+### struct ToolSearchConfig
 

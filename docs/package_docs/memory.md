@@ -19,6 +19,6 @@ func update(segment: String): Unit
 ```
 - 描述: 更新内存中的片段
 - 参数:
-  - `segment`: `String`, 需要更新的内存片段
+  - `segment`: `String`, 要更新的内存片段
 
 

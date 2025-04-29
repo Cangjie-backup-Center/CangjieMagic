@@ -176,8 +176,8 @@ func checkFile(path: Path): Bool {
 }
 
 let blacklist = [
-    "openai", "ollama", "zhipuai", "dashscope",
-    "llamacpp", "main", "prompt", "tests", "examples", "dsl"
+    "openai", "ollama", "zhipuai", "dashscope", "siliconflow",
+    "llamacpp", "main", "prompt", "tests", "examples", "dsl", "utils"
 ]
 
 func getAllFiles(dirPath: Path, allFiles: ArrayList<Path>): Unit  {
