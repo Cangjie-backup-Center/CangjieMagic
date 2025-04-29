@@ -11,10 +11,10 @@ import magic.core.message.ChatMessage
 import magic.core.tool.ToolRequest
 import magic.jsonable.{JsonUtils, Jsonable, ToJsonValue}
 import magic.instrumentor.Instrumentor
+import magic.log.LogUtils
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
-import encoding.json.JsonValue
-import encoding.json.JsonObject
+import encoding.json.{JsonValue, JsonObject, JsonException}
 
 protected enum FailureLevel {
     | Repairable
@@ -137,10 +137,10 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
         let action = Tag.extract(content, Tag.ACTION)
         match ((thought, action)) {
             case (_, Some(_action)) =>
-                let json = OutputParserUtils.extractLastCode(_action, "json").getOrThrow({
-                    => AgentExecutionException("Failed to parse the action: no json object")
-                })
                 try {
+                    let json = OutputParserUtils.extractLastCode(_action, "json").getOrThrow({
+                        => ParserException("There is no valid JSON content wrapped by ```json and ```")
+                    })
                     let request = OutputParserUtils.parseToolRequest(json)
                     return ReactStep.Action(
                         ToolCall(
@@ -149,12 +149,21 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
                             request: request
                         )
                     )
-                } catch (_: ParserException) {
+                } catch (_: JsonException) {
+                    LogUtils.error("Tool invocation has invalid syntax")
                     return ReactStep.Failure(
                         FailureInfo(FailureLevel.Repairable,
                                     message: content,
                                     reason: "Tool invocation has invalid syntax",
-                                    suggestion: "You must follow the required tool invocation syntax.")
+                                    suggestion: "You must follow the required syntax to use a tool.")
+                    )
+                } catch (ex: ParserException) {
+                    LogUtils.error("Parsing action failed: ${ex.reason}")
+                    return ReactStep.Failure(
+                        FailureInfo(FailureLevel.Repairable,
+                                    message: content,
+                                    reason: ex.reason,
+                                    suggestion: "You should regenerate to fix the error: `${ex.reason}`")
                     )
                 }
             case (Some(_thought), None) =>

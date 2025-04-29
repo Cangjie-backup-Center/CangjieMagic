@@ -6,12 +6,16 @@ package magic.utils.http
 import magic.log.LogUtils
 import magic.utils.getEnv
 
-import net.http.{Client, ClientBuilder, HttpRequest, HttpResponse, HttpRequestBuilder, HttpStatusCode}
-import net.tls.TlsClientConfig
-import net.tls.CertificateVerifyMode
-import std.io.StringReader
 import std.collection.HashMap
+@When[cjc_version < "0.56.4"]
+import std.socket.{SocketAddress, TcpSocket}
+@When[cjc_version >= "0.56.4"]
+import std.net.{SocketAddress, TcpSocket}
+import std.io.StringReader
+import net.tls.{TlsClientConfig, CertificateVerifyMode}
+import net.http.*
 import encoding.json.*
+import encoding.url.URL
 
 @When[cjc_version < "0.56.4"]
 import std.time.Duration
@@ -24,8 +28,17 @@ private func buildHttpClient(url: String, verify: Bool): Client {
         if (!verify) {
             config.verifyMode = TrustAll
         }
+        config.domain = URL.parse(url).hostName
         cb.tlsConfig(config)
     }
+    let TcpSocketConnector = { sa: SocketAddress =>
+        let socket = TcpSocket(sa)
+        socket.readTimeout = Duration.second * 60
+        socket.writeTimeout = Duration.second * 60
+        socket.connect(timeout: Duration.second * 60)
+        return socket
+    }
+    cb.connector(TcpSocketConnector)
     // if (let Some(proxy) <- getEnv("http_proxy")) {
     //     cb.httpProxy(proxy)
     // }
@@ -110,10 +123,14 @@ protected struct HttpUtilsImpl {
             httpStream.markError()
         } else {
             spawn {
-                let reader = StringReader(resp.body)
-                while (let Some(line) <- reader.readln()) {
-                    LogUtils.debug("Receive http stream: `${line}`")
-                    httpStream.put(line.toArray())
+                let buffer = Array<Byte>(1024 * 10, { _ => 0})
+                while (true) {
+                    let length = resp.body.read(buffer)
+                    if (length == 0) {
+                        break
+                    } else {
+                        httpStream.put(buffer[..length])
+                    }
                 }
                 client.close()
             }

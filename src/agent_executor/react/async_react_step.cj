@@ -81,12 +81,12 @@ class AsyncReactStep {
             let content = "${thought}\n${action}"
             LogUtils.info("React action content: ${content}")
             return ReactStep.fromStr(content)
-        } catch (_: Exception) {
+        } catch (ex: Exception) {
             return ReactStep.Failure(
                 FailureInfo(
                     FailureLevel.Fatal,
                     message: "",
-                    reason: "Fail to get chat model response",
+                    reason: ex.toString(),
                     suggestion: ""
                 )
             )
