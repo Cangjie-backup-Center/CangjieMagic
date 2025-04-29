@@ -106,7 +106,7 @@ func toLogString(): String
 ```
 func toString(): String
 ```
-- 描述: 将消息转换为字符串表示
+- 描述: 将消息转换为字符串
 
 #### func user
 ```
@@ -125,7 +125,7 @@ operator func !=(other: ChatMessageRole): Bool
 ```
 - 描述: 比较两个角色是否不相等
 - 参数:
-  - `other`: `ChatMessageRole`, 要比较的另一个角色
+  - `other`: `ChatMessageRole`, 另一个角色
 
 #### func operator ==
 ```
@@ -133,7 +133,7 @@ operator func ==(other: ChatMessageRole): Bool
 ```
 - 描述: 比较两个角色是否相等
 - 参数:
-  - `other`: `ChatMessageRole`, 要比较的另一个角色
+  - `other`: `ChatMessageRole`, 另一个角色
 
 ####  Assistant
 ```
@@ -163,7 +163,7 @@ User
 ```
 static func fromStr(str: String): ChatMessageRole
 ```
-- 描述: 从字符串解析为角色
+- 描述: 从字符串转换为角色
 - 参数:
   - `str`: `String`, 表示角色的字符串
 
@@ -171,96 +171,96 @@ static func fromStr(str: String): ChatMessageRole
 ```
 func toString(): String
 ```
-- 描述: 将角色转换为字符串表示
+- 描述: 将角色转换为字符串
 
 
 ### class Dialog
 #### func addMessage
 ```
-func addMessage(msg: ChatMessage): Unit
+public func addMessage(msg: ChatMessage): Unit
 ```
-- 描述: 向对话集合中添加一条消息
+- 描述: 添加一条聊天消息到对话集合中
 - 参数:
   - `msg`: `ChatMessage`, 要添加的聊天消息
 
 #### func addMessage
 ```
-func addMessage(messages: Array<ChatMessage>): Unit
+public func addMessage(messages: Array<ChatMessage>): Unit
 ```
-- 描述: 向对话集合中添加多条消息
+- 描述: 添加多条聊天消息到对话集合中
 - 参数:
   - `messages`: `Array<ChatMessage>`, 要添加的聊天消息数组
 
 #### func clear
 ```
-func clear(): Unit
+public func clear(): Unit
 ```
 - 描述: 清空对话集合中的所有消息
 
 #### func clone
 ```
-func clone(): Dialog
+public func clone(): Dialog
 ```
-- 描述: 克隆当前对话集合
+- 描述: 克隆当前的对话集合
 
 #### func init
 ```
-init()
+public init()
 ```
 - 描述: 初始化一个空的对话集合
 
 #### func init
 ```
-init(messages: ArrayList<ChatMessage>)
+public init(messages: ArrayList<ChatMessage>)
 ```
-- 描述: 通过已有的ArrayList<ChatMessage>初始化对话集合
+- 描述: 使用已有的ArrayList<ChatMessage>初始化对话集合
 - 参数:
   - `messages`: `ArrayList<ChatMessage>`, 包含聊天消息的ArrayList
 
 #### func init
 ```
-init(messages: Array<ChatMessage>)
+public init(messages: Array<ChatMessage>)
 ```
-- 描述: 通过已有的Array<ChatMessage>初始化对话集合
+- 描述: 使用已有的Array<ChatMessage>初始化对话集合
 - 参数:
   - `messages`: `Array<ChatMessage>`, 包含聊天消息的Array
 
 #### func isEmpty
 ```
-func isEmpty(): Bool
+public func isEmpty(): Bool
 ```
 - 描述: 检查对话集合是否为空
 
 #### func iterator
 ```
-func iterator(): Iterator<ChatMessage>
+public func iterator(): Iterator<ChatMessage>
 ```
 - 描述: 返回对话集合的迭代器
 
 #### func operator operator func[]
 ```
-operator func[](index: Int64): ChatMessage
+public operator func[](index: Int64): ChatMessage
 ```
 - 描述: 通过索引获取对话集合中的消息
 - 参数:
-  - `index`: `Int64`, 消息的索引
+  - `index`: `Int64`, 消息的索引位置
 
 #### func removeLast
 ```
-func removeLast(): ChatMessage
+public func removeLast(): ChatMessage
 ```
 - 描述: 移除并返回对话集合中的最后一条消息
 
 #### prop size
 ```
-prop size: Int64
+public prop size: Int64
 ```
 - 描述: 获取对话集合中消息的数量
 
 #### func toString
 ```
-func toString(): String
+public func toString(): String
 ```
-- 描述: 将对话集合转换为字符串表示
+- 描述: 将对话集合中的所有消息转换为字符串
 
 

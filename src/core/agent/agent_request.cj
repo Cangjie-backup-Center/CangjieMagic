@@ -26,6 +26,11 @@ public class AgentRequest {
     public let verbose: Bool
 
     /**
+     * The maximum number of tools that can be used when enable tool filter
+     */
+    public let maxTool: Int64
+
+    /**
      * An agent request may be handled by multiple agents,
      * so this field stores previous execution info
      */
@@ -33,9 +38,11 @@ public class AgentRequest {
 
     public init(question: String,
                 dialog!: Option<Dialog> = None,
-                verbose!: Bool = false) {
+                verbose!: Bool = false,
+                maxTool!: Int64 = 10) {
         this.question = question
         this.dialog = dialog
         this.verbose = verbose
+        this.maxTool = maxTool
     }
 }

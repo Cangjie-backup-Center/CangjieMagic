@@ -9,6 +9,8 @@
     - [let env](#let-env)
     - [prop externalScriptDir](#prop-externalscriptdir)
     - [var filterThink](#var-filterthink)
+    - [var httpConnectTimeout](#var-httpconnecttimeout)
+    - [var httpReadTimeout](#var-httpreadtimeout)
     - [var logFile](#var-logfile)
     - [var logLevel](#var-loglevel)
     - [var maxReactNumber](#var-maxreactnumber)
@@ -70,11 +72,23 @@ static var filterThink = false
 ```
 - 描述: 是否过滤推理LLM生成的<think>消息，仅在同步调用时生效
 
+#### var httpConnectTimeout
+```
+static var httpConnectTimeout = 60000
+```
+- 描述: HTTP请求的最大连接超时时间（毫秒）
+
+#### var httpReadTimeout
+```
+static var httpReadTimeout = 60000
+```
+- 描述: HTTP请求的最大读取超时时间（毫秒）
+
 #### var logFile
 ```
-static var logFile: String = "stdout"
+static var logFile: String = "stderr"
 ```
-- 描述: 日志文件路径，默认为标准输出
+- 描述: 日志文件路径，默认为标准错误输出
 
 #### var logLevel
 ```
@@ -104,7 +118,7 @@ static var modelRetryNumber = 3
 ```
 static var outputRepairRetryNumber = 3
 ```
-- 描述: 生成符合要求的JSON模式输出失败时的最大重试次数
+- 描述: 生成所需JSON模式输出失败时的最大重试次数
 
 #### var saveCodeInterpreter
 ```
@@ -118,17 +132,6 @@ static var saveModelRequest = false
 ```
 - 描述: 是否保存模型请求
 
-#### var httpConnectTimeout
-```
-static var httpConnectTimeout = 60000
-```
-- 描述: HTTP 建立连接的超时设置
-
-#### var httpReadTimeout
-```
-static var httpReadTimeout = 60000
-```
-- 描述: HTTP 读取数据的超时设置
 
 ### struct EnvWrapper
 #### func operator []
@@ -137,7 +140,7 @@ operator func [](name: String): Option<String>
 ```
 - 描述: 获取环境变量的值
 - 参数:
-  - `name`: `String`, 环境变量名称
+  - `name`: `String`, 环境变量的名称
 
 #### func operator []
 ```
@@ -145,7 +148,7 @@ operator func [](name: String, value!: String): Unit
 ```
 - 描述: 设置环境变量的值
 - 参数:
-  - `name`: `String`, 环境变量名称
-  - `value`: `String`, 环境变量值
+  - `name`: `String`, 环境变量的名称
+  - `value`: `String`, 环境变量的值
 
 
