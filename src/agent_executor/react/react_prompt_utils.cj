@@ -127,7 +127,7 @@ protected struct ReactPromptUtils {
         let allTools = if (task.agent.toolManager.enableFilter) {
             task.agent.toolManager.filterTool(
                 task.request.question,
-                ToolSearchConfig(chatModel: task.agent.model)
+                ToolSearchConfig(chatModel: task.agent.model, number: task.request.maxTool)
             )
         } else {
             task.agent.toolManager.getTools()

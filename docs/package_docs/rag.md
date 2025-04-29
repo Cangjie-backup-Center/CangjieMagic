@@ -23,7 +23,7 @@ public static func createRetriever(_agent: Agent, source: Retriever, mode: Optio
 - 描述: 创建检索器包装器
 - 参数:
   - `_agent`: `Agent`, 代理对象，包含模型信息
-  - `source`: `Retriever`, 已有的检索器对象
+  - `source`: `Retriever`, 已存在的检索器对象
   - `mode`: `Option<RetrieverMode>`, 检索模式选项
   - `description`: `Option<String>`, 检索器描述信息
 

@@ -12,7 +12,8 @@
     - [func load](#func-load-1)
     - [func save](#func-save-1)
     - [func search](#func-search-1)
-  - [interface IndexMap](#interface-indexmap)
+    - [func setVector](#func-setvector)
+  - [interface IndexMap<Self, T>](#interface-indexmap<self,-t>)
     - [func add](#func-add)
     - [func get](#func-get)
     - [func load](#func-load-1)
@@ -23,6 +24,10 @@
     - [func init](#func-init-1)
     - [func load](#func-load-1)
     - [func save](#func-save-1)
+  - [struct SearchResult](#struct-searchresult)
+    - [let dist](#let-dist)
+    - [let index](#let-index)
+    - [func init](#func-init-1)
   - [class SemanticMap](#class-semanticmap)
     - [func asRetriever](#func-asretriever)
     - [prop embeddingModel](#prop-embeddingmodel)
@@ -48,6 +53,7 @@
     - [func load](#func-load-1)
     - [func save](#func-save-1)
     - [func serialize](#func-serialize)
+    - [func set](#func-set)
   - [class Vector](#class-vector)
     - [func init](#func-init-1)
     - [let vector](#let-vector)
@@ -62,21 +68,21 @@
 ### class FaissVectorDatabase
 #### func addVector
 ```
-func addVector(vector: Vector): Unit
+addVector(vector: Vector): Unit
 ```
 - 描述: 向Faiss向量数据库中添加一个向量
 - 参数:
-  - `vector`: `Vector`, 要添加到数据库中的向量
+  - `vector`: `Vector`, 要添加到数据库的向量
 
 #### func close
 ```
-func close(): Unit
+close(): Unit
 ```
 - 描述: 关闭Faiss向量数据库并释放资源
 
 #### func init
 ```
-init(dimension!: Int64 = 1536)
+init(dimension: Int64 = 1536)
 ```
 - 描述: 初始化Faiss向量数据库
 - 参数:
@@ -84,7 +90,7 @@ init(dimension!: Int64 = 1536)
 
 #### func load
 ```
-static func load(filePath: String): FaissVectorDatabase
+load(filePath: String): FaissVectorDatabase
 ```
 - 描述: 从指定文件路径加载Faiss向量数据库
 - 参数:
@@ -92,7 +98,7 @@ static func load(filePath: String): FaissVectorDatabase
 
 #### func save
 ```
-func save(filePath: String): Unit
+save(filePath: String): Unit
 ```
 - 描述: 将Faiss向量数据库保存到指定文件路径
 - 参数:
@@ -100,13 +106,13 @@ func save(filePath: String): Unit
 
 #### func search
 ```
-func search(queryVec: Vector, number!: Int64 = 5, minDistance!: Float64 = 0.6): Array<Int64>
+search(queryVec: Vector, number: Int64 = 5, minDistance: Float64 = 0.6): Array<SearchResult>
 ```
 - 描述: 在Faiss向量数据库中搜索与查询向量最相似的向量
 - 参数:
   - `queryVec`: `Vector`, 查询向量
   - `number`: `Int64`, 返回的最相似向量的数量，默认为5
-  - `minDistance`: `Float64`, 最小相似度距离阈值，默认为0.6
+  - `minDistance`: `Float64`, 最小距离阈值，默认为0.6
 
 
 ### class InMemoryVectorDatabase
@@ -114,7 +120,7 @@ func search(queryVec: Vector, number!: Int64 = 5, minDistance!: Float64 = 0.6): 
 ```
 func addVector(vector: Vector): Unit
 ```
-- 描述: 向内存向量数据库中添加一个向量
+- 描述: 添加向量到数据库
 - 参数:
   - `vector`: `Vector`, 要添加的向量
 
@@ -122,7 +128,7 @@ func addVector(vector: Vector): Unit
 ```
 static func load(filePath: String): InMemoryVectorDatabase
 ```
-- 描述: 从文件加载内存向量数据库
+- 描述: 从文件加载数据库
 - 参数:
   - `filePath`: `String`, 文件路径
 
@@ -130,27 +136,36 @@ static func load(filePath: String): InMemoryVectorDatabase
 ```
 func save(filePath: String): Unit
 ```
-- 描述: 保存内存向量数据库到文件
+- 描述: 保存数据库到文件
 - 参数:
   - `filePath`: `String`, 文件路径
 
 #### func search
 ```
-func search(queryVec: Vector, number: Int64 = 5, minDistance: Float64 = 0.6): Array<Int64>
+func search(queryVec: Vector, number: Int64 = 5, minDistance: Float64 = 0.6): Array<SearchResult>
 ```
-- 描述: 在内存向量数据库中搜索与查询向量最相似的向量
+- 描述: 搜索与查询向量最相似的向量
 - 参数:
   - `queryVec`: `Vector`, 查询向量
-  - `number`: `Int64`, 要返回的最相似向量的数量
+  - `number`: `Int64`, 返回的最相似向量的数量
   - `minDistance`: `Float64`, 最小相似度阈值
 
+#### func setVector
+```
+func setVector(index: Int64, vector: Vector): Unit
+```
+- 描述: 设置指定索引处的向量
+- 参数:
+  - `index`: `Int64`, 向量的索引
+  - `vector`: `Vector`, 要设置的向量
 
-### interface IndexMap
+
+### interface IndexMap<Self, T>
 #### func add
 ```
 func add(content: T): Unit
 ```
-- 描述: 添加内容到索引映射中，索引由添加顺序决定
+- 描述: 根据添加顺序确定索引
 - 参数:
   - `content`: `T`, 要添加的内容
 
@@ -160,23 +175,23 @@ func get(index: Int64): T
 ```
 - 描述: 根据索引获取内容
 - 参数:
-  - `index`: `Int64`, 要获取内容的索引
+  - `index`: `Int64`, 内容的索引
 
 #### func load
 ```
 static func load(filePath: String): Self
 ```
-- 描述: 从指定文件路径加载索引映射
+- 描述: 从文件加载内容
 - 参数:
-  - `filePath`: `String`, 文件加载路径
+  - `filePath`: `String`, 文件路径
 
 #### func save
 ```
 func save(filePath: String): Unit
 ```
-- 描述: 将索引映射保存到指定文件路径
+- 描述: 保存内容到文件
 - 参数:
-  - `filePath`: `String`, 文件保存路径
+  - `filePath`: `String`, 文件路径
 
 
 ### class JsonlIndexMap
@@ -186,7 +201,7 @@ override public func add(content: T): Unit
 ```
 - 描述: 向索引映射中添加内容
 - 参数:
-  - `content`: `T`, 要添加的内容
+  - `content`: `T`, 要添加的内容，必须实现Jsonable和ToPrompt接口
 
 #### func get
 ```
@@ -194,13 +209,13 @@ override public func get(index: Int64): T
 ```
 - 描述: 根据索引获取内容
 - 参数:
-  - `index`: `Int64`, 索引值
+  - `index`: `Int64`, 要获取内容的索引位置
 
 #### func init
 ```
 public init()
 ```
-- 描述: 初始化JsonlIndexMap实例
+- 描述: 初始化一个空的JsonlIndexMap
 
 #### func load
 ```
@@ -208,7 +223,7 @@ redef public static func load(filePath: String): JsonlIndexMap<T>
 ```
 - 描述: 从文件加载索引映射
 - 参数:
-  - `filePath`: `String`, 文件路径
+  - `filePath`: `String`, 要加载的文件路径
 
 #### func save
 ```
@@ -216,7 +231,30 @@ override public func save(filePath: String): Unit
 ```
 - 描述: 将索引映射保存到文件
 - 参数:
-  - `filePath`: `String`, 文件路径
+  - `filePath`: `String`, 文件保存路径
+
+
+### struct SearchResult
+#### let dist
+```
+let dist: Float64
+```
+- 描述: 距离值
+
+#### let index
+```
+let index: Int64
+```
+- 描述: 索引值
+
+#### func init
+```
+init(index: Int64, dist: Float64)
+```
+- 描述: 初始化SearchResult
+- 参数:
+  - `index`: `Int64`, 索引值
+  - `dist`: `Float64`, 距离值
 
 
 ### class SemanticMap
@@ -224,7 +262,7 @@ override public func save(filePath: String): Unit
 ```
 public func asRetriever(): Retriever
 ```
-- 描述: 将SemanticMap转换为Retriever
+- 描述: 将SemanticMap转换为检索器
 
 #### prop embeddingModel
 ```
@@ -246,13 +284,13 @@ public init(vectorDB!: VDB, indexMap!: IMAP, embeddingModel!: Option<EmbeddingMo
 - 参数:
   - `vectorDB`: `VDB`, 向量数据库实例
   - `indexMap`: `IMAP`, 索引映射实例
-  - `embeddingModel`: `Option<EmbeddingModel>`, 嵌入模型，可选参数
+  - `embeddingModel`: `Option<EmbeddingModel>`, 嵌入模型选项
 
 #### func load
 ```
 public static func load(dirPath: String): SemanticMap<VDB, IMAP, T>
 ```
-- 描述: 从指定目录加载向量数据库和索引映射
+- 描述: 从指定目录加载SemanticMap
 - 参数:
   - `dirPath`: `String`, 目录路径
 
@@ -260,7 +298,7 @@ public static func load(dirPath: String): SemanticMap<VDB, IMAP, T>
 ```
 public func put(key: String, value: T): Unit
 ```
-- 描述: 将键值对存入向量数据库和索引映射
+- 描述: 将键值对存入语义映射
 - 参数:
   - `key`: `String`, 键
   - `value`: `T`, 值
@@ -269,7 +307,7 @@ public func put(key: String, value: T): Unit
 ```
 public func save(dirPath: String): Unit
 ```
-- 描述: 保存向量数据库和索引映射到指定目录
+- 描述: 保存SemanticMap到指定目录
 - 参数:
   - `dirPath`: `String`, 目录路径
 
@@ -280,8 +318,8 @@ public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.
 - 描述: 查找相似数据
 - 参数:
   - `query`: `String`, 查询字符串
-  - `number`: `Int64`, 返回结果数量，默认为5
-  - `minDistance`: `Float64`, 最小距离阈值，默认为0.3
+  - `number`: `Int64`, 返回结果数量
+  - `minDistance`: `Float64`, 最小距离阈值
 
 #### let vectorDB
 ```
@@ -295,7 +333,7 @@ public let vectorDB: VDB
 ```
 public func asRetriever(): Retriever
 ```
-- 描述: 将SemanticSet转换为Retriever
+- 描述: 将SemanticSet转换为Retriever实例
 
 #### prop embeddingModel
 ```
@@ -317,7 +355,7 @@ public init(vectorDB!: VDB, indexMap!: IMAP, embeddingModel!: Option<EmbeddingMo
 ```
 public static func load(dirPath: String): SemanticSet<VDB, IMAP, T>
 ```
-- 描述: 从指定目录加载SemanticSet
+- 描述: 从指定目录加载SemanticSet实例
 - 参数:
   - `dirPath`: `String`, 加载目录路径
 
@@ -341,59 +379,68 @@ public func save(dirPath: String): Unit
 ```
 public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T>
 ```
-- 描述: 根据查询字符串搜索SemanticSet
+- 描述: 根据查询字符串搜索相关内容
 - 参数:
   - `query`: `String`, 查询字符串
-  - `number`: `Int64`, 返回结果的数量，默认为5
+  - `number`: `Int64`, 返回结果的最大数量，默认为5
   - `minDistance`: `Float64`, 最小距离阈值，默认为0.3
 
 
 ### class SimpleIndexMap
 #### func add
 ```
-override public func add(content: String): Unit
+func add(content: String): Unit
 ```
-- 描述: 向映射中添加内容
+- 描述: 在末尾添加内容
 - 参数:
   - `content`: `String`, 要添加的内容
 
 #### func deserialize
 ```
-public static func deserialize(dm: DataModel): SimpleIndexMap
+static func deserialize(dm: DataModel): SimpleIndexMap
 ```
-- 描述: 从数据模型反序列化为映射
+- 描述: 从数据模型反序列化为SimpleIndexMap对象
 - 参数:
   - `dm`: `DataModel`, 要反序列化的数据模型
 
 #### func get
 ```
-override public func get(index: Int64): String
+func get(index: Int64): String
 ```
-- 描述: 根据索引获取内容
+- 描述: 获取指定索引的内容
 - 参数:
-  - `index`: `Int64`, 要获取内容的索引
+  - `index`: `Int64`, 要获取的索引
 
 #### func load
 ```
-redef public static func load(filePath:String): SimpleIndexMap
+static func load(filePath: String): SimpleIndexMap
 ```
-- 描述: 从文件加载映射
+- 描述: 从指定文件路径加载SimpleIndexMap对象
 - 参数:
-  - `filePath`: `String`, 文件路径
+  - `filePath`: `String`, 要加载的文件路径
 
 #### func save
 ```
-override public func save(filePath: String): Unit
+func save(filePath: String): Unit
 ```
-- 描述: 将映射保存到文件
+- 描述: 将当前对象保存到指定文件路径
 - 参数:
-  - `filePath`: `String`, 文件路径
+  - `filePath`: `String`, 要保存的文件路径
 
 #### func serialize
 ```
-public func serialize(): DataModel
+func serialize(): DataModel
 ```
-- 描述: 将映射序列化为数据模型
+- 描述: 将当前对象序列化为数据模型
+
+#### func set
+```
+func set(index: Int64, content: String): Unit
+```
+- 描述: 设置指定索引的内容
+- 参数:
+  - `index`: `Int64`, 要设置的索引
+  - `content`: `String`, 要设置的内容
 
 
 ### class Vector
@@ -417,9 +464,9 @@ let vector: Array<Float64>
 ```
 func createEmbeddingVector(content: String): Vector
 ```
-- 描述: 根据输入内容创建嵌入向量
+- 描述: 根据输入的内容创建嵌入向量
 - 参数:
-  - `content`: `String`, 需要转换为向量的文本内容
+  - `content`: `String`, 需要创建嵌入向量的文本内容
 
 
 ### interface VectorDatabase
@@ -449,12 +496,12 @@ func save(filePath: String): Unit
 
 #### func search
 ```
-func search(queryVec: Vector, number!: Int64, minDistance!: Float64): Array<Int64>
+func search(queryVec: Vector, number!: Int64, minDistance!: Float64): Array<SearchResult>
 ```
 - 描述: 查询数据库并找到相似数据的索引
 - 参数:
   - `queryVec`: `Vector`, 查询向量
-  - `number!`: `Int64`, 返回的相似数据数量
+  - `number!`: `Int64`, 返回结果的数量
   - `minDistance!`: `Float64`, 最小距离阈值
 
 

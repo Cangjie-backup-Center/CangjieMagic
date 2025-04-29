@@ -24,7 +24,12 @@
   - [interface AgentExecutor](#interface-agentexecutor)
     - [func asyncRun](#func-asyncrun)
     - [func run](#func-run)
-  - [struct AgentRequest](#struct-agentrequest)
+  - [interface AgentGroup](#interface-agentgroup)
+    - [func asyncChat](#func-asyncchat-1)
+    - [func chat](#func-chat-1)
+    - [func chat](#func-chat-1)
+    - [func operator []](#func-operator-[])
+  - [class AgentRequest](#class-agentrequest)
     - [let dialog](#let-dialog-1)
     - [func init](#func-init-1)
     - [let question](#let-question)
@@ -52,9 +57,9 @@
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 查询代理并获取答案，以流的形式返回代理回复
+- 描述: 查询代理并以流的形式获取答案
 - 参数:
-  - `request`: `AgentRequest`, 代理请求对象
+  - `request`: `AgentRequest`, 代理请求
 
 #### func chat
 ```
@@ -62,7 +67,7 @@ func chat(request: AgentRequest): AgentResponse
 ```
 - 描述: 查询代理并获取答案，可能会抛出AgentExecutionException异常
 - 参数:
-  - `request`: `AgentRequest`, 代理请求对象
+  - `request`: `AgentRequest`, 代理请求
 
 #### prop description
 ```
@@ -130,7 +135,7 @@ prop toolManager: ToolManager
 ```
 init(msg: String)
 ```
-- 描述: 构造函数，用于创建AgentExecutionException实例
+- 描述: 初始化AgentExecutionException异常
 - 参数:
   - `msg`: `String`, 异常消息
 
@@ -140,7 +145,7 @@ init(msg: String)
 ```
 let dialog: Dialog
 ```
-- 描述: 代理执行过程中与LLM的内部对话历史
+- 描述: 代理执行期间与LLM的内部对话历史
 
 #### func init
 ```
@@ -160,7 +165,7 @@ public init(dialog: Dialog)
 ```
 let retrievalInfo: ArrayList<RetrievalInfo>
 ```
-- 描述: 执行过程中检索到的文档信息
+- 描述: 执行期间检索到的文档
 
 #### prop verboseInfo
 ```
@@ -174,22 +179,57 @@ prop verboseInfo: Iterator<String>
 ```
 func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步执行代理的运行方法
+- 描述: 异步执行代理运行任务
 - 参数:
-  - `agent`: `Agent`, 代理实例
-  - `request`: `AgentRequest`, 代理请求
+  - `agent`: `Agent`, 要执行的代理实例
+  - `request`: `AgentRequest`, 代理请求参数
 
 #### func run
 ```
 func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
-- 描述: 执行代理的运行方法
+- 描述: 执行代理运行任务
 - 参数:
-  - `agent`: `Agent`, 代理实例
-  - `request`: `AgentRequest`, 代理请求
+  - `agent`: `Agent`, 要执行的代理实例
+  - `request`: `AgentRequest`, 代理请求参数
 
 
-### struct AgentRequest
+### interface AgentGroup
+#### func asyncChat
+```
+func asyncChat(request: AgentRequest): AsyncAgentResponse
+```
+- 描述: 异步与AgentGroup进行聊天交互
+- 参数:
+  - `request`: `AgentRequest`, 聊天请求参数
+
+#### func chat
+```
+func chat(request: AgentRequest): AgentResponse
+```
+- 描述: 与AgentGroup进行聊天交互
+- 参数:
+  - `request`: `AgentRequest`, 聊天请求参数
+
+#### func chat
+```
+func chat(request: AgentRequest, maxRound!: Int64): AgentResponse
+```
+- 描述: 与AgentGroup进行聊天交互，并指定最大轮次
+- 参数:
+  - `request`: `AgentRequest`, 聊天请求参数
+  - `maxRound!`: `Int64`, 最大聊天轮次
+
+#### func operator operator []
+```
+operator func [](memberName: String): Agent
+```
+- 描述: 根据名称查找Agent
+- 参数:
+  - `memberName`: `String`, Agent名称
+
+
+### class AgentRequest
 #### let dialog
 ```
 let dialog: Option<Dialog>
@@ -198,12 +238,13 @@ let dialog: Option<Dialog>
 
 #### func init
 ```
-public init(question: String, dialog!: Option<Dialog> = None, verbose!: Bool = false)
+public init(question: String, dialog!: Option<Dialog> = None, maxTool!: Int64 = 10, verbose!: Bool = false)
 ```
-- 描述: 初始化AgentRequest结构体
+- 描述: 初始化AgentRequest对象
 - 参数:
   - `question`: `String`, 当前用户的问题
   - `dialog`: `Option<Dialog>`, 用户与代理之间的历史聊天记录，默认为None
+  - maxTool: Agent 在启用工具过滤功能时，最多使用工具的数量，默认为 `10`
   - `verbose`: `Bool`, 是否输出内部执行信息，默认为false
 
 #### let question
@@ -211,6 +252,12 @@ public init(question: String, dialog!: Option<Dialog> = None, verbose!: Bool = f
 let question: String
 ```
 - 描述: 当前用户的问题
+
+#### let maxTool
+```
+let maxTool: Int64
+```
+- 描述: Agent 在启用工具过滤功能时，最多使用工具的数量
 
 #### let verbose
 ```
@@ -238,7 +285,7 @@ public init(content: String)
 ```
 - 描述: 初始化AgentResponse
 - 参数:
-  - `content`: `String`, 执行结果内容
+  - `content`: `String`, 执行结果
 
 #### func init
 ```
@@ -246,7 +293,7 @@ public init(content: String, execInfo!: AgentExecutionInfo)
 ```
 - 描述: 初始化AgentResponse，包含执行信息
 - 参数:
-  - `content`: `String`, 执行结果内容
+  - `content`: `String`, 执行结果
   - `execInfo`: `AgentExecutionInfo`, 执行过程中的内部信息
 
 
@@ -259,32 +306,32 @@ public prop content: String
 
 #### let execInfo
 ```
-let execInfo: Option<AgentExecutionInfo>
+public let execInfo: Option<AgentExecutionInfo>
 ```
-- 描述: 执行过程中的内部信息
+- 描述: 执行期间的内部信息
 
 #### func init
 ```
 public init(chunks: Iterator<String>)
 ```
-- 描述: 初始化AsyncAgentResponse
+- 描述: 构造函数，初始化AsyncAgentResponse实例
 - 参数:
-  - `chunks`: `Iterator<String>`, 字符串迭代器
+  - `chunks`: `Iterator<String>`, 字符串迭代器，用于初始化响应块
 
 #### func init
 ```
 public init(chunks: Iterator<String>, execInfo!: Option<AgentExecutionInfo>)
 ```
-- 描述: 初始化AsyncAgentResponse
+- 描述: 构造函数，初始化AsyncAgentResponse实例，并设置执行信息
 - 参数:
-  - `chunks`: `Iterator<String>`, 字符串迭代器
-  - `execInfo`: `Option<AgentExecutionInfo>`, 执行信息
+  - `chunks`: `Iterator<String>`, 字符串迭代器，用于初始化响应块
+  - `execInfo`: `Option<AgentExecutionInfo>`, 执行信息，用于记录执行过程中的内部信息
 
 #### func next
 ```
 override public func next(): Option<String>
 ```
-- 描述: 获取下一个字符串块
+- 描述: 获取下一个响应块
 
 
 ### class Interceptor
@@ -292,10 +339,10 @@ override public func next(): Option<String>
 ```
 init(agent: Agent, mode!: InterceptorMode = InterceptorMode.Always)
 ```
-- 描述: Interceptor的构造函数
+- 描述: 初始化拦截器实例
 - 参数:
-  - `agent`: `Agent`, 拦截器关联的代理
-  - `mode!`: `InterceptorMode`, 拦截器的模式，默认为InterceptorMode.Always
+  - `agent`: `Agent`, 代理实例，用于拦截操作
+  - `mode!`: `InterceptorMode`, 拦截模式，默认为InterceptorMode.Always
 
 
 ### enum InterceptorMode
