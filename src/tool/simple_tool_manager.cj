@@ -61,7 +61,9 @@ Available Tools:
 }
 ```
 
-# Example Input/Output
+# Examples of Input/Output
+
+## Example 1
 
 User Question: "How can I extract text from a PDF?"
 Available Tools:
@@ -83,6 +85,35 @@ Output:
     {
       "name": "Image OCR",
       "reason": "May be useful if the PDF contains scanned images of text."
+    }
+  ]
+}
+```
+
+## Example 2
+
+User Question: "What's the weather today?"
+Available Tools:
+
+PDF Text Extractor: Extracts raw text from PDFs while preserving formatting.
+-----
+Image OCR: Converts text in images/scans to machine-readable text.
+-----
+Web Search: Retrieve information from the internet by querying search engines.
+-----
+Get Time: Retrieves the current date and time
+
+Output:
+```json
+{
+  "relevantTools": [
+    {
+      "name": "Web Search",
+      "reason": "Search the Weather forecast."
+    },
+    {
+      "name": "Get Time",
+      "reason": "I need to know today's date to get the accurate weather."
     }
   ]
 }
@@ -154,8 +185,9 @@ public class SimpleToolManager <: ToolManager {
 
     override public func filterTool(question: String, config: ToolSearchConfig): Array<Tool> {
         if (!this.enableFilter) {
-            throw ToolException("Tool manager does not enable filter")
+            return this.getTools()
         }
+        // Tools, whose filterable == false, are special tools
         let (specialTools, normalTools) = this.splitTools({ tool =>
             (tool.extra.get("filterable") ?? "") == "false"
         })
