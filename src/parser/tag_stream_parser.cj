@@ -130,7 +130,7 @@ protected class TagStreamParser {
             if (!rest.trimAscii().startsWith(closeTag) && tag != Tag.ANSWER) {
                 throw ParserException("Fail to read async react ${tag} content. Rest: `${rest}`")
             }
-            if (rest.trimAscii().size == closeTag.size) {
+            if (rest.trimAscii().size == closeTag.size || tag == Tag.ANSWER) {
                 finished = true
                 this.resetBuffer("")
             } else {

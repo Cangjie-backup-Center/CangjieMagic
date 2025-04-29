@@ -15,10 +15,10 @@
     - [func addTools](#func-addtools)
     - [func clear](#func-clear)
     - [func delTool](#func-deltool)
-    - [prop enableToolSearch](#prop-enabletoolsearch)
+    - [prop enableFilter](#prop-enablesearch)
     - [func findTool](#func-findtool)
     - [func getTools](#func-gettools)
-    - [func searchTool](#func-searchtool)
+    - [func filterTool](#func-filtertool)
   - [struct ToolParameter](#struct-toolparameter)
     - [let description](#let-description)
     - [func init](#func-init-1)
@@ -117,9 +117,9 @@ func delTool(tool: Tool): Unit
 - 参数:
   - `tool`: `Tool`, 要删除的工具
 
-#### prop enableToolSearch
+#### prop enableFilter
 ```
-prop enableToolSearch: Bool
+prop enableFilter: Bool
 ```
 - 描述: 是否启用工具语义搜索
 
@@ -137,9 +137,9 @@ func getTools(): Array<Tool>
 ```
 - 描述: 获取所有工具
 
-#### func searchTool
+#### func filterTool
 ```
-func searchTool(question: String, number!: Int64): Array<Tool>
+func filterTool(question: String, number!: Int64): Array<Tool>
 ```
 - 描述: 根据问题搜索相关工具
 - 参数:
