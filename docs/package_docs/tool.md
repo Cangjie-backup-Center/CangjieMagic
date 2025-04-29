@@ -22,12 +22,12 @@
     - [func addTools](#func-addtools)
     - [func clear](#func-clear)
     - [func delTool](#func-deltool)
-    - [prop enableToolSearch](#prop-enabletoolsearch)
+    - [prop enableFilter](#prop-enablesearch)
     - [func findTool](#func-findtool)
     - [func getTools](#func-gettools)
     - [func init](#func-init-1)
     - [func init](#func-init-1)
-    - [func searchTool](#func-searchtool)
+    - [func filterTool](#func-filtertool)
 
 ### class NativeFuncTool
 #### func addExamples
@@ -169,9 +169,9 @@ func delTool(tool: Tool): Unit
 - 参数:
   - `tool`: `Tool`, 要删除的工具
 
-#### prop enableToolSearch
+#### prop enableFilter
 ```
-prop enableToolSearch: Bool
+prop enableFilter: Bool
 ```
 - 描述: 获取是否启用了工具搜索功能
 
@@ -197,16 +197,16 @@ init()
 
 #### func init
 ```
-init(tools: Collection<Tool>, enableToolSearch: Bool = false)
+init(tools: Collection<Tool>, enableFilter: Bool = false)
 ```
 - 描述: 使用给定的工具集合和工具搜索启用标志初始化SimpleToolManager实例
 - 参数:
   - `tools`: `Collection<Tool>`, 工具集合
-  - `enableToolSearch`: `Bool`, 是否启用工具搜索功能
+  - `enableFilter`: `Bool`, 是否启用工具搜索功能
 
-#### func searchTool
+#### func filterTool
 ```
-func searchTool(question: String, number: Int64 = 5): Array<Tool>
+func filterTool(question: String, number: Int64 = 5): Array<Tool>
 ```
 - 描述: 根据问题搜索相关工具
 - 参数:

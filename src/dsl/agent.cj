@@ -141,7 +141,7 @@ class AgentAttr <: Attr {
         "rag",
         "memory",
         "tools",
-        "enableToolSearch",
+        "enableToolFilter",
         "mcp",
         "dump"
     ]
@@ -255,8 +255,8 @@ class AgentAttr <: Attr {
         }
     }
 
-    prop enableToolSearch: Bool {
-        get() { getBool("enableToolSearch") }
+    prop enableToolFilter: Bool {
+        get() { getBool("enableToolFilter") }
     }
 
     let internalTools = ArrayList<String>()
@@ -688,7 +688,7 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                 match (__TOOL_MANAGER__) {
                     case Some(tm) => return tm
                     case None =>
-                        let tm = SimpleToolManager([], enableToolSearch: $(newLiteralToken(agentAttr.enableToolSearch)))
+                        let tm = SimpleToolManager([], enableFilter: $(newLiteralToken(agentAttr.enableToolFilter)))
 
                         $addTools
 

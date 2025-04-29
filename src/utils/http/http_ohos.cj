@@ -84,6 +84,7 @@ protected struct HttpUtilsImpl {
         logHttpInfo(method, url, header, body, async: true)
         let httpRequest = createHttp()
         let httpStream = HttpStream(closeFn: { =>
+            LogUtils.debug("Http stream closed ${url}")
             httpRequest.destroy()
         })
         // Register callbacks

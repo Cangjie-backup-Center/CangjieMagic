@@ -3,6 +3,17 @@
  */
 package magic.core.tool
 
+import magic.core.model.{ChatModel, EmbeddingModel}
+
+public struct ToolSearchConfig {
+    public ToolSearchConfig(
+        protected let viaEmbedding!: Bool = false,
+        protected let chatModel!: Option<ChatModel> = None,
+        protected let embeddingModel!: Option<EmbeddingModel> = None,
+        protected let number!: Int64 = 10
+    ) { }
+}
+
 /**
  * Manage agent tools
  */
@@ -40,10 +51,10 @@ public interface ToolManager {
     /**
      * Search related tools to the question
      */
-    func searchTool(question: String, number!: Int64): Array<Tool>
+    func filterTool(question: String, config: ToolSearchConfig): Array<Tool>
 
     /**
      * Whether semantic search of tools is enabled
      */
-    prop enableToolSearch: Bool
+    prop enableFilter: Bool
 }
