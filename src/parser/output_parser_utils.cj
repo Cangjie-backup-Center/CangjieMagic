@@ -24,14 +24,15 @@ public struct OutputParserUtils {
             while (let Some(pos) <- str.indexOf(langEndMark, currStart)) {
                 // Check whether ``` or ```xxx is found
                 let posAfterEndMark = pos + langEndMark.size
-                if (posAfterEndMark >= str.size ||
+                // Case 1: ``` is found
+                if (posAfterEndMark == str.size ||
                     str[posAfterEndMark].isAsciiWhiteSpace()) {
                     if (nested == 0) {
                         return str[contentStart..pos].trimAscii()
                     } else {
                         nested -= 1
                     }
-                } else {
+                } else { // Case 2: ```xxx is found
                     nested += 1
                 }
                 currStart = posAfterEndMark
