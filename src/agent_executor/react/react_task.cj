@@ -9,7 +9,7 @@ import magic.core.message.{ChatMessage, Dialog}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.utils.sleep2
-import magic.parser.TagStreamParser
+import magic.parser.{TagStreamParser, ParserException}
 
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
@@ -159,26 +159,34 @@ protected class ReactTask <: AgentTask {
         let asyncReactStep = this.getAsyncReactStep()
         // remove the hint message
         this.execInfo.dialog.removeLast()
-        let tag = asyncReactStep.peekTag()
-        if (tag == Tag.THOUGHT) {
-            this.handleStep(asyncReactStep.getStepOf(Tag.THOUGHT))
-            return None
-        } else if (tag == Tag.ACTION) {
-            this.handleStep(asyncReactStep.getStepOf(Tag.ACTION))
-            return None
-        } else if (tag == Tag.ANSWER) {
-            if (this.request.verbose) {
-                asyncReactStep.parser.onChunkFn = None
-                // The Tag.ANSWER has been put into the channel by the AsyncStepParser
-                // Put a close tag but does not put the answer
-                this.execInfo.verboseChannel.put(Tag.ANSWER.getCloseTag())
-                this.execInfo.verboseChannel.close()
+        try {
+            let tag = asyncReactStep.peekTag()
+            if (tag == Tag.THOUGHT) {
+                this.handleStep(asyncReactStep.getStepOf(Tag.THOUGHT))
+                return None
+            } else if (tag == Tag.ACTION) {
+                this.handleStep(asyncReactStep.getStepOf(Tag.ACTION))
+                return None
+            } else if (tag == Tag.ANSWER) {
+                if (this.request.verbose) {
+                    asyncReactStep.parser.onChunkFn = None
+                    // The Tag.ANSWER has been put into the channel by the AsyncStepParser
+                    // Put a close tag but does not put the answer
+                    this.execInfo.verboseChannel.put(Tag.ANSWER.getCloseTag())
+                    this.execInfo.verboseChannel.close()
+                }
+                let (thought, asyncAnswer) = asyncReactStep.getAsyncFinalAnswer()
+                this.addAndLogMessage(ChatMessage.assistant(thought))
+                return asyncAnswer
+            } else {
+                throw UnsupportedException()
             }
-            let (thought, asyncAnswer) = asyncReactStep.getAsyncFinalAnswer()
-            this.addAndLogMessage(ChatMessage.assistant(thought))
-            return asyncAnswer
-        } else {
-            throw UnsupportedException()
+        } catch (ex: ParserException) {
+            // Add the repair message
+            this.execInfo.dialog.addMessage(
+                ChatMessage.system("You should generate valid tags of required syntax!")
+            )
+            return None
         }
     }
 
