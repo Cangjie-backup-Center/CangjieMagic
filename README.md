@@ -1,3 +1,5 @@
+[English version](./README-en.md)
+
 ![logo](./docs//logo.png)
 
 # Cangjie Magic: Make Apps Grow Intelligence and Creativity

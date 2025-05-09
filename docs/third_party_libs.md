@@ -1,6 +1,6 @@
-## 三方库依赖
+## Third-party Libraries
 
-请按照以下流程构建出动态库，并把所有构建的动态库都放到 `ffi_libs` 目录下。
+Following the instructions to build dynamic libs and put all these libs to the dir `ffi_libs`。
 
 ### Sqlite
 
@@ -32,7 +32,7 @@ MKL_PATH=<path>/Intel/oneAPI/mkl/latest
 -DLAPACK_INCLUDE_DIR="$MKL_PATH/include"
 ```
 
-### Llama.cpp（可选）
+### Llama.cpp (Optional)
 
 ```bash
 git clone https://github.com/ggerganov/llama.cpp
