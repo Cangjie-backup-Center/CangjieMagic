@@ -79,7 +79,7 @@ protected class TagStreamParser {
                 }
             }
             if (!content.isEmpty()) {
-                throw Exception("Fail to peek tag. Invalid content: `${this.currContent}`")
+                throw ParserException("Fail to peek tag. Invalid content: `${this.currContent}`")
             }
             return None
         }
@@ -101,7 +101,7 @@ protected class TagStreamParser {
                 if (!this.readChunk()) { break }
             }
         }
-        throw Exception("Fail to parse tag ${tag}")
+        throw ParserException("Fail to parse tag ${tag}")
     }
 
     protected func removeTag(tag: String): Unit {

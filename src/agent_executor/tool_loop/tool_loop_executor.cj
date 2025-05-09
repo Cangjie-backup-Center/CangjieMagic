@@ -46,6 +46,8 @@ For example,
 
 All available tools are listed:
 {tools}
+
+Now, select a tool and output it with required format.
 """
 
 private let ANSWER_PROMPT = """
