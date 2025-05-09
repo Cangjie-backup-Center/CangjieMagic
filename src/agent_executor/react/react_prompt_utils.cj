@@ -124,14 +124,10 @@ protected struct ReactPromptUtils {
     }
 
     protected static func buildAgentToolsPrompt(task: AgentTask): String {
-        let allTools = if (task.agent.toolManager.enableFilter) {
-            task.agent.toolManager.filterTool(
-                task.request.question,
-                ToolSearchConfig(chatModel: task.agent.model, number: task.request.maxTool)
-            )
-        } else {
-            task.agent.toolManager.getTools()
-        }
+        let allTools = task.agent.toolManager.filterTool(
+            task.request.question,
+            ToolSearchConfig(chatModel: task.agent.model, number: task.request.maxTool)
+        )
         if (allTools.size == 0) {
             return "# Available Tools\nNo tools"
         }
