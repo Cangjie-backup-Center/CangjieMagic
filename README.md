@@ -1,4 +1,4 @@
-[English version](./README-en.md)
+[English version](./.github/README.md)
 
 ![logo](./docs//logo.png)
 
