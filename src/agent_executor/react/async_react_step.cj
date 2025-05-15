@@ -4,7 +4,6 @@
 package magic.agent_executor.react
 
 import magic.core.*
-import magic.core.agent.AgentTask
 import magic.core.message.{ChatMessage, Dialog}
 import magic.log.LogUtils
 import magic.model.ModelUtils
@@ -13,10 +12,10 @@ import magic.parser.{Tag, TagStreamParser}
 
 import std.collection.{ArrayList, map, collectArray}
 
-class AsyncReactFinalAnswer <: Iterator<String> {
+class AsyncReactAnswer <: Iterator<String> {
     private var finished = false
 
-    AsyncReactFinalAnswer(
+    AsyncReactAnswer(
         let parser: TagStreamParser
     ) {
         if ((this.parser.currTag ?? "") != Tag.ANSWER) {
@@ -30,7 +29,7 @@ class AsyncReactFinalAnswer <: Iterator<String> {
         if (finished) {
             return None
         }
-        if (let Some((content, _isClosed)) <- this.parser.readPartContentBefore(Tag.ANSWER)) {
+        if (let Some((content, _isClosed)) <- this.parser.readContentUntilClosed(Tag.ANSWER)) {
             finished = _isClosed
             return content
         }
@@ -93,8 +92,8 @@ class AsyncReactStep {
         }
     }
 
-    func getAsyncFinalAnswer(): (String, AsyncReactFinalAnswer) {
+    func getAsyncAnswer(): (String, AsyncReactAnswer) {
         let thought = String.join(this.thoughts.toArray(), delimiter: "\n")
-        (thought, AsyncReactFinalAnswer(this.parser))
+        (thought, AsyncReactAnswer(this.parser))
     }
 }

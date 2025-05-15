@@ -6,6 +6,7 @@ package magic.agent_group
 import magic.core.message.Dialog
 import magic.model.ModelUtils
 import magic.log.LogUtils
+import magic.parser.{Tag, WithTag}
 
 import std.collection.ArrayList
 
@@ -25,7 +26,7 @@ The following is the discussion content.
 {discussion}
 
 ## Output Format
-1. If the problem is solved, the output should be formatted as [Answer] ... [/Answer]
+1. If the problem is solved, the output should be formatted as ${Tag.ANSWER} ... ${Tag.ANSWER.getCloseTag()}
 2. Otherwise, output NO-ANSWER
 """
 
@@ -59,12 +60,13 @@ class RoundRobinDiscussGroup <: DiscussGroup {
             case None => return Selection.Failure("LLM model failed")
         }
         LogUtils.info(this.name, msg)
-        if (let Some(answer) <- OutputParserUtils.extractLastSection(msg.content, "[Answer]")) {
-            return Selection.Summary(answer)
-        } else {
+        let answer = Tag.extract(msg.content, Tag.ANSWER) ?? "NO-ANSWER"
+        if (answer.contains("NO-ANSWER")) {
             let selection = Selection.Speaker(members[currSpeakerIndex % members.size])
             currSpeakerIndex += 1
             return selection
+        } else {
+            return Selection.Summary(answer)
         }
     }
 }

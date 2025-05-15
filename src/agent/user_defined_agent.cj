@@ -82,7 +82,7 @@ public abstract class UserDefinedAgent <: AbsAgent {
     /*
      * This method will be used in the future.
      */
-    open public func __CUSTOMIZED_EXECUTION_FUNC__(request: AgentRequest): Option<String> {
+    open public func __CUSTOMIZED_EXECUTION_FUNC__(state: Object): Option<Object> {
         return None
     }
 }

@@ -5,6 +5,7 @@ package magic.agent_executor.react
 
 import magic.core.agent.*
 import magic.core.rag.RetrieverMode
+import magic.agent_executor.common.IteratorWrapper
 import magic.log.LogUtils
 import magic.config.Config
 import magic.parser.WithTag
@@ -47,28 +48,5 @@ public class ReactExecutor <: AgentExecutor {
             }
         }
         return AsyncAgentResponse(IteratorWrapper(agent, fut), execInfo: task.execInfo)
-    }
-}
-
-protected class IteratorWrapper <: Iterator<String> {
-    protected IteratorWrapper(
-        private let agent: Agent,
-        private let workerFut: Future<Iterator<String>>
-    ) { }
-
-    /**
-     * Concatenate all response content and log it finally
-     */
-    private let buffer = StringBuilder()
-
-    override public func next(): Option<String> {
-        let asyncAnswer = workerFut.get()
-        let data = asyncAnswer.next()
-        match (data) {
-            case Some(v) => buffer.append(v)
-            case None =>
-                LogUtils.info(this.agent.name, buffer.toString().withTag(Tag.ANSWER))
-        }
-        return data
     }
 }

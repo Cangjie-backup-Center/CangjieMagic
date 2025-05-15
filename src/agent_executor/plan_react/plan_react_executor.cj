@@ -5,7 +5,7 @@ package magic.agent_executor.plan_react
 
 import magic.core.agent.*
 import magic.utils.*
-import magic.agent_executor.react.{ReactPromptUtils, IteratorWrapper}
+import magic.agent_executor.common.IteratorWrapper
 import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
 import magic.core.message.{ChatMessage, Dialog}

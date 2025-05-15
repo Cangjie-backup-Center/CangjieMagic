@@ -41,30 +41,25 @@ protected struct Tag {
     }
 
     /**
-     * Extract the tag and content from a string
+     * Extract tagged content from a string which is generate by LLMs
      */
     public static func extract(str: String, tag: String): Option<String> {
         if (let Some(start) <- str.lastIndexOf(tag)) {
             let contentStart = start + tag.size
+            // Case 1: the tag is well-formed, i.e., it has both the open tag and close tag
             if (let Some(end) <- str.indexOf(tag.getCloseTag(), contentStart)) {
                 return str[contentStart..end].trimAscii()
             }
-            // Special treatment for the answer tag
-            // because LLM is prone to generate the final answer without a close tag
-            if (tag == Tag.ANSWER) {
-                return str[contentStart..str.size].trimAscii()
+            // Case 2: it only has the open tag and is followed by another tag
+            for (anotherTag in Tag.ALL_TAGS) {
+                if (let Some(end) <- str.indexOf(anotherTag.getCloseTag(), contentStart)) {
+                    return str[contentStart..end].trimAscii()
+                }
             }
+            // Case 3: it only has the open tag
+            // LLMs are prone to generate output without a close tag
+            return str[contentStart..str.size].trimAscii()
         }
         return None
     }
 }
-
-func getTagSymbol(tag: String): (String, String) {
-    if (tag.startsWith("[")) {
-        return ("[", "]")
-    } else if (tag.startsWith("<")) {
-        return ("<", ">")
-    }
-    throw Exception("Invalid tag symbol `${tag}`")
-}
-

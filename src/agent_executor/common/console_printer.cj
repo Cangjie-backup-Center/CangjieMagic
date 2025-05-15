@@ -1,18 +1,18 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent_executor.react
+package magic.agent_executor.common
 
+import magic.parser.*
 import magic.core.agent.AsyncAgentResponse
 import magic.utils.{Color, Colorful}
-import magic.parser.*
 
 import std.console.Console
 
 /**
  * Dumper the verbose react internal information for debugging
  */
-public class ConsoleReactPrinter <: TagStreamVisitor {
+public class ConsolePrinter <: TagStreamVisitor {
     public init(chunks: Iterator<String>) {
         super(chunks)
     }
@@ -63,7 +63,7 @@ public class ConsoleReactPrinter <: TagStreamVisitor {
 
     public static func print(asyncResponse: AsyncAgentResponse, verbose!: Bool = false): Unit {
         if (verbose) {
-            let dumper = ConsoleReactPrinter(asyncResponse)
+            let dumper = ConsolePrinter(asyncResponse)
             dumper.dump()
         }
         for (data in asyncResponse) {
