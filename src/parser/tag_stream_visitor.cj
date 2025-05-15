@@ -33,7 +33,7 @@ public abstract class TagStreamVisitor {
             _currTag = tag
             this.onTag(tag)
             this.parser.removeTag(tag)
-            while (let Some((content, isClosed)) <- this.parser.readPartContentBefore(tag)) {
+            while (let Some((content, isClosed)) <- this.parser.readContentUntilClosed(tag)) {
                 this.onChunk(content)
                 if (isClosed) { break }
             }

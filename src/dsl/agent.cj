@@ -166,8 +166,16 @@ class AgentAttr <: Attr {
     }
 
     prop executor: String {
-        get() { getString("executor") ?? "react" }
+        get() {
+            if (this.hasExecutionDSL) {
+                return "dsl-executor"
+            } else {
+                getString("executor") ?? "react"
+            }
+        }
     }
+
+    var hasExecutionDSL = false
 
     prop description: String {
         get() { getString("description") ?? "" }
@@ -277,6 +285,12 @@ public macro agent(input: Tokens): Tokens {
         }
         agentAttr.hasPrompt = true
     }
+    for (m in getChildMessages("execution")) {
+        if (m.hasItem("executionDSL")) {
+            agentAttr.hasExecutionDSL = m.getBool("executionDSL")
+        }
+    }
+
     return transformAgent(input, agentAttr)
 }
 
@@ -294,6 +308,11 @@ public macro agent(attr: Tokens, input: Tokens): Tokens {
             agentAttr.solidPrompt = m.getBool("prompt:solid")
         }
         agentAttr.hasPrompt = true
+    }
+    for (m in getChildMessages("execution")) {
+        if (m.hasItem("defineExecution")) {
+            agentAttr.hasExecutionDSL = m.getBool("defineExecution")
+        }
     }
 
     let content = transformAgent(input, agentAttr)

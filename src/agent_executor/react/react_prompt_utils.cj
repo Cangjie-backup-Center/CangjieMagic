@@ -4,7 +4,7 @@
 package magic.agent_executor.react
 
 import magic.core.*
-import magic.core.agent.AgentTask
+import magic.agent_executor.common.AgentTask
 import magic.core.message.*
 import magic.log.LogUtils
 import magic.prompt.Template
@@ -124,14 +124,11 @@ protected struct ReactPromptUtils {
     }
 
     protected static func buildAgentToolsPrompt(task: AgentTask): String {
-        let allTools = task.agent.toolManager.filterTool(
-            task.request.question,
-            ToolSearchConfig(chatModel: task.agent.model, number: task.request.maxTool)
-        )
-        if (allTools.size == 0) {
+        let tools = task.availableTools
+        if (tools.size == 0) {
             return "# Available Tools\nNo tools"
         }
-        let toolStringArr = allTools |> map { t: Tool => t.toString() } |> collectArray
+        let toolStringArr = tools |> map { t: Tool => t.toString() } |> collectArray
         let str = String.join(toolStringArr, delimiter: ",\n")
         return "# Available Tools\n[\n ${str} \n]\n---end of tools---"
     }

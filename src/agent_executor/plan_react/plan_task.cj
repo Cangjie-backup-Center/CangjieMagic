@@ -4,6 +4,7 @@
 package magic.agent_executor.plan_react
 
 import magic.core.agent.*
+import magic.agent_executor.common.AgentTask
 
 protected class PlanTask <: AgentTask {
     private var _subtasks: Option<Array<Subtask>>

@@ -9,6 +9,7 @@ import magic.parser.OutputParserUtils
 import magic.core.agent.*
 import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
 import magic.model.ModelUtils
+import magic.parser.{Tag, WithTag}
 
 import std.collection.ArrayList
 
@@ -32,7 +33,7 @@ The following are agent involved in the discussion.
 
 ## Output Format
 1. If the problem is solved, there is no need to select the agent and return the final answer.
-   The output should be formatted as [Answer] ... [/Answer]
+   The output should be formatted as ${Tag.ANSWER} ... ${Tag.ANSWER.getCloseTag()}
 1. If an agent select, The output should be formatted as [Selection] <agent-name> [/Selection]
 
 ## Discussion
@@ -77,11 +78,11 @@ class AutoDiscussGroup <: DiscussGroup {
             case None => return Selection.Failure("LLM response error")
         }
         LogUtils.info(name, msg)
-        if (let Some(answer) <- OutputParserUtils.extractLastSection(msg.content, "[Answer]")) {
+        if (let Some(answer) <- Tag.extract(msg.content, Tag.ANSWER)) {
             return Selection.Summary(answer)
         }
 
-        if (let Some(name) <- OutputParserUtils.extractLastSection(msg.content, "[Selection]")) {
+        if (let Some(name) <- Tag.extract(msg.content, "[Selection]")) {
             if (let Some(idx) <- findAgent(name)) {
                 currSpeakerIndex = idx
                 return Selection.Speaker(members[idx])

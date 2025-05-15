@@ -16,7 +16,8 @@ import std.sync.ReentrantMutex
  */
 public class AgentExecutionInfo {
     /**
-     * Internal chat history between the agent and llm
+     * Internal chat messages between the agent and llm
+     * These messages represent the execution traces
      */
     public let dialog: Dialog
 
