@@ -1,6 +1,8 @@
 [English version](./.github/README.md)
 
-![logo](./docs//logo.png)
+<div align="center">
+  <img src="https://raw.gitcode.com/user-images/assets/4883625/129822f9-5211-43ec-a8b3-3946eb515c17/cj_magic_logo.png" style="width:300px" />
+</div>
 
 # Cangjie Magic: Make Apps Grow Intelligence and Creativity
 ---
