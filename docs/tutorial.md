@@ -15,6 +15,7 @@
     - [工具函数编写](#工具函数编写)
     - [使用工具和 MCP 服务器](#使用工具和-mcp-服务器)
   - [规划](#规划)
+    - [Agent 执行 DSL（实验）](#agent-执行-dsl实验)
   - [外部知识](#外部知识)
   - [示例](#示例)
     - [示例 1: 命令行助手 Agent](#示例-1-命令行助手-agent)
@@ -596,6 +597,96 @@ class Foo{ }
 @agent[executor: "react"]
 class Bar{ }
 ```
+
+### Agent 执行 DSL（实验）
+
+除了直接使用 Magic 预先提供的规划方法外，还可以使用规划 DSL 去更细粒度地控制 Agent 执行过程。
+
+**Agent Execution DSL 定义**：一种用于定义 LLM Agent 执行流程的“编程语言”，通过组合操作实现复杂策略
+
+- **避免重复代码**：避免手写冗余模板代码
+- **灵活定制**：能够轻易编写复杂的规划策略
+
+**基本规则**
+
+- 规划 DSL 在 `@agent` 内部 `@execution` 中使用；当使用规划 DSL 后，将忽略 `executor` 属性的配置。
+- 管道符 `|>` 串联多个规划操作
+- Agent 执行状态是*一个 Prompt 序列*
+  - 每次令 LLM 执行完一个操作后，操作结果将添加到这个 Prompt 序列中
+
+**使用示例**
+
+```swift
+@agent class Foo {
+  @execution(
+    plan |> loop(think |> action) |> answer
+  )
+}
+```
+
+流程图示
+
+```
+             plan         -> think         -> action ->       think -> ... -> answer
+| SysPrompt | -> | SysPrompt | -> | SysPrompt |        | SysPrompt |
+                 | Plan: ... |    | Plan: ... |        | Plan: ... |
+                                  | Think: ... |       | Think: ... |
+                                                       | Action: ... |
+                                                       | Result: ... |
+```
+
+规划操作是从已有的规划方法中提取而来，将规划中常用的逻辑抽象为可组合的操作，包括三类：*基础操作*、*任务分解操作*、*条件控制操作*。
+
+**基础操作速览**
+
+| 操作符      | 作用             |
+|-------------|----------------|
+| `think`     | 生成推理步骤     |
+| `action`    | 选择并执行工具   |
+| `answer`    | 返回最终答案     |
+| `plan`      | 制定计划     |
+| `loop`      | 循环内部操作序列 |
+| `tool`      | 依次执行工具函数序列，工具的参数由 LLM 自动生成 |
+| `done`      | 检查是否终止     |
+
+**复杂操作：任务分解&合并**
+
+```swift
+@agent class ResearchAssistant {
+  @execution(
+    divide |> each(tool(web_search)) |> summary |> answer
+  )
+  @tool
+  func web_search(...) { ... }
+}
+```
+
+| 操作符      | 作用             |
+|-------------|----------------|
+| `divide` | 由 LLM 拆分任务为子问题，子问题数由 LLM 自动决定 |
+| `each` | 处理子任务 | 
+| `summary` | 汇总子任务结果 |
+
+**复杂操作：条件控制**
+
+```swift
+@agent class Assistant {
+  @execution(
+    switch(
+      onCase("问题是询问天气？", tool(weather_api)),
+      onCase("问题是关于订单查询？", tool(db_query |> db_summary)),
+      otherwise(think |> answer)
+    )
+  )
+}
+```
+
+- `switch` 接受多个 `onCase` 子句
+- 每个 `onCase` 子句由一个条件（自然语言表示）和操作序列组成
+    - 当 `onCase` 中条件成立（根据当前执行状态），对应的操作序列继续执行
+    - `onCase` 子句由上往下依次执行
+- 若没有 `onCase` 成立，则执行 `otherwise` 子句
+
 
 ## 外部知识
 

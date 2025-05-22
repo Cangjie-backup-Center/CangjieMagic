@@ -113,7 +113,7 @@ protected class TagStreamParser {
     /**
      * Return part content and whether the close tag is read
      */
-    protected func readPartContentBefore(tag: String): Option<(String, Bool)> {
+    protected func readContentUntilClosed(tag: String): Option<(String, Bool)> {
         if (finished) {
             if (this.readChunk()) {
                 LogUtils.debug("Tag stream is finished but the stream is not finished")

@@ -8,6 +8,7 @@ import magic.agent_executor.naive.NaiveExecutor
 import magic.agent_executor.react.ReactExecutor
 import magic.agent_executor.plan_react.PlanReactExecutor
 import magic.agent_executor.tool_loop.ToolLoopExecutor
+import magic.agent_executor.dsl.DslExecutor
 
 import std.collection.ArrayList
 import magic.core.agent.AgentExecutionException
@@ -46,6 +47,8 @@ public struct AgentExecutorManager {
             return PlanReactExecutor()
         } else if (name == "tool-loop") {
             return ToolLoopExecutor()
+        } else if (name == "dsl-executor") {
+            return DslExecutor()
         }
         // react with a loop number, like react:5
         if (name.startsWith("react:") || name.startsWith("tool-loop:")) {

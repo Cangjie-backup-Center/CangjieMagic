@@ -3,8 +3,9 @@
  */
 package magic.agent_executor.react
 
-import magic.core.agent.{Agent, AgentTask, AgentExecutionException}
+import magic.core.agent.{Agent, AgentExecutionException}
 import magic.core.tool.{Tool, ToolManager, ToolException}
+import magic.agent_executor.common.AgentTask
 import magic.model.ModelUtils
 import magic.parser.{OutputParserUtils, ParserException}
 import magic.core.message.ChatMessage

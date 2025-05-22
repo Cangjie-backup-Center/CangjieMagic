@@ -5,6 +5,7 @@ package magic.agent_executor.naive
 
 import magic.core.agent.*
 import magic.utils.*
+import magic.agent_executor.common.AgentTask
 import magic.agent_executor.react.ReactPromptUtils
 import magic.log.LogUtils
 import magic.core.message.{ChatMessage, Dialog}

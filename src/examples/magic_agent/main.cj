@@ -6,7 +6,7 @@ package magic.examples.magic_agent
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
-import magic.agent_executor.react.ConsoleReactPrinter
+import magic.agent_executor.common.ConsolePrinter
 
 import log.LogLevel
 import std.console.Console
@@ -91,5 +91,5 @@ main() {
     let agent = MagicAgent()
     let q = "..."
     let asyncResp = agent.asyncChat(AgentRequest(q, verbose: true))
-    ConsoleReactPrinter.print(asyncResp, verbose: true)
+    ConsolePrinter.print(asyncResp, verbose: true)
 }

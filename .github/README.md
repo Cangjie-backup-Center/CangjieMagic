@@ -1,4 +1,6 @@
-![logo](./docs//logo.png)
+<div align="center">
+  <img src="https://raw.gitcode.com/user-images/assets/4883625/129822f9-5211-43ec-a8b3-3946eb515c17/cj_magic_logo.png" style="width:300px" />
+</div>
 
 # Cangjie Magic: Make Apps Grow Intelligence and Creativity
 ---
@@ -70,13 +72,13 @@ import magic.dsl.*
 import magic.prelude.*  
 ```  
 
-## [Tutorial](./docs/tutorial-en.md)  
+## [Tutorial](../docs/tutorial-en.md)  
 
-👀 See [docs/tutorial-en.md](./docs/tutorial-en.md) for details.  
+👀 See [docs/tutorial-en.md](../docs/tutorial-en.md) for details.  
 
-## [API Reference](./docs/api_reference.md)  
+## [API Reference](../docs/api_reference.md)  
 
-👀 See [docs/api_reference.md](./docs/api_reference.md) for details.  
+👀 See [docs/api_reference.md](../docs/api_reference.md) for details.  
 
 ## Additional Build Configuration Notes  
 
@@ -93,7 +95,7 @@ The project's `cjpm.toml` provides the following conditional compilation options
 
 **📌 Additional Notes**  
 
-- If building `faiss`, `sqlite`, or `llamacpp`, you need to compile the corresponding binary libraries (see [third_party_libs.md](./docs/third_party_libs.md)), place them in a directory (e.g., `./ffi_libs`), and modify `cjpm.toml`:  
+- If building `faiss`, `sqlite`, or `llamacpp`, you need to compile the corresponding binary libraries (see [third_party_libs.md](../docs/third_party_libs.md)), place them in a directory (e.g., `./ffi_libs`), and modify `cjpm.toml`:  
     ```toml  
     [ffi.c]  
       sqlite = { path = "./ffi_libs/" }  

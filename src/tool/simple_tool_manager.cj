@@ -32,17 +32,14 @@ private class FoundTool {
 private const FILTER_TOOL_PROMPT = """
 Objective: Select the most relevant tool(s) for a given user question from a predefined list.
 
-# Instructions:
+# Instructions
 
 Analyze the user's question and the provided list of tools.
 For each tool, evaluate its relevance to the question based on its name and description.
 Return the top {number} most relevant tools (if any), ranked by relevance. If no tool fits, return "None."
 Justify your selections with a brief reasoning.
 
-# Input:
-
-User Question: {question}
-Available Tools:
+# Available Tools
 
 {tools}
 ...
@@ -118,6 +115,9 @@ Output:
   ]
 }
 ```
+
+# Input
+User Question: {question}
 """
 
 private type InMemSemanticMap = SemanticMap<InMemoryVectorDatabase, SimpleIndexMap, String>
