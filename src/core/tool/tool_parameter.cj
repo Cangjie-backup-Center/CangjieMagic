@@ -3,7 +3,7 @@
  */
 package magic.core.tool
 
-public import magic.jsonable.TypeSchema
+import magic.jsonable.TypeSchema
 
 public struct ToolParameter {
     public let name: String

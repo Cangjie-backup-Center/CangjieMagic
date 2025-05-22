@@ -19,12 +19,13 @@ public struct OutputParserUtils {
         }
         if (let Some(start) <- found) {
             let contentStart = start + langStartMark.size
+            // Code blocks may be nested, like ```plain ```json ... ``` ```
             var nested = 0
             var currStart = contentStart
             while (let Some(pos) <- str.indexOf(langEndMark, currStart)) {
                 // Check whether ``` or ```xxx is found
                 let posAfterEndMark = pos + langEndMark.size
-                // Case 1: ``` is found
+                // Case 1: ``` is found, which is a close mark
                 if (posAfterEndMark == str.size ||
                     str[posAfterEndMark].isAsciiWhiteSpace()) {
                     if (nested == 0) {
@@ -32,7 +33,7 @@ public struct OutputParserUtils {
                     } else {
                         nested -= 1
                     }
-                } else { // Case 2: ```xxx is found
+                } else { // Case 2: ```xxx is found, which means a new nested code block starts
                     nested += 1
                 }
                 currStart = posAfterEndMark
@@ -47,23 +48,6 @@ public struct OutputParserUtils {
 
     public static func extractFirstCode(str: String, lang: String): Option<String> {
         return extractCode(str, lang, last: false)
-    }
-
-    public static func extractLastSection(str: String, section: String): Option<String> {
-        let sectionName = if (section.startsWith("[") && section.endsWith("]")) {
-            section[1..section.size-1]
-        } else {
-            section
-        }
-        let sectionStart = "[${sectionName}]"
-        let sectionEnd = "[/${sectionName}]"
-        if (let Some(start) <- str.lastIndexOf(sectionStart)) {
-            let contentStart = start + sectionStart.size
-            if (let Some(end) <- str.indexOf(sectionEnd, contentStart)) {
-                return str[contentStart..end].trimAscii()
-            }
-        }
-        return None  // The target section is not found
     }
 
     public static func parseToolRequest(str: String): ToolRequest {

@@ -31,7 +31,7 @@ public class DispatchAgent <: BaseAgent {
         if (let Some(agent) <- this.doSelect(request)) {
             if (request.verbose) {
                 let execInfo = AgentExecutionInfo()
-                execInfo.verboseChannel.put("Dispatch to the agent: ${agent.name}".withTag(Tag.INFO))
+                execInfo.verboseChannel.put("Dispatch to the agent: ${agent.name}", Tag.INFO)
                 request.execInfo = execInfo
             }
             return agent.asyncChat(request)

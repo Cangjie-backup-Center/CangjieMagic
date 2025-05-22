@@ -3,7 +3,18 @@
  */
 package magic.parser
 
+import magic.utils.StringExt
+
 protected interface WithTag { }
+
+private func getTagSymbol(tag: String): (String, String) {
+    if (tag.startsWith("[")) {
+        return ("[", "]")
+    } else if (tag.startsWith("<")) {
+        return ("<", ">")
+    }
+    throw Exception("Invalid tag symbol `${tag}`")
+}
 
 /**
  * Add auxiliary methods to wrap strings with react tags.
@@ -16,15 +27,40 @@ extend String <: WithTag {
         throw Exception("Invalid tag name `${this}`")
     }
 
+    /**
+     * Wrap the string with the specified tag if necessary
+     */
     public func withTag(tag: String): String {
-        let (left, right) = getTagSymbol(tag)
-
-        let tagName = if (tag.startsWith(left) && tag.endsWith(right)) {
-            tag[1..tag.size-1]
+        let closeTag = tag.getCloseTag()
+        let content = this.trimAscii()
+        if (!content.startsWith(tag)) {
+            return "${tag} ${content} ${closeTag}"
         } else {
-            throw Exception("Invalid tag name `${tag}`")
+            if (content.endsWith(closeTag)) {
+                return content
+            } else {
+                return "${content} ${closeTag}"
+            }
         }
+    }
 
-        return "${left}${tagName}${right} ${this} ${left}/${tagName}${right}"
+    /**
+     * Remove the specified tag from the string if necessary
+     */
+    public func withoutTag(tag: String): String {
+        var content = this.trimAscii()
+        content = content.removePrefix(tag)
+        content = content.removeSuffix(tag.getCloseTag())
+        return content.trimAscii()
+    }
+
+    public func withoutTag(): String {
+        var content = this.trimAscii()
+        for (tag in Tag.ALL_TAGS) {
+            if (content.startsWith(tag)) {
+                return content.withoutTag(tag)
+            }
+        }
+        return this
     }
 }

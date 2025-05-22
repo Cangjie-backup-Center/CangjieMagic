@@ -1,4 +1,4 @@
-# User Tutorial  
+# User Tutorial
 
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
@@ -16,6 +16,7 @@
     - [Writing Tool Functions](#writing-tool-functions)
     - [Using Tools and MCP Servers](#using-tools-and-mcp-servers)
   - [Planning](#planning)
+    - [Agent Execution DSL (Experimental)](#agent-execution-dsl-experimental)
   - [External Knowledge](#external-knowledge)
   - [Examples](#examples)
     - [Example 1: CLI Assistant Agent](#example-1-cli-assistant-agent)
@@ -42,43 +43,43 @@
 
 
 
-The Cangjie Agent DSL is a domain-specific language designed for defining and cooperating Agents. It enables developers to enhance Agent capabilities through structured system prompts, tools, and collaborative strategies. This manual introduces how to use the various features of the Cangjie Agent DSL with examples to help users get started quickly.  
+The Cangjie Agent DSL is a domain-specific language designed for defining and cooperating Agents. It enables developers to enhance Agent capabilities through structured system prompts, tools, and collaborative strategies. This manual introduces how to use the various features of the Cangjie Agent DSL with examples to help users get started quickly.
 
-The Cangjie Agent DSL is implemented as an embedded DSL (eDSL) within the Cangjie language, leveraging metaprogramming mechanisms. This means that code written in the Agent DSL is ultimately transformed into standard Cangjie code and compiled by the Cangjie compiler.  
+The Cangjie Agent DSL is implemented as an embedded DSL (eDSL) within the Cangjie language, leveraging metaprogramming mechanisms. This means that code written in the Agent DSL is ultimately transformed into standard Cangjie code and compiled by the Cangjie compiler.
 
-## Agent Definition  
+## Agent Definition
 
-Currently, we use the `@agent` macro to decorate a `class` type to define an Agent.  
+Currently, we use the `@agent` macro to decorate a `class` type to define an Agent.
 
 ```cangjie
 @agent class Foo { }
-```  
+```
 
-The `@agent` macro supports the following attributes. Refer to the corresponding sections for details.  
+The `@agent` macro supports the following attributes. Refer to the corresponding sections for details.
 
-| Attribute | Value Type | Description |  
-|-----------|------------|-------------|  
-| `description` | `String` | A functional description of the Agent. If not set, the LLM will automatically summarize it from the system prompt. |  
-| `model` | `String` | Configures the LLM model service to use. Defaults to `gpt-4o`. |  
-| `tools` | `Array` | Configures external tools available to the Agent. |  
-| `mcp` | `Array` | Configures the MCP servers to connect to. |  
-| `rag` | `Map` | Configures external knowledge sources. |  
-| `memory` | `Bool` | Whether to enable memory (saving Agent conversation history). Currently, memory is non-persistent (in-memory only). Defaults to `false`. |  
-| `executor` | `String` | The planning mode. Defaults to `react`. |  
-| `temperature` | `Float` | The temperature value used by the Agent's LLM. Defaults to `0.5`. |  
-| `enableToolFilter` | `Bool` | Enables tool filtering, allowing the Agent to automatically select suitable tools based on the input question. Defaults to `false`. |  
-| `dump` | `Bool` | Debugging flag to print the transformed AST of the Agent. Defaults to `false`. |  
+| Attribute | Value Type | Description |
+|-----------|------------|-------------|
+| `description` | `String` | A functional description of the Agent. If not set, the LLM will automatically summarize it from the system prompt. |
+| `model` | `String` | Configures the LLM model service to use. Defaults to `gpt-4o`. |
+| `tools` | `Array` | Configures external tools available to the Agent. |
+| `mcp` | `Array` | Configures the MCP servers to connect to. |
+| `rag` | `Map` | Configures external knowledge sources. |
+| `memory` | `Bool` | Whether to enable memory (saving Agent conversation history). Currently, memory is non-persistent (in-memory only). Defaults to `false`. |
+| `executor` | `String` | The planning mode. Defaults to `react`. |
+| `temperature` | `Float` | The temperature value used by the Agent's LLM. Defaults to `0.5`. |
+| `enableToolFilter` | `Bool` | Enables tool filtering, allowing the Agent to automatically select suitable tools based on the input question. Defaults to `false`. |
+| `dump` | `Bool` | Debugging flag to print the transformed AST of the Agent. Defaults to `false`. |
 
-## Writing System Prompts  
+## Writing System Prompts
 
-The core of every Agent is its system prompt, which defines its role and execution steps, enabling the LLM to answer questions more accurately and efficiently. The `@prompt` macro is used to define the system prompt for an Agent.  
+The core of every Agent is its system prompt, which defines its role and execution steps, enabling the LLM to answer questions more accurately and efficiently. The `@prompt` macro is used to define the system prompt for an Agent.
 
-- Within the `@prompt` macro's scope, all string literals (including interpolated strings) are concatenated into a complete system prompt.  
-- Functions and member variables in Cangjie can be accessed within `@prompt`.  
-- Each Agent can have at most one `@prompt` definition.  
+- Within the `@prompt` macro's scope, all string literals (including interpolated strings) are concatenated into a complete system prompt.
+- Functions and member variables in Cangjie can be accessed within `@prompt`.
+- Each Agent can have at most one `@prompt` definition.
 
-**Example: String Concatenation**  
-In the following code, three strings are concatenated as the Agent's system prompt. The third interpolated string calls the function `bar()`.  
+**Example: String Concatenation**
+In the following code, three strings are concatenated as the Agent's system prompt. The third interpolated string calls the function `bar()`.
 
 ```cangjie
 @agent
@@ -89,9 +90,9 @@ class Foo {
         "balabala ${bar()}"
     )
 }
-```  
+```
 
-**Example: Accessing Member Variables**  
+**Example: Accessing Member Variables**
 
 ```cangjie
 @agent
@@ -109,32 +110,32 @@ class Calculator {
 }
 
 let calculator = Calculator(name: "aha", version: 1)
-```  
+```
 
-The `@prompt` macro supports the `include` attribute, which takes a file path string. The file's content will be used as the Agent's system prompt.  
-- When `include` is set, string literals inside `@prompt` are ignored.  
-- If the file does not exist, an exception is thrown.  
+The `@prompt` macro supports the `include` attribute, which takes a file path string. The file's content will be used as the Agent's system prompt.
+- When `include` is set, string literals inside `@prompt` are ignored.
+- If the file does not exist, an exception is thrown.
 
-**Example: Using an External File for the System Prompt**  
+**Example: Using an External File for the System Prompt**
 
 ```cangjie
 @agent
 class Foo {
     @prompt[include: "./a.md"]()
 }
-```  
+```
 
-### Using Prompt Patterns  
+### Using Prompt Patterns
 
-Well-structured prompts significantly improve LLM performance. Defining a unified prompt syntax helps developers write more structured prompts.  
+Well-structured prompts significantly improve LLM performance. Defining a unified prompt syntax helps developers write more structured prompts.
 
-**Using Prompt Patterns**  
+**Using Prompt Patterns**
 
-The `@prompt` macro supports the `pattern` attribute, which takes a prompt pattern type. When using a pattern, the `@prompt` scope must contain *prompt elements* conforming to the pattern rather than string literals.  
+The `@prompt` macro supports the `pattern` attribute, which takes a prompt pattern type. When using a pattern, the `@prompt` scope must contain *prompt elements* conforming to the pattern rather than string literals.
 
-⚠️Note: The `include` and `pattern` attributes are mutually exclusive; setting both will raise an exception.  
+⚠️Note: The `include` and `pattern` attributes are mutually exclusive; setting both will raise an exception.
 
-**Example: Using a Prompt Pattern**  
+**Example: Using a Prompt Pattern**
 
 ```cangjie
 @agent
@@ -145,9 +146,9 @@ class Foo {
         expectation: "Generate a reasonable travel itinerary, including time, attractions, and transportation"
     )
 }
-```  
+```
 
-The following prompt patterns are currently available:  
+The following prompt patterns are currently available:
 
 <table>
     <tr>
@@ -275,15 +276,15 @@ The following prompt patterns are currently available:
     </tr>
 </table>
 
-### Custom Prompt Patterns  
+### Custom Prompt Patterns
 
-The `@promptPattern` macro decorates a `class` to define a new prompt pattern. Inside the decorated class, the `@element` macro defines prompt elements.  
-- Each element must be of type `String`.  
-- The `description` attribute explains the element and does not affect the final prompt.  
+The `@promptPattern` macro decorates a `class` to define a new prompt pattern. Inside the decorated class, the `@element` macro defines prompt elements.
+- Each element must be of type `String`.
+- The `description` attribute explains the element and does not affect the final prompt.
 
-The prompt pattern type must implement the `toString` method, which constructs the prompt.  
+The prompt pattern type must implement the `toString` method, which constructs the prompt.
 
-**Example: Custom Prompt Pattern**  
+**Example: Custom Prompt Pattern**
 
 ```cangjie
 @promptPattern
@@ -301,11 +302,11 @@ class APE {
         return "...${action}...${purpose}...${expectation}..."
     }
 }
-```  
+```
 
-## Agent Interaction Methods  
+## Agent Interaction Methods
 
-Agents defined with `@agent` have a default method `func chat(question: ToString): String` as the interaction entry.  
+Agents defined with `@agent` have a default method `func chat(question: ToString): String` as the interaction entry.
 
 ```cangjie
 @agent class Foo { ... }
@@ -313,21 +314,21 @@ Agents defined with `@agent` have a default method `func chat(question: ToString
 let agent = Foo()
 let result = agent.chat("What's the weather today?")
 println(result)
-```  
+```
 
-Additionally, `chatGet` allows an Agent to return a typed value instead of just a string. If the Agent fails to produce valid data, it returns `None`:  
+Additionally, `chatGet` allows an Agent to return a typed value instead of just a string. If the Agent fails to produce valid data, it returns `None`:
 
 ```cangjie
 func chatGet<T>(question: String): Option<T> where T <: Jsonable<T>
-```  
+```
 
-Here, the `Jsonable` interface ([see section](#jsonable-interface)) ensures type compatibility with JSON objects. Basic types like `Int`, `Int64`, and `String` already implement this interface.  
+Here, the `Jsonable` interface ([see section](#jsonable-interface)) ensures type compatibility with JSON objects. Basic types like `Int`, `Int64`, and `String` already implement this interface.
 
-The `@jsonable` macro customizes types to automatically implement the interface:  
-- `@jsonable` decorates a `class` type, automatically implementing `Jsonable` via code transformation.  
-- Inside the decorated type, `@field` adds descriptions for member variables. If unused, member variables will lack descriptions.  
+The `@jsonable` macro customizes types to automatically implement the interface:
+- `@jsonable` decorates a `class` type, automatically implementing `Jsonable` via code transformation.
+- Inside the decorated type, `@field` adds descriptions for member variables. If unused, member variables will lack descriptions.
 
-**Example: Returning Structured Data**  
+**Example: Returning Structured Data**
 
 ```cangjie
 @jsonable
@@ -344,21 +345,21 @@ let agent = Foo()
 let date = agent.chatGet<MyDate>("When was Huawei founded?")
 println(date.year)
 println(date.month)
-```  
+```
 
-### Input Templates  
+### Input Templates
 
-When defining an Agent with `@agent`, you can specify an *input template*—a question templated with *placeholder variables*. The interaction interface only requires values for these placeholders.  
+When defining an Agent with `@agent`, you can specify an *input template*—a question templated with *placeholder variables*. The interaction interface only requires values for these placeholders.
 
-The `@user` macro defines input templates:  
-- Like `@prompt`, it concatenates all string literals inside as the full input template.  
-- Placeholder variables are written as `{variable}` in the template, where the variable name consists of letters, digits, and underscores.  
-- Like `@prompt`, `@user` supports the `include` attribute (a file path). If set, the file's content becomes the input template.  
+The `@user` macro defines input templates:
+- Like `@prompt`, it concatenates all string literals inside as the full input template.
+- Placeholder variables are written as `{variable}` in the template, where the variable name consists of letters, digits, and underscores.
+- Like `@prompt`, `@user` supports the `include` attribute (a file path). If set, the file's content becomes the input template.
 
-When calling `func chat(variables: Array<(String, ToString)>): String`, placeholder variables and their values must be provided.  
-- If an Agent lacks an input template, calling this method throws an `UnsupportedException`.  
+When calling `func chat(variables: Array<(String, ToString)>): String`, placeholder variables and their values must be provided.
+- If an Agent lacks an input template, calling this method throws an `UnsupportedException`.
 
-**Example: Using an Input Template**  
+**Example: Using an Input Template**
 
 ```cangjie
 @agent
@@ -376,33 +377,33 @@ let area = agent.chat(
     ("length", 3),
     ("width", 4),
 )
-```  
+```
 
-## MCP Protocol and Tools  
+## MCP Protocol and Tools
 
-Tools are functions an Agent can execute during processing. Agent tools come from two sources:  
-- Tool functions written directly in DSL.  
-- Tools provided by MCP servers (MCP servers act as *collections of tools*).  
+Tools are functions an Agent can execute during processing. Agent tools come from two sources:
+- Tool functions written directly in DSL.
+- Tools provided by MCP servers (MCP servers act as *collections of tools*).
 
-### Writing Tool Functions  
+### Writing Tool Functions
 
-The `@tool` macro decorates **top-level functions** or **methods inside Agent classes** with the following attributes:  
+The `@tool` macro decorates **top-level functions** or **methods inside Agent classes** with the following attributes:
 
-- `description`: Describes the tool's functionality (**required**).  
-- `parameters`: Describes function parameter meanings as `<parameter-name>: <parameter-description>` key-value pairs (**optional**).  
-- `filterable`: Whether the tool can be filtered by the Agent (used with `@agent`'s `enableToolFilter`) (**optional**).  
+- `description`: Describes the tool's functionality (**required**).
+- `parameters`: Describes function parameter meanings as `<parameter-name>: <parameter-description>` key-value pairs (**optional**).
+- `filterable`: Whether the tool can be filtered by the Agent (used with `@agent`'s `enableToolFilter`) (**optional**).
 
-Global tool functions must be explicitly specified in the `tools` attribute for the Agent to use them.  
+Global tool functions must be explicitly specified in the `tools` attribute for the Agent to use them.
 
-**Example: Defining and Configuring a Global Tool**  
+**Example: Defining and Configuring a Global Tool**
 
 ```cangjie
 @tool[description: "...",
       parameters: { arg: "..." }]
 func foo(arg: String): String { ... }
-```  
+```
 
-**Example: Defining an Internal Tool**  
+**Example: Defining an Internal Tool**
 
 ```cangjie
 @agent
@@ -411,29 +412,29 @@ class A {
           parameters: { str: "..." }]
     func bar(str: String): String { ... }
 }
-```  
+```
 
-Limitations on tool functions:  
-- Tool functions cannot be called directly like regular functions.  
+Limitations on tool functions:
+- Tool functions cannot be called directly like regular functions.
 
     ```cangjie
     @tool[...]
     func foo() { ... }
 
     foo() // Error: Cannot call tool functions directly
-    ```  
-- Tool parameters must be basic types.  
-- Tool return values must satisfy the `ToString` interface (the method's return value is used as the tool's output).  
+    ```
+- Tool parameters must be basic types.
+- Tool return values must satisfy the `ToString` interface (the method's return value is used as the tool's output).
 
-### Using Tools and MCP Servers  
+### Using Tools and MCP Servers
 
-Agents configure MCP servers via the `mcp` attribute, which takes multiple MCP server configurations. Each configuration uses the following syntax:  
+Agents configure MCP servers via the `mcp` attribute, which takes multiple MCP server configurations. Each configuration uses the following syntax:
 
-- `stdio` transport: `stdio(<command>, <env-kv-pair>*)` (launch command + optional environment variables). Example: `stdio("command and arguments", ENV_1: "value1", ENV_2: "value2")`.  
-- `HTTP/SSE` transport: `http(<url>)` (server address). Example: `http("https://abc.com/mcp")`.  
-- `tools`: Aggregates tool functions into a "virtual MCP server" (`tools(<func-id>+)`). Example: `tools(foo, bar)`.  
+- `stdio` transport: `stdio(<command>, <env-kv-pair>*)` (launch command + optional environment variables). Example: `stdio("command and arguments", ENV_1: "value1", ENV_2: "value2")`.
+- `HTTP/SSE` transport: `http(<url>)` (server address). Example: `http("https://abc.com/mcp")`.
+- `tools`: Aggregates tool functions into a "virtual MCP server" (`tools(<func-id>+)`). Example: `tools(foo, bar)`.
 
-⚠️Note: Tools defined inside an Agent class can be used directly (**without** explicit declaration in the `tools` attribute).  
+⚠️Note: Tools defined inside an Agent class can be used directly (**without** explicit declaration in the `tools` attribute).
 
 ```cangjie
 @agent[
@@ -445,9 +446,9 @@ Agents configure MCP servers via the `mcp` attribute, which takes multiple MCP s
     ]
 ]
 class Foo { ... }
-```  
+```
 
-Alternatively, MCP tools can be configured via API:  
+Alternatively, MCP tools can be configured via API:
 
 ```cangjie
 // Initialize MCP client
@@ -455,22 +456,22 @@ let client = MCPClient("node", ["args"])
 let agent = SomeAgent()
 // Add MCP tools
 agent.toolManager.addTools(client.getTools())
-```  
+```
 
-⚠️Note: Currently, MCP servers only support tool-related protocols.  
+⚠️Note: Currently, MCP servers only support tool-related protocols.
 
-**The following tool/MCP configuration syntax is deprecated:**  
+**The following tool/MCP configuration syntax is deprecated:**
 
-Tool function configuration:  
+Tool function configuration:
 
 ```cangjie
 @agent[
     tools: [toolA, toolB]
 ]
 class Foo { ... }
-```  
+```
 
-MCP configuration syntax for `stdio` and `HTTP SSE`:  
+MCP configuration syntax for `stdio` and `HTTP SSE`:
 
 ```cangjie
 @agent[
@@ -481,7 +482,7 @@ MCP configuration syntax for `stdio` and `HTTP SSE`:
     ]
 ]
 class Foo { ... }
-```  
+```
 
 ## Planning
 
@@ -504,6 +505,95 @@ class Foo{ }
 @agent[executor: "react"]
 class Bar{ }
 ```
+
+### Agent Execution DSL (Experimental)
+
+In addition to directly using the pre-defined planning methods provided by Magic, you can use the **Execution DSL** (Domain-Specific Language) to control the execution process of an Agent at a finer granularity.
+
+**Definition of Agent Execution DSL**: A "programming language" designed to define the execution flow of an LLM Agent, enabling complex strategies by combining operations.
+
+- **Avoid Repetitive Code**: Eliminates the need for manually writing redundant template code.
+- **Flexible Customization**: Allows easy implementation of sophisticated planning strategies.
+
+**Basic Rules**
+
+- The Planning DSL is used inside `@execution` within an `@agent` block. Once the DSL is applied, the `executor` property configuration is ignored.
+- The pipe operator `|>` chains multiple planning operations.
+- The Agent’s execution state is represented as a *sequence of Prompts*:
+  - After each operation performed by the LLM, the result is appended to this Prompt sequence.
+
+**Example Usage**
+
+```swift
+@agent class Foo {
+  @execution(
+    plan |> loop(think |> action) |> answer
+  )
+}
+```
+
+**Execution Flow Diagram**
+
+```
+             plan         -> think         -> action ->       think -> ... -> answer
+| SysPrompt | -> | SysPrompt | -> | SysPrompt |        | SysPrompt |
+                 | Plan: ... |    | Plan: ... |        | Plan: ... |
+                                  | Think: ... |       | Think: ... |
+                                                       | Action: ... |
+                                                       | Result: ... |
+```
+
+Planning operations are derived from existing planning methods, abstracting common logic into composable actions. They are categorized into three types: *Basic Operations*, *Task Decomposition Operations*, and *Conditional Control Operations*.
+
+**Basic Operations Overview**
+
+| Operator   | Purpose          |
+|------------|----------------|
+| `think`    | Generate reasoning steps |
+| `action`   | Select and execute a tool |
+| `answer`   | Return the final answer |
+| `plan`     | Formulate a plan |
+| `loop`     | Loop through a sequence of internal operations |
+| `tool`     | Execute a sequence of tool functions in order; tool parameters are auto-generated by the LLM |
+| `done`     | Check whether execution should terminate |
+
+**Advanced Operations: Task Decomposition & Merging**
+
+```swift
+@agent class ResearchAssistant {
+  @execution(
+    divide |> each(tool(web_search)) |> summary |> answer
+  )
+  @tool
+  func web_search(...) { ... }
+}
+```
+
+| Operator   | Purpose          |
+|------------|----------------|
+| `divide`   | Task is split into sub-problems by the LLM; the number of sub-tasks is auto-determined |
+| `each`     | Process sub-tasks |
+| `summary`  | Aggregate results from sub-tasks |
+
+**Advanced Operations: Conditional Control**
+
+```swift
+@agent class Assistant {
+  @execution(
+    switch(
+      onCase("Is the question about weather?", tool(weather_api)),
+      onCase("Is the question about order inquiry?", tool(db_query |> db_summary)),
+      otherwise(think |> answer)
+    )
+  )
+}
+```
+
+- `switch` accepts multiple `onCase` clauses.
+- Each `onCase` consists of a condition (expressed in natural language) and an operation sequence:
+  - If the condition holds true (based on the current execution state), the corresponding operation sequence is executed.
+  - `onCase` clauses are evaluated top-down.
+- If no `onCase` condition is met, the `otherwise` clause is executed.
 
 ## External Knowledge
 

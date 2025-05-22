@@ -4,7 +4,7 @@
 package magic.agent_executor.react
 
 import magic.core.*
-import magic.core.agent.AgentTask
+import magic.agent_executor.common.AgentTask
 import magic.core.message.{ChatMessage, Dialog}
 import magic.log.LogUtils
 import magic.model.ModelUtils
@@ -47,7 +47,7 @@ protected class ReactTask <: AgentTask {
                 let observation = tc.invoke(this)
                 this.addAndLogMessage(ChatMessage.assistant(observation.withTag(Tag.OBSERVATION)))
                 if (this.request.verbose) {
-                    this.execInfo.verboseChannel.putObservation(observation)
+                    this.execInfo.verboseChannel.put(observation, Tag.OBSERVATION)
                 }
             case ReactStep.Answer(answer) =>
                 if (answer.thought != "") {
@@ -149,7 +149,7 @@ protected class ReactTask <: AgentTask {
 
     //------------------------------------------------------------
 
-    func asyncRunOnce(): Option<AsyncReactFinalAnswer> {
+    func asyncRunOnce(): Option<AsyncReactAnswer> {
         LogUtils.info(this.agent.name, "Step #${this.step}")
         this.step += 1
         // Add a hint message
@@ -175,7 +175,7 @@ protected class ReactTask <: AgentTask {
                     this.execInfo.verboseChannel.put(Tag.ANSWER.getCloseTag())
                     this.execInfo.verboseChannel.close()
                 }
-                let (thought, asyncAnswer) = asyncReactStep.getAsyncFinalAnswer()
+                let (thought, asyncAnswer) = asyncReactStep.getAsyncAnswer()
                 this.addAndLogMessage(ChatMessage.assistant(thought))
                 return asyncAnswer
             } else {
@@ -212,7 +212,7 @@ protected class ReactTask <: AgentTask {
     /**
      * Summarize an answer according to the react execution history.
      **/
-    func asyncSummarize(): AsyncReactFinalAnswer {
+    func asyncSummarize(): AsyncReactAnswer {
         let messages = [
             ChatMessage.system(ReactPromptUtils.buildReactSummarizePrompt(this))
         ]
@@ -221,12 +221,10 @@ protected class ReactTask <: AgentTask {
         let asyncReactStep = AsyncReactStep(parser)
         if (this.request.verbose) {
             // Put a pair of close tags but does not put the answer
-            this.execInfo.verboseChannel.put(Tag.ANSWER)
-            this.execInfo.verboseChannel.put("\n")
-            this.execInfo.verboseChannel.put(Tag.ANSWER.getCloseTag())
+            this.execInfo.verboseChannel.put("", Tag.ANSWER)
             this.execInfo.verboseChannel.close()
         }
-        let (_, asyncAnswer) = asyncReactStep.getAsyncFinalAnswer()
+        let (_, asyncAnswer) = asyncReactStep.getAsyncAnswer()
         return asyncAnswer
     }
 }

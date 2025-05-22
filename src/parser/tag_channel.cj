@@ -29,30 +29,21 @@ protected class TagChannel <: Iterator<String> {
 
     protected func put(msg: String): Unit {
         this.queue.enqueue(msg)
-    }
-
-    protected func putThought(msg: String): Unit {
-        this.queue.enqueue(msg.withTag(Tag.THOUGHT))
         // Put an empty item to avoid the parser being blocked
         this.queue.enqueue("")
     }
 
-    protected func putAction(msg: String): Unit {
-        this.queue.enqueue(msg.withTag(Tag.ACTION))
-        // Put an empty item to avoid the parser being blocked
-        this.queue.enqueue("")
+    protected func put(msg: String, tag: String): Unit {
+        this.put(msg.withTag(tag))
     }
 
-    protected func putObservation(msg: String): Unit {
+    private func truncateMessage(msg: String): String {
         let runes = msg.toRuneArray()
-        let content = if (runes.size < 100) {
-            msg.withTag(Tag.OBSERVATION)
+        return if (runes.size < 100) {
+            msg
         } else {
-            "${String(runes[..100])}...".withTag(Tag.OBSERVATION)
+            "${String(runes[..100])}..."
         }
-        this.queue.enqueue(content)
-        // Put an empty item to avoid the parser being blocked
-        this.queue.enqueue("")
     }
 
     protected func close(): Unit {
