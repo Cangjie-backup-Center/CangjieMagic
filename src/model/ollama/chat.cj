@@ -8,8 +8,8 @@ import magic.core.model.*
 import magic.core.message.*
 import magic.dsl.jsonable
 import magic.jsonable.*
+import magic.config.Config
 import magic.utils.StringExt
-
 import encoding.json.*
 import std.time.DateTime
 import std.collection.ArrayList
@@ -70,19 +70,26 @@ public class OllamaChatModel <: ChatModel {
     private let model: String
     private let baseURL: String
     private let temperature: Option<Float64>
+    private var _contextLen: Int64
 
     public init(
         model: String,
         baseURL!: String,
-        temperature!: Option<Float64> = None
-    ) {
+        temperature!: Option<Float64> = None,
+        contextLen!: Int64 = Config.defaultContextLen) {
         this.model = model
         this.baseURL = baseURL
         this.temperature = temperature
+        this._contextLen = contextLen
     }
 
     override public prop service: String {
         get() { "ollama" }
+    }
+
+    override public mut prop contextLen: Int64 {
+        get() { _contextLen }
+        set(v) { _contextLen = v }
     }
 
     override public prop name: String {
