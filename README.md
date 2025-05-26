@@ -128,7 +128,7 @@ MCP Server 集合示例：https://gitcode.com/Cangjie-TPC/CangjieMagic-MCPServer
 
 欢迎加入官方开发者讨论者群组，一起交流碰撞创意想法，构建最具创意的Agent应用！
 
-![开发者群组群聊8.jpg](https://cdn-img.gitcode.com/fa/dd/355452f2adda9c0d051640448e406c837774f0045ffcf73d8ae34baf38aadb06.jpg '开发者群组群聊8.jpg')
+![开发者群组群聊9.jpg](https://cdn-img.gitcode.com/ef/fe/3ef7fef9560cc2f6f3a26c8395eca31537da02dd8be4b4ef53f0e388f4c848b6.jpg '开发者群组群聊9.jpg')
 
 ## 教程
 
