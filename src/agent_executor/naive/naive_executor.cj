@@ -38,7 +38,7 @@ public class NaiveExecutor <: AgentExecutor {
     }
 
     public override func run(agent: Agent, request: AgentRequest): AgentResponse {
-        let task = AgentTask(agent, request, dialog:FinityDialog(contextLen:agent.model.contextLen))
+        let task = AgentTask(agent, request, dialog: BoundedDialog(contextLen: agent.model.contextLen))
         let dialog = task.execInfo.dialog
         LogUtils.info("${agent.name} runs")
         dialog.addMessage(getFullDialog(task))

@@ -15,7 +15,7 @@ public open class AgentTask {
     public var step = 0
     public let execInfo: AgentExecutionInfo
 
-    protected init(agent: Agent, request: AgentRequest, initPrompt!: Bool = false, dialog!:?Dialog = None) {
+    protected init(agent: Agent, request: AgentRequest, initPrompt!: Bool = false, dialog!: ?Dialog = None) {
         this.agent = agent
         this.request = request
         this.execInfo = request.execInfo ?? AgentExecutionInfo(agent.executor, dialog:dialog)

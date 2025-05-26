@@ -19,7 +19,7 @@ public class ReactExecutor <: AgentExecutor {
 
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         LogUtils.info("React executor runs ${agent.name}")
-        let task = ReactTask(agent, request, FinityDialog(contextLen: agent.model.contextLen))
+        let task = ReactTask(agent, request, BoundedDialog(contextLen: agent.model.contextLen))
         for (_ in 0..this.loop) {
             if (let Some(resp) <- task.runOnce()) {
                 return resp
@@ -31,7 +31,7 @@ public class ReactExecutor <: AgentExecutor {
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
         LogUtils.info("React executor async runs ${agent.name}")
-        let task = ReactTask(agent, request, FinityDialog(contextLen: agent.model.contextLen))
+        let task = ReactTask(agent, request, BoundedDialog(contextLen: agent.model.contextLen))
         // Create a thread to execute the react task
         let fut: Future<Iterator<String>> = spawn {
             try {
