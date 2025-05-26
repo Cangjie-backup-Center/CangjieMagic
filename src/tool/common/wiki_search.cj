@@ -88,6 +88,11 @@ public func wikiSearch(query: String): String {
 }
 
 class WikiExecutor <: AgentExecutor {
+
+    override public prop name: String {
+        get() {"wiki"}
+    }
+
     public override func run(agent: Agent, request: AgentRequest): AgentResponse {
         let (query, term) = match (rephraseQuery(agent.model, request.question)) {
             case Some(tup) => tup

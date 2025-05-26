@@ -4,7 +4,7 @@
 package magic.core.agent
 
 import magic.core.message.ChatMessage
-
+import magic.parser.{Tag, WithTag}
 /**
  * The asynchronous execution response from an agent executor
  */
@@ -49,7 +49,12 @@ public class AsyncAgentResponse <: Iterator<String> {
             return chunk
         } else {
             if (let Some(info) <- this.execInfo) {
-                info.dialog.addMessage(ChatMessage.assistant(buffer.toString()))
+                if(info.executor.name == "react" || info.executor.name == "plan-react") {
+                    info.dialog.addMessage(ChatMessage.assistant("${Tag.ANSWER}${buffer.toString()}${Tag.ANSWER.getCloseTag()}"))
+                } else {
+                    info.dialog.addMessage(ChatMessage.assistant(buffer.toString()))
+                }
+                
             }
             return None
         }

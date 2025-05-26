@@ -16,6 +16,10 @@ import magic.prompt.Template
 protected class PlanReactExecutor <: AgentExecutor {
     protected PlanReactExecutor() { }
 
+    override public prop name: String {
+        get() {"plan-react"}
+    }
+
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         // Extract necessary knowledge
         let knowledge = knowledgeExtract(agent, request)

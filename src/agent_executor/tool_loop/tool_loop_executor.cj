@@ -26,9 +26,13 @@ public class ToolLoopExecutor <: AgentExecutor {
         private let loop!: Int64 = Config.maxReactNumber
     ) { }
 
+     override public prop name: String {
+        get() {"tool-loop"}
+    }
+
     private func doRun(task: AgentTask): String {
         LogUtils.info("${task.agent.name} runs")
-        var state = ExecutionState(task) 
+        var state = ExecutionState(task)
         try {
             for (_ in 0..this.loop) {
                 state = ExecutionOpSet.action(state)

@@ -5,7 +5,7 @@ package magic.agent_executor.common
 
 import magic.core.agent.*
 import magic.core.tool.{Tool, ToolSearchConfig}
-import magic.core.message.ChatMessage
+import magic.core.message.{ChatMessage, Dialog}
 import magic.log.LogUtils
 
 public open class AgentTask {
@@ -15,10 +15,10 @@ public open class AgentTask {
     public var step = 0
     public let execInfo: AgentExecutionInfo
 
-    protected init(agent: Agent, request: AgentRequest, initPrompt!: Bool = false) {
+    protected init(agent: Agent, request: AgentRequest, initPrompt!: Bool = false, dialog!:?Dialog = None) {
         this.agent = agent
         this.request = request
-        this.execInfo = request.execInfo ?? AgentExecutionInfo()
+        this.execInfo = request.execInfo ?? AgentExecutionInfo(agent.executor, dialog:dialog)
         if (initPrompt) {
             this.execInfo.dialog.addMessage([
                 ChatMessage.system(agent.systemPrompt),

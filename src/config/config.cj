@@ -4,6 +4,7 @@
 package magic.config
 
 import magic.core.model.{ChatModel, EmbeddingModel}
+import magic.core.tokenizer.Tokenizer
 import magic.utils.{exists, setEnv, getEnv}
 
 import log.LogLevel
@@ -33,6 +34,9 @@ public class Config {
 
     public static var defaultChatModel = Option<ChatModel>.None
     public static var defaultEmbeddingModel = Option<EmbeddingModel>.None
+
+    public static var defaultTokenizer = Option<Tokenizer>.None
+    public static var defaultContextLen = 32000
 
     /**
      * Directory of external scripts, like python scripts
