@@ -8,7 +8,7 @@ import std.collection.*
 /**
  * A collection of chat messages
  */
-protected class FinityDialog <: Dialog {
+protected class BoundedDialog <: Dialog {
     private let tokenizer: Tokenizer
     private let contextLen: Int64
     private var curLen: Int64 = 0
@@ -40,7 +40,7 @@ protected class FinityDialog <: Dialog {
     }
 
     public func clone(): Dialog {
-        return FinityDialog(messages: this.messages.toArray().clone(), contextLen: contextLen, tokenizer: tokenizer)
+        return BoundedDialog(messages: this.messages.toArray().clone(), contextLen: contextLen, tokenizer: tokenizer)
     }
 
     public override func addMessage(msg: ChatMessage): Unit {

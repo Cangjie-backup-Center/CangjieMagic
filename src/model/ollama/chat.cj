@@ -87,9 +87,8 @@ public class OllamaChatModel <: ChatModel {
         get() { "ollama" }
     }
 
-    override public mut prop contextLen: Int64 {
+    override public prop contextLen: Int64 {
         get() { _contextLen }
-        set(v) { _contextLen = v }
     }
 
     override public prop name: String {

@@ -7,7 +7,7 @@ import magic.utils.getEnv
 import magic.tokenizer.{TokenizerLoader, TokenizerType}
 import std.collection.{ArrayList, forEach, map, filter, collectArray}
 
-public class PromptBuilder {
+protected class PromptBuilder {
     var _system: ?ChatMessage = None
     var _tokenizer: ?Tokenizer = None
     let _contextLen: Int64

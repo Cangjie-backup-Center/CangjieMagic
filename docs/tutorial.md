@@ -472,10 +472,10 @@ let area = agent.chat(
 
 ### 对话历史
 
-通过指定Dialog作为AgentRequest来将对话历史加入当前的Agent调用中，并通过AgentResponse的execInfo.dialog获取更新后的对话历史
-Dialog会根据全局配置对会话历史进行管理：
- - `ChatModel.contextLen`: 模型上下文长度， Dialog会根据设置的长度来进行对话历史截断; 也可以通过`Config.defaultContextLen`来设置全局变量
- - `Config.defaultTokenizer`: 计算token使用的tokenizer，建议设置为Cl100kTokenizer(见示例)，不建议使用默认值
+通过指定 `Dialog` 作为 `AgentRequest` 的参数来将对话历史加入当前的 Agent 调用中，并通过 `AgentResponse` 的 execInfo.dialog 获取更新后的对话历史。
+`Dialog` 会根据全局配置对会话历史进行管理：
+ - `ChatModel.contextLen`: 模型上下文长度，`Dialog` 会根据设置的长度来进行对话历史截断; 也可以通过 `Config.defaultContextLen` 来设置全局变量
+ - `Config.defaultTokenizer`: 计算 token 使用的 tokenizer，建议设置为 Cl100kTokenizer (见示例)，不建议使用默认值
 
 **示例：对话历史示例**
 ```cangjie
@@ -483,13 +483,13 @@ import magic.tokenizer.Cl100kTokenizer
 import magic.core.agent.{AgentRequest, AgentResponse}
 import magic.core.agent.{AgentRequest, AgentResponse}
 
-// 设置全局tokenizer, 加载词表（Cl100k词表在CangjieMagic/ffi_libs文件夹下）
+// 设置全局 tokenizer, 加载词表（Cl100k 词表在 CangjieMagic/ffi_libs 文件夹下）
 Config.defaultTokenizer = Cl100kTokenizer("./ffi_libs/cl100K_base.tiktoken")
 Config.defaultContextLen = 32000
 var dialog = Dialog()
 let agent = MyAgent()
 let resp = agent.chat(AgentRequest("Hello.", dialog:dialog))
-// 更新Dialog
+// 更新 Dialog
 dialog = resp.execInfo.getOrThrow().dialog
 ```
 
