@@ -36,7 +36,7 @@ public class LlamacppEmbeddingModel <: EmbeddingModel {
         this.baseURL = baseURL
     }
 
-    public func create(embeddingReq: EmbeddingRequest):EmbeddingResponse {
+    public func create(embeddingReq: EmbeddingRequest): EmbeddingResponse {
         let req = JsonObject()
         req.put("content", JsonString(embeddingReq.prompt))
         match (HttpUtils.post("${this.baseURL}/embedding", this.header, req)) {

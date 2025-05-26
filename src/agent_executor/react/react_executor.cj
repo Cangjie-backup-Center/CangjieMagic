@@ -19,10 +19,17 @@ public class ReactExecutor <: AgentExecutor {
 
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         LogUtils.info("React executor runs ${agent.name}")
-        let task = ReactTask(agent, request, BoundedDialog(contextLen: agent.model.contextLen))
+        let task = ReactTask(agent, request)
         for (_ in 0..this.loop) {
             if (let Some(resp) <- task.runOnce()) {
                 return resp
+            }
+            if (let Some(stopInfo) <- task.stopInfo) {
+                if (request.verbose) {
+                    task.execInfo.verboseChannel.close()
+                }
+                LogUtils.info("Task stopped: ${stopInfo.reason}")
+                return AgentResponse(stopInfo.result, execInfo: task.execInfo)
             }
         }
         LogUtils.info("Exceed the max react loop")
@@ -31,13 +38,20 @@ public class ReactExecutor <: AgentExecutor {
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
         LogUtils.info("React executor async runs ${agent.name}")
-        let task = ReactTask(agent, request, BoundedDialog(contextLen: agent.model.contextLen))
+        let task = ReactTask(agent, request)
         // Create a thread to execute the react task
         let fut: Future<Iterator<String>> = spawn {
             try {
                 for (_ in 0..this.loop) {
                     if (let Some(asyncAnswer) <- task.asyncRunOnce()) {
                         return asyncAnswer
+                    }
+                    if (let Some(stopInfo) <- task.stopInfo) {
+                        if (request.verbose) {
+                            task.execInfo.verboseChannel.close()
+                        }
+                        LogUtils.info("Task stopped: ${stopInfo.reason}")
+                        return AsyncAgentResponse([stopInfo.result].iterator(), execInfo: task.execInfo)
                     }
                 }
                 LogUtils.info("Exceed the max react loop")

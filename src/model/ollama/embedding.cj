@@ -42,7 +42,7 @@ public class OllamaEmbeddingModel <: EmbeddingModel {
         this.baseURL = baseURL
     }
 
-    public func create(embeddingReq: EmbeddingRequest):EmbeddingResponse {
+    public func create(embeddingReq: EmbeddingRequest): EmbeddingResponse {
         let req = JsonObject()
         req.put("model", JsonString(model))
         req.put("input", JsonString(embeddingReq.prompt))

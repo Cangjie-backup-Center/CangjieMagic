@@ -60,7 +60,7 @@ public class DashscopeEmbeddingModel <: EmbeddingModel {
         get() { model }
     }
 
-    public func create(embeddingReq: EmbeddingRequest):EmbeddingResponse {
+    public func create(embeddingReq: EmbeddingRequest): EmbeddingResponse {
         let header = HashMap<String, String>([
             ("Content-Type", "application/json"),
             ("Authorization", "Bearer ${this.apiKey}")

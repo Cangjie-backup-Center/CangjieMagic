@@ -36,7 +36,7 @@ Objective: Select the most relevant tool(s) for a given user question from a pre
 
 Analyze the user's question and the provided list of tools.
 For each tool, evaluate its relevance to the question based on its name and description.
-Return the top {number} most relevant tools (if any), ranked by relevance. If no tool fits, return "None."
+Return the top {number} most relevant tools (if any), ranked by relevance. If no tool fits, return an empty list.
 Justify your selections with a brief reasoning.
 
 # Available Tools
@@ -113,6 +113,20 @@ Output:
       "reason": "I need to know today's date to get the accurate weather."
     }
   ]
+}
+```
+
+User Question: "Generate a login page html for me?"
+Available Tools:
+
+PDF Text Extractor: Extracts raw text from PDFs while preserving formatting.
+-----
+Get Time: Retrieves the current date and time
+
+Output:
+```json
+{
+  "relevantTools": [ ]
 }
 ```
 
@@ -256,7 +270,11 @@ public class SimpleToolManager <: ToolManager {
                 try {
                     let json = JsonValue.fromStr(jsonStr)
                     return Response.fromJsonValue(json)
+                } catch(_: JsonableException) {
+                    LogUtils.error("Failed to parse the chat model response `${jsonStr}` as Jsonable")
+                    return None
                 } catch (_: JsonException) {
+                    LogUtils.error("Failed to parse the chat model response `${jsonStr}` as JsonValue")
                     return None
                 }
             }

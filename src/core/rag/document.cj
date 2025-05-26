@@ -82,12 +82,12 @@ public class Document <: Jsonable<Document> & ToString & ToPrompt & Serializable
         return this.serialize().toJson().toString()
     }
 
-    public operator func ==(other: Document):Bool {
+    public operator func ==(other: Document): Bool {
         return this.id == other.id && this.content == other.content && this.metadata == other.metadata
     }
 
     @When[cjc_version < "0.56.4"]
-    public operator func !=(other: Document):Bool {
+    public operator func !=(other: Document): Bool {
         return !(this == other)
     }
 }

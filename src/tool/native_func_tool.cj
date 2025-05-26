@@ -23,6 +23,7 @@ open public class NativeFuncTool <: AbsTool {
                 retType!: TypeSchema = TypeSchema.Str,
                 examples!: Array<String> = [],
                 filterable!: Bool = true,
+                terminal!: Bool = false,
                 execFn!: Option<ExecFn> = None) {
         _name = name
         _description = description
@@ -36,6 +37,9 @@ open public class NativeFuncTool <: AbsTool {
         _fnOpt = execFn
         if (!filterable) {
             this._extra.put("filterable", "false")
+        }
+        if (terminal) {
+            this._extra.put("terminal", "true")
         }
     }
 

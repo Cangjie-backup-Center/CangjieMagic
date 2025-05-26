@@ -49,7 +49,7 @@ public class SimpleIndexMap <: IndexMap<SimpleIndexMap, String> &Serializable<Si
         }
     }
 
-    redef public static func load(filePath:String): SimpleIndexMap {
+    redef public static func load(filePath: String): SimpleIndexMap {
         let bytes: Array<Byte> = File.readFrom(filePath)
         let jsonStr: String = String.fromUtf8(bytes)
         let jv = JsonValue.fromStr(jsonStr)

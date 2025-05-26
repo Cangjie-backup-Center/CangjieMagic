@@ -40,6 +40,10 @@ public struct OnCase {
     }
 }
 
+/**
+ * ExecutionOpSet provides a set of operations for executing in the DslExecutor.
+ * It includes operations like planning, thinking, invoking tools, and handling subtasks.
+ */
 public struct ExecutionOpSet {
     // A special fake tool
     static let ANSWER_TOOL = NativeFuncTool(
@@ -114,8 +118,7 @@ public struct ExecutionOpSet {
             return state
         }
         // Execute the tool
-        let tc = ToolCall(thought: "", request: toolRequest, text: jsonStr)
-        let observation = tc.invoke(state.task)
+        let observation = state.task.invokeTool(toolRequest)
         LogUtils.info(state.task.agent.name, "Observation: ${observation}")
         if (state.task.request.verbose) {
             state.execInfo.verboseChannel.put(observation, Tag.OBSERVATION)
@@ -151,9 +154,7 @@ public struct ExecutionOpSet {
         if (state.done) {
             return state
         }
-        if (state.answer.isNone()) {
-            state.answer = "Task completed!"
-        }
+        state.answer = "Task completed!"
         return state
     }
 
