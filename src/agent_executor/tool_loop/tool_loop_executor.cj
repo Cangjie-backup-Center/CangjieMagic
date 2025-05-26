@@ -37,12 +37,16 @@ public class ToolLoopExecutor <: AgentExecutor {
             for (_ in 0..this.loop) {
                 state = ExecutionOpSet.action(state)
                 if (state.done) {
-                    return state.answer.getOrThrow()
+                    return state.answer
+                }
+                if (let Some(stopInfo) <- state.task.stopInfo) {
+                    LogUtils.info("Task stopped: ${stopInfo.reason}")
+                    return stopInfo.result
                 }
             }
             LogUtils.info("Exceed the max loop")
             state = ExecutionOpSet.answer(state)
-            return state.answer.getOrThrow()
+            return state.answer
         } finally {
             if (task.request.verbose) {
                 task.execInfo.verboseChannel.close()

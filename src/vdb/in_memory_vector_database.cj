@@ -18,7 +18,7 @@ struct VectorWithIndex {
 public class InMemoryVectorDatabase <: VectorDatabase<InMemoryVectorDatabase> {
     let vectorBuffer = ArrayList<VectorWithIndex>()
 
-    public func setVector(index:Int64, vector: Vector): Unit {
+    public func setVector(index: Int64, vector: Vector): Unit {
         vectorBuffer.set(index, VectorWithIndex(index, vector))
     }
 

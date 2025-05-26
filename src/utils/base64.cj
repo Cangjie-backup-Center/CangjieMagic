@@ -12,9 +12,9 @@ public func imageFileToBase64(path: String, head!: Bool = true): String {
     let bytesBuf = readToEnd(file)
     file.close()
     let image = toBase64String(bytesBuf)
-    if(head){
+    if (head) {
         let idx = path.lastIndexOf(".")
-        let fileType:String = match (idx){
+        let fileType: String = match (idx){
             case Some(val) => path[val+1..].toAsciiLower()
             case None => "jpeg"
         }

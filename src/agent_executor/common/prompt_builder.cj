@@ -1,123 +1,118 @@
 package magic.agent_executor.common
 
-import magic.core.tokenizer.*
-import magic.core.message.*
-import magic.log.LogUtils
-import magic.utils.getEnv
+import magic.core.agent.{AgentExecutionException}
+import magic.core.tokenizer.{Tokenizer}
+import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
 import magic.tokenizer.{TokenizerLoader, TokenizerType}
+import magic.log.LogUtils
+
 import std.collection.{ArrayList, forEach, map, filter, collectArray}
 
+/**
+ * A builder for constructing prompts.
+ * This class is used to build the initial prompts for the agent executor.
+ * It usually builds
+ *   - the system prompt (comprising system, retrieval, tool, and memory prompts),
+ *   - the dialogs (conversation history between the agent and user), 
+ *   - and the user prompts (user's questions).
+ */
 protected class PromptBuilder {
-    var _system: ?ChatMessage = None
-    var _tokenizer: ?Tokenizer = None
-    let _contextLen: Int64
-    let _userMsgs: ArrayList<ChatMessage> = ArrayList()
-    let _historyMsgs: ArrayList<ChatMessage> = ArrayList()
+    let tokenizer: Tokenizer
+    let contextLength: Int64
+    var systemMessages = ArrayList<ChatMessage>()
+    let userMessages: ArrayList<ChatMessage> = ArrayList()
+    let dialogMessages: ArrayList<ChatMessage> = ArrayList()
 
-    public init(contextLen: Int64, tokenizer!: ?Tokenizer = None) {
-        this._contextLen = contextLen
-        this._tokenizer = match (tokenizer) {
-            case Some(tk) => tokenizer
-            case None => TokenizerLoader.default()
-        }
+    public init(contextLength: Int64, tokenizer!: Option<Tokenizer> = None) {
+        this.contextLength = contextLength
+        this.tokenizer = tokenizer ?? TokenizerLoader.default()
     }
 
-    public func system(system: String): PromptBuilder {
-        spliceSystemPrompt(system)
-        this
-    }
-
-    public func retrieval(retrieval: String): PromptBuilder {
-        spliceSystemPrompt(retrieval)
-        this
-    }
-
-    public func tool(tool: String): PromptBuilder {
-        spliceSystemPrompt(tool)
-        this
-    }
-
-    public func memory(memory: String): PromptBuilder {
-        spliceSystemPrompt(memory)
-        this
-    }
-
-    private func spliceSystemPrompt(prompt: String): Unit {
-        if (prompt.trimAscii().isEmpty()) {
-            return
-        }
-        if (let Some(sys) <- this._system) {
-            let sc = sys.content
-            this._system = ChatMessage(System, String.join([sc, prompt], delimiter: "\n\n"))
-        } else {
-            this._system = ChatMessage(System, prompt)
-        }
-    }
-
-    public func user(msgs: Array<String>): PromptBuilder {
-        this._userMsgs.appendAll(msgs |> map({msg => ChatMessage(User, msg)}) |> collectArray)
-        this
-    }
-
-    public func user(msgs: Array<ChatMessage>): PromptBuilder {
-        this._userMsgs.appendAll(msgs.clone())
-        this
-    }
-
-    public func history(msgs: Array<ChatMessage>): PromptBuilder {
-        this._historyMsgs.appendAll(msgs.clone())
-        this
-    }
-
-    public func history(dialog: ?Dialog): PromptBuilder {
-        if (let Some(dia) <- dialog) {
-            this._historyMsgs.appendAll(dia.clone() |> collectArray)
+    public func system(prompt: String): PromptBuilder {
+        if (!prompt.trimAscii().isEmpty()) {
+            this.systemMessages.append(ChatMessage.system(prompt))
         }
         this
     }
 
-    private func calLen(message: ?ChatMessage): Int64 {
-        if (let Some(msg) <- message) {
-            calLen(msg.content)
-        } else {
-            0
-        }
+    public func retrieval(prompt: String): PromptBuilder {
+        // Treat retrieval prompt as a part of the system message
+        this.system(prompt)
     }
 
-    private func calLen(message: String): Int64 {
-        this._tokenizer.getOrThrow().tokenCount(message)
+    public func tool(prompt: String): PromptBuilder {
+        // Treat tool prompt as a part of the system message
+        this.system(prompt)
+    }
+
+    public func memory(prompt: String): PromptBuilder {
+        // Treat memory prompt as a part of the system message
+        this.system(prompt)
+    }
+
+    public func user(prompts: Array<String>): PromptBuilder {
+        for (prompt in prompts) {
+            if (!prompt.trimAscii().isEmpty()) {
+                this.userMessages.append(ChatMessage.user(prompt))
+            }
+        }
+        this
+    }
+
+    public func user(promptMessages: Array<ChatMessage>): PromptBuilder {
+        for (msg in promptMessages) {
+            if (!msg.content.trimAscii().isEmpty()) {
+                this.userMessages.append(msg)
+            }
+        }
+        this
+    }
+
+    public func dialog(msgs: Array<ChatMessage>): PromptBuilder {
+        // Filter out system messages from dialog history
+        this.dialogMessages.appendAll(
+            msgs |> filter { msg => msg.role != ChatMessageRole.System } |> collectArray
+        )
+        this
+    }
+
+    public func dialog(dialog: Dialog): PromptBuilder {
+        this.dialog(dialog.toArray())
+    }
+
+    private func mergeSystemPrompt(): String {
+        return String.join(
+            this.systemMessages |> map { msg => msg.content } |> collectArray,
+            delimiter: "\n\n"
+        )
     }
 
     public func build(): Array<ChatMessage> {
-        var curLen = calLen(this._system)
-        var maxLen = this._contextLen
-        for (userMsg in this._userMsgs) {
-            curLen += calLen(userMsg)
+        let systemPrompt = this.mergeSystemPrompt()
+        var currTotalLength = this.tokenizer.countToken(systemPrompt)
+        for (userMsg in this.userMessages) {
+            currTotalLength += this.tokenizer.countToken(userMsg.content)
         }
+        if (currTotalLength > this.contextLength) {
+            throw AgentExecutionException("The system & user prompt exceeds the context length: ${this.contextLength}")
+        }
+        // Merge system prompt and user messages, then add dialog messages
         let res = ArrayList<ChatMessage>()
-        if (let Some(sys) <- this._system) {
-            res.append(sys)
-        } else {
-            res.append(ChatMessage(System, ""))
+        if (!systemPrompt.trimAscii().isEmpty()) {
+            res.append(ChatMessage.system(systemPrompt))
         }
-        let hisMsgInUse = ArrayList<ChatMessage>()
-        let historyMsgs = this._historyMsgs.toArray()
-        historyMsgs.reverse()
-        for (msg in historyMsgs) {
-            if (msg.role == System) {
-                continue
-            }
-            let msgLen = calLen(msg)
-            curLen += msgLen
-            if (curLen > maxLen) {
+        // Add dialog messages in reverse order until the total length exceeds the context length
+        // or all dialog messages are added
+        for (i in (this.dialogMessages.size - 1)..=0:-1) {
+            let msg = this.dialogMessages[i]
+            currTotalLength += this.tokenizer.countToken(msg.content)
+            if (currTotalLength > this.contextLength) {
                 break
+            } else {
+                res.append(msg)
             }
-            hisMsgInUse.append(msg)
         }
-        let hmArray = hisMsgInUse.toArray()
-        hmArray.reverse()
-        res.appendAll(hmArray)
-        this._userMsgs |> filter {msg => !msg.content.trimAscii().isEmpty()} |> forEach {userMsg => res.append(userMsg)}
-        res.toArray()
+        res.appendAll(this.userMessages)
+        return res.toArray()
     }
 }

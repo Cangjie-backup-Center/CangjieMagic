@@ -192,19 +192,19 @@ public class OpenAIChatModel <: ChatModel {
     private let baseURL: String
     public let apiKey: String
     private let temperature: Option<Float64>
-    private var _contextLen: Int64
+    private var _contextLength: Int64
 
     public init(
         model: String,
         apiKey!: String,
         baseURL!: String,
         temperature!: Option<Float64> = None,
-        contextLen!:Int64 = Config.defaultContextLen) {
+        contextLength!: Int64 = Config.defaultContextLen) {
         this.model = model
         this.baseURL = baseURL
         this.apiKey = apiKey
         this.temperature = temperature
-        this._contextLen = contextLen
+        this._contextLength = contextLength
     }
 
     override public prop service: String {
@@ -215,8 +215,8 @@ public class OpenAIChatModel <: ChatModel {
         get() { model }
     }
 
-    override public prop contextLen: Int64 {
-        get() { _contextLen }
+    override public prop contextLength: Int64 {
+        get() { _contextLength }
     }
 
     override public func create(chatReq: ChatRequest): ChatResponse {

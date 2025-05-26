@@ -69,4 +69,8 @@ public open class Dialog <: ToString & Iterable<ChatMessage> {
         }
         return strBuilder.toString()
     }
+
+    public func toArray(): Array<ChatMessage> {
+        return messages.toArray()
+    }
 }
