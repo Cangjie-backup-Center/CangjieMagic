@@ -6,4 +6,5 @@ public interface Tokenizer {
 
     func decode(tokens:Array<UInt32>):String
     
+    func tokenCount(input:String): Int64
 }

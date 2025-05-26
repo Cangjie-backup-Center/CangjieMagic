@@ -26,14 +26,16 @@ public class AgentExecutionInfo {
      */
     public let retrievalInfo: ArrayList<RetrievalInfo>
 
-    public init() {
-        this.dialog = Dialog()
-        this.retrievalInfo = ArrayList<RetrievalInfo>()
-    }
+    public let executor: AgentExecutor
 
-    public init(dialog: Dialog) {
-        this.dialog = dialog
+    public init(executor:AgentExecutor, dialog!:?Dialog = None) {
+        this.dialog = if (let Some(dg) <- dialog) {
+            dg
+        } else {
+            Dialog()
+        }
         this.retrievalInfo = ArrayList<RetrievalInfo>()
+        this.executor = executor
     }
 
     protected func addRetrieval(query: String, retrieval: Retrieval): Unit {

@@ -8,13 +8,14 @@ import magic.core.message.*
 import magic.core.model.*
 import magic.log.LogUtils
 import magic.utils.getEnv
+import magic.config.Config
 import magic.model.openai.{OpenAIChatModel, OpenAIEmbeddingModel, OpenAIImageModel}
 import magic.model.ollama.{OllamaChatModel, OllamaEmbeddingModel}
 import magic.model.dashscope.DashscopeEmbeddingModel
 import magic.model.llamacpp.LlamacppEmbeddingModel
 import magic.model.siliconflow.SiliconflowImageModel
 import magic.instrumentor.Instrumentor
-
+import std.convert.*
 import std.collection.HashMap
 import std.collection.{filter, collectArray}
 
@@ -101,18 +102,34 @@ func getDefaultApiKey(service: String): String {
     }
 }
 
+//====================================================================================
+
+private func getDefaultContextLen(): Int64 {
+    if (let Some(cl) <- getEnv("CHAT_MODEL_CONTEXT_LEN")) {
+        try {
+            Int64.parse(cl)
+        } catch (e: Exception) {
+            throw Exception("env CHAT_MODEL_CONTEXT_LEN must be a positive integer")
+        }
+    } else {
+        Config.defaultContextLen
+    }
+}
+
 public class ModelConfig {
     let service: String // Model service, like "openai"
     let kind: String    // "chat", "embedding", or "image"
     let name: String    // Model name, like "gpt-4o", "text-embedding-ada-002"
     let apiKey: String
     let baseURL: String
+    let contextLen: Int64 // default-32000
 
     /**
      * If apiKey is not specified, XX_API_KEY will be used.
      * If baseURL is not specified, XX_BASE_URL will be used.
      */
-    public init(service!: String, kind!: String, name!: String, apiKey!: String = "", baseURL!: String = "") {
+    public init(service!: String, kind!: String, name!: String, apiKey!: String = "", baseURL!: String = "",
+        contextLen!: ?Int64 = None) {
         if (!checkService(service)) {
             LogUtils.error("Only ${getAllServiceNames()} are supported now.")
         }
@@ -128,6 +145,11 @@ public class ModelConfig {
             this.baseURL = getDefaultBaseURL(service, kind)
         } else {
             this.baseURL = baseURL
+        }
+        if (let Some(cl) <- contextLen) {
+            this.contextLen = cl
+        } else {
+            this.contextLen = getDefaultContextLen()
         }
     }
 }

@@ -12,41 +12,36 @@ import magic.core.message.{ChatMessage, Dialog}
 import magic.core.model.ChatRequest
 import magic.model.ModelUtils
 import magic.prompt.Template
-
-private let NAIVE_PROMPT = """
-{systemPrompt}
-
-{retrieval}
-
-{memory}
-
-{dialog}
-"""
+import magic.agent_executor.common.*
+import std.collection.collectArray
 
 public class NaiveExecutor <: AgentExecutor {
-    private func getFullSystemPrompt(task: AgentTask): String {
+
+    override public prop name: String {
+        get() {"naive"}
+    }
+
+    private func getFullDialog(task: AgentTask): Array<ChatMessage> {
         // The system prompt of a naive agent may be empty
         let sysPrompt = if (task.agent.systemPrompt != "") {
             task.agent.systemPrompt
         } else {
             "Answer user question"
         }
-        return NAIVE_PROMPT.format(
-            ("retrieval", ReactPromptUtils.buildAgentRetrievalPrompt(task)),
-            ("systemPrompt", sysPrompt),
-            ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task)),
-            ("dialog", ReactPromptUtils.buildAgentDialogPrompt(task))
-        )
+        PromptBuilder(task.agent.model.contextLen)
+            .system(sysPrompt)
+            .retrieval(ReactPromptUtils.buildAgentRetrievalPrompt(task))
+            .memory(ReactPromptUtils.buildAgentMemoryPrompt(task))
+            .history(task.request.dialog)
+            .user(task.request.question)
+            .build()
     }
 
-    override public func run(agent: Agent, request: AgentRequest): AgentResponse {
-        let task = AgentTask(agent, request)
+    public override func run(agent: Agent, request: AgentRequest): AgentResponse {
+        let task = AgentTask(agent, request, dialog: BoundedDialog(contextLen: agent.model.contextLen))
         let dialog = task.execInfo.dialog
         LogUtils.info("${agent.name} runs")
-        dialog.addMessage([
-            ChatMessage.system(getFullSystemPrompt(task)),
-            ChatMessage.user(request.question)
-        ])
+        dialog.addMessage(getFullDialog(task))
         LogUtils.info(agent.name, dialog)
         let assistantMsg = ModelUtils.makeChat(agent.model, dialog).getOrThrow()
         dialog.addMessage(assistantMsg)
@@ -54,18 +49,13 @@ public class NaiveExecutor <: AgentExecutor {
         return AgentResponse(assistantMsg.content, execInfo: task.execInfo)
     }
 
-    override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
+    public override func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
         let task = AgentTask(agent, request)
         let dialog = task.execInfo.dialog
         LogUtils.info("${agent.name} async runs")
-        dialog.addMessage([
-            ChatMessage.system(getFullSystemPrompt(task)),
-            ChatMessage.user(request.question)
-        ])
+        dialog.addMessage(getFullDialog(task))
         LogUtils.info(agent.name, dialog)
-        let asyncChatResp = agent.model.asyncCreate(
-            ChatRequest(dialog, temperature: agent.temperature)
-        )
+        let asyncChatResp = agent.model.asyncCreate(ChatRequest(dialog, temperature: agent.temperature))
         if (request.verbose) {
             task.execInfo.verboseChannel.close()
         }

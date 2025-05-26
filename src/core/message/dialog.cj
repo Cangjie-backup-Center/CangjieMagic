@@ -3,13 +3,13 @@
  */
 package magic.core.message
 
-import std.collection.ArrayList
 
+import std.collection.{ArrayList, filter, forEach}
 /**
  * A collection of chat messages
  */
-public class Dialog <: ToString & Iterable<ChatMessage> {
-    private let messages: ArrayList<ChatMessage>
+public open class Dialog <: ToString & Iterable<ChatMessage> {
+    protected let messages: ArrayList<ChatMessage>
 
     public init() {
         this.messages = ArrayList<ChatMessage>()
@@ -23,15 +23,15 @@ public class Dialog <: ToString & Iterable<ChatMessage> {
         this.messages = ArrayList<ChatMessage>(messages)
     }
 
-    public func clone(): Dialog {
+    public open func clone(): Dialog {
         return Dialog(messages.clone())
     }
 
-    public func addMessage(msg: ChatMessage): Unit {
+    public open func addMessage(msg: ChatMessage): Unit {
         messages.append(msg)
     }
 
-    public func addMessage(messages: Array<ChatMessage>): Unit {
+    public open func addMessage(messages: Array<ChatMessage>): Unit {
         this.messages.appendAll(messages)
     }
 
@@ -39,18 +39,18 @@ public class Dialog <: ToString & Iterable<ChatMessage> {
         messages.clear()
     }
 
-    public func removeLast(): ChatMessage {
+    public open func removeLast(): ChatMessage {
         if (messages.isEmpty()) {
             throw Exception("Remove the last message from an empty history")
         }
-        return messages.remove(messages.size-1)
+        return messages.remove(messages.size - 1)
     }
 
     public func iterator(): Iterator<ChatMessage> {
         return messages.iterator()
     }
 
-    public operator func[](index: Int64): ChatMessage {
+    public operator func [](index: Int64): ChatMessage {
         return messages[index]
     }
 

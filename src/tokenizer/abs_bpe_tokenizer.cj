@@ -547,7 +547,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         let specialTokenMap = HashMap<Int64, UInt32>()
         let specialTokenIndexes = HashSet<Pair<Int64>>()
         let specMathDatas = this._specialRegex.matcher(uniformed).findAll() ?? Array<MatchData>()
-        var text = uniformed;
+        var text = uniformed
         // replace special tokens with empty blank
         for (specMd in specMathDatas) {
             let specialToken = specMd.matchStr()
@@ -556,11 +556,11 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
                 this._vocab.get(specialToken).getOrThrow()
             )
             specialTokenIndexes.put(Pair(specMd.matchPosition().start, specMd.matchPosition().end))
-            var space = "";
+            var space = ""
             var i = 0;
             while (i < specialToken.size) {
                 space += " "
-                i++;
+                i++
             }
             text = text.replace(specialToken, space)
         }
@@ -575,8 +575,8 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             }
         }
         for (matchData in matchDatas) {
-            let ms = matchData.matchPosition().start;
-            let me = matchData.matchPosition().end;
+            let ms = matchData.matchPosition().start
+            let me = matchData.matchPosition().end
             let orgStr = uniformed[ms..me]
             // find special token
             if (this._specialTokens.contains(orgStr)) {
@@ -591,14 +591,14 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
                 runeLevelStr = matchedStr
             } else {
                 for (b in matchedStr.toArray()) {
-                    let rune = this._byte2rune[b];
+                    let rune = this._byte2rune[b]
                     runeList.append(rune.toString())
                 }
                 runeLevelStr = String.join(runeList.toArray())
             }
 
             if (this._cache.contains(runeLevelStr)) {
-                let cacheLst = this._cache[runeLevelStr];
+                let cacheLst = this._cache[runeLevelStr]
                 for (cache in cacheLst) {
                     ids.append(this._vocab[cache])
                 }
@@ -626,7 +626,10 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         return ids.toArray()
     }
 
-    /**
+    public func tokenCount(input: String): Int64 {
+        return encode(input).size
+    }
+     /**
      *  merge tokens and find the best tokens to get
      */
     private func bpe(tokens: Array<String>): Array<String> {
@@ -637,8 +640,8 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         // records indices in pairs that were merged.
         while (finalTokens.size > 1) {
             let pairs: ArrayList<Pair<String>> = this.buildAdjacentConcatenations(finalTokens)
-            var minScore: UInt32 = UINT32_MAX;
-            var toMerge: Int64 = -1;
+            var minScore: UInt32 = UINT32_MAX
+            var toMerge: Int64 = -1
             for ((i, pair) in enumerate(pairs)) {
                 // if pair i is not merged.
                 let score = this._bpeRanks.get(pair.left + pair.right).getOrDefault({=> UINT32_MAX})
@@ -648,11 +651,11 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
                 }
             }
             if (toMerge == -1) {
-                break;
+                break
             }
             let bestTokens: ArrayList<String> = ArrayList<String>()
-            let left = pairs[toMerge].left;
-            let right = pairs[toMerge].right;
+            let left = pairs[toMerge].left
+            let right = pairs[toMerge].right
             // find all meged tokens and merge
             var i = 0
             while (i < finalTokens.size) {
@@ -663,7 +666,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
                     i = j + 2
                 } else {
                     bestTokens.appendAll(finalTokens[i..])
-                    break;
+                    break
                 }
             }
             finalTokens = bestTokens
@@ -674,10 +677,10 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
     private func find<T>(arr: ArrayList<T>, index: Int64, target: Pair<T>): Int64 where T <: Hashable & Equatable<T> {
         for (i in index..arr.size - 1) {
             if (arr[i] == target.left && arr[i + 1] == target.right) {
-                return i;
+                return i
             }
         }
-        return -1;
+        return -1
     }
 
     /**
@@ -691,6 +694,6 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         for (i in 0..tokens.size - 1) {
             pairs.append(Pair<String>(tokens[i].toString(), tokens[i + 1].toString()))
         }
-        return pairs;
+        return pairs
     }
 }
