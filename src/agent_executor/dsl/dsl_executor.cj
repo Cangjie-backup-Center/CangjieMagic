@@ -9,6 +9,9 @@ import magic.agent_executor.common.{AgentTask, IteratorWrapper}
 import magic.log.LogUtils
 
 public class DslExecutor <: AgentExecutor {
+    override public prop name:String {
+        get() {"dsl"}
+    }
     private func doRun(task: AgentTask): String {
         let ag = (task.agent as UserDefinedAgent).getOrThrow({ =>
             AgentExecutionException("Only agents defined by @agent can use the dsl executor")

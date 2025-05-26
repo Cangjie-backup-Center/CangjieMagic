@@ -14,10 +14,15 @@ import magic.parser.{TagStreamParser, ParserException}
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
         super(agent, request)
-        this.execInfo.dialog.addMessage([
-            ChatMessage.system(ReactPromptUtils.buildReactFullSystemPrompt(this)),
-            ChatMessage.user(request.question)
-        ])
+        this.execInfo.dialog.addMessage(ReactPromptUtils.buildReactPrompt(this))
+        LogUtils.info(agent.name, "----- Build Agent Task -----")
+        LogUtils.info(agent.name, this.execInfo.dialog)
+        LogUtils.info(agent.name, "----- End of Build Agent Task -----")
+    }
+
+    protected init(agent: Agent, request: AgentRequest, dialog: Dialog) {
+        super(agent, request, dialog: dialog)
+        this.execInfo.dialog.addMessage(ReactPromptUtils.buildReactPrompt(this))
         LogUtils.info(agent.name, "----- Build Agent Task -----")
         LogUtils.info(agent.name, this.execInfo.dialog)
         LogUtils.info(agent.name, "----- End of Build Agent Task -----")
@@ -135,9 +140,7 @@ protected class ReactTask <: AgentTask {
      * Summarize an answer according to the react execution history.
      **/
     protected func summarize(): AgentResponse {
-        let messages = [
-            ChatMessage.system(ReactPromptUtils.buildReactSummarizePrompt(this))
-        ]
+        let messages = ReactPromptUtils.buildReactSummarizePrompt(this)
         let answer = ModelUtils.agentMakeChatGet(this.agent, messages) { msg: ChatMessage =>
             Tag.extract(msg.content, Tag.ANSWER)
         }
@@ -176,7 +179,9 @@ protected class ReactTask <: AgentTask {
                     this.execInfo.verboseChannel.close()
                 }
                 let (thought, asyncAnswer) = asyncReactStep.getAsyncAnswer()
-                this.addAndLogMessage(ChatMessage.assistant(thought))
+                if (!thought.trimAscii().isEmpty()) {
+                    this.addAndLogMessage(ChatMessage.assistant(thought))
+                }
                 return asyncAnswer
             } else {
                 throw UnsupportedException()
@@ -213,9 +218,7 @@ protected class ReactTask <: AgentTask {
      * Summarize an answer according to the react execution history.
      **/
     func asyncSummarize(): AsyncReactAnswer {
-        let messages = [
-            ChatMessage.system(ReactPromptUtils.buildReactSummarizePrompt(this))
-        ]
+        let messages = ReactPromptUtils.buildReactSummarizePrompt(this)
         let asyncChatResp = agent.model.asyncCreate(ChatRequest(messages))
         let parser = TagStreamParser(asyncChatResp.iter())
         let asyncReactStep = AsyncReactStep(parser)

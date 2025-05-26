@@ -30,7 +30,7 @@ public class DispatchAgent <: BaseAgent {
     override public func asyncChat(request: AgentRequest): AsyncAgentResponse {
         if (let Some(agent) <- this.doSelect(request)) {
             if (request.verbose) {
-                let execInfo = AgentExecutionInfo()
+                let execInfo = AgentExecutionInfo(this.executor)
                 execInfo.verboseChannel.put("Dispatch to the agent: ${agent.name}", Tag.INFO)
                 request.execInfo = execInfo
             }

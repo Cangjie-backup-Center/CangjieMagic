@@ -5,19 +5,21 @@ package magic.agent_executor.react
 
 import magic.core.agent.*
 import magic.core.rag.RetrieverMode
-import magic.agent_executor.common.IteratorWrapper
 import magic.log.LogUtils
 import magic.config.Config
 import magic.parser.WithTag
+import magic.agent_executor.common.*
 
 public class ReactExecutor <: AgentExecutor {
-    public ReactExecutor(
-        private let loop!: Int64 = Config.maxReactNumber
-    ) { }
+    public ReactExecutor(private let loop!: Int64 = Config.maxReactNumber) {}
+
+    override public prop name: String {
+        get() {"react"}
+    }
 
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         LogUtils.info("React executor runs ${agent.name}")
-        let task = ReactTask(agent, request)
+        let task = ReactTask(agent, request, BoundedDialog(contextLen: agent.model.contextLen))
         for (_ in 0..this.loop) {
             if (let Some(resp) <- task.runOnce()) {
                 return resp
@@ -29,7 +31,7 @@ public class ReactExecutor <: AgentExecutor {
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
         LogUtils.info("React executor async runs ${agent.name}")
-        let task = ReactTask(agent, request)
+        let task = ReactTask(agent, request, BoundedDialog(contextLen: agent.model.contextLen))
         // Create a thread to execute the react task
         let fut: Future<Iterator<String>> = spawn {
             try {

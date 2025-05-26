@@ -11,6 +11,7 @@
     - [自定义提示词模式](#自定义提示词模式)
   - [Agent 交互方法](#agent-交互方法)
     - [输入模板](#输入模板)
+    - [对话历史](#对话历史)
   - [MCP 协议和工具](#mcp-协议和工具)
     - [工具函数编写](#工具函数编写)
     - [使用工具和 MCP 服务器](#使用工具和-mcp-服务器)
@@ -469,6 +470,29 @@ let area = agent.chat(
 )
 ```
 
+### 对话历史
+
+通过指定 `Dialog` 作为 `AgentRequest` 的参数来将对话历史加入当前的 Agent 调用中，并通过 `AgentResponse` 的 execInfo.dialog 获取更新后的对话历史。
+`Dialog` 会根据全局配置对会话历史进行管理：
+ - `ChatModel.contextLen`: 模型上下文长度，`Dialog` 会根据设置的长度来进行对话历史截断; 也可以通过 `Config.defaultContextLen` 来设置全局变量
+ - `Config.defaultTokenizer`: 计算 token 使用的 tokenizer，建议设置为 Cl100kTokenizer (见示例)，不建议使用默认值
+
+**示例：对话历史示例**
+```cangjie
+import magic.tokenizer.Cl100kTokenizer
+import magic.core.agent.{AgentRequest, AgentResponse}
+import magic.core.agent.{AgentRequest, AgentResponse}
+
+// 设置全局 tokenizer, 加载词表（Cl100k 词表在 CangjieMagic/ffi_libs 文件夹下）
+Config.defaultTokenizer = Cl100kTokenizer("./ffi_libs/cl100K_base.tiktoken")
+Config.defaultContextLen = 32000
+var dialog = Dialog()
+let agent = MyAgent()
+let resp = agent.chat(AgentRequest("Hello.", dialog:dialog))
+// 更新 Dialog
+dialog = resp.execInfo.getOrThrow().dialog
+```
+
 ## MCP 协议和工具
 
 工具可以理解为 Agent 执行过程中能够执行的代码。当前 Agent 工具有两个来源：
@@ -908,6 +932,8 @@ func foo(topic: String): String {
 | `defaultChatModel` | `Option<ChatModel>` | 默认的大语言模型 | `None` |
 | `defaultEmbeddingModel` | `Option<EmbeddingModel>` | 默认的向量模型 | `None` |
 | `externalScriptDir` | `String` | 保存外部脚本的目录 | `./external_scripts` |
+| `defaultContextLen` | `Int` | LLM上下文长度 | `32000` |
+| `defaultTokenizer` | `Option<Tokenizer>` | 设置默认的tokenizer,用于Dialog中的token数计算 | `UnicodeTokenizer()` |
 | `filterThink` | `Bool` | 过滤推理模型输出中的 `<think>` 内容，仅对同步接口生效 | `false` |
 | `maxReactNumber` | `Int` | React 模式的最大迭代次数 | `10` |
 | `modelRetryNumber` | `Int` | 模型请求失败时的最大重试次数 | `3` |

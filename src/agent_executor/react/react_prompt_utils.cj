@@ -6,10 +6,10 @@ package magic.agent_executor.react
 import magic.core.*
 import magic.agent_executor.common.AgentTask
 import magic.core.message.*
+import magic.agent_executor.common.PromptBuilder
 import magic.log.LogUtils
 import magic.prompt.Template
 internal import magic.parser.{Tag, WithTag}
-
 import std.collection.{map, collectArray}
 
 // Modified from https://smith.langchain.com/hub/hwchase17/react
@@ -48,16 +48,6 @@ Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.T
 Output: ${Tag.THOUGHT} I know the final answer now ${Tag.THOUGHT.getCloseTag()} ${Tag.ANSWER} ... ${Tag.ANSWER.getCloseTag()}
 
 - If there are no available tools, generate final answer directly.
-
-{tools}
-
-{systemPrompt}
-
-{retrieval}
-
-{memory}
-
-{dialog}
 """
 
 private let REACT_SUMMARIZE_SYSTEM_PROMPT = """
@@ -88,24 +78,25 @@ ${Tag.ANSWER.getCloseTag()}
 {retrieval}
 
 {memory}
-
-{dialog}
-
-Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}
 """
 
+private let REACT_SUMMARIZE_USER_PROMPT = """
+Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}
+"""
 protected struct ReactPromptUtils {
-    static func buildReactFullSystemPrompt(task: AgentTask): String {
-        return REACT_SYSTEM_PROMPT.format(
-            ("tools", ReactPromptUtils.buildAgentToolsPrompt(task)),
-            ("retrieval", ReactPromptUtils.buildAgentRetrievalPrompt(task)),
-            ("systemPrompt", task.agent.systemPrompt),
-            ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task)),
-            ("dialog", ReactPromptUtils.buildAgentDialogPrompt(task))
-        ).trimAscii()
+    static func buildReactPrompt(task: AgentTask): Array<ChatMessage> {
+        PromptBuilder(task.agent.model.contextLen)
+            .system(REACT_SYSTEM_PROMPT.trimAscii())
+            .tool(ReactPromptUtils.buildAgentToolsPrompt(task))
+            .system(task.agent.systemPrompt)
+            .retrieval(ReactPromptUtils.buildAgentRetrievalPrompt(task))
+            .memory(ReactPromptUtils.buildAgentMemoryPrompt(task))
+            .history(task.request.dialog)
+            .user(task.request.question)
+            .build()
     }
 
-    static func buildReactSummarizePrompt(task: AgentTask): String {
+    static func buildReactSummarizePrompt(task: AgentTask): Array<ChatMessage> {
         let strBuilder = StringBuilder()
         for (msg in task.execInfo.dialog) {
             // Only add messages with tags, like [Action]
@@ -113,14 +104,18 @@ protected struct ReactPromptUtils {
                 strBuilder.append("${msg.content}\n")
             }
         }
-        return REACT_SUMMARIZE_SYSTEM_PROMPT.format(
+        let sys = REACT_SUMMARIZE_SYSTEM_PROMPT.format(
             ("question", task.request.question),
             ("procedure", strBuilder.toString()),
             ("retrieval", ReactPromptUtils.buildAgentRetrievalPrompt(task)),
             ("systemPrompt", task.agent.systemPrompt),
-            ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task)),
-            ("dialog", ReactPromptUtils.buildAgentDialogPrompt(task))
+            ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task))
         ).trimAscii()
+        PromptBuilder(task.agent.model.contextLen)
+            .system(sys)
+            .history(task.request.dialog)
+            .user(REACT_SUMMARIZE_USER_PROMPT.trimAscii())
+            .build()
     }
 
     protected static func buildAgentToolsPrompt(task: AgentTask): String {
