@@ -69,7 +69,7 @@ class ToolAttr <: Attr {
     static func parse(attrTokens: Tokens): ToolAttr {
         let map = AttrParser(attrTokens).parseAttr(
             macroName: "tool",
-            validKeys: ["description", "parameters", "examples", "filterable", "terminal"]
+            validKeys: ["description", "parameters", "examples", "filterable", "terminal", "dump"]
         )
         return ToolAttr(map)
     }

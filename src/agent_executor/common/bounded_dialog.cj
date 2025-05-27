@@ -4,6 +4,8 @@ import magic.core.message.*
 import magic.core.tokenizer.*
 import magic.config.Config
 import magic.tokenizer.TokenizerLoader
+import magic.log.LogUtils
+
 import std.collection.*
 
 /**
@@ -16,36 +18,22 @@ protected class BoundedDialog <: Dialog {
     // Length of each message in the dialog, used to calculate the total size
     private let messageLengthMap = ArrayList<Int64>()
     // Record the position of the system message, if exists
-    private var posOfSystemMessage: Int64 = -1
+    private var posOfSystemMessage: Option<Int64> = None
 
     public init(contextLength!: Option<Int64> = None) {
-        this(messages: [], contextLength: contextLength ?? Config.defaultContextLen, tokenizer: TokenizerLoader.default())
-    }
-
-    init(messages!: Array<ChatMessage>, contextLength!: Int64, tokenizer!: Tokenizer) {
-        super(messages)
-        this.contextLength = contextLength
-        this.tokenizer = tokenizer
-        for (msg in messages) {
-            let len = this.tokenizer.countToken(msg.content)
-            this.currTotalLength += len
-            messageLengthMap.append(len)
-        }
-        if (!messages.isEmpty() && messages[0].role == ChatMessageRole.System) {
-            posOfSystemMessage = 0
-        }
-    }
-
-    public func clone(): Dialog {
-        return BoundedDialog(messages: this.messages.toArray().clone(), contextLength: contextLength, tokenizer: tokenizer)
+        this.contextLength = contextLength ?? Config.defaultContextLen
+        this.tokenizer = TokenizerLoader.default()
     }
 
     public override func addMessage(msg: ChatMessage): Unit {
-        let msgLen = this.tokenizer.countToken(msg.content)
-        messages.append(msg)
-        if (posOfSystemMessage == -1 && msg.role == ChatMessageRole.System) {
-            posOfSystemMessage = 0
+        if (posOfSystemMessage.isNone() && msg.role == ChatMessageRole.System) {
+            if (!this.isEmpty()) {
+                LogUtils.error("System message should be the first message in the dialog.")
+            }
+            posOfSystemMessage = Some(this.messages.size)
         }
+        this.messages.append(msg)
+        let msgLen = this.tokenizer.countToken(msg.content)
         this.currTotalLength += msgLen
         this.messageLengthMap.append(msgLen)
         // If the total length exceeds the context length, remove messages
@@ -60,15 +48,12 @@ protected class BoundedDialog <: Dialog {
      * This is a heuristic that dialog messages are after the system message.
      */
     private func removeExcessMessages(): Unit {
+        let posToRemove = (this.posOfSystemMessage ?? -1) + 1
         while (this.currTotalLength > this.contextLength &&
-               messages.size > posOfSystemMessage + 1) {
-            this.messages.remove(posOfSystemMessage + 1)
-            this.currTotalLength -= messageLengthMap.remove(posOfSystemMessage + 1)
+               messages.size > posToRemove) {
+            this.messages.remove(posToRemove)
+            this.currTotalLength -= messageLengthMap.remove(posToRemove)
         }
-    }
-
-    public override func addMessage(messages: Array<ChatMessage>): Unit {
-        messages |> forEach { msg => this.addMessage(msg) }
     }
 
     public override func removeLast(): ChatMessage {
