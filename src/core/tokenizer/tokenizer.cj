@@ -2,9 +2,9 @@ package magic.core.tokenizer
 
 public interface Tokenizer {
 
-    func encode(input:String): Array<UInt32>
+    func encode(input: String): Array<UInt32>
 
-    func decode(tokens:Array<UInt32>):String
+    func decode(tokens: Array<UInt32>): String
     
-    func tokenCount(input:String): Int64
+    func countToken(input: String): Int64
 }

@@ -122,14 +122,14 @@ public class ModelConfig {
     let name: String    // Model name, like "gpt-4o", "text-embedding-ada-002"
     let apiKey: String
     let baseURL: String
-    let contextLen: Int64 // default-32000
+    let contextLength: Int64 // default-32000
 
     /**
      * If apiKey is not specified, XX_API_KEY will be used.
      * If baseURL is not specified, XX_BASE_URL will be used.
      */
     public init(service!: String, kind!: String, name!: String, apiKey!: String = "", baseURL!: String = "",
-        contextLen!: ?Int64 = None) {
+        contextLength!: ?Int64 = None) {
         if (!checkService(service)) {
             LogUtils.error("Only ${getAllServiceNames()} are supported now.")
         }
@@ -146,10 +146,10 @@ public class ModelConfig {
         } else {
             this.baseURL = baseURL
         }
-        if (let Some(cl) <- contextLen) {
-            this.contextLen = cl
+        if (let Some(cl) <- contextLength) {
+            this.contextLength = cl
         } else {
-            this.contextLen = getDefaultContextLen()
+            this.contextLength = getDefaultContextLen()
         }
     }
 }

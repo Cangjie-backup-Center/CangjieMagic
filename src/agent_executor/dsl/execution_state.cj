@@ -3,7 +3,7 @@
  */
 package magic.agent_executor.dsl
 
-import magic.core.agent.{Agent, AgentRequest, AgentExecutionInfo}
+import magic.core.agent.{Agent, AgentRequest, AgentExecutionInfo, AgentExecutionException}
 import magic.core.message.ChatMessageRole
 import magic.agent_executor.common.AgentTask
 import magic.dsl.jsonable
@@ -24,7 +24,7 @@ struct Subtask {
 
 public class ExecutionState {
     protected let task: AgentTask
-    protected var answer: Option<String> = None
+    private var _answer: Option<String> = None
     // If the state represents a subtask, it use this field to refer to its parent state
     var parent: Option<ExecutionState> = None
     // If the state represents a subtask, it should be bounded with a subtask
@@ -41,7 +41,28 @@ public class ExecutionState {
 
     protected prop done: Bool {
         get() {
-            this.answer.isSome()
+            this._answer.isSome() || this.task.stopInfo.isSome()
+        }
+    }
+
+    protected mut prop answer: String {
+        get() {
+            if (let Some(stopInfo) <- this.task.stopInfo) {
+                return stopInfo.result
+            } else {
+                return this._answer.getOrThrow({ =>
+                    throw AgentExecutionException("The answer is not set yet")
+                })
+            }
+        }
+        set(value) {
+            if (this._answer.isNone()) {
+                // If the answer is not set, we can set it
+                this._answer = Some(value)
+            } else {
+                // If the answer is already set, we cannot change it
+                throw AgentExecutionException("The answer has already been set")
+            }
         }
     }
 
@@ -56,7 +77,7 @@ public class ExecutionState {
         strBuilder.append("{\n")
         strBuilder.append("  description: ${this.subtask.getOrThrow().description},\n")
         strBuilder.append("  process: [\n    ${this.extractExecutionProcess()}\n  ],\n")
-        strBuilder.append("  result: ${this.answer.getOrThrow().withoutTag()}\n")
+        strBuilder.append("  result: ${this.answer.withoutTag()}\n")
         strBuilder.append("}")
         return strBuilder.toString()
     }

@@ -70,25 +70,25 @@ public class OllamaChatModel <: ChatModel {
     private let model: String
     private let baseURL: String
     private let temperature: Option<Float64>
-    private var _contextLen: Int64
+    private var _contextLength: Int64
 
     public init(
         model: String,
         baseURL!: String,
         temperature!: Option<Float64> = None,
-        contextLen!: Int64 = Config.defaultContextLen) {
+        contextLength!: Int64 = Config.defaultContextLen) {
         this.model = model
         this.baseURL = baseURL
         this.temperature = temperature
-        this._contextLen = contextLen
+        this._contextLength = contextLength
     }
 
     override public prop service: String {
         get() { "ollama" }
     }
 
-    override public prop contextLen: Int64 {
-        get() { _contextLen }
+    override public prop contextLength: Int64 {
+        get() { _contextLength }
     }
 
     override public prop name: String {

@@ -8,7 +8,7 @@ import std.collection.ArrayList
 
 @When[faiss == "enable"]
 foreign {
-    func faiss_IndexFlatL2_new_with(indexPtrPtr: CPointer<CPointer<Unit>>, d:Int64): Int32
+    func faiss_IndexFlatL2_new_with(indexPtrPtr: CPointer<CPointer<Unit>>, d: Int64): Int32
     func faiss_Index_add(indexPtr: CPointer<Unit>, n: Int64, x: CPointer<Float32>): Int32
     func faiss_write_index_fname(idxPtr: CPointer<Unit>, fname: CString): Int32
     func faiss_read_index_fname(fname: CString, io_flags: Int32, p_out: CPointer<CPointer<Unit>>): Int32

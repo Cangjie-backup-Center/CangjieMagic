@@ -8,7 +8,10 @@ import magic.core.tokenizer.Tokenizer
 
 public interface ChatModel <: Model {
 
-    prop contextLen:Int64
+    /**
+     * The context length of the chat model
+     */
+    prop contextLength: Int64
 
     /**
      * Synchronous API of the chat model

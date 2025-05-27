@@ -138,5 +138,5 @@ protected func move(source: Path, to: Path, overwrite: Bool): Unit {
 
 @When[cjc_version >= "0.56.4"]
 protected func move(source: Path, to: Path, overwrite: Bool): Unit {
-    rename(source, to:to, overwrite:overwrite)
+    rename(source, to: to, overwrite: overwrite)
 }

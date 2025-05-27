@@ -85,13 +85,13 @@ Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} 
 """
 protected struct ReactPromptUtils {
     static func buildReactPrompt(task: AgentTask): Array<ChatMessage> {
-        PromptBuilder(task.agent.model.contextLen)
+        PromptBuilder(task.agent.model.contextLength)
             .system(REACT_SYSTEM_PROMPT.trimAscii())
             .tool(ReactPromptUtils.buildAgentToolsPrompt(task))
             .system(task.agent.systemPrompt)
             .retrieval(ReactPromptUtils.buildAgentRetrievalPrompt(task))
             .memory(ReactPromptUtils.buildAgentMemoryPrompt(task))
-            .history(task.request.dialog)
+            .dialog(task.request.dialog ?? Dialog())
             .user(task.request.question)
             .build()
     }
@@ -111,9 +111,9 @@ protected struct ReactPromptUtils {
             ("systemPrompt", task.agent.systemPrompt),
             ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task))
         ).trimAscii()
-        PromptBuilder(task.agent.model.contextLen)
+        PromptBuilder(task.agent.model.contextLength)
             .system(sys)
-            .history(task.request.dialog)
+            .dialog(task.request.dialog ?? Dialog())
             .user(REACT_SUMMARIZE_USER_PROMPT.trimAscii())
             .build()
     }

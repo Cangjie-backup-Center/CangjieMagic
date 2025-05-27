@@ -20,14 +20,6 @@ protected class ReactTask <: AgentTask {
         LogUtils.info(agent.name, "----- End of Build Agent Task -----")
     }
 
-    protected init(agent: Agent, request: AgentRequest, dialog: Dialog) {
-        super(agent, request, dialog: dialog)
-        this.execInfo.dialog.addMessage(ReactPromptUtils.buildReactPrompt(this))
-        LogUtils.info(agent.name, "----- Build Agent Task -----")
-        LogUtils.info(agent.name, this.execInfo.dialog)
-        LogUtils.info(agent.name, "----- End of Build Agent Task -----")
-    }
-
     /**
      * Internal auxiliary method
      */
@@ -49,7 +41,7 @@ protected class ReactTask <: AgentTask {
                     this.addAndLogMessage(ChatMessage.assistant(tc.thought.withTag(Tag.THOUGHT)))
                 }
                 this.addAndLogMessage(ChatMessage.assistant(tc.text.withTag(Tag.ACTION)))
-                let observation = tc.invoke(this)
+                let observation = this.invokeTool(tc.request)
                 this.addAndLogMessage(ChatMessage.assistant(observation.withTag(Tag.OBSERVATION)))
                 if (this.request.verbose) {
                     this.execInfo.verboseChannel.put(observation, Tag.OBSERVATION)

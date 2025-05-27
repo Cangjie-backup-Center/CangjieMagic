@@ -28,17 +28,17 @@ public class NaiveExecutor <: AgentExecutor {
         } else {
             "Answer user question"
         }
-        PromptBuilder(task.agent.model.contextLen)
+        PromptBuilder(task.agent.model.contextLength)
             .system(sysPrompt)
             .retrieval(ReactPromptUtils.buildAgentRetrievalPrompt(task))
             .memory(ReactPromptUtils.buildAgentMemoryPrompt(task))
-            .history(task.request.dialog)
+            .dialog(task.request.dialog ?? Dialog())
             .user(task.request.question)
             .build()
     }
 
     public override func run(agent: Agent, request: AgentRequest): AgentResponse {
-        let task = AgentTask(agent, request, dialog: BoundedDialog(contextLen: agent.model.contextLen))
+        let task = AgentTask(agent, request)
         let dialog = task.execInfo.dialog
         LogUtils.info("${agent.name} runs")
         dialog.addMessage(getFullDialog(task))

@@ -3,19 +3,11 @@
  */
 package magic.agent_executor.react
 
-import magic.core.agent.{Agent, AgentExecutionException}
-import magic.core.tool.{Tool, ToolManager, ToolException}
-import magic.agent_executor.common.AgentTask
-import magic.model.ModelUtils
 import magic.parser.{OutputParserUtils, ParserException}
-import magic.core.message.ChatMessage
 import magic.core.tool.ToolRequest
-import magic.jsonable.{JsonUtils, Jsonable, ToJsonValue}
-import magic.instrumentor.Instrumentor
 import magic.log.LogUtils
 
-import std.collection.{ArrayList, HashMap, map, collectArray}
-import encoding.json.{JsonValue, JsonObject, JsonException}
+import encoding.json.JsonException
 
 protected enum FailureLevel {
     | Repairable
@@ -28,45 +20,6 @@ protected struct ToolCall {
         protected let request!: ToolRequest, // Tool call request
         protected let text!: String          // The original tool call representation
     ) { }
-
-    /**
-     * Run the tool and return observation messages
-     */
-    protected func invoke(task: AgentTask): String {
-        let toolManager = task.agent.toolManager
-        var observation: String = ""
-        // Special treatment for the retriever tool
-        if (this.request.name == "__retriever__tool___") {
-            // See RetrieverTool
-            let query = this.request.args["query"].asString().getValue()
-            let retrieval = task.agent.retriever.getOrThrow().search(query)
-            task.execInfo.addRetrieval(query, retrieval)
-            observation = retrieval.toPrompt()
-        } else if (let Some(foundTool) <- toolManager.findTool(this.request.name)) {
-            try {
-                // Arguments are of type JsonValue, we should convert them as ToJsonValue
-                let convertedArgs = HashMap<String, ToJsonValue>()
-                for ((argName, argValue) in this.request.args) {
-                    convertedArgs.put(argName, argValue)
-                }
-                var toolResponse = if (let Some(resp) <- Instrumentor.doInstrumentBeforeToolCall(task.agent, this.request)) {
-                    resp
-                } else {
-                    foundTool.invoke(convertedArgs)
-                }
-                toolResponse = Instrumentor.doInstrumentAfterToolCall(task.agent, this.request, toolResponse)
-                observation = toolResponse.content
-            } catch (ex: ToolException) {
-                observation = "Fail to invoke the tool `${this.request.name}`. Reason: ${ex.reason}"
-            } catch (_: Exception) {
-                observation = "Fail to invoke the tool `${this.request.name}`"
-            }
-        } else {
-            let names = toolManager.getTools() |> map { t: Tool => t.name } |> collectArray
-            observation = "Tool `${this.request.name}` not found in ${names}"
-        }
-        return observation
-    }
 }
 
 protected struct FinalAnswer {

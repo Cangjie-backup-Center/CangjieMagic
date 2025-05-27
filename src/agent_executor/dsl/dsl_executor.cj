@@ -9,8 +9,8 @@ import magic.agent_executor.common.{AgentTask, IteratorWrapper}
 import magic.log.LogUtils
 
 public class DslExecutor <: AgentExecutor {
-    override public prop name:String {
-        get() {"dsl"}
+    override public prop name: String {
+        get() { "dsl" }
     }
     private func doRun(task: AgentTask): String {
         let ag = (task.agent as UserDefinedAgent).getOrThrow({ =>
@@ -25,7 +25,7 @@ public class DslExecutor <: AgentExecutor {
             if (!finalState.done) {
                 throw AgentExecutionException("Agent has not solved the question")
             }
-            return finalState.answer.getOrThrow()
+            return finalState.answer
         } finally {
             if (task.request.verbose) {
                 task.execInfo.verboseChannel.close()
