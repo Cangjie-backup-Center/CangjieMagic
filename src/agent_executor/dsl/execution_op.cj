@@ -250,7 +250,7 @@ public struct ExecutionOpSet {
             // Bound with the subtask
             subtaskState.subtask = subtask
             // Add prompts
-            subtaskState.execInfo.dialog.addMessage([
+            subtaskState.execInfo.dialog.addMessages([
                 ChatMessage.system(sysPrompt),
                 ChatMessage.user(subtask.description)
             ])

@@ -17,16 +17,9 @@ import std.collection.{ArrayList, forEach, map, filter, collectArray}
  *   - and the user prompts (user's questions).
  */
 protected class PromptBuilder {
-    let tokenizer: Tokenizer
-    let contextLength: Int64
-    var systemMessages = ArrayList<ChatMessage>()
-    let userMessages: ArrayList<ChatMessage> = ArrayList()
-    let dialogMessages: ArrayList<ChatMessage> = ArrayList()
-
-    public init(contextLength: Int64, tokenizer!: Option<Tokenizer> = None) {
-        this.contextLength = contextLength
-        this.tokenizer = tokenizer ?? TokenizerLoader.default()
-    }
+    private let systemMessages = ArrayList<ChatMessage>()
+    private let dialogMessages = ArrayList<ChatMessage>()
+    private let userMessages = ArrayList<ChatMessage>()
 
     public func system(prompt: String): PromptBuilder {
         if (!prompt.trimAscii().isEmpty()) {
@@ -69,7 +62,7 @@ protected class PromptBuilder {
     }
 
     public func dialog(msgs: Array<ChatMessage>): PromptBuilder {
-        // Filter out system messages from dialog history
+        // Filter out system messages from dialog
         this.dialogMessages.appendAll(
             msgs |> filter { msg => msg.role != ChatMessageRole.System } |> collectArray
         )
@@ -89,29 +82,17 @@ protected class PromptBuilder {
 
     public func build(): Array<ChatMessage> {
         let systemPrompt = this.mergeSystemPrompt()
-        var currTotalLength = this.tokenizer.countToken(systemPrompt)
-        for (userMsg in this.userMessages) {
-            currTotalLength += this.tokenizer.countToken(userMsg.content)
-        }
-        if (currTotalLength > this.contextLength) {
-            throw AgentExecutionException("The system & user prompt exceeds the context length: ${this.contextLength}")
-        }
-        // Merge system prompt and user messages, then add dialog messages
+        // Merge system prompt dialog message, and user messages
         let res = ArrayList<ChatMessage>()
         if (!systemPrompt.trimAscii().isEmpty()) {
             res.append(ChatMessage.system(systemPrompt))
         }
-        // Add dialog messages in reverse order until the total length exceeds the context length
-        // or all dialog messages are added
+        // Add dialog messages in reverse order
         for (i in (this.dialogMessages.size - 1)..=0:-1) {
             let msg = this.dialogMessages[i]
-            currTotalLength += this.tokenizer.countToken(msg.content)
-            if (currTotalLength > this.contextLength) {
-                break
-            } else {
-                res.append(msg)
-            }
+            res.append(msg)
         }
+        // Add user messages
         res.appendAll(this.userMessages)
         return res.toArray()
     }
