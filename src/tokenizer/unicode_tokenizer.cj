@@ -18,7 +18,7 @@ public class UnicodeTokenizer <: Tokenizer {
        throw UnsupportedException()
     }
 
-    public func tokenCount(input: String): Int64 {
+    public func countToken(input: String): Int64 {
         var cnCnt = 0
         var enCnt = 0
         var otherCnt = 0

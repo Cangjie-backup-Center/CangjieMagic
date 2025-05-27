@@ -37,7 +37,7 @@ public func escape(input: String): String {
     return String.fromUtf8(output.toArray())
 }
 
-public func regSearch(content:String, pattern:String, group!:Int64 = 0): Option<String> {
+public func regSearch(content: String, pattern: String, group!: Int64 = 0): Option<String> {
     var re = Regex(pattern)
     match (re.matches(content)) {
         case Some(r) => r.matchStr(group)

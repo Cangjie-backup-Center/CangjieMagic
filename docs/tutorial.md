@@ -506,6 +506,7 @@ dialog = resp.execInfo.getOrThrow().dialog
 - `description` 属性描述了工具的功能【必选】
 - `parameters` 属性描述了函数参数的含义，它接收 `<parameter-name>: <parameter-description>` 的键值对【可选】
 - `filterable` 是否可以被 Agent 过滤，配合 `@agent` 宏的 `enableToolFilter` 属性使用【可选】
+- `terminal` 是否终止 Agent 执行，当设置为 `true` 时，Agent 执行这个工具后将直接结束，并且函数的返回值作为 Agent 执行结果【可选】
 
 如果工具函数是全局函数，那么需要在 `tools` 属性中显式指定才能让 Agent 使用工具。
 

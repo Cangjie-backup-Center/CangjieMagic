@@ -1230,7 +1230,7 @@ public class MiniRag {
         this._entityNameVdb.add(Document(entity.name))
         this
             ._entityVdb
-            .add(Document("${entity.name}\n${String.join(entity.descs,delimiter:this._config.graphFieldDelimiter)}"))
+            .add(Document("${entity.name}\n${String.join(entity.descs, delimiter: this._config.graphFieldDelimiter)}"))
     }
 
     private func mergeRelationShipAndUpsert(relations: ArrayList<Edge<Relationship>>): Unit {
@@ -1267,7 +1267,7 @@ public class MiniRag {
         try {
             this._graph.upsertEdge(edge)
             let edgeDoc = Document(
-                "${String.join(relationShip.keywords,delimiter:" ")}\n${edge.srcId}\n${edge.tgtId}\n${String.join(relationShip.descs,delimiter:this._config.graphFieldDelimiter)}"
+                "${String.join(relationShip.keywords,delimiter:" ")}\n${edge.srcId}\n${edge.tgtId}\n${String.join(relationShip.descs, delimiter: this._config.graphFieldDelimiter)}"
             )
             edgeDoc.metadata.put("srcId", edge.srcId)
             edgeDoc.metadata.put("tgtId", edge.tgtId)

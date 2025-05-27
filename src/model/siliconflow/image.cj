@@ -46,7 +46,7 @@ public class SiliconflowImageModel <: ImageModel {
         get() { model }
     }
 
-    override public func create(imageReq: ImageRequest):ImageResponse {
+    override public func create(imageReq: ImageRequest): ImageResponse {
         let req = JsonObject()
         req.put("model", JsonString(model))
         req.put("prompt", JsonString(imageReq.prompt))

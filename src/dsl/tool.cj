@@ -60,10 +60,16 @@ class ToolAttr <: Attr {
         }
     }
 
+    prop terminal: Bool {
+        get() {
+            getBool("terminal", default: false)
+        }
+    }
+
     static func parse(attrTokens: Tokens): ToolAttr {
         let map = AttrParser(attrTokens).parseAttr(
             macroName: "tool",
-            validKeys: ["description", "parameters", "examples", "filterable"]
+            validKeys: ["description", "parameters", "examples", "filterable", "terminal"]
         )
         return ToolAttr(map)
     }
@@ -161,6 +167,7 @@ func buildCallNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
             // retType: $retType.getTypeSchema(),
             examples: [$(joinTokens(examples, Token(TokenKind.COMMA)))],
             filterable: $(newLiteralToken(toolAttr.filterable)),
+            terminal: $(newLiteralToken(toolAttr.terminal)),
             execFn: $execFunc
         ))
     } else {
@@ -171,6 +178,7 @@ func buildCallNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
             // retType: $retType.getTypeSchema(),
             examples: [$(joinTokens(examples, Token(TokenKind.COMMA)))],
             filterable: $(newLiteralToken(toolAttr.filterable)),
+            terminal: $(newLiteralToken(toolAttr.terminal)),
             execFn: $execFunc
         ))
     }

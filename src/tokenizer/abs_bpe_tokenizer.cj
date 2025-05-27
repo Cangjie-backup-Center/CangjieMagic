@@ -626,7 +626,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         return ids.toArray()
     }
 
-    public func tokenCount(input: String): Int64 {
+    public func countToken(input: String): Int64 {
         return encode(input).size
     }
      /**

@@ -392,6 +392,7 @@ The `@tool` macro decorates **top-level functions** or **methods inside Agent cl
 - `description`: Describes the tool's functionality (**required**).
 - `parameters`: Describes function parameter meanings as `<parameter-name>: <parameter-description>` key-value pairs (**optional**).
 - `filterable`: Whether the tool can be filtered by the Agent (used with `@agent`'s `enableToolFilter`) (**optional**).
+- `terminal`: Whether to terminate Agent execution. When set to true, the Agent will immediately end after executing this tool, and the function's return value will be used as the Agent's execution result **optional**
 
 Global tool functions must be explicitly specified in the `tools` attribute for the Agent to use them.
 

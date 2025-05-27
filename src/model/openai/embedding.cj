@@ -55,7 +55,7 @@ public class OpenAIEmbeddingModel <: EmbeddingModel {
         get() { model }
     }
 
-    public func create(embeddingReq: EmbeddingRequest):EmbeddingResponse {
+    public func create(embeddingReq: EmbeddingRequest): EmbeddingResponse {
         let req = JsonObject()
         req.put("input", JsonString(embeddingReq.prompt))
         req.put("model", JsonString(model))
