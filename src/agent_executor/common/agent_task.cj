@@ -12,12 +12,20 @@ import magic.log.LogUtils
 
 import std.collection.{HashMap, map, collectArray}
 
+/**
+ * Early stop information for the agent task.
+ * It contains the reason for stopping and the result of the task.
+ */
 protected struct EarlyStopInfo {
     EarlyStopInfo(
         protected let reason: String,
         protected let result!: String) { }
 }
 
+/**
+ * AgentTask represents a task that is being executed by an agent executor.
+ * It contains the agent, the request, and execution information.
+ */
 public open class AgentTask {
     public let agent: Agent
     public let request: AgentRequest
@@ -36,7 +44,7 @@ public open class AgentTask {
         this.request = request
         this.execInfo = request.execInfo ?? AgentExecutionInfo(agent.executor, dialog: BoundedDialog(contextLength: agent.model.contextLength))
         if (initPrompt) {
-            this.execInfo.dialog.addMessage([
+            this.execInfo.dialog.addMessages([
                 ChatMessage.system(agent.systemPrompt),
                 ChatMessage.user(request.question)
             ])

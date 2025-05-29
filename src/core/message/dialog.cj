@@ -3,8 +3,8 @@
  */
 package magic.core.message
 
+import std.collection.{ArrayList}
 
-import std.collection.{ArrayList, filter, forEach}
 /**
  * A collection of chat messages
  */
@@ -15,28 +15,12 @@ public open class Dialog <: ToString & Iterable<ChatMessage> {
         this.messages = ArrayList<ChatMessage>()
     }
 
-    public init(messages: ArrayList<ChatMessage>) {
-        this.messages = messages.clone()
-    }
-
-    public init(messages: Array<ChatMessage>) {
+    public init(messages: Collection<ChatMessage>) {
         this.messages = ArrayList<ChatMessage>(messages)
-    }
-
-    public open func clone(): Dialog {
-        return Dialog(messages.clone())
     }
 
     public open func addMessage(msg: ChatMessage): Unit {
         messages.append(msg)
-    }
-
-    public open func addMessage(messages: Array<ChatMessage>): Unit {
-        this.messages.appendAll(messages)
-    }
-
-    public func clear(): Unit {
-        messages.clear()
     }
 
     public open func removeLast(): ChatMessage {
@@ -44,6 +28,16 @@ public open class Dialog <: ToString & Iterable<ChatMessage> {
             throw Exception("Remove the last message from an empty history")
         }
         return messages.remove(messages.size - 1)
+    }
+
+    public func addMessages(messages: Array<ChatMessage>): Unit {
+        for (msg in messages) {
+            this.addMessage(msg)
+        }
+    }
+
+    public func clear(): Unit {
+        messages.clear()
     }
 
     public func iterator(): Iterator<ChatMessage> {
