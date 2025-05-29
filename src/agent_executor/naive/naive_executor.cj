@@ -21,14 +21,14 @@ public class NaiveExecutor <: AgentExecutor {
         get() {"naive"}
     }
 
-    private func getFullDialog(task: AgentTask): Array<ChatMessage> {
+    private func buildNaivePrompt(task: AgentTask): Array<ChatMessage> {
         // The system prompt of a naive agent may be empty
         let sysPrompt = if (task.agent.systemPrompt != "") {
             task.agent.systemPrompt
         } else {
             "Answer user question"
         }
-        PromptBuilder(task.agent.model.contextLength)
+        PromptBuilder()
             .system(sysPrompt)
             .retrieval(ReactPromptUtils.buildAgentRetrievalPrompt(task))
             .memory(ReactPromptUtils.buildAgentMemoryPrompt(task))
@@ -41,7 +41,7 @@ public class NaiveExecutor <: AgentExecutor {
         let task = AgentTask(agent, request)
         let dialog = task.execInfo.dialog
         LogUtils.info("${agent.name} runs")
-        dialog.addMessage(getFullDialog(task))
+        dialog.addMessages(this.buildNaivePrompt(task))
         LogUtils.info(agent.name, dialog)
         let assistantMsg = ModelUtils.makeChat(agent.model, dialog).getOrThrow()
         dialog.addMessage(assistantMsg)
@@ -53,7 +53,7 @@ public class NaiveExecutor <: AgentExecutor {
         let task = AgentTask(agent, request)
         let dialog = task.execInfo.dialog
         LogUtils.info("${agent.name} async runs")
-        dialog.addMessage(getFullDialog(task))
+        dialog.addMessages(this.buildNaivePrompt(task))
         LogUtils.info(agent.name, dialog)
         let asyncChatResp = agent.model.asyncCreate(ChatRequest(dialog, temperature: agent.temperature))
         if (request.verbose) {

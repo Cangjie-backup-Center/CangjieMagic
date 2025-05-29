@@ -14,7 +14,7 @@ import magic.parser.{TagStreamParser, ParserException}
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
         super(agent, request)
-        this.execInfo.dialog.addMessage(ReactPromptUtils.buildReactPrompt(this))
+        this.execInfo.dialog.addMessages(ReactPromptUtils.buildReactPrompt(this))
         LogUtils.info(agent.name, "----- Build Agent Task -----")
         LogUtils.info(agent.name, this.execInfo.dialog)
         LogUtils.info(agent.name, "----- End of Build Agent Task -----")

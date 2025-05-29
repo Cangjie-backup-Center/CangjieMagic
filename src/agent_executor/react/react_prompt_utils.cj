@@ -83,9 +83,10 @@ ${Tag.ANSWER.getCloseTag()}
 private let REACT_SUMMARIZE_USER_PROMPT = """
 Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}
 """
+
 protected struct ReactPromptUtils {
     static func buildReactPrompt(task: AgentTask): Array<ChatMessage> {
-        PromptBuilder(task.agent.model.contextLength)
+        PromptBuilder()
             .system(REACT_SYSTEM_PROMPT.trimAscii())
             .tool(ReactPromptUtils.buildAgentToolsPrompt(task))
             .system(task.agent.systemPrompt)
@@ -111,7 +112,7 @@ protected struct ReactPromptUtils {
             ("systemPrompt", task.agent.systemPrompt),
             ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task))
         ).trimAscii()
-        PromptBuilder(task.agent.model.contextLength)
+        PromptBuilder()
             .system(sys)
             .dialog(task.request.dialog ?? Dialog())
             .user(REACT_SUMMARIZE_USER_PROMPT.trimAscii())
