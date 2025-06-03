@@ -6,8 +6,6 @@ macro package magic.dsl
 import std.ast.*
 
 class UserAttr <: Attr {
-    private static let ATTR_NAMES = ["include"]
-
     UserAttr(map: AttrMap) { super(map) }
 
     init() { super(AttrMap()) }
