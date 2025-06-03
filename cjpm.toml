@@ -14,6 +14,8 @@
   compile-option = "--cfg \"ohos=false\""
 [target.x86_64-w64-mingw32]
   compile-option = "--cfg \"ohos=false\""
+[target.aarch64-unknown-linux-gnu]
+  compile-option = "--cfg \"ohos=false\""
 
 [target.x86_64-apple-darwin]
   compile-option = "--cfg \"ohos=false\""
