@@ -3,7 +3,7 @@
  */
 macro package magic.dsl
 
-import std.collection.{map, collectArrayList}
+import std.collection.{ArrayList, map, collectArray}
 import std.ast.*
 
 /**
@@ -26,11 +26,13 @@ public macro ai(attr: Tokens, input: Tokens): Tokens {
 /**
  * Transform the function as quick use of an agent.
  * @ai[...]
- * func foo(<args>{ ... }
+ * func foo(<args>) { ... }
  * AS
- * func __prompt_foo(<args>{ ... }
+ * func __prompt_foo(<args>) { ... }
+
  * @agent[...]
  * class __agent_foo {}
+
  * func foo(<args>{
  *   let agent = __agent_foo()
  *   let question = __prompt_foo(<args>)
@@ -44,16 +46,16 @@ func transformAi(input: Tokens, agentAttr: AgentAttr): Tokens {
     }
     let funcDecl = decl.asFuncDecl()
     let modifier = funcDecl.modifiers
-    let promptFuncDecl = parseFuncDecl(transformTemplate(funcDecl.toTokens()))
+    let promptFuncDecl = parseFuncDecl(transformPromptFunc(funcDecl))
     let agentName = newIdentifierToken("__agent_of_${funcDecl.identifier.value}")
     let anonymousAgent = transformAgent(quote($modifier class $agentName { }), agentAttr)
 
     let genericTypeParam = getGenericTypeParamsTokens(funcDecl)
     let genericConstraint = getGenericConstraintsTokens(funcDecl)
     let args: Tokens = joinTokens(
-            getFuncParamNameList(funcDecl) |>
-                map({ name: String => newIdentifierToken(name) }) |>
-                collectArrayList,
+            getFuncParamNames(funcDecl) |>
+                map { name: String => newIdentifierToken(name) } |>
+                collectArray,
             Token(TokenKind.COMMA)
         )
     let retType = checkFuncRetString(funcDecl)
@@ -67,4 +69,53 @@ func transformAi(input: Tokens, agentAttr: AgentAttr): Tokens {
             return agent.chat(question)
         }
     )
+}
+
+/**
+ * Rename the template function
+ * and insert a `StringBuilder` to the function body.
+ */
+func transformPromptFunc(funcDecl: FuncDecl): Tokens {
+    // Make sure that there is no `return`s in the template function.
+    if (hasReturnExpr(funcDecl)) {
+        throw DslException("Template functions cannot contain return expressions.")
+    }
+    let modifier = funcDecl.modifiers
+    let name = funcDecl.identifier
+    let newName = newIdentifierToken("${name.value}${TEMPLATE_FUNC_NAME_POSTFIX}")
+    let paramList = funcDecl.funcParams
+    let retType = checkFuncRetString(funcDecl)
+    let funcBody = funcDecl.block.nodes
+    let genericTypeParam = getGenericTypeParamsTokens(funcDecl)
+    let genericConstraint = getGenericConstraintsTokens(funcDecl)
+
+    return quote (
+        $modifier func $newName $genericTypeParam ( $paramList ): $retType $genericConstraint {
+            let $PROMPT_BUILDER = StringBuilder()
+            $funcBody
+            return $PROMPT_BUILDER.toString()
+        }
+    )
+}
+
+
+/**
+ * Check whether the return type of a function is String.
+ */
+func checkFuncRetString(funcDecl: FuncDecl): Token {
+    try {
+        let ty = funcDecl.declType
+        if (!ty.isRefType()) {
+            eprintln("Function ${funcDecl.identifier.value} should return String")
+            return Token(TokenKind.IDENTIFIER, "String")
+        }
+        let refTy: RefType = ty.asRefType()
+        let id = refTy.identifier
+        if (!(id.kind == TokenKind.IDENTIFIER && id.value == "String")) {
+            eprintln("Function ${funcDecl.identifier.value} should return String")
+        }
+        return Token(TokenKind.IDENTIFIER, "String")
+    } catch (_: ASTException) {
+        return Token(TokenKind.IDENTIFIER, "String")
+    }
 }
