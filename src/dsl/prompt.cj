@@ -99,3 +99,31 @@ func transformPrompt(input: Tokens, promptAttr: PromptAttr): Tokens {
         return transformStringLiteral(tokens, isDecl: true)
     }
 }
+
+/**
+ * 1. Find all independent string literals, which are top-level STRING_LITERAL tokens
+ *    Since we cannot mutate AST in-place, we collect positions of these tokens
+ * 2. Replace all these string literals (tokens) with a call of `prompt_builder`
+ */
+func transformStringLiteral(input: Tokens, isDecl!: Bool): Tokens {
+    let node: Node = if (isDecl) {
+        parseDecl(input)
+    } else {
+        parseExpr(input)
+    }
+    let collector = collectIndependentStringLiteral(node)
+    let transformedTokens = Tokens()
+    for (token in input) {
+        if ((token.kind == TokenKind.STRING_LITERAL ||
+            token.kind == TokenKind.MULTILINE_STRING) &&
+            collector.isIndependentStringLiteral(token)) {
+            transformedTokens.append(quote(
+                $PROMPT_BUILDER.append($token)
+                // $token
+            ))
+        } else {
+            transformedTokens.append(token)
+        }
+    }
+    return transformedTokens
+}

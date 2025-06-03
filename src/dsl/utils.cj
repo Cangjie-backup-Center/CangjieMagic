@@ -3,16 +3,27 @@
  */
 macro package magic.dsl
 
-import std.collection.ArrayList
+import std.collection.{ArrayList, map, collectArray}
 import std.ast.*
 @When[cjc_version >= "0.56.4"]
 internal import std.fs.exists
 @When[cjc_version < "0.56.4"]
-import std.fs.{File, Directory}
+import std.fs.{Directory}
+
+import std.fs.{File, OpenOption}
+import std.io.StringReader
 
 @When[cjc_version < "0.56.4"]
 protected func exists(path: String): Bool {
     return File.exists(path) || Directory.exists(path)
+}
+
+protected func readFile(path: String): String {
+    try (file = File(path, OpenOption.Open(true, false))) {
+        let reader = StringReader(file)
+        return reader.readToEnd()
+    }
+    throw UnsupportedException()
 }
 
 protected func newIdentifierToken(id: String): Token {
@@ -179,15 +190,22 @@ protected func renameFunctionAsOperator(funcDecl: FuncDecl): Tokens {
     )
 }
 
-protected func getFuncParamTypes(funcDecl: FuncDecl): ArrayList<Tokens> {
-    let funcParamList: ArrayList<FuncParam> = funcDecl.funcParams
-    let allTypeTokens = ArrayList<Tokens>()
-    // Iterate all parameters.
-    for (param in funcParamList) {
-        let paramTy = param.paramType
-        allTypeTokens.append(paramTy.toTokens())
-    }
-    return allTypeTokens
+/**
+ * Get the names of all parameters in a function declaration.
+ */
+protected func getFuncParamNames(funcDecl: FuncDecl): Array<String> {
+    return funcDecl.funcParams |>
+        map { param: FuncParam => param.identifier.value } |>
+        collectArray
+}
+
+/**
+ * Get the types of all parameters in a function declaration.
+ */
+protected func getFuncParamTypes(funcDecl: FuncDecl): Array<Tokens> {
+    return funcDecl.funcParams |>
+        map { param: FuncParam => param.paramType.toTokens() } |>
+        collectArray
 }
 
 protected func getRetTypeTokens(funcDecl: FuncDecl): Tokens {
@@ -326,6 +344,15 @@ extend Node <: NodeExt {
     protected func isLitConstExpr(): Bool {
         match (this as LitConstExpr) {
             case Some(_) => true
+            case None => false
+        }
+    }
+
+    protected func isStringLiteral(): Bool {
+        match (this as LitConstExpr) {
+            case Some(lit) =>
+                lit.literal.kind == TokenKind.STRING_LITERAL ||
+                lit.literal.kind == TokenKind.MULTILINE_STRING
             case None => false
         }
     }
