@@ -6,7 +6,7 @@ package magic.jsonable
 import encoding.json.*
 import std.collection.{map, collectArray}
 
-public struct JsonUtils {
+protected struct JsonUtils {
     public static func buildJsonObject(key: String, value: String): JsonObject {
         let j = JsonObject()
         j.put(key, JsonString(value))
