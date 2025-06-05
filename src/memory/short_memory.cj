@@ -8,11 +8,18 @@ import magic.vdb.{SemanticSet, InMemoryVectorDatabase, SimpleIndexMap}
 import magic.core.model.EmbeddingModel
 import magic.config.Config
 
+/**
+ * A simple memory implementation that uses a in-memory vector database
+ * to store and retrieve segments of text based on semantic similarity.
+ */
 public class ShortMemory <: Memory {
     private let vecSet = SemanticSet(vectorDB: InMemoryVectorDatabase(),
                                      indexMap: SimpleIndexMap(),
                                      embeddingModel: Config.defaultEmbeddingModel)
 
+    /**
+     * Add a segment of text to the memory.
+     */
     override public func update(segment: String): Unit {
         vecSet.put(segment)
     }

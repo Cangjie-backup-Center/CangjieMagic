@@ -13,7 +13,7 @@ import std.collection.ArrayList
 @When[ohos == "true"]
 public struct LogUtils {
     /**
-     * AppLog.info will truncate a log message, so we split it as multiple messages
+     * AppLog.info will truncate a long message, so we split it as multiple messages
      */
     private static func splitMessages(msg: String): Array<String> {
         let result = ArrayList<String>()
