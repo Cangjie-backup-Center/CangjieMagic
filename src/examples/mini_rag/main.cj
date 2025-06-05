@@ -11,25 +11,28 @@ import magic.config.Config
 import log.LogLevel
 import std.fs.*
 
-@agent[model: "deepseek:deepseek-chat", 
- executor: "naive", 
- rag: { source: miniRagRetriever(), mode: "static" }]
+@agent[
+    model: "deepseek:deepseek-chat", 
+    executor: "naive", 
+    rag: { source: miniRagRetriever(), mode: "static" }
+]
 class MiniRagAgent {
     @prompt("""
----Role---
-You are a helpful assistant responding to questions about documents provided.
----Goal---
-Generate a response of the target length and format that responds to the user's question, summarizing all information in the input data tables appropriate for the response length and format, and incorporating any relevant general knowledge.
-If you don't know the answer, just say so. Do not make anything up.
-Do not include information where the supporting evidence for it is not provided.
-Add sections and commentary to the response as appropriate for the length and format. Style the response in markdown.
-""")
+        ---Role---
+        You are a helpful assistant responding to questions about documents provided.
+        ---Goal---
+        Generate a response of the target length and format that responds to the user's question, summarizing all information in the input data tables appropriate for the response length and format, and incorporating any relevant general knowledge.
+        If you don't know the answer, just say so. Do not make anything up.
+        Do not include information where the supporting evidence for it is not provided.
+        Add sections and commentary to the response as appropriate for the length and format. Style the response in markdown.
+    """
+    )
 }
 
 func instantiate(): MiniRag {
     let model = ModelManager.createChatModel("deepseek:deepseek-chat")
-    let embeddingModel = OllamaEmbeddingModel("bge-m3:567m", baseURL: "http://127.0.0.1:11434")
-    let tokenizer = Cl100kTokenizer("src/examples/mini_rag/tiktoken/cl100k_base.tiktoken")
+    let embeddingModel = ModelManager.createEmbeddingModel("ollama:bge-m3:567m")
+    let tokenizer = Cl100kTokenizer("resource/mini_rag/tiktoken/cl100k_base.tiktoken")
     MiniRagBuilder(MiniRagConfig(model, embeddingModel, tokenizer)).build()
 }
 
@@ -40,7 +43,7 @@ func miniRagRetriever(): Retriever {
 
 func buildGraph(): Unit {
     let miniRag = instantiate()
-    for (entry in Directory("src/examples/mini_rag/data")) {
+    for (entry in Directory("resource/mini_rag/data")) {
         try (file = File.openRead(entry.path)) {
             let content = String.fromUtf8(readToEnd(file))
             miniRag.insert(content)
@@ -51,6 +54,7 @@ func buildGraph(): Unit {
 
 main(): Unit {
     Config.env["DEEPSEEK_API_KEY"] = "<your api key>"
+    Config.env["OLLAMA_BASE_URL"] = "http://127.0.0.1:11434"
     Config.logLevel = LogLevel.INFO
     // if graph is already built, turn it off
     var build = true
