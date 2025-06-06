@@ -14,4 +14,4 @@ public interface VectorStorage {
     func add(doc: Document): Unit
 }
 
-public abstract class LocalVectorStorage <: VectorStorage & LocalStorage {}
+public interface LocalVectorStorage <: VectorStorage & LocalStorage {}

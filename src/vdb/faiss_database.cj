@@ -103,7 +103,7 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
                     break
                 }
                 let index = indexPtr.read(i)
-                result.append(SearchResult(index, dist))
+                result.append(SearchResult(index, Float64(dist)))
             }
             LibC.free(distancePtr)
             LibC.free(indexPtr)

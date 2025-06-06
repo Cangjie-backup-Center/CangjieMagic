@@ -12,7 +12,7 @@ import std.collection.*
 import encoding.json.*
 import std.convert.Parsable
 
-public class JsonMemroyVectorStorage <: LocalVectorStorage {
+public class JsonMemoryVectorStorage <: LocalVectorStorage {
     private let _workspace: String
     private let _collection: String
     private let _indexPath: String
