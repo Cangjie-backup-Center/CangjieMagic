@@ -7,6 +7,7 @@ import magic.core.model.EmbeddingModel
 import magic.storage.kv.*
 import magic.storage.LocalStorage
 import magic.core.rag.Document
+import magic.utils.{exists, removeIfExists}
 import std.sync.*
 import std.fs.*
 import std.collection.*
@@ -99,8 +100,20 @@ public class FaissVectorStorage <: LocalVectorStorage {
             _lock.readMutex.lock()
             let vec = this._vectorBuilder.createEmbeddingVector(query)
             let offsets = this._vdb.search(vec, number: topK, minDistance: threshold)
-            offsets |> map({idx => this._index.get(idx)}) |> map(
+            offsets |> map({sr => this._index.get(sr.index)}) |> map(
                 {str => Document.fromJsonValue(JsonValue.fromStr(str))}) |> collectArray
+        } finally {
+            _lock.readMutex.unlock()
+        }
+    }
+
+    public func queryWithScore(query: String, topK: Int64, threshold!: Float64 = 0.6): Array<(Document, Float64)> {
+        try {
+            _lock.readMutex.lock()
+            let vec = this._vectorBuilder.createEmbeddingVector(query)
+            let offsets = this._vdb.search(vec, number: topK, minDistance: threshold)
+            offsets |> map({sr => (this._index.get(sr.index), sr.dist)}) |> map(
+                {tuple => (Document.fromJsonValue(JsonValue.fromStr(tuple[0])), tuple[1])}) |> collectArray
         } finally {
             _lock.readMutex.unlock()
         }

@@ -10,7 +10,7 @@
     - [func query](#func-query)
     - [func reset](#func-reset)
     - [prop workspace](#prop-workspace)
-  - [class JsonMemroyVectorStorage](#class-jsonmemroyvectorstorage)
+  - [class JsonMemoryVectorStorage](#class-jsonmemoryvectorstorage)
     - [func add](#func-add-1)
     - [func close](#func-close-1)
     - [prop collection](#prop-collection-1)
@@ -94,7 +94,7 @@ prop workspace: String
 - 描述: 获取工作区路径
 
 
-### class JsonMemroyVectorStorage
+### class JsonMemoryVectorStorage
 #### func add
 ```
 public func add(doc: Document): Unit
@@ -131,7 +131,7 @@ public prop embeddingModel: EmbeddingModel
 ```
 public init(embeddingModel: EmbeddingModel, workspace!: String = ".storage", collection!: String = "default")
 ```
-- 描述: 初始化JsonMemroyVectorStorage实例
+- 描述: 初始化JsonMemoryVectorStorage实例
 - 参数:
   - `embeddingModel`: `EmbeddingModel`, 用于生成嵌入向量的模型
   - `workspace`: `String`, 存储向量数据的目录路径，默认为".storage"

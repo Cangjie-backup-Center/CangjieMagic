@@ -506,7 +506,7 @@ public class MiniRagBuilder {
         workspace, collection => JsonKVStorage<Document>(workspace: workspace, collection: collection)
     }
     var _vectorStroageInstance: (workspace: String, collection: String, embeddingModel: EmbeddingModel) -> LocalVectorStorage = {
-        workspace, collection, embeddingModel => JsonMemroyVectorStorage(embeddingModel, workspace: workspace,
+        workspace, collection, embeddingModel => JsonMemoryVectorStorage(embeddingModel, workspace: workspace,
             collection: collection)
     }
     var _graphStorageInstance: (workspace: String, collection: String) -> LocalGraphStorage<Entity, Relationship> = {
