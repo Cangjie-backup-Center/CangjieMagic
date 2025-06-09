@@ -7,10 +7,10 @@ import magic.core.agent.Agent
 import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
 
-protected class IteratorWrapper <: Iterator<String> {
-    protected IteratorWrapper(
-        private let agent: Agent,
-        private let workerFut: Future<Iterator<String>>
+protected class FutureIteratorWrapper <: Iterator<String> {
+    protected FutureIteratorWrapper(
+        private let task: AgentTask,
+        private let fut: Future<Iterator<String>>
     ) { }
 
     /**
@@ -19,12 +19,13 @@ protected class IteratorWrapper <: Iterator<String> {
     private let buffer = StringBuilder()
 
     override public func next(): Option<String> {
-        let asyncAnswer = workerFut.get()
-        let data = asyncAnswer.next()
+        let iterator = fut.get()
+        let data = iterator.next()
         match (data) {
             case Some(v) => buffer.append(v)
             case None =>
-                LogUtils.info(this.agent.name, buffer.toString().withTag(Tag.ANSWER))
+                let answer = buffer.toString()
+                LogUtils.info(task.agent.name, answer.withTag(Tag.ANSWER))
         }
         return data
     }

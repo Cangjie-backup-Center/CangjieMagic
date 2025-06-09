@@ -4,10 +4,10 @@
 package magic.agent_executor.tool_loop
 
 import magic.core.agent.*
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 import magic.core.model.{ChatRequest}
 import magic.config.Config
-import magic.agent_executor.common.{AgentTask, IteratorWrapper}
+import magic.agent_executor.common.{AgentTask, FutureIteratorWrapper}
 import magic.agent_executor.dsl.{ExecutionOpSet, ExecutionState}
 import magic.parser.OutputParserUtils
 import magic.log.LogUtils
@@ -49,7 +49,7 @@ public class ToolLoopExecutor <: AgentExecutor {
             return state.answer
         } finally {
             if (task.request.verbose) {
-                task.execInfo.verboseChannel.close()
+                task.execution.verboseChannel.close()
             }
         }
     }
@@ -57,7 +57,7 @@ public class ToolLoopExecutor <: AgentExecutor {
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         let task = AgentTask(agent, request, initPrompt: true)
         let answer = this.doRun(task)
-        return AgentResponse(answer, execInfo: task.execInfo)
+        return AgentResponse(answer, execution: task.execution)
     }
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
@@ -66,6 +66,6 @@ public class ToolLoopExecutor <: AgentExecutor {
             let answer = this.doRun(task)
             return [answer].iterator()
         }
-        return AsyncAgentResponse(IteratorWrapper(agent, fut), execInfo: task.execInfo)
+        return AsyncAgentResponse(FutureIteratorWrapper(task, fut), execution: task.execution)
     }
 }

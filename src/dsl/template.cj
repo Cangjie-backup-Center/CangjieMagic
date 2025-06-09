@@ -134,6 +134,85 @@ private func escapeStringForTemplate(input: String): String {
     return input.replace("\${", "\\\${")
 }
 
+private struct Loop {
+    Loop(
+        let varName: String,
+        let arrayExpr: String,
+        let body: String) {
+    }
+
+    /**
+     * Extract top-level loops from the string and split the string by these loops
+     * Split "...{% for ...%} xxx {% /for %}...{% for ...%} xxx {% /for %}..."
+    */
+    static func split(str: String): (Array<Loop>, Array<String>) {
+        let loops = ArrayList<Loop>()
+        let splitStrings = ArrayList<String>()
+
+        // Regex to match loops in the format "{for item in <expr>}...{/for}"
+        // <expr> allows identifiers, member access, array access, and map access
+        let startRegex = Regex("{%\\s*for\\s+(\\w+)\\s+in\\s+([\\w\\d\\.\\[\\]\"']+)\\s*%}")
+        let endRegex = Regex("{%\\s*/for\\s*%}")
+        let startMatcher = startRegex.matcher(str)
+        let endMatcher = endRegex.matcher(str)
+
+        // Match the next start or end loop
+        // Returns (matchData, isStart)> where isStart is true for start loop and false for end loop
+        let matchNext: (Int64) -> Option<(MatchData, Bool)> = { pos: Int64 =>
+            return match ((startMatcher.find(pos), endMatcher.find(pos))) {
+                case (Some(mdStart), None) => Some((mdStart, true))
+                case (None, Some(mdEnd)) => Some((mdEnd, false))
+                case (Some(mdStart), Some(mdEnd)) =>
+                    if (mdStart.matchPosition().start < mdEnd.matchPosition().start) {
+                        Some((mdStart, true))
+                    } else {
+                        Some((mdEnd, false))
+                    }
+                case (None, None) => None
+            }
+        }
+
+        var currIndex = 0           // The current start index to match
+        var currLoopVarName = ""    // Var name of the current matched loop
+        var currLoopArrayExpr = ""  // Expr of the current matched loop
+        var currLoopBodyIndex = -1  // Start index of the current loop body
+        var nestDepth = 0           // The depth of nested loops
+
+        while (let Some((md, isStart)) <- matchNext(currIndex)) {
+            let matchPos = md.matchPosition()
+            if (isStart) {
+                if (nestDepth == 0) {
+                    splitStrings.append(str[currIndex..matchPos.start])
+                    currIndex = matchPos.end
+                    currLoopVarName = md.matchStr(1)
+                    currLoopArrayExpr = md.matchStr(2)
+                    currLoopBodyIndex = currIndex
+                } else {
+                    currIndex = matchPos.end
+                }
+                nestDepth += 1
+            } else {
+                let matchPos = md.matchPosition()
+                if (nestDepth == 0) {
+                    throw DslException("Invalid {% /for %} loop without beginning")
+                } else if (nestDepth == 1) {
+                    loops.append(
+                        Loop(
+                            currLoopVarName,
+                            currLoopArrayExpr,
+                            str[currLoopBodyIndex..matchPos.start]
+                        )
+                    )
+                }
+                currIndex = matchPos.end
+                nestDepth -= 1
+            }
+        } 
+        splitStrings.append(str[currIndex..])
+        return (loops.toArray(), splitStrings.toArray())
+    }
+}
+
 class TemplateCompiler {
     private static const ESCAPED_NEWLINE = "#^#"
 
@@ -144,32 +223,26 @@ class TemplateCompiler {
     }
 
     private func compileLoops(template: String): Tokens {
-        // Regex to match loops in the format "{for item in <expr>}...{/for}"
-        // <expr> allows identifiers, member access, array access, and map access
-        let regex = Regex("{%\\s*for\\s+(\\w+)\\s+in\\s+([\\w\\d\\.\\[\\]\"']+)\\s*%}(.*?){%\\s*/for\\s*%}")
-        let matcher = regex.matcher(template)
-        // Split "...{for ...}xxx{/for}...{for ...}xxx{/for}..."
-        let subStrings = matcher.split()
+        let (loops, splitStrings) = Loop.split(template)
         // And find all variables
-        let loops: Array<MatchData> = matcher.findAll() ?? []
-        if (subStrings.size != loops.size + 1) {
-            throw DslException("Template format error: the number of loops does not match the number of substrings")
+        if (splitStrings.size != loops.size + 1) {
+            throw DslException("Template format error: the number of loops does not match the number of substrings. #Loop: ${loops.size}, #Substrings: ${splitStrings.size}")
         }
         // Compile loop content and construct the final string
         let tokens = Tokens()
-        tokens.append(this.compileExprs(subStrings[0]))
+        tokens.append(this.compileExprs(splitStrings[0]))
         for (i in 0..loops.size) {
             tokens.append(this.compileLoop(loops[i]))
-            tokens.append(this.compileExprs(subStrings[i+1]))
+            tokens.append(this.compileExprs(splitStrings[i+1]))
         }
         // Replace the special symbol with newlines
         return tokens
     }
 
-    private func compileLoop(loop: MatchData): Tokens {
-        let itemVar = newIdentifierToken(loop.matchStr(1))
-        let array = this.parseExpr(loop.matchStr(2))
-        let loopBody = this.compileLoops(loop.matchStr(3))
+    private func compileLoop(loop: Loop): Tokens {
+        let itemVar = newIdentifierToken(loop.varName)
+        let array = this.parseExpr(loop.arrayExpr)
+        let loopBody = this.compileLoops(loop.body)
         return quote(
             for ($itemVar in $array) {
                 $loopBody

@@ -8,7 +8,7 @@ internal import magic.core.agent.*
 internal import magic.prompt.Template
 internal import magic.log.LogUtils
 internal import magic.parser.OutputParserUtils
-internal import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
+internal import magic.core.message.{Message, MessageRole, MessageList}
 
 import std.collection.ArrayList
 
@@ -43,7 +43,7 @@ abstract class DiscussGroup {
     let topic: String
     let members: ArrayList<Agent>
     let model: ChatModel
-    let discussion = Dialog()
+    let discussion = MessageList()
     var currSpeakerIndex = 0
 
     public init(topic: String, members: ArrayList<Agent>) {
@@ -54,7 +54,7 @@ abstract class DiscussGroup {
 
     public func discuss(initiator: String, speech: String, maxRound!: Int64): AgentResponse {
         if (let Some(idx) <- findAgent(initiator)) {
-            discussion.addMessage(ChatMessage.assistant(speech, name: members[idx].name))
+            discussion.addMessage(Message.assistant(speech, name: members[idx].name))
             currSpeakerIndex = idx + 1 // For round robin, we should adjust the index
         } else {
             throw AgentExecutionException("Initiator agent is not existed.")
@@ -81,7 +81,7 @@ abstract class DiscussGroup {
                     throw AgentExecutionException("The speaker agent failed to make speech")
             }
             LogUtils.info(this.name, "The speaker says: ${speech}")
-            discussion.addMessage(ChatMessage.assistant(speech, name: speaker.name))
+            discussion.addMessage(Message.assistant(speech, name: speaker.name))
             // LogUtils.info(this.name, assistantMsg)
         }
         throw AgentExecutionException("Exceed the max discussion round")

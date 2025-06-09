@@ -3,8 +3,9 @@
  */
 package magic.agent_executor.dsl
 
-import magic.core.agent.{Agent, AgentRequest, AgentExecutionInfo, AgentExecutionException}
-import magic.core.message.ChatMessageRole
+import magic.core.agent.{Agent, AgentRequest, AgentExecutionException}
+import magic.core.message.MessageRole
+import magic.agent.AgentExecutionInfo
 import magic.agent_executor.common.AgentTask
 import magic.dsl.jsonable
 import magic.jsonable.{Jsonable, JsonableException, FieldSchema, TypeSchema}
@@ -66,9 +67,9 @@ public class ExecutionState {
         }
     }
 
-    protected prop execInfo: AgentExecutionInfo {
+    protected prop execution: AgentExecutionInfo {
         get() {
-            return this.task.execInfo
+            return this.task.execution
         }
     }
 
@@ -85,8 +86,8 @@ public class ExecutionState {
     private func extractExecutionProcess(): String {
         // All assistant messages comprise the execution process
         let strArr = ArrayList<String>()
-        for (msg in this.task.execInfo.dialog) {
-            if (msg.role == ChatMessageRole.Assistant) {
+        for (msg in this.task.execution.stepMessages) {
+            if (msg.role == MessageRole.Assistant) {
                 strArr.append(msg.content.withoutTag())
             }
         }

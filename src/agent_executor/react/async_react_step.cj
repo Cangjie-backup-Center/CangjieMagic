@@ -4,7 +4,7 @@
 package magic.agent_executor.react
 
 import magic.core.*
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.utils.{StringExt, sleep2}

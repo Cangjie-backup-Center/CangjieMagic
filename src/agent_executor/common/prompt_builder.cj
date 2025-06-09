@@ -1,29 +1,27 @@
 package magic.agent_executor.common
 
-import magic.core.agent.{AgentExecutionException}
-import magic.core.tokenizer.{Tokenizer}
-import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
+import magic.core.agent.AgentExecutor
+import magic.core.message.{Message, Conversation}
 import magic.tokenizer.{TokenizerLoader, TokenizerType}
+import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
 
 import std.collection.{ArrayList, forEach, map, filter, collectArray}
 
 /**
- * A builder for constructing prompts.
+ * A builder for constructing agent system prompts.
  * This class is used to build the initial prompts for the agent executor.
  * It usually builds
  *   - the system prompt (comprising system, retrieval, tool, and memory prompts),
- *   - the dialogs (conversation history between the agent and user), 
- *   - and the user prompts (user's questions).
+ *   - the conversation (between the agent and user),
  */
 protected class PromptBuilder {
-    private let systemMessages = ArrayList<ChatMessage>()
-    private let dialogMessages = ArrayList<ChatMessage>()
-    private let userMessages = ArrayList<ChatMessage>()
+    private let systemMessages = ArrayList<Message>()
+    private var _conversation: Option<Conversation> = None
 
     public func system(prompt: String): PromptBuilder {
         if (!prompt.trimAscii().isEmpty()) {
-            this.systemMessages.append(ChatMessage.system(prompt))
+            this.systemMessages.append(Message.system(prompt))
         }
         this
     }
@@ -43,34 +41,9 @@ protected class PromptBuilder {
         this.system(prompt)
     }
 
-    public func user(prompts: Array<String>): PromptBuilder {
-        for (prompt in prompts) {
-            if (!prompt.trimAscii().isEmpty()) {
-                this.userMessages.append(ChatMessage.user(prompt))
-            }
-        }
+    public func conversation(con: Conversation): PromptBuilder {
+        this._conversation = con
         this
-    }
-
-    public func user(promptMessages: Array<ChatMessage>): PromptBuilder {
-        for (msg in promptMessages) {
-            if (!msg.content.trimAscii().isEmpty()) {
-                this.userMessages.append(msg)
-            }
-        }
-        this
-    }
-
-    public func dialog(msgs: Array<ChatMessage>): PromptBuilder {
-        // Filter out system messages from dialog
-        this.dialogMessages.appendAll(
-            msgs |> filter { msg => msg.role != ChatMessageRole.System } |> collectArray
-        )
-        this
-    }
-
-    public func dialog(dialog: Dialog): PromptBuilder {
-        this.dialog(dialog.toArray())
     }
 
     private func mergeSystemPrompt(): String {
@@ -80,20 +53,28 @@ protected class PromptBuilder {
         )
     }
 
-    public func build(): Array<ChatMessage> {
+    public func buildFor(executor: AgentExecutor): Array<Message> {
         let systemPrompt = this.mergeSystemPrompt()
-        // Merge system prompt dialog message, and user messages
-        let res = ArrayList<ChatMessage>()
+        // Merge system prompt messageList message, and user messages
+        let res = ArrayList<Message>()
         if (!systemPrompt.trimAscii().isEmpty()) {
-            res.append(ChatMessage.system(systemPrompt))
+            res.append(Message.system(systemPrompt))
         }
-        // Add dialog messages in reverse order
-        for (i in (this.dialogMessages.size - 1)..=0:-1) {
-            let msg = this.dialogMessages[i]
-            res.append(msg)
+        // Add conversation messages in reverse order
+        if (let Some(con) <- this._conversation) {
+            for (i in (con.size - 1)..=0:-1) {
+                let chatRound = con[i]
+                res.append(Message.user(chatRound.question))
+                for (msg in chatRound.steps) {
+                    res.append(msg)
+                }
+                if(executor.name == "react" || executor.name == "plan-react") {
+                    res.append(Message.assistant(chatRound.answer.withTag(Tag.ANSWER)))
+                } else {
+                    res.append(Message.assistant(chatRound.answer))
+                }
+            }
         }
-        // Add user messages
-        res.appendAll(this.userMessages)
         return res.toArray()
     }
 }

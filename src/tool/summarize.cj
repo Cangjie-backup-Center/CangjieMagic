@@ -3,7 +3,7 @@
  */
 package magic.tool
 
-import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
+import magic.core.message.{Message, MessageRole, MessageList}
 import magic.core.model.{ChatModel, ChatRequest}
 import magic.model.ModelUtils
 import magic.log.LogUtils
@@ -25,7 +25,7 @@ Now, make the summary:
 
 func summarize(model: ChatModel, content: String): String {
     let messages = [
-        ChatMessage.system(AGENT_SUMMARY_PROMPT.format(
+        Message.system(AGENT_SUMMARY_PROMPT.format(
             ("instruction", content)
         ))
     ]

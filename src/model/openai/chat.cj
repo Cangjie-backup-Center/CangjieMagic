@@ -33,11 +33,11 @@ private class OpenAIChatResponse {
 private class Choice {
     let finish_reason: String
     let index: Int64
-    let message: Message
+    let message: OpenAIChatMessage
 }
 
 @jsonable
-private class Message {
+private class OpenAIChatMessage {
     let content: String
     let role: String
     let reasoning_content: Option<String>
@@ -82,7 +82,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
     AsyncChatChunkStream(let httpStream: HttpStream) { }
 
     let start = DateTime.now()
-    private var role: Option<ChatMessageRole> = None
+    private var role: Option<MessageRole> = None
     private var usage: Option<ChatUsage> = None
     private var finished = false
 
@@ -128,13 +128,13 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
                 while (let Some(_) <- httpStream.next()) { }
                 finished = true
                 return AsyncChatChunk(
-                    message: ChatMessage(this.role.getOrThrow(), ""),
+                    message: Message(this.role.getOrThrow(), ""),
                     done: true,
                     usage: this.usage
                 )
             } else {
                 return AsyncChatChunk(
-                    message: ChatMessage(
+                    message: Message(
                         this.role.getOrThrow(),
                         content,
                         reason: if (reason.isEmpty()) { None } else { reason}),
@@ -145,7 +145,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
         // Some model services may not return "[DONE]" and finish the http stream directly?
         finished = true
         return AsyncChatChunk(
-            message: ChatMessage(this.role.getOrThrow(), ""),
+            message: Message(this.role.getOrThrow(), ""),
             done: true,
             usage: this.usage
         )
@@ -168,7 +168,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
         for (chunkChoice in chunkResp.choices) {
             let delta = chunkChoice.delta
             if (let Some(role) <- delta.role) {
-                this.role = ChatMessageRole.fromStr(role)
+                this.role = MessageRole.fromStr(role)
             }
             reasonContentBuilder.append(delta.reasoning_content ?? "")
             contentBuilder.append(delta.content)
@@ -242,7 +242,7 @@ public class OpenAIChatModel <: ChatModel {
         ])
 
         let req = JsonObject()
-        requestAddChatHistory(req, chatReq.dialog)
+        requestAddChatHistory(req, chatReq.messageList)
         req.put("model", JsonString(model))
         req.put("stream", JsonBool(stream))
         if (let Some(items) <- chatReq.stop) {
@@ -264,9 +264,9 @@ public class OpenAIChatModel <: ChatModel {
         return (header, req)
     }
 
-    private func requestAddChatHistory(request: JsonObject, dialog: Dialog): Unit {
+    private func requestAddChatHistory(request: JsonObject, messageList: MessageList): Unit {
         let ja = JsonArray()
-        for (msg in dialog) {
+        for (msg in messageList) {
             let msgJson = if (let Some(image) <- msg.image) {
                 // Schema: { role: string,
                 //           content: [ {type: string, text: string},
@@ -296,12 +296,12 @@ public class OpenAIChatModel <: ChatModel {
     // cjlint-ignore -start !G.FUNC.01 !G.ERR.03
     private func parseChatResponse(body: String, duration: Duration): ChatResponse {
         let resp = OpenAIChatResponse.fromJsonValue(JsonValue.fromStr(body))
-        let dialog = Dialog()
+        let messageList = MessageList()
         for (choice in resp.choices) {
             let msg = choice.message
-            dialog.addMessage(
-                ChatMessage(
-                    ChatMessageRole.fromStr(msg.role),
+            messageList.addMessage(
+                Message(
+                    MessageRole.fromStr(msg.role),
                     msg.content,
                     reason: msg.reasoning_content
                 )
@@ -313,7 +313,7 @@ public class OpenAIChatModel <: ChatModel {
             totalTokens: resp.usage.total_tokens,
             timeCost: duration
         )
-        return ChatResponse(dialog, resp.model, usage: usage)
+        return ChatResponse(messageList, resp.model, usage: usage)
     }
 
     override public func asyncCreate(chatReq: ChatRequest): AsyncChatResponse {

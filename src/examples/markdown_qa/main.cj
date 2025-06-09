@@ -36,11 +36,9 @@ main () {
         print(chunk)
     }
     println("\n---end---")
-    if (let Some(info) <- aresp.execInfo) {
-        for (info in info.retrievalInfo) {
-            for (doc in info.retrieval.sources) {
-                println(doc.metadata)
-            }
+    for (info in aresp.execution.retrievalInfo) {
+        for (doc in info.retrieval.sources) {
+            println(doc.metadata)
         }
     }
 }

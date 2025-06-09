@@ -7,7 +7,7 @@ import magic.prompt.Template
 import magic.log.LogUtils
 import magic.parser.OutputParserUtils
 import magic.core.agent.*
-import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
+import magic.core.message.{Message, MessageRole, MessageList}
 import magic.model.ModelUtils
 import magic.parser.{Tag, WithTag}
 
@@ -65,15 +65,15 @@ class AutoDiscussGroup <: DiscussGroup {
 
     override public func selectSpeaker(): Selection {
         let sysPrompt = buildSelectSystemPrompt()
-        let dialog = Dialog([
-            ChatMessage.system(sysPrompt)
+        let messageList = MessageList([
+            Message.system(sysPrompt)
         ])
         LogUtils.info(name, sysPrompt)
-        dialog.addMessage(
-            ChatMessage.user("Now, select the next speaker or make the final answer")
+        messageList.addMessage(
+            Message.user("Now, select the next speaker or make the final answer")
         )
 
-        let msg = match (ModelUtils.makeChat(this.model, dialog)) {
+        let msg = match (ModelUtils.makeChat(this.model, messageList)) {
             case Some(msg) => msg
             case None => return Selection.Failure("LLM response error")
         }

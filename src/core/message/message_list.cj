@@ -8,29 +8,29 @@ import std.collection.{ArrayList}
 /**
  * A collection of chat messages
  */
-public open class Dialog <: ToString & Iterable<ChatMessage> {
-    protected let messages: ArrayList<ChatMessage>
+public open class MessageList <: ToString & Iterable<Message> {
+    protected let messages: ArrayList<Message>
 
     public init() {
-        this.messages = ArrayList<ChatMessage>()
+        this.messages = ArrayList<Message>()
     }
 
-    public init(messages: Collection<ChatMessage>) {
-        this.messages = ArrayList<ChatMessage>(messages)
+    public init(messages: Collection<Message>) {
+        this.messages = ArrayList<Message>(messages)
     }
 
-    public open func addMessage(msg: ChatMessage): Unit {
+    public open func addMessage(msg: Message): Unit {
         messages.append(msg)
     }
 
-    public open func removeLast(): ChatMessage {
+    public open func removeLast(): Message {
         if (messages.isEmpty()) {
             throw Exception("Remove the last message from an empty history")
         }
         return messages.remove(messages.size - 1)
     }
 
-    public func addMessages(messages: Array<ChatMessage>): Unit {
+    public func addMessages(messages: Array<Message>): Unit {
         for (msg in messages) {
             this.addMessage(msg)
         }
@@ -40,11 +40,11 @@ public open class Dialog <: ToString & Iterable<ChatMessage> {
         messages.clear()
     }
 
-    public func iterator(): Iterator<ChatMessage> {
+    public func iterator(): Iterator<Message> {
         return messages.iterator()
     }
 
-    public operator func [](index: Int64): ChatMessage {
+    public operator func [](index: Int64): Message {
         return messages[index]
     }
 
@@ -60,11 +60,12 @@ public open class Dialog <: ToString & Iterable<ChatMessage> {
         let strBuilder = StringBuilder()
         for (msg in messages) {
             strBuilder.append(msg.toString())
+            strBuilder.append("\n")
         }
         return strBuilder.toString()
     }
 
-    public func toArray(): Array<ChatMessage> {
+    public func toArray(): Array<Message> {
         return messages.toArray()
     }
 }

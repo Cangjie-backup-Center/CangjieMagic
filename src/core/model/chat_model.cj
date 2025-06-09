@@ -3,7 +3,7 @@
  */
 package magic.core.model
 
-import magic.core.message.ChatMessage
+import magic.core.message.Message
 import magic.core.tokenizer.Tokenizer
 
 public interface ChatModel <: Model {
@@ -23,7 +23,7 @@ public interface ChatModel <: Model {
      * Since there is a bug in cjc 0.53.x, we cannot add this method.
      * Fix it later.
      */
-    // func create(messages: Array<ChatMessage>): ChatResponse {
+    // func create(messages: Array<Message>): ChatResponse {
     //     return create(ChatRequest(messages))
     // }
 

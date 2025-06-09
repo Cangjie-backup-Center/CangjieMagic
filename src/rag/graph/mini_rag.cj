@@ -1323,15 +1323,15 @@ public class MiniRag {
         )
         var response = this._agent.chat(AgentRequest(extractPrompt))
         var finalResult = response.content
-        var dialog = response.execInfo.getOrThrow().dialog
+        var chatRound = response.execution.chatRound
         for (i in (0..this._config.maxContinueTimes)) {
-            let continueResult = this._agent.chat(AgentRequest(continuePrompt, dialog: dialog))
+            let continueResult = this._agent.chat(AgentRequest(continuePrompt, conversation: Conversation(chatRound)))
             finalResult += continueResult.content
-            dialog = response.execInfo.getOrThrow().dialog
+            chatRound = response.execution.chatRound
             if (i >= this._config.maxContinueTimes - 1) {
                 break
             }
-            let judgeResult = this._agent.chat(AgentRequest(judgePrompt, dialog: dialog))
+            let judgeResult = this._agent.chat(AgentRequest(judgePrompt, conversation: Conversation(chatRound)))
             if (!judgeResult.content.toAsciiLower().contains("yes")) {
                 break
             }
