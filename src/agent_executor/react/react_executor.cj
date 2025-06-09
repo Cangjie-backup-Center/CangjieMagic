@@ -26,10 +26,10 @@ public class ReactExecutor <: AgentExecutor {
             }
             if (let Some(stopInfo) <- task.stopInfo) {
                 if (request.verbose) {
-                    task.execInfo.verboseChannel.close()
+                    task.execution.verboseChannel.close()
                 }
                 LogUtils.info("Task stopped: ${stopInfo.reason}")
-                return AgentResponse(stopInfo.result, execInfo: task.execInfo)
+                return AgentResponse(stopInfo.result, execution: task.execution)
             }
         }
         LogUtils.info("Exceed the max react loop")
@@ -48,21 +48,21 @@ public class ReactExecutor <: AgentExecutor {
                     }
                     if (let Some(stopInfo) <- task.stopInfo) {
                         if (request.verbose) {
-                            task.execInfo.verboseChannel.close()
+                            task.execution.verboseChannel.close()
                         }
                         LogUtils.info("Task stopped: ${stopInfo.reason}")
-                        return AsyncAgentResponse([stopInfo.result].iterator(), execInfo: task.execInfo)
+                        return AsyncAgentResponse([stopInfo.result].iterator(), execution: task.execution)
                     }
                 }
                 LogUtils.info("Exceed the max react loop")
                 return task.asyncSummarize()
             } catch (e: Exception) {
                 if (request.verbose) {
-                    task.execInfo.verboseChannel.close()
+                    task.execution.verboseChannel.close()
                 }
                 throw e
             }
         }
-        return AsyncAgentResponse(IteratorWrapper(agent, fut), execInfo: task.execInfo)
+        return AsyncAgentResponse(FutureIteratorWrapper(task, fut), execution: task.execution)
     }
 }

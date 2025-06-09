@@ -30,7 +30,7 @@ class A <: ToString {
 class TestDialog {
     @TestCase
     func test1() {
-        @dialog[agent: Bar()](
+        @messageList[agent: Bar()](
             "微软创建时间" -> time1: A
             @Assert(time1.year, 1975)
 

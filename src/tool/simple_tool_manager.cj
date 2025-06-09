@@ -6,7 +6,7 @@ package magic.tool
 import magic.dsl.jsonable
 import magic.core.tool.*
 import magic.core.model.ChatModel
-import magic.core.message.ChatMessage
+import magic.core.message.Message
 import magic.config.Config
 import magic.log.LogUtils
 import magic.jsonable.*
@@ -254,7 +254,7 @@ public class SimpleToolManager <: ToolManager {
             toolPrompts.append("${tool.name}: ${tool.description}")
         }
         let messages = [
-            ChatMessage.system(
+            Message.system(
                 FILTER_TOOL_PROMPT.format(
                     ("number", config.number),
                     ("question", question),
@@ -264,7 +264,7 @@ public class SimpleToolManager <: ToolManager {
         ]
         let model = config.chatModel.getOrThrow()
         let response = ModelUtils.makeChatGet<Response>(
-            "Simple Tool Manager", model, messages) { msg: ChatMessage =>
+            "Simple Tool Manager", model, messages) { msg: Message =>
             if (let Some(jsonStr) <- OutputParserUtils.extractLastCode(msg.content, "json")) {
                 // LogUtils.info("Tool filtered response: ${jsonStr}")
                 try {

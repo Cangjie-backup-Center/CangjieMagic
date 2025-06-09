@@ -51,7 +51,7 @@ main() {
     )
 
     // 打印中间信息
-    let dumper = ConsolePrinter(asyncResp.execInfo.getOrThrow().verboseInfo)
+    let dumper = ConsolePrinter(asyncResp.execution.verboseInfo)
     dumper.dump()
 
     // 打印结果

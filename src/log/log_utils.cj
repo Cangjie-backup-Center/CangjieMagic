@@ -3,8 +3,8 @@
  */
 package magic.log
 
-import magic.core.message.ChatMessage
-import magic.core.message.Dialog
+import magic.core.message.Message
+import magic.core.message.MessageList
 import magic.config.Config
 import magic.utils.exists
 
@@ -114,33 +114,33 @@ public struct LogUtils {
         }
     }
 
-    public static func info(msg: ChatMessage): Unit {
+    public static func info(msg: Message): Unit {
         info("Chat Message[ ${msg.role} ]: ${msg.content}")
     }
 
-    public static func info(name: String, msg: ChatMessage): Unit {
+    public static func info(name: String, msg: Message): Unit {
         info(name, "Chat Message[ ${msg.role} ]: ${msg.content}")
     }
 
-    public static func info(history: Dialog): Unit {
+    public static func info(history: MessageList): Unit {
         for (msg in history) {
             info(msg)
         }
     }
 
-    public static func info(name: String, history: Dialog): Unit {
+    public static func info(name: String, history: MessageList): Unit {
         for (msg in history) {
             info(name, msg)
         }
     }
 
-    public static func info(messages: Array<ChatMessage>): Unit {
+    public static func info(messages: Array<Message>): Unit {
         for (msg in messages) {
             info(msg)
         }
     }
 
-    public static func info(name: String, messages: Array<ChatMessage>): Unit {
+    public static func info(name: String, messages: Array<Message>): Unit {
         for (msg in messages) {
             info(name, msg)
         }

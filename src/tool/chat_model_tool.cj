@@ -48,15 +48,15 @@ protected class ChatModelTool <: AbsTool {
         // The chat model tool must accept a string
         let question = args["question"].toJsonValue().asString().getValue()
         let messages = [
-            ChatMessage.system("Answer user questions in brief."),
-            ChatMessage.user(question)
+            Message.system("Answer user questions in brief."),
+            Message.user(question)
         ]
         try {
             let resp = model.create(ChatRequest(messages))
-            if (resp.dialog.isEmpty()) {
+            if (resp.messageList.isEmpty()) {
                 throw ToolException("Fail to get chat model response")
             }
-            return ToolResponse(resp.dialog[0].content)
+            return ToolResponse(resp.messageList[0].content)
         } catch (ex: ModelException) {
             throw ToolException("Fail to get chat model response")
         }

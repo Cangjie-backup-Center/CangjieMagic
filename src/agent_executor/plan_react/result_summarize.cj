@@ -4,7 +4,7 @@
 package magic.agent_executor.plan_react
 
 import magic.core.agent.*
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 import magic.core.model.ChatRequest
 import magic.prompt.Template
 import magic.log.LogUtils
@@ -36,7 +36,7 @@ func resultSummarize(planTask: PlanTask): String {
         ("progress", planTask.progress),
     )
     let messages = [
-        ChatMessage.user(userPrompt)
+        Message.user(userPrompt)
     ]
     return ModelUtils.agentMakeChat(planTask.agent, messages).getOrThrow({ =>
         AgentExecutionException("Fail to get chat model response")
@@ -49,7 +49,7 @@ func asyncResultSummarize(planTask: PlanTask): Iterator<String> {
         ("progress", planTask.progress),
     )
     let messages = [
-        ChatMessage.user(userPrompt)
+        Message.user(userPrompt)
     ]
     LogUtils.info(planTask.agent.name, messages)
     return planTask.agent.model.asyncCreate(ChatRequest(messages)).iter()

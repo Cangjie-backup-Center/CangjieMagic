@@ -5,7 +5,7 @@ package magic.agent_executor.dsl
 
 import magic.core.agent.*
 import magic.core.tool.Tool
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 import magic.core.model.{ChatRequest}
 import magic.agent_executor.react.{ReactPromptUtils, ToolCall}
 import magic.agent_executor.common.AgentTask
@@ -57,19 +57,18 @@ public struct ExecutionOpSet {
 
     private static func chatWithOperation(state: ExecutionState,
                                           operationPrompt: String,
-                                          stop!: Option<Array<String>>): ChatMessage {
+                                          stop!: Option<Array<String>>): Message {
         let agent = state.task.agent
-        let dialog = state.execInfo.dialog
         // Prepare input messages
         LogUtils.debug(agent.name, operationPrompt)
-        dialog.addMessage(ChatMessage.system(operationPrompt))
+        state.execution.addMessage(Message.system(operationPrompt))
         // Call the LLM
         try {
-            return ModelUtils.makeChat(agent.model, dialog, stop: stop).getOrThrow({ =>
+            return ModelUtils.makeChat(agent.model, state.execution.messages, stop: stop).getOrThrow({ =>
                 AgentExecutionException("Fail to get chat model response")
             })
         } finally {
-            dialog.removeLast()
+            state.execution.removeLastMessage()
         }
     }
 
@@ -80,9 +79,11 @@ public struct ExecutionOpSet {
         let msg = chatWithOperation(state, PLAN_PROMPT, stop: [])
         // Parse the response and add the message to the state
         LogUtils.info(state.task.agent.name, "Plan: ${msg.content}")
-        state.execInfo.dialog.addMessage(ChatMessage.assistant(msg.content.withTag(Tag.THOUGHT))) // Add plan as a thought
+        state.execution.addStepMessage(
+            Message.assistant(msg.content.withTag(Tag.THOUGHT)), // Add plan as a thought
+        )
         if (state.task.request.verbose) {
-            state.execInfo.verboseChannel.put(msg.content.withTag(Tag.PLAN))
+            state.execution.verboseChannel.put(msg.content.withTag(Tag.PLAN))
         }
         return state
     }
@@ -94,18 +95,20 @@ public struct ExecutionOpSet {
         let msg = chatWithOperation(state, THINK_PROMPT, stop: [Tag.ACTION, Tag.THOUGHT.getCloseTag()])
         // Parse the response and add the message to the state
         LogUtils.info(state.task.agent.name, "Thought: ${msg.content}")
-        state.execInfo.dialog.addMessage(ChatMessage.assistant(msg.content.withTag(Tag.THOUGHT)))
+        state.execution.addStepMessage(
+            Message.assistant(msg.content.withTag(Tag.THOUGHT)),
+        )
         if (state.task.request.verbose) {
-            state.execInfo.verboseChannel.put(msg.content, Tag.THOUGHT)
+            state.execution.verboseChannel.put(msg.content, Tag.THOUGHT)
         }
         return state
     }
 
-    private static func doInvokeTool(state: ExecutionState, message: ChatMessage): ExecutionState {
+    private static func doInvokeTool(state: ExecutionState, message: Message): ExecutionState {
         LogUtils.info(state.task.agent.name, "Action: ${message.content}")
         // Send verbose information if necessary
         if (state.task.request.verbose) {
-            state.execInfo.verboseChannel.put(message.content, Tag.ACTION)
+            state.execution.verboseChannel.put(message.content, Tag.ACTION)
         }
         // If the content does not contain ```json ... ```, treat the content as a json value
         let jsonStr = OutputParserUtils.extractFirstCode(message.content, "json") ?? message.content.trimAscii()
@@ -121,11 +124,15 @@ public struct ExecutionOpSet {
         let observation = state.task.invokeTool(toolRequest)
         LogUtils.info(state.task.agent.name, "Observation: ${observation}")
         if (state.task.request.verbose) {
-            state.execInfo.verboseChannel.put(observation, Tag.OBSERVATION)
+            state.execution.verboseChannel.put(observation, Tag.OBSERVATION)
         }
-        // Add action and observation to the dialog
-        state.execInfo.dialog.addMessage(ChatMessage.assistant("```json\n${jsonStr}\n```".withTag(Tag.ACTION)))
-        state.execInfo.dialog.addMessage(ChatMessage.assistant(observation.withTag(Tag.OBSERVATION)))
+        // Add action and observation to the messageList
+        state.execution.addStepMessage(
+            Message.assistant("```json\n${jsonStr}\n```".withTag(Tag.ACTION)),
+        )
+        state.execution.addStepMessage(
+            Message.assistant(observation.withTag(Tag.OBSERVATION)),
+        )
         return state
     }
 
@@ -165,13 +172,13 @@ public struct ExecutionOpSet {
         let msg = chatWithOperation(state, ANSWER_PROMPT, stop: [])
         // Parse the response
         LogUtils.info(state.task.agent.name, "ANSWER: ${msg.content}")
-        state.task.execInfo.dialog.addMessage(ChatMessage.assistant(msg.content.withTag(Tag.ANSWER)))
+        state.task.execution.addStepMessage(Message.assistant(msg.content.withTag(Tag.ANSWER)))
         if (state.task.request.verbose) {
             if (let Some(subtask) <- state.subtask) {
                 let answer = "Solve the subtask ${subtask.description}\nAnswer: ${msg.content.withoutTag(Tag.ANSWER)}"
-                state.execInfo.verboseChannel.put(answer, Tag.OBSERVATION)
+                state.execution.verboseChannel.put(answer, Tag.OBSERVATION)
             } else {
-                state.execInfo.verboseChannel.put(msg.content, Tag.ANSWER)
+                state.execution.verboseChannel.put(msg.content, Tag.ANSWER)
             }
         }
         state.answer = msg.content.withoutTag(Tag.ANSWER)
@@ -225,7 +232,7 @@ public struct ExecutionOpSet {
         return subtasks |> map { subtask: Subtask =>
             if (state.task.request.verbose) {
                 let info = "Generate subtask:\n${subtask.toJsonValue().toJsonString()}"
-                state.execInfo.verboseChannel.put(info, Tag.THOUGHT)
+                state.execution.verboseChannel.put(info, Tag.THOUGHT)
             }
 
             // Build the system prompt to solve the subtask
@@ -244,17 +251,15 @@ public struct ExecutionOpSet {
                 )
             )
             // Set the verbose channel
-            subtaskState.task.execInfo._verboseChannel = state.task.execInfo._verboseChannel
+            subtaskState.task.execution._verboseChannel = state.task.execution._verboseChannel
             // Save the current state as its parent state
             subtaskState.parent = state
             // Bound with the subtask
             subtaskState.subtask = subtask
             // Add prompts
-            subtaskState.execInfo.dialog.addMessages([
-                ChatMessage.system(sysPrompt),
-                ChatMessage.user(subtask.description)
-            ])
-            LogUtils.info(state.task.agent.name, subtaskState.execInfo.dialog)
+            subtaskState.execution.addMessage(Message.system(sysPrompt))
+            subtaskState.execution.addQuestion(subtask.description)
+            LogUtils.info(state.task.agent.name, subtaskState.execution.messages)
             return subtaskState
         } |> collectArray
     }
@@ -265,7 +270,7 @@ public struct ExecutionOpSet {
                 if (let Some(subtask) <- state.subtask) {
                     if (state.task.request.verbose) {
                         let info = "To solve the subtask: ${subtask.description}"
-                        state.execInfo.verboseChannel.put(info, Tag.THOUGHT)
+                        state.execution.verboseChannel.put(info, Tag.THOUGHT)
                     }
                 }
                 op(state)
@@ -286,8 +291,8 @@ public struct ExecutionOpSet {
         let state = states[0].parent.getOrThrow()
         // Build prompt of subtasks
         let subtaskDesc = ExecutionOpSet.buildSubtaskDesc(states)
-        state.execInfo.dialog.addMessage(
-            ChatMessage.assistant("Multiple subtasks are generated and executed:\n${subtaskDesc}".withTag(Tag.THOUGHT))
+        state.execution.addStepMessage(
+            Message.assistant("Multiple subtasks are generated and executed:\n${subtaskDesc}".withTag(Tag.THOUGHT)),
         )
 
         let prompt = SUMMARY_PROMPT.format(
@@ -296,9 +301,11 @@ public struct ExecutionOpSet {
         let msg = chatWithOperation(state, prompt, stop: [])
         LogUtils.info(state.task.agent.name, "Subtask Summary: ${msg.content}")
         if (state.task.request.verbose) {
-            state.execInfo.verboseChannel.put(msg.content, Tag.OBSERVATION)
+            state.execution.verboseChannel.put(msg.content, Tag.OBSERVATION)
         }
-        state.execInfo.dialog.addMessage(ChatMessage.assistant(msg.content.withTag(Tag.OBSERVATION)))
+        state.execution.addStepMessage(
+            Message.assistant(msg.content.withTag(Tag.OBSERVATION)),
+        )
 
         return state
     }

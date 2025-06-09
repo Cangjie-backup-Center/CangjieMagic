@@ -5,7 +5,7 @@ package magic.agent
 
 import magic.core.agent.{Agent, AgentRequest, AgentResponse, AsyncAgentResponse}
 import magic.core.model.ChatModel
-import magic.core.message.{Dialog, ChatMessage}
+import magic.core.message.{MessageList, Message, Conversation}
 import magic.log.LogUtils
 
 /**
@@ -13,7 +13,7 @@ import magic.log.LogUtils
  */
 public class ConversationAgent <: BaseAgent {
     private let agent: Agent
-    let dialog: Dialog
+    let conversation: Conversation
 
     public init(agent: Agent) {
         super (
@@ -22,24 +22,23 @@ public class ConversationAgent <: BaseAgent {
             description: "An proxy agent that saves chat messages."
         )
         this.agent = agent
-        this.dialog = Dialog()
+        this.conversation = Conversation()
     }
 
     private func buildFullRequest(request: AgentRequest): AgentRequest {
-        if (request.dialog.isSome()) {
-            LogUtils.error("The request of ConversationAgent should have no dialog, which will be omitted.")
+        if (request.conversation.isSome()) {
+            LogUtils.error("The request of ConversationAgent should have no conversation, which will be omitted.")
         }
         return AgentRequest(
             request.question,
-            dialog: this.dialog,
+            conversation: this.conversation,
             verbose: request.verbose
         )
     }
 
     override public func chat(request: AgentRequest): AgentResponse {
         let resp = this.agent.chat(this.buildFullRequest(request))
-        this.dialog.addMessage(ChatMessage.user(request.question))
-        this.dialog.addMessage(ChatMessage.assistant(resp.content))
+        this.conversation.addChatRound(request.question, resp.content)
         return resp
     }
 
@@ -47,14 +46,14 @@ public class ConversationAgent <: BaseAgent {
         let asyncResp = this.agent.asyncChat(this.buildFullRequest(request))
         return AsyncAgentResponse( // Wrap the iterator as the AsyncAgentResponse
             IteratorWrapper(this, request.question, asyncResp), // Wrap the original AsyncAgentResponse as an iterator
-            execInfo: asyncResp.execInfo
+            execution: asyncResp.execution
         )
     }
 }
 
 /**
  * Wrap the AsyncAgentResponse,
- * merge the full response content and add to the dialog
+ * merge the full response content and add to the messageList
  */
 private class IteratorWrapper <: Iterator<String> {
     protected IteratorWrapper(
@@ -73,8 +72,7 @@ private class IteratorWrapper <: Iterator<String> {
         match (data) {
             case Some(v) => buffer.append(v)
             case None =>
-                this.agent.dialog.addMessage(ChatMessage.user(this.question))
-                this.agent.dialog.addMessage(ChatMessage.assistant(this.buffer.toString()))
+                this.agent.conversation.addChatRound(this.question, this.buffer.toString())
         }
         return data
     }
