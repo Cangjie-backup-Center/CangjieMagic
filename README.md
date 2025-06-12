@@ -79,6 +79,8 @@ import magic.prelude.*
 
 👀 详见 [docs/tutorial.md](./docs/tutorial.md)
 
+❓ Magic 的各种 How-To 案例 [docs/how-to.md](./docs/how-to.md)
+
 ## [API 手册](./docs/api_reference.md)
 
 👀 详见 [docs/api_reference.md](./docs/api_reference.md)
