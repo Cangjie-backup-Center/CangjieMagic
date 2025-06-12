@@ -6,6 +6,9 @@ package magic.parser
 import magic.log.LogUtils
 import magic.utils.{StringExt}
 
+import std.collection.ArrayList
+import std.regex.Regex
+
 /**
  * Parsing a sequence of tagged content
  * Each tagged content is of form [tag] ... [/tag]
@@ -35,13 +38,8 @@ protected class TagStreamParser {
     /**
      * Read a chunk to the buffer
      */
-    private func readChunk(trimAscii!: Bool = false): Bool {
-        if (let Some(data) <- this.chunks.next()) {
-            let chunk = if (trimAscii) {
-                data.trimAscii()
-            } else {
-                data
-            }
+    private func readChunk(): Bool {
+        if (let Some(chunk) <- this.chunks.next()) {
             buffer.append(chunk)
             if (let Some(fn) <- this.onChunkFn) {
                 fn(chunk)
@@ -74,13 +72,12 @@ protected class TagStreamParser {
     protected prop currTag: Option<String> {
         get() {
             while (this.currContent.trimAscii().size < Tag.longestTag.size) {
-                // When read tags, trim whitespaces because the LLM may generate [\nTAG\n]
-                if (!this.readChunk(trimAscii: true)) { break }
+                if (!this.readChunk()) { break }
             }
             // Check whether the current content starts with a tag
             let content = this.currContent.trimAscii()
             for (tag in Tag.ALL_TAGS) {
-                if (content.startsWith(tag)) {
+                if (Tag.startsWith(content, tag)) {
                     return tag
                 }
             }
@@ -92,28 +89,17 @@ protected class TagStreamParser {
     }
 
     protected func readTagAndContent(tag: String): String {
-        let closeTag = tag.getCloseTag()
-        while (true) {
-            let content = this.currContent.trimAscii()
-            // If the current content contains the close tag, split it as two parts
-            if (let Some(index) <- content.lastIndexOf(closeTag)) {
-                let pivot = index + closeTag.size
-                let (tagWithContent, rest) = (content[0..pivot], content[pivot..])
-                // Save the part after the close tag
-                this.resetBuffer(rest)
-                return tagWithContent
-            } else {
-                // If the current content does not contain the close tag, continue to read chunks
-                if (!this.readChunk()) { break }
-            }
+        let strBuilder = StringBuilder()
+        while (let Some((content, isClosed)) <- this.readContentUntilClosed(tag)) {
+            strBuilder.append(content)
+            if (isClosed) { break }
         }
-        throw ParserException("Fail to parse tag ${tag}")
+        let content = Tag.trimTag(strBuilder.toString(), tag)
+        return content.withTag(tag)
     }
 
     protected func removeTag(tag: String): Unit {
-        let content = this.currContent
-        let pivot = content.indexOf(tag).getOrThrow()
-        this.resetBuffer(content[(pivot + tag.size)..].trimAsciiLeft())
+        this.resetBuffer(Tag.trimTag(this.currContent, tag).trimAsciiLeft())
     }
 
     /**
@@ -126,49 +112,65 @@ protected class TagStreamParser {
             }
             return None
         }
-        let closeTag = tag.getCloseTag()
         // Read a chunk
         let exhausted = !this.readChunk()
-        let (content, rest) = this.splitByCloseTag(closeTag)
+        let (left, closeTag, right) = this.splitByCloseTag(tag)
         if (exhausted) {
             // When the stream is over, the close tag must exist
             // The answer tag is special, the LLM may not generate its close tag
-            if (!rest.trimAscii().startsWith(closeTag) && tag != Tag.ANSWER) {
-                throw ParserException("Fail to read async react ${tag} content. Rest: `${rest}`")
-            }
-            if (rest.trimAscii().size == closeTag.size || tag == Tag.ANSWER) {
+            if (tag == Tag.ANSWER) {
+                finished = true
+                this.resetBuffer("")
+            } else if (closeTag.isNone()) {
+                throw ParserException("Fail to read async react ${tag} content. Rest: `${right}`")
+            } else if (right.trimAscii().isEmpty()) {
                 finished = true
                 this.resetBuffer("")
             } else {
-                this.resetBuffer(rest[(rest.indexOf(closeTag).getOrThrow() + closeTag.size)..])
+                this.resetBuffer(right)
             }
-            return (content.trimAsciiRight(), true)
+            return (left.trimAsciiRight(), true)
         } else {
             // If the rest starts with the complete close tag, remove it
-            if (rest.trimAscii().startsWith(closeTag)) {
-                this.resetBuffer(rest[(rest.indexOf(closeTag).getOrThrow() + closeTag.size)..])
-                return (content.trimAsciiRight(), true)
+            this.resetBuffer(right)
+            if (closeTag.isSome()) {
+                return (left.trimAsciiRight(), true)
             } else {
-                this.resetBuffer(rest)
-                return (content, false)
+                return (left, false)
             }
         }
     }
 
-    private func splitByCloseTag(closeTag: String): (String, String) {
+    private func splitByCloseTag(tag: String): (String, ?String, String) {
+        let tagName = tag[1..tag.size-1]
         let content = this.currContent
         // The current content contains the full close tag
-        if (let Some(pivot) <- content.indexOf(closeTag)) {
-            return (content[0..pivot], content[pivot..])
+        let regex = Regex("\\[\\s*/\\s*${tagName}\\s*\\]")
+        let matcher = regex.matcher(content)
+        if (let Some(md) <- matcher.find()) {
+            let pos = md.matchPosition()
+            let left = content[..pos.start]
+            let right = content[pos.end..]
+            return (left, tag.getCloseTag(), right)
         }
-        // Or check whether it ends with a prefix of the close tag
-        for (index in closeTag.size..1 : -1) {
-            let prefix = closeTag[0..index]
-            if (content.trimAscii().endsWith(prefix)) {
-                let pivot = content.lastIndexOf(prefix).getOrThrow()
-                return (content[0..pivot], content[pivot..])
+
+        // Check whether the content ends with a prefix of the close tag
+        let regexToCheck = ArrayList<Regex>()
+        for (index in tagName.size..=1 : -1) {
+            let prefix = tagName[0..index]
+            regexToCheck.append(Regex("\\[\\s*/\\s*${prefix}\\s*$"))
+        }
+        // Add the regex to check the prefix symbols of closed tags
+        regexToCheck.append(Regex("\\[\\s*/?\\s*$"))
+
+        for (regex in regexToCheck) {
+            let matcher = regex.matcher(content)
+            if (let Some(md) <- matcher.find()) {
+                let pos = md.matchPosition()
+                let pivot = pos.start
+                return (content[0..pivot], None, content[pivot..])
             }
         }
-        return (content, "")
+        return (content, None, "")
     }
 }
