@@ -53,11 +53,11 @@ func transformAi(input: Tokens, agentAttr: AgentAttr): Tokens {
     let genericTypeParam = getGenericTypeParamsTokens(funcDecl)
     let genericConstraint = getGenericConstraintsTokens(funcDecl)
     let args: Tokens = joinTokens(
-            getFuncParamNames(funcDecl) |>
-                map { name: String => newIdentifierToken(name) } |>
-                collectArray,
-            Token(TokenKind.COMMA)
-        )
+        getFuncParamNames(funcDecl) |>
+            map { name: String => newIdentifierToken(name) } |>
+            collectArray,
+        Token(TokenKind.COMMA)
+    )
     let retType = checkFuncRetString(funcDecl)
 
     return quote(
