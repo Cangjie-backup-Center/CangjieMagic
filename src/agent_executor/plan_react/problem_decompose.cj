@@ -4,7 +4,7 @@
 package magic.agent_executor.plan_react
 
 import magic.core.agent.*
-import magic.core.message.ChatMessage
+import magic.core.message.Message
 import magic.agent_executor.react.ReactPromptUtils
 import magic.prompt.Template
 import magic.log.LogUtils
@@ -72,11 +72,11 @@ protected func problemDecompose(agent: Agent, request: AgentRequest): Array<Subt
         ("question", request.question)
     )
     let messages = [
-        ChatMessage.system(sysPrompt),
-        ChatMessage.user(userPrompt)
+        Message.system(sysPrompt),
+        Message.user(userPrompt)
     ]
     let jsonStr = ModelUtils.agentMakeChatGet(agent, messages) {
-        msg: ChatMessage =>
+        msg: Message =>
             OutputParserUtils.extractLastCode(msg.content, "json")
     }
     let json = JsonValue.fromStr(jsonStr.getOrThrow({ => AgentExecutionException("Fail to get valid chat model response")}))

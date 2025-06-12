@@ -19,7 +19,7 @@ import std.collection.HashMap
 private class OllamaChatResponse {
     let model: String
     let created_at: String
-    let message: Message
+    let message: OllamaChatMessage
     let done: Bool
 
     let total_duration: Option<Int64>
@@ -30,7 +30,7 @@ private class OllamaChatResponse {
 }
 
 @jsonable
-private class Message {
+private class OllamaChatMessage {
     let role: String
     let content: String
 }
@@ -47,7 +47,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
             let resp = OllamaChatResponse.fromJsonValue(JsonValue.fromStr(data))
             if (resp.done) {
                 return AsyncChatChunk(
-                    message: ChatMessage(ChatMessageRole.fromStr(resp.message.role), resp.message.content),
+                    message: Message(MessageRole.fromStr(resp.message.role), resp.message.content),
                     done: true,
                     usage: ChatUsage(
                         promptTokens: resp.prompt_eval_count ?? 0,
@@ -58,7 +58,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
                 )
             } else {
                 return AsyncChatChunk(
-                    message: ChatMessage(ChatMessageRole.fromStr(resp.message.role), resp.message.content),
+                    message: Message(MessageRole.fromStr(resp.message.role), resp.message.content),
                 )
             }
         }
@@ -104,7 +104,7 @@ public class OllamaChatModel <: ChatModel {
         req.put("model", JsonString(model))
         req.put("stream", JsonBool(stream))
         let ja = JsonArray()
-        for (m in chatReq.dialog) {
+        for (m in chatReq.messageList) {
             let jo = JsonObject()
             jo.put("role", JsonString(m.role.toString()))
             jo.put("content", JsonString(m.content))
@@ -154,7 +154,7 @@ public class OllamaChatModel <: ChatModel {
                 let resp = OllamaChatResponse.fromJsonValue(JsonValue.fromStr(body))
                 let msg = resp.message
                 return ChatResponse(
-                    Dialog([ChatMessage(ChatMessageRole.fromStr(msg.role), msg.content)]),
+                    MessageList([Message(MessageRole.fromStr(msg.role), msg.content)]),
                     model
                 )
             case None => throw ModelException("Fail to get http respnose")

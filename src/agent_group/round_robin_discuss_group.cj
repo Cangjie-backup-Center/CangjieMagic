@@ -3,7 +3,7 @@
  */
 package magic.agent_group
 
-import magic.core.message.Dialog
+import magic.core.message.MessageList
 import magic.model.ModelUtils
 import magic.log.LogUtils
 import magic.parser.{Tag, WithTag}
@@ -44,18 +44,18 @@ class RoundRobinDiscussGroup <: DiscussGroup {
 
     override public func selectSpeaker(): Selection {
         let sysPrompt = buildSelectSystemPrompt()
-        let dialog = Dialog([
-            ChatMessage.system(sysPrompt)
+        let messageList = MessageList([
+            Message.system(sysPrompt)
         ])
         LogUtils.info(this.name, sysPrompt)
         for (msg in discussion) {
-            dialog.addMessage(ChatMessage.assistant("${msg.name} says: ${msg.content}"))
+            messageList.addMessage(Message.assistant("${msg.name} says: ${msg.content}"))
         }
-        dialog.addMessage(
-            ChatMessage.user("Select the next speaker now")
+        messageList.addMessage(
+            Message.user("Select the next speaker now")
         )
 
-        let msg = match (ModelUtils.makeChat(this.model, dialog)) {
+        let msg = match (ModelUtils.makeChat(this.model, messageList)) {
             case Some(msg) => msg
             case None => return Selection.Failure("LLM model failed")
         }

@@ -27,7 +27,7 @@ public class LinearGroup <: AgentGroup {
         var currResp: Option<AgentResponse> = None
         for (agent in this.members) {
             currResp = agent.chat(currReq)
-            currReq = AgentRequest(currResp.getOrThrow().content, dialog: currReq.dialog)
+            currReq = AgentRequest(currResp.getOrThrow().content, conversation: currReq.conversation)
         }
         return currResp.getOrThrow()
     }
@@ -37,7 +37,7 @@ public class LinearGroup <: AgentGroup {
         for (i in 0..this.members.size-1) {
             let agent = this.members[i]
             let currResp = agent.chat(currReq)
-            currReq = AgentRequest(currResp.content, dialog: currReq.dialog)
+            currReq = AgentRequest(currResp.content, conversation: currReq.conversation)
         }
         let lastAgent = this.members[this.members.size - 1]
         return lastAgent.asyncChat(currReq)

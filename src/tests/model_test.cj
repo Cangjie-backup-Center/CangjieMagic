@@ -25,38 +25,38 @@ class TestModel {
     @TestCase
     func testOpenAIChat() {
         let client = ModelManager.createChatModel("deepseek:deepseek-chat")
-        let msgList = Dialog([
-            ChatMessage.user("hello")
+        let msgList = MessageList([
+            Message.user("hello")
         ])
         let resp = client.create(ChatRequest(msgList))
-        @Assert(resp.dialog.size > 0)
-        @Assert(resp.dialog[0].content.size > 0)
-        println(resp.dialog[0].content)
+        @Assert(resp.messageList.size > 0)
+        @Assert(resp.messageList[0].content.size > 0)
+        println(resp.messageList[0].content)
     }
 
     @TestCase
     func testOpenAIAsyncChat() {
         let model = ModelManager.createChatModel("deepseek:deepseek-chat")
-        let msgList = Dialog([
-            ChatMessage.user("hello")
+        let msgList = MessageList([
+            Message.user("hello")
         ])
         let asyncResp = model.asyncCreate(ChatRequest(msgList))
         let content: Array<String> = asyncResp |> collectArray
         @Assert(content.size > 0)
-        @Assert(asyncResp.dialog.size > 0)
-        @Assert(asyncResp.dialog[0].content.size > 0)
+        @Assert(asyncResp.messageList.size > 0)
+        @Assert(asyncResp.messageList[0].content.size > 0)
     }
 
     @TestCase
     func testOpenAIChatWithImage() {
         let model = ModelManager.createChatModel("openai:gpt-4o")
-        let msgList = Dialog([
-            ChatMessage.user("what's in this image", image: this.imageBase64)
+        let msgList = MessageList([
+            Message.user("what's in this image", image: this.imageBase64)
         ])
         let resp = model.create(ChatRequest(msgList))
-        @Assert(resp.dialog.size > 0)
-        @Assert(resp.dialog[0].content.size > 0)
-        println(resp.dialog[0].content)
+        @Assert(resp.messageList.size > 0)
+        @Assert(resp.messageList[0].content.size > 0)
+        println(resp.messageList[0].content)
     }
 
     @TestCase
@@ -69,25 +69,25 @@ class TestModel {
     @TestCase
     func testOllamaChat() {
         let model = ModelManager.createChatModel("ollama:qwen2.5:7b")
-        let msgList = Dialog([
-            ChatMessage.user("hello")
+        let msgList = MessageList([
+            Message.user("hello")
         ])
         let resp = model.create(ChatRequest(msgList))
-        @Assert(resp.dialog.size > 0)
-        @Assert(resp.dialog[0].content.size > 0)
-        println(resp.dialog[0].content)
+        @Assert(resp.messageList.size > 0)
+        @Assert(resp.messageList[0].content.size > 0)
+        println(resp.messageList[0].content)
     }
 
     // @TestCase
     func testOllamaChatModelWithImage() {
         let model = ModelManager.createChatModel("ollama:llava:34b")
-        let msgList = Dialog([
-            ChatMessage.user("what's in this image", image: this.imageBase64)
+        let msgList = MessageList([
+            Message.user("what's in this image", image: this.imageBase64)
         ])
         let resp = model.create(ChatRequest(msgList))
-        @Assert(resp.dialog.size > 0)
-        @Assert(resp.dialog[0].content.size > 0)
-        println(resp.dialog[0].content)
+        @Assert(resp.messageList.size > 0)
+        @Assert(resp.messageList[0].content.size > 0)
+        println(resp.messageList[0].content)
     }
 
     // @TestCase
@@ -100,13 +100,13 @@ class TestModel {
     @TestCase
     func testDashscopeChat() {
         let client = ModelManager.createChatModel("dashscope:qwen-plus")
-        let msgList = Dialog([
-            ChatMessage.user("hello")
+        let msgList = MessageList([
+            Message.user("hello")
         ])
         let resp = client.create(ChatRequest(msgList))
-        @Assert(resp.dialog.size > 0)
-        @Assert(resp.dialog[0].content.size > 0)
-        println(resp.dialog[0].content)
+        @Assert(resp.messageList.size > 0)
+        @Assert(resp.messageList[0].content.size > 0)
+        println(resp.messageList[0].content)
     }
 
     @TestCase
@@ -119,13 +119,13 @@ class TestModel {
     @TestCase
     func testOllamaAsyncChat() {
         let model = ModelManager.createChatModel("ollama:qwen2.5:7b")
-        let msgList = Dialog([
-            ChatMessage.user("hello")
+        let msgList = MessageList([
+            Message.user("hello")
         ])
         let asyncResp = model.asyncCreate(ChatRequest(msgList))
         let content: Array<String> = asyncResp |> collectArray
         @Assert(content.size > 0)
-        @Assert(asyncResp.dialog.size > 0)
-        @Assert(asyncResp.dialog[0].content.size > 0)
+        @Assert(asyncResp.messageList.size > 0)
+        @Assert(asyncResp.messageList[0].content.size > 0)
     }
 }

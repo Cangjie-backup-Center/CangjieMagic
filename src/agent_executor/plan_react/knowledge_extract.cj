@@ -4,7 +4,7 @@
 package magic.agent_executor.plan_react
 
 import magic.core.agent.*
-import magic.core.message.ChatMessage
+import magic.core.message.Message
 import magic.prompt.Template
 import magic.log.LogUtils
 import magic.parser.OutputParserUtils
@@ -49,11 +49,11 @@ func knowledgeExtract(agent: Agent, request: AgentRequest): String {
         ("systemPrompt", agent.systemPrompt),
     )
     let messages = [
-        ChatMessage.system(sysPrompt)
+        Message.system(sysPrompt)
     ]
 
     let knowledge = ModelUtils.agentMakeChatGet(agent, messages) {
-        msg: ChatMessage => OutputParserUtils.extractLastCode(msg.content, "knowledge")
+        msg: Message => OutputParserUtils.extractLastCode(msg.content, "knowledge")
     }
     return knowledge ?? ""
 }

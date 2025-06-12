@@ -18,7 +18,7 @@ public class ConsolePrinter <: TagStreamVisitor {
     }
 
     public init(asyncResponse: AsyncAgentResponse) {
-        super(asyncResponse.execInfo.getOrThrow().verboseInfo)
+        super(asyncResponse.execution.verboseInfo)
     }
 
     private func getTagColor(tag: String): Color {

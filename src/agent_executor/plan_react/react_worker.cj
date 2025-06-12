@@ -5,7 +5,7 @@ package magic.agent_executor.plan_react
 
 import magic.core.agent.*
 import magic.agent.BaseAgent
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 import magic.core.model.ChatRequest
 import magic.agent_executor.react.{ReactPromptUtils, ReactExecutor, REACT_SYSTEM_PROMPT}
 import magic.utils.*

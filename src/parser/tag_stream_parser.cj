@@ -35,8 +35,13 @@ protected class TagStreamParser {
     /**
      * Read a chunk to the buffer
      */
-    private func readChunk(): Bool {
-        if (let Some(chunk) <- this.chunks.next()) {
+    private func readChunk(trimAscii!: Bool = false): Bool {
+        if (let Some(data) <- this.chunks.next()) {
+            let chunk = if (trimAscii) {
+                data.trimAscii()
+            } else {
+                data
+            }
             buffer.append(chunk)
             if (let Some(fn) <- this.onChunkFn) {
                 fn(chunk)
@@ -69,7 +74,8 @@ protected class TagStreamParser {
     protected prop currTag: Option<String> {
         get() {
             while (this.currContent.trimAscii().size < Tag.longestTag.size) {
-                if (!this.readChunk()) { break }
+                // When read tags, trim whitespaces because the LLM may generate [\nTAG\n]
+                if (!this.readChunk(trimAscii: true)) { break }
             }
             // Check whether the current content starts with a tag
             let content = this.currContent.trimAscii()

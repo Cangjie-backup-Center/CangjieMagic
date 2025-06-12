@@ -3,35 +3,35 @@
  */
 package magic.core.model
 
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 
 public class ChatRequest <: ToString {
-    public let dialog: Dialog
+    public let messageList: MessageList
     public let stop: Option<Array<String>>
     public let temperature: Option<Float64>
 
     public init(message: String) {
-        this.dialog = Dialog([ChatMessage.user(message)])
+        this.messageList = MessageList([Message.user(message)])
         this.stop = None
         this.temperature = None
     }
 
     public init(
-        messages: Array<ChatMessage>,
+        messages: Array<Message>,
         temperature!: Option<Float64> = None,
         stop!: Option<Array<String>> = None
     ) {
-        this.dialog = Dialog(messages)
+        this.messageList = MessageList(messages)
         this.stop = stop
         this.temperature = temperature
     }
 
     public init(
-        dialog: Dialog,
+        messageList: MessageList,
         temperature!: Option<Float64> = None,
         stop!: Option<Array<String>> = None
     ) {
-        this.dialog = dialog
+        this.messageList = messageList
         this.stop = stop
         this.temperature = temperature
     }
@@ -41,7 +41,7 @@ public class ChatRequest <: ToString {
         strBuilder.append("""
 ChatRequest: stop${stop.toString()}
 """)
-        for (msg in dialog) {
+        for (msg in messageList) {
             strBuilder.append("  ")
             strBuilder.append(msg.toString())
             strBuilder.append("\n")

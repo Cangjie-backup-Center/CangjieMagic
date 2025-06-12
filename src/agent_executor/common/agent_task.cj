@@ -4,7 +4,8 @@
 package magic.agent_executor.common
 
 import magic.core.agent.*
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
+import magic.agent.AgentExecutionInfo
 import magic.core.tool.{Tool, ToolRequest, ToolSearchConfig, ToolException}
 import magic.jsonable.ToJsonValue
 import magic.instrumentor.Instrumentor
@@ -31,24 +32,26 @@ public open class AgentTask {
     public let request: AgentRequest
     // Information during the execution
     public var step = 0
-    public let execInfo: AgentExecutionInfo
+    public let execution: AgentExecutionInfo
     // Whether the task is stopped
     protected var stopInfo: Option<EarlyStopInfo> = None
 
     /**
      * Create a new AgentTask with the given agent and request.
-     * If `initPrompt` is true, it will initialize the dialog with system and user messages.
+     * If `initPrompt` is true, it will initialize the messageList with system and user messages.
      */
     protected init(agent: Agent, request: AgentRequest, initPrompt!: Bool = false) {
         this.agent = agent
         this.request = request
-        this.execInfo = request.execInfo ?? AgentExecutionInfo(agent.executor, dialog: BoundedDialog(contextLength: agent.model.contextLength))
+        if (let Some(execution) <- request.execution) {
+            this.execution = (request.execution as AgentExecutionInfo).getOrThrow()
+        } else {
+            this.execution = AgentExecutionInfo(agent)
+        }
         if (initPrompt) {
-            this.execInfo.dialog.addMessages([
-                ChatMessage.system(agent.systemPrompt),
-                ChatMessage.user(request.question)
-            ])
-            LogUtils.info(agent.name, this.execInfo.dialog)
+            this.execution.addMessage(Message.system(agent.systemPrompt))
+            this.execution.addQuestion(request.question)
+            LogUtils.info(agent.name, this.execution.messages)
         }
     }
 
@@ -80,7 +83,7 @@ public open class AgentTask {
             // See RetrieverTool
             let query = toolRequest.args["query"].asString().getValue()
             let retrieval = this.agent.retriever.getOrThrow().search(query)
-            this.execInfo.addRetrieval(query, retrieval)
+            this.execution.addRetrieval(query, retrieval)
             observation = retrieval.toPrompt()
         } else if (let Some(tool) <- this.agent.toolManager.findTool(toolRequest.name)) {
             try {
