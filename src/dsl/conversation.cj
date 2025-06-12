@@ -23,11 +23,6 @@ class ConversationAttr <: Attr {
     }
 }
 
-public macro conversation(input: Tokens): Tokens {
-    let emptyAttr = ConversationAttr()
-    return transformConversation(input, emptyAttr)
-}
-
 public macro conversation(attrTokens: Tokens, input: Tokens): Tokens {
     let attr = ConversationAttr.parse(attrTokens)
     let content = transformConversation(input, attr)

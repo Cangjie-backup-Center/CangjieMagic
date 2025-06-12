@@ -472,25 +472,23 @@ let area = agent.chat(
 
 ### 对话历史
 
-通过指定 `Dialog` 作为 `AgentRequest` 的参数来将对话历史加入当前的 Agent 调用中，并通过 `AgentResponse` 的 execInfo.dialog 获取更新后的对话历史。
-`Dialog` 会根据全局配置对会话历史进行管理：
- - `ChatModel.contextLen`: 模型上下文长度，`Dialog` 会根据设置的长度来进行对话历史截断; 也可以通过 `Config.defaultContextLen` 来设置全局变量
- - `Config.defaultTokenizer`: 计算 token 使用的 tokenizer，建议设置为 Cl100kTokenizer (见示例)，不建议使用默认值
+和 Agent 的一次 `chat` 调用能构成 `ChatRound`，`Conversation` 维护多个对话过程，从而形成连续对轮的对话历史。
+
+在调用 Agent 时，可以将 `Conversation` 作为 `AgentRequest` 的参数来让 Agent 基于对话完成作答。同时，通过 `AgentResponse` 的 `execution.chatRound` 属性来更新对话历史。
 
 **示例：对话历史示例**
-```cangjie
-import magic.tokenizer.Cl100kTokenizer
-import magic.core.agent.{AgentRequest, AgentResponse}
-import magic.core.agent.{AgentRequest, AgentResponse}
 
-// 设置全局 tokenizer, 加载词表（Cl100k 词表在 CangjieMagic/ffi_libs 文件夹下）
-Config.defaultTokenizer = Cl100kTokenizer("./ffi_libs/cl100K_base.tiktoken")
-Config.defaultContextLen = 32000
-var dialog = Dialog()
-let agent = MyAgent()
-let resp = agent.chat(AgentRequest("Hello.", dialog:dialog))
-// 更新 Dialog
-dialog = resp.execInfo.getOrThrow().dialog
+```cangjie
+let agent = FooAgent()
+let conversation = Conversation()
+let resp = agent.chat(
+    AgentRequest("Hello", conversation: conversation)
+)
+// 更新对话
+conversation.addChatRound(resp.execution.chatRound)
+let resp2 = agent.chat(
+    AgentRequest("How are you", conversation: conversation)
+)
 ```
 
 ## MCP 协议和工具
@@ -934,7 +932,7 @@ func foo(topic: String): String {
 | `defaultEmbeddingModel` | `Option<EmbeddingModel>` | 默认的向量模型 | `None` |
 | `externalScriptDir` | `String` | 保存外部脚本的目录 | `./external_scripts` |
 | `defaultContextLen` | `Int` | LLM上下文长度 | `32000` |
-| `defaultTokenizer` | `Option<Tokenizer>` | 设置默认的tokenizer,用于Dialog中的token数计算 | `UnicodeTokenizer()` |
+| `defaultTokenizer` | `Option<Tokenizer>` | 设置默认的 tokenizer，用于计算提示词中的 token 数 | `UnicodeTokenizer()` |
 | `filterThink` | `Bool` | 过滤推理模型输出中的 `<think>` 内容，仅对同步接口生效 | `false` |
 | `maxReactNumber` | `Int` | React 模式的最大迭代次数 | `10` |
 | `modelRetryNumber` | `Int` | 模型请求失败时的最大重试次数 | `3` |

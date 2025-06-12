@@ -76,6 +76,8 @@ import magic.prelude.*
 
 👀 See [docs/tutorial-en.md](../docs/tutorial-en.md) for details.  
 
+❓ Various How-To examples of Magic [docs/how-to.md](../docs/how-to.md)
+
 ## [API Reference](../docs/api_reference.md)  
 
 👀 See [docs/api_reference.md](../docs/api_reference.md) for details.  
