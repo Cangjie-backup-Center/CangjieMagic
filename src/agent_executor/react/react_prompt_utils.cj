@@ -85,21 +85,20 @@ Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} 
 """
 
 protected struct ReactPromptUtils {
-    static func buildReactPrompt(task: AgentTask): Array<ChatMessage> {
+    static func buildReactPrompt(task: AgentTask): Array<Message> {
         PromptBuilder()
             .system(REACT_SYSTEM_PROMPT.trimAscii())
             .tool(ReactPromptUtils.buildAgentToolsPrompt(task))
             .system(task.agent.systemPrompt)
             .retrieval(ReactPromptUtils.buildAgentRetrievalPrompt(task))
             .memory(ReactPromptUtils.buildAgentMemoryPrompt(task))
-            .dialog(task.request.dialog ?? Dialog())
-            .user(task.request.question)
-            .build()
+            .conversation(task.request.conversation ?? Conversation())
+            .buildFor(task.agent.executor)
     }
 
-    static func buildReactSummarizePrompt(task: AgentTask): Array<ChatMessage> {
+    static func buildReactSummarizePrompt(task: AgentTask): Array<Message> {
         let strBuilder = StringBuilder()
-        for (msg in task.execInfo.dialog) {
+        for (msg in task.execution.stepMessages) {
             // Only add messages with tags, like [Action]
             if (msg.content.startsWith("[")) {
                 strBuilder.append("${msg.content}\n")
@@ -112,11 +111,10 @@ protected struct ReactPromptUtils {
             ("systemPrompt", task.agent.systemPrompt),
             ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task))
         ).trimAscii()
-        PromptBuilder()
-            .system(sys)
-            .dialog(task.request.dialog ?? Dialog())
-            .user(REACT_SUMMARIZE_USER_PROMPT.trimAscii())
-            .build()
+        return [
+            Message.system(sys),
+            Message.user(REACT_SUMMARIZE_USER_PROMPT.trimAscii())
+        ]
     }
 
     protected static func buildAgentToolsPrompt(task: AgentTask): String {
@@ -136,7 +134,7 @@ protected struct ReactPromptUtils {
             }
             let query = task.request.question
             let retrieval = rt.search(query)
-            task.execInfo.addRetrieval(query, retrieval)
+            task.execution.addRetrieval(query, retrieval)
             return "# Retrieved Content\n${retrieval.toPrompt()}\n---end of Retrieved Content---"
         } else {
             return ""
@@ -162,19 +160,6 @@ protected struct ReactPromptUtils {
                 strBuilder.append("\n---\n")
             }
             strBuilder.append("---end of memory---\n")
-            return strBuilder.toString()
-        } else {
-            return ""
-        }
-    }
-
-    protected static func buildAgentDialogPrompt(task: AgentTask): String {
-        if (let Some(dialog) <- task.request.dialog) {
-            let strBuilder = StringBuilder()
-            strBuilder.append("# Previous Dialog (with the user)\n")
-            for (msg in dialog) {
-                strBuilder.append("${msg}\n")
-            }
             return strBuilder.toString()
         } else {
             return ""

@@ -3,7 +3,7 @@
  */
 package magic.core.agent
 
-import magic.core.message.Dialog
+import magic.core.message.MessageList
 
 /**
  The execution response from an agent executor
@@ -17,15 +17,19 @@ public struct AgentResponse {
     /**
      * Internal information during the execution
      */
-    public let execInfo: Option<AgentExecutionInfo>
+    private var _execution: Option<AgentExecution> = None
+
+    public prop execution: AgentExecution {
+        get() { this._execution.getOrThrow() }
+    }
 
     public init(content: String) {
         this.content = content
-        this.execInfo = None
     }
 
-    public init(content: String, execInfo!: AgentExecutionInfo) {
+    public init(content: String, execution!: AgentExecution) {
         this.content = content
-        this.execInfo = execInfo
+        this._execution = execution
+        execution.setAnswer(content)
     }
 }

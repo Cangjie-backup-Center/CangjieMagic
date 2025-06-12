@@ -5,7 +5,7 @@ package magic.agent_executor.react
 
 import magic.core.*
 import magic.agent_executor.common.AgentTask
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.utils.sleep2
@@ -14,43 +14,47 @@ import magic.parser.{TagStreamParser, ParserException}
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
         super(agent, request)
-        this.execInfo.dialog.addMessages(ReactPromptUtils.buildReactPrompt(this))
+        this.execution.addMessages(ReactPromptUtils.buildReactPrompt(this))
+        this.execution.addQuestion(request.question)
         LogUtils.info(agent.name, "----- Build Agent Task -----")
-        LogUtils.info(agent.name, this.execInfo.dialog)
+        LogUtils.info(agent.name, this.execution.messages)
         LogUtils.info(agent.name, "----- End of Build Agent Task -----")
     }
 
     /**
      * Internal auxiliary method
      */
-    private func addAndLogMessage(msg: ChatMessage): Unit {
-        this.execInfo.dialog.addMessage(msg)
+    private func addAndLogMessage(msg: Message, step!: Bool = true): Unit {
+        if (step) {
+            this.execution.addStepMessage(msg)
+        } else {
+            this.execution.addMessage(msg)
+        }
         LogUtils.info(this.agent.name, msg)
     }
 
     /**
      * If the answer is generated, return its value;
-     * otherwise, just add messages to the dialog
+     * otherwise, just add messages to the messageList
      */
     private func handleStep(step: ReactStep): Option<String> {
         match (step) {
             case ReactStep.Thought(thought) =>
-                this.addAndLogMessage(ChatMessage.assistant(thought.withTag(Tag.THOUGHT)))
+                this.addAndLogMessage(Message.assistant(thought.withTag(Tag.THOUGHT)))
             case ReactStep.Action(tc) =>
                 if (tc.thought != "") {
-                    this.addAndLogMessage(ChatMessage.assistant(tc.thought.withTag(Tag.THOUGHT)))
+                    this.addAndLogMessage(Message.assistant(tc.thought.withTag(Tag.THOUGHT)))
                 }
-                this.addAndLogMessage(ChatMessage.assistant(tc.text.withTag(Tag.ACTION)))
+                this.addAndLogMessage(Message.assistant(tc.text.withTag(Tag.ACTION)))
                 let observation = this.invokeTool(tc.request)
-                this.addAndLogMessage(ChatMessage.assistant(observation.withTag(Tag.OBSERVATION)))
+                this.addAndLogMessage(Message.assistant(observation.withTag(Tag.OBSERVATION)))
                 if (this.request.verbose) {
-                    this.execInfo.verboseChannel.put(observation, Tag.OBSERVATION)
+                    this.execution.verboseChannel.put(observation, Tag.OBSERVATION)
                 }
             case ReactStep.Answer(answer) =>
                 if (answer.thought != "") {
-                    addAndLogMessage(ChatMessage.assistant(answer.thought.withTag(Tag.THOUGHT)))
+                    addAndLogMessage(Message.assistant(answer.thought.withTag(Tag.THOUGHT)))
                 }
-                addAndLogMessage(ChatMessage.assistant(answer.content.withTag(Tag.ANSWER)))
                 return answer.content
             case ReactStep.Failure(failureInfo) =>
                 match (failureInfo.level) {
@@ -58,11 +62,12 @@ protected class ReactTask <: AgentTask {
                         // If the model returns an empty reply, just retry;
                         // else, add hint messages to fix.
                         if (!failureInfo.message.isEmpty()) {
-                            // Add the reply message to the dialog and fix the failure
-                            addAndLogMessage(ChatMessage.assistant(failureInfo.message))
-                            addAndLogMessage(ChatMessage.user( // and add the repair message
-                                "Output is invalid because ${failureInfo.reason}. ${failureInfo.suggestion}"
-                            ))
+                            // Add the reply message to the messageList and fix the failure
+                            addAndLogMessage(Message.assistant(failureInfo.message), step: false)
+                            addAndLogMessage( // and add the repair message
+                                Message.user("Output is invalid because ${failureInfo.reason}. ${failureInfo.suggestion}"),
+                                step: false
+                            )
                         } else {
                             LogUtils.info(this.agent.name, "React backoff")
                             sleep2(1000) // Backoff when getting empty messages
@@ -80,14 +85,14 @@ protected class ReactTask <: AgentTask {
         LogUtils.info(this.agent.name, "Step #${this.step}")
         this.step += 1
         // Add a hint message
-        this.execInfo.dialog.addMessage(
-            ChatMessage.system("Decide what to do next. Output a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}, or a single ${Tag.ANSWER}")
+        this.execution.addMessage(
+            Message.system("Decide what to do next. Output a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}, or a single ${Tag.ANSWER}")
         )
         let step = this.getNextReactStep()
         // Remove the hint message
-        this.execInfo.dialog.removeLast()
+        this.execution.removeLastMessage()
         if (let Some(answer) <- handleStep(step)) {
-            return AgentResponse(answer, execInfo: this.execInfo)
+            return AgentResponse(answer, execution: this.execution)
         }
         return None
     }
@@ -101,7 +106,7 @@ protected class ReactTask <: AgentTask {
         // so we truncate it with `stop` words.
         try {
             match (ModelUtils.makeChat(this.agent.model,
-                                       this.execInfo.dialog,
+                                       this.execution.messages,
                                        stop: [Tag.OBSERVATION])) {
                 case Some(msg) =>
                     return ReactStep.fromStr(msg.content)
@@ -133,12 +138,12 @@ protected class ReactTask <: AgentTask {
      **/
     protected func summarize(): AgentResponse {
         let messages = ReactPromptUtils.buildReactSummarizePrompt(this)
-        let answer = ModelUtils.agentMakeChatGet(this.agent, messages) { msg: ChatMessage =>
+        let answer = ModelUtils.agentMakeChatGet(this.agent, messages) { msg: Message =>
             Tag.extract(msg.content, Tag.ANSWER)
         }
         return AgentResponse(
             answer.getOrThrow({ => AgentExecutionException("Fail to get chat model response") }),
-            execInfo: this.execInfo
+            execution: this.execution
         )
     }
 
@@ -148,12 +153,12 @@ protected class ReactTask <: AgentTask {
         LogUtils.info(this.agent.name, "Step #${this.step}")
         this.step += 1
         // Add a hint message
-        this.execInfo.dialog.addMessage(
-            ChatMessage.system("Decide what to do next. Output a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}, or a single ${Tag.ANSWER}")
+        this.execution.addMessage(
+            Message.system("Decide what to do next. Output a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}, or a single ${Tag.ANSWER}")
         )
         let asyncReactStep = this.getAsyncReactStep()
         // remove the hint message
-        this.execInfo.dialog.removeLast()
+        this.execution.removeLastMessage()
         try {
             let tag = asyncReactStep.peekTag()
             if (tag == Tag.THOUGHT) {
@@ -167,12 +172,12 @@ protected class ReactTask <: AgentTask {
                     asyncReactStep.parser.onChunkFn = None
                     // The Tag.ANSWER has been put into the channel by the AsyncStepParser
                     // Put a close tag but does not put the answer
-                    this.execInfo.verboseChannel.put(Tag.ANSWER.getCloseTag())
-                    this.execInfo.verboseChannel.close()
+                    this.execution.verboseChannel.put(Tag.ANSWER.getCloseTag())
+                    this.execution.verboseChannel.close()
                 }
                 let (thought, asyncAnswer) = asyncReactStep.getAsyncAnswer()
                 if (!thought.trimAscii().isEmpty()) {
-                    this.addAndLogMessage(ChatMessage.assistant(thought))
+                    this.addAndLogMessage(Message.assistant(thought))
                 }
                 return asyncAnswer
             } else {
@@ -180,8 +185,8 @@ protected class ReactTask <: AgentTask {
             }
         } catch (ex: ParserException) {
             // Add the repair message
-            this.execInfo.dialog.addMessage(
-                ChatMessage.system("You should generate valid tags of required syntax!")
+            this.execution.addMessage(
+                Message.system("You should generate valid tags of required syntax!")
             )
             return None
         }
@@ -195,10 +200,10 @@ protected class ReactTask <: AgentTask {
         // [Observation} ... [/Observation],
         // so we truncate it with `stop` words.
         let asyncChatResp = agent.model.asyncCreate(
-            ChatRequest(this.execInfo.dialog, stop: [Tag.OBSERVATION])
+            ChatRequest(this.execution.messages, stop: [Tag.OBSERVATION])
         )
         let onChunkFn: Option<(String)->Unit> = if (this.request.verbose) {
-            { chunk: String => this.execInfo.verboseChannel.put(chunk) }
+            { chunk: String => this.execution.verboseChannel.put(chunk) }
         } else {
             None
         }
@@ -210,14 +215,15 @@ protected class ReactTask <: AgentTask {
      * Summarize an answer according to the react execution history.
      **/
     func asyncSummarize(): AsyncReactAnswer {
-        let messages = ReactPromptUtils.buildReactSummarizePrompt(this)
-        let asyncChatResp = agent.model.asyncCreate(ChatRequest(messages))
+        let asyncChatResp = agent.model.asyncCreate(
+            ChatRequest(ReactPromptUtils.buildReactSummarizePrompt(this))
+        )
         let parser = TagStreamParser(asyncChatResp.iter())
         let asyncReactStep = AsyncReactStep(parser)
         if (this.request.verbose) {
             // Put a pair of close tags but does not put the answer
-            this.execInfo.verboseChannel.put("", Tag.ANSWER)
-            this.execInfo.verboseChannel.close()
+            this.execution.verboseChannel.put("", Tag.ANSWER)
+            this.execution.verboseChannel.close()
         }
         let (_, asyncAnswer) = asyncReactStep.getAsyncAnswer()
         return asyncAnswer

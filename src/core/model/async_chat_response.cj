@@ -3,13 +3,13 @@
  */
 package magic.core.model
 
-import magic.core.message.{ChatMessage, ChatMessageRole, Dialog}
+import magic.core.message.{Message, MessageRole, MessageList}
 
 import std.sync.AtomicBool
 
 public struct AsyncChatChunk <: ToString {
     protected AsyncChatChunk(
-        public let message!: ChatMessage,
+        public let message!: Message,
         let done!: Bool = false,
         let usage!: Option<ChatUsage> = None) { }
 
@@ -43,15 +43,15 @@ private class ContentIterator <: Iterator<String> {
     }
 }
 
-public class AsyncChatResponse <: Iterator<AsyncChatChunk> & ToString {
+public class AsyncChatResponse <: ToString {
     public let model: String
     public let chunks: Iterator<AsyncChatChunk>
     // The following fields will be set when the response stream is finished
     private var _usage: Option<ChatUsage> = None
-    private let _chatHistory = Dialog()
+    private let _messageList = MessageList()
     private let finished = AtomicBool(false)
 
-    private var role = ChatMessageRole.Assistant
+    private var role = MessageRole.Assistant
     private let content = StringBuilder()
 
     protected init(model: String, chunks: Iterator<AsyncChatChunk>) {
@@ -59,7 +59,7 @@ public class AsyncChatResponse <: Iterator<AsyncChatChunk> & ToString {
         this.chunks = chunks
     }
 
-    override public func next(): Option<AsyncChatChunk> {
+    protected func next(): Option<AsyncChatChunk> {
         if (finished.load()) {
             return None
         }
@@ -69,8 +69,8 @@ public class AsyncChatResponse <: Iterator<AsyncChatChunk> & ToString {
             }
             content.append(chunk.message.content)
             if (chunk.done) {
-                this._chatHistory.addMessage(
-                    ChatMessage(this.role, content.toString())
+                this._messageList.addMessage(
+                    Message(this.role, content.toString())
                 )
                 this._usage = chunk.usage
                 finished.store(true)
@@ -99,13 +99,13 @@ public class AsyncChatResponse <: Iterator<AsyncChatChunk> & ToString {
     /**
      * This method is synchronous, it will wait until the chat response completes.
      */
-    public prop dialog: Dialog {
+    public prop messageList: MessageList {
         get() {
             if (!finished.load()) {
                 // Consume all chunks
-                for (_ in this) { }
+                while (let Some(_) <- this.next()) { }
             }
-            this._chatHistory
+            this._messageList
         }
     }
 
@@ -115,7 +115,7 @@ public class AsyncChatResponse <: Iterator<AsyncChatChunk> & ToString {
         }
         let strBuilder = StringBuilder()
         strBuilder.append("ChatResult: model[${model}] usage[${usage.toString()}]")
-        for (msg in this.dialog) {
+        for (msg in this.messageList) {
             strBuilder.append("  ")
             strBuilder.append(msg.toString())
             strBuilder.append("\n")

@@ -16,13 +16,13 @@ import std.collection.{filter, collectArray}
 //====================================================================================
 
 public struct ModelUtils {
-    private static func parseChatResponse(response: ChatResponse): Option<ChatMessage> {
-        let messages = response.dialog |>
-            filter { msg: ChatMessage =>
-                msg.role == ChatMessageRole.Assistant && !msg.content.isEmpty()
+    private static func parseChatResponse(response: ChatResponse): Option<Message> {
+        let messages = response.messageList |>
+            filter { msg: Message =>
+                msg.role == MessageRole.Assistant && !msg.content.isEmpty()
             } |>
             collectArray
-        LogUtils.debug("#Response-Message: ${response.dialog.size}; #Assistant-Message: ${messages.size}")
+        LogUtils.debug("#Response-Message: ${response.messageList.size}; #Assistant-Message: ${messages.size}")
         if (messages.isEmpty()) {
             LogUtils.error("The chat model did not reply a valid assistant message")
             return None
@@ -39,7 +39,7 @@ public struct ModelUtils {
                 content = content[(idx + tag.size)..]
             }
         }
-        return ChatMessage(
+        return Message(
             msg.role,
             content,
             name: msg.name,
@@ -48,7 +48,7 @@ public struct ModelUtils {
         )
     }
 
-    private static func makeChatImpl(model: ChatModel, request: ChatRequest, who!: Option<String> = None): Option<ChatMessage> {
+    private static func makeChatImpl(model: ChatModel, request: ChatRequest, who!: Option<String> = None): Option<Message> {
         if (let Some(response) <- Instrumentor.doInstrumentBeforeChatModel(model, request, who: who)) {
             return ModelUtils.parseChatResponse(response)
         }
@@ -65,43 +65,43 @@ public struct ModelUtils {
     }
 
     public static func makeChat(model: ChatModel,
-                                dialog: Dialog,
+                                messageList: MessageList,
                                 temperature!: Option<Float64> = None,
-                                stop!: Option<Array<String>> = None): Option<ChatMessage> {
-        let request = ChatRequest(dialog, temperature: temperature, stop: stop)
+                                stop!: Option<Array<String>> = None): Option<Message> {
+        let request = ChatRequest(messageList, temperature: temperature, stop: stop)
         return ModelUtils.makeChatImpl(model, request)
     }
 
     public static func makeChat(model: ChatModel,
-                                messages: Array<ChatMessage>,
+                                messages: Array<Message>,
                                 temperature!: Option<Float64> = None,
-                                stop!: Option<Array<String>> = None): Option<ChatMessage> {
-        let request = ChatRequest(Dialog(messages), temperature: temperature, stop: stop)
+                                stop!: Option<Array<String>> = None): Option<Message> {
+        let request = ChatRequest(MessageList(messages), temperature: temperature, stop: stop)
         return ModelUtils.makeChatImpl(model, request)
     }
 
     public static func makeChat(name: String,
                                 model: ChatModel,
-                                dialog: Dialog,
+                                messageList: MessageList,
                                 temperature!: Option<Float64> = None,
-                                stop!: Option<Array<String>> = None): Option<ChatMessage> {
-        let request = ChatRequest(dialog, temperature: temperature, stop: stop)
+                                stop!: Option<Array<String>> = None): Option<Message> {
+        let request = ChatRequest(messageList, temperature: temperature, stop: stop)
         return ModelUtils.makeChatImpl(model, request, who: name)
     }
 
     public static func makeChat(name: String,
                                 model: ChatModel,
-                                messages: Array<ChatMessage>,
+                                messages: Array<Message>,
                                 temperature!: Option<Float64> = None,
-                                stop!: Option<Array<String>> = None): Option<ChatMessage> {
-        let request = ChatRequest(Dialog(messages), temperature: temperature, stop: stop)
+                                stop!: Option<Array<String>> = None): Option<Message> {
+        let request = ChatRequest(MessageList(messages), temperature: temperature, stop: stop)
         return ModelUtils.makeChatImpl(model, request, who: name)
     }
 
     public static func makeChatGet<T>(name: String,
                                       model: ChatModel,
-                                      messages: Array<ChatMessage>,
-                                      getFn!: (ChatMessage) -> Option<T>): Option<T> {
+                                      messages: Array<Message>,
+                                      getFn!: (Message) -> Option<T>): Option<T> {
         LogUtils.info(name, messages)
         if (let Some(msg) <- ModelUtils.makeChat(name, model, messages)) {
             LogUtils.info(name, msg)
@@ -111,13 +111,13 @@ public struct ModelUtils {
         }
     }
 
-    public static func agentMakeChat(agent: Agent, messages: Array<ChatMessage>): Option<ChatMessage> {
+    public static func agentMakeChat(agent: Agent, messages: Array<Message>): Option<Message> {
         LogUtils.info(agent.name, messages)
         return ModelUtils.makeChat(agent.name, agent.model, messages)
     }
 
-    public static func agentMakeChatGet<T>(agent: Agent, messages: Array<ChatMessage>,
-                                           getFn!: (ChatMessage) -> Option<T>): Option<T> {
+    public static func agentMakeChatGet<T>(agent: Agent, messages: Array<Message>,
+                                           getFn!: (Message) -> Option<T>): Option<T> {
         return ModelUtils.makeChatGet<T>(agent.name, agent.model, messages, getFn: getFn)
     }
 }

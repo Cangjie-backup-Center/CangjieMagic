@@ -4,7 +4,7 @@
 package magic.agent
 
 import magic.core.agent.*
-import magic.core.message.ChatMessage
+import magic.core.message.Message
 import magic.core.model.ChatModel
 import magic.model.ModelUtils
 import magic.config.Config
@@ -63,9 +63,7 @@ public abstract class AbsAgent <: Agent {
         }
         resp = Instrumentor.doInstrumentAfterAgentRun(this, request, resp)
         if (let Some(memory) <- this.memory) {
-            if (let Some(info) <- resp.execInfo) {
-                memory.update(info.dialog.toString()) // Update the agent memory
-            }
+            memory.update(resp.execution.chatRound.toString()) // Update the agent memory
         }
         return resp
     }
@@ -93,8 +91,9 @@ public abstract class AbsAgent <: Agent {
             ("question", request.question)
         )
 
-        let resp = this.chat(AgentRequest(fullQuestion, dialog: request.dialog))
-        var (answer, dialog) = (resp.content, resp.execInfo.getOrThrow().dialog)
+        let resp = this.chat(AgentRequest(fullQuestion, conversation: request.conversation))
+        // Reuse the message list
+        var (answer, messageList) = (resp.content, resp.execution.messages)
         for (_ in 0..Config.outputRepairRetryNumber) {
             // Convert the answer to a value of type T
             try {
@@ -102,14 +101,17 @@ public abstract class AbsAgent <: Agent {
                 let jv = JsonValue.fromStr(jsonStr)
                 return T.fromJsonValue(jv)
             } catch(_: JsonException) {
-                let userMsg = ChatMessage.user("Output does not obey the type schema.")
+                let userMsg = Message.user("Output does not obey the type schema.")
                 LogUtils.info(this.name, userMsg)
-                dialog.addMessage(userMsg)
+                messageList.addMessage(userMsg)
                 // Continue to let the model repair the output
-                let assistantMsg = ModelUtils.makeChat(this.model, dialog).getOrThrow({ => AgentExecutionException("Fail to get chat model response") })
-                LogUtils.info(this.name, assistantMsg)
-                dialog.addMessage(assistantMsg)
-                answer = assistantMsg.content
+                let msg = ModelUtils.makeChat(this.model, messageList).getOrThrow({ =>
+                    AgentExecutionException("Fail to get chat model response")
+                })
+                LogUtils.info(this.name, msg)
+                messageList.addMessage(msg)
+                answer = msg.content
+                resp.execution.setAnswer(answer)
             }
         }
         LogUtils.error("${this.name}: Fail to generate an output obeying the type schema")

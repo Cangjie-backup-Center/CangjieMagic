@@ -5,8 +5,8 @@ macro package magic.dsl
 
 import std.ast.*
 
-class DialogAttr <: Attr {
-    DialogAttr(map: AttrMap) { super(map) }
+class ConversationAttr <: Attr {
+    ConversationAttr(map: AttrMap) { super(map) }
 
     init() { super(AttrMap()) }
 
@@ -14,40 +14,40 @@ class DialogAttr <: Attr {
         get() { getTokens("agent").getOrThrow() }
     }
 
-    static func parse(attrTokens: Tokens): DialogAttr {
+    static func parse(attrTokens: Tokens): ConversationAttr {
         let map = AttrParser(attrTokens).parseAttr(
-            macroName: "dialog",
+            macroName: "conversation",
             validKeys: ["agent"],
         )
-        return DialogAttr(map)
+        return ConversationAttr(map)
     }
 }
 
-public macro dialog(input: Tokens): Tokens {
-    let emptyAttr = DialogAttr()
-    return transformDialog(input, emptyAttr)
+public macro conversation(input: Tokens): Tokens {
+    let emptyAttr = ConversationAttr()
+    return transformConversation(input, emptyAttr)
 }
 
-public macro dialog(attr: Tokens, input: Tokens): Tokens {
-    let dialogAttr = DialogAttr.parse(attr)
-    let content = transformDialog(input, dialogAttr)
-    if (dialogAttr.dump) {
+public macro conversation(attrTokens: Tokens, input: Tokens): Tokens {
+    let attr = ConversationAttr.parse(attrTokens)
+    let content = transformConversation(input, attr)
+    if (attr.dump) {
         printTokens(content)
     }
     return content
 }
 
-func transformDialog(input: Tokens, dialogAttr: DialogAttr): Tokens {
-    // 1. Process dialog-related tokens
+func transformConversation(input: Tokens, attr: ConversationAttr): Tokens {
+    // 1. Process conversation-related tokens
     var transformedTokens = transformDialogTokens(input)
-    // 3. Wrap the dialog into a lambda function (as its scope) and call it immediately
+    // 3. Wrap the conversation into a lambda function (as its scope) and call it immediately
     // 4. transform if the last expression is an infer expression
     let lambda = quote({ => $transformedTokens })
     // Compose as a call of the lambda
     return quote(
         { =>
-            let __CURR_DIALOG__ = Dialog()
-            let __CURR_AGENT__ = $(dialogAttr.agent)
+            let __CURR_CONVERSATION__ = Conversation()
+            let __CURR_AGENT__ = $(attr.agent)
             $transformedTokens
         }()
     )
@@ -61,7 +61,7 @@ func transformDialogTokens(tokens: Tokens): Tokens {
         match (currToken.kind) {
             case TokenKind.RSHIFT => // >>
                 transformedTokens.append(quote(
-                    __CURR_DIALOG__.clear()
+                    __CURR_CONVERSATION__.clear()
                 ))
             case TokenKind.ARROW => // ->
                 if (lastPos >= 0 && tokens[lastPos].kind == TokenKind.STRING_LITERAL) {
@@ -101,21 +101,19 @@ class ChatExprParser <: Parser {
         let content = match (parseType()) {
             case Some(ty) =>
                 quote(
-                    let $tempToken = __CURR_AGENT__.chatGet<$ty>(AgentRequest($chatMessage, dialog: __CURR_DIALOG__))
-                    __CURR_DIALOG__.addMessage(ChatMessage.user($chatMessage))
+                    let $tempToken = __CURR_AGENT__.chatGet<$ty>(AgentRequest($chatMessage, conversation: __CURR_CONVERSATION__))
                     match ($tempToken) {
                         case Some(v) =>
-                            __CURR_DIALOG__.addMessage(ChatMessage.assistant(v.toJsonValue().toJsonString()))
+                            __CURR_CONVERSATION__.addChatRound($chatMessage, v.toJsonValue().toJsonString())
                         case None =>
-                            __CURR_DIALOG__.addMessage(ChatMessage.assistant("Generate JSON object failed"))
+                            __CURR_CONVERSATION__.addChatRound($chatMessage, "Generate JSON object failed")
                     }
                     let $varToken = $tempToken.getOrThrow()
                 )
             case None =>
                 quote(
-                    let $varToken = __CURR_AGENT__.chat(AgentRequest($chatMessage, dialog: __CURR_DIALOG__)).content
-                    __CURR_DIALOG__.addMessage(ChatMessage.user($chatMessage))
-                    __CURR_DIALOG__.addMessage(ChatMessage.assistant($varToken))
+                    let $varToken = __CURR_AGENT__.chat(AgentRequest($chatMessage, conversation: __CURR_CONVERSATION__)).content
+                    __CURR_CONVERSATION__.addChatRound($chatMessage, $varToken)
                 )
         }
         return (content, currPos)

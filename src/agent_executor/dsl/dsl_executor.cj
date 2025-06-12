@@ -5,7 +5,7 @@ package magic.agent_executor.dsl
 
 import magic.core.agent.*
 import magic.agent.UserDefinedAgent
-import magic.agent_executor.common.{AgentTask, IteratorWrapper}
+import magic.agent_executor.common.{AgentTask, FutureIteratorWrapper}
 import magic.log.LogUtils
 
 public class DslExecutor <: AgentExecutor {
@@ -28,7 +28,7 @@ public class DslExecutor <: AgentExecutor {
             return finalState.answer
         } finally {
             if (task.request.verbose) {
-                task.execInfo.verboseChannel.close()
+                task.execution.verboseChannel.close()
             }
         }
     }
@@ -36,7 +36,7 @@ public class DslExecutor <: AgentExecutor {
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         let task = AgentTask(agent, request, initPrompt: true)
         let answer = this.doRun(task)
-        return AgentResponse(answer, execInfo: task.execInfo)
+        return AgentResponse(answer, execution: task.execution)
     }
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
@@ -45,6 +45,6 @@ public class DslExecutor <: AgentExecutor {
             let answer = this.doRun(task)
             return [answer].iterator()
         }
-        return AsyncAgentResponse(IteratorWrapper(agent, fut), execInfo: task.execInfo)
+        return AsyncAgentResponse(FutureIteratorWrapper(task, fut), execution: task.execution)
     }
 }

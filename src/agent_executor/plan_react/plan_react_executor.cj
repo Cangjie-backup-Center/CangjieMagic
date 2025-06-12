@@ -5,10 +5,10 @@ package magic.agent_executor.plan_react
 
 import magic.core.agent.*
 import magic.utils.*
-import magic.agent_executor.common.IteratorWrapper
+import magic.agent_executor.common.FutureIteratorWrapper
 import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 import magic.core.model.ChatRequest
 import magic.model.ModelUtils
 import magic.prompt.Template
@@ -17,7 +17,7 @@ protected class PlanReactExecutor <: AgentExecutor {
     protected PlanReactExecutor() { }
 
     override public prop name: String {
-        get() {"plan-react"}
+        get() { "plan-react" }
     }
 
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
@@ -26,6 +26,7 @@ protected class PlanReactExecutor <: AgentExecutor {
         // Decompose the problem
         let subtasks: Array<Subtask> = problemDecompose(agent, request)
         let planTask = PlanTask(agent, request, subtasks, knowledge)
+        planTask.execution.addQuestion(request.question)
         // Solve each subtask
         for (subtask in subtasks) {
             let worker = ReactWorker(planTask)
@@ -35,22 +36,23 @@ protected class PlanReactExecutor <: AgentExecutor {
         // Summarize the result
         let result = resultSummarize(planTask)
         LogUtils.info(agent.name, "Summarized answer: ${result}")
-        return AgentResponse(result)
+        return AgentResponse(result, execution: planTask.execution)
     }
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
         let planTask = PlanTask(agent, request)
+        planTask.execution.addQuestion(request.question)
         // Create the worker thread
         let fut: Future<Iterator<String>> = spawn {
             try {
                 return workFn(planTask)
             } catch(ex: Exception) {
-                planTask.execInfo.verboseChannel.close()
+                planTask.execution.verboseChannel.close()
                 throw ex
             }
             throw UnsupportedException("Unreachable")
         }
-        return AsyncAgentResponse(IteratorWrapper(agent, fut), execInfo: planTask.execInfo)
+        return AsyncAgentResponse(FutureIteratorWrapper(planTask, fut), execution: planTask.execution)
     }
 }
 
@@ -69,28 +71,28 @@ private func workFn(planTask: PlanTask): Iterator<String> {
             strBuilder.append(subtask.toMarkdown())
             strBuilder.append("\n")
         }
-        planTask.execInfo.verboseChannel.put(strBuilder.toString().withTag(Tag.PLAN))
+        planTask.execution.verboseChannel.put(strBuilder.toString().withTag(Tag.PLAN))
     }
     // Solve each subtask
     for (subtask in subtasks) {
         if (request.verbose) {
-            planTask.execInfo.verboseChannel.put("Solve the subtask: ${subtask.name}".withTag(Tag.PLAN))
+            planTask.execution.verboseChannel.put("Solve the subtask: ${subtask.name}".withTag(Tag.PLAN))
         }
         let worker = ReactWorker(planTask)
         let asyncResp = worker.asyncSolve(subtask, verbose: request.verbose)
         if (request.verbose) {
             // Transfer the internal information from the react worker to this agent
-            for (data in asyncResp.execInfo.getOrThrow().verboseInfo) {
-                planTask.execInfo.verboseChannel.put(data)
+            for (data in asyncResp.execution.verboseInfo) {
+                planTask.execution.verboseChannel.put(data)
             }
         }
         subtask.result = asyncResp.content
         if (request.verbose) {
-            planTask.execInfo.verboseChannel.put("# Subtask DONE!\n${subtask.toMarkdown()}".withTag(Tag.INFO))
+            planTask.execution.verboseChannel.put("# Subtask DONE!\n${subtask.toMarkdown()}".withTag(Tag.INFO))
         }
     }
     if (request.verbose) {
-        planTask.execInfo.verboseChannel.close()
+        planTask.execution.verboseChannel.close()
     }
     // Summarize the result
     return asyncResultSummarize(planTask)

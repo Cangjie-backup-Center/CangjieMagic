@@ -3,8 +3,9 @@
  */
 package magic.core.agent
 
-import magic.core.message.ChatMessage
+import magic.core.message.Message
 import magic.parser.{Tag, WithTag}
+
 /**
  * The asynchronous execution response from an agent executor
  */
@@ -19,16 +20,19 @@ public class AsyncAgentResponse <: Iterator<String> {
     /**
      * Internal information during the execution
      */
-    public let execInfo: Option<AgentExecutionInfo>
+    private var _execution: Option<AgentExecution> = None
+
+    public prop execution: AgentExecution {
+        get() { this._execution.getOrThrow() }
+    }
 
     public init(chunks: Iterator<String>) {
         this.chunks = chunks
-        this.execInfo = None
     }
 
-    public init(chunks: Iterator<String>, execInfo!: Option<AgentExecutionInfo>) {
+    public init(chunks: Iterator<String>, execution!: AgentExecution) {
         this.chunks = chunks
-        this.execInfo = execInfo
+        this._execution = execution
     }
 
     /**
@@ -48,13 +52,8 @@ public class AsyncAgentResponse <: Iterator<String> {
             buffer.append(chunk)
             return chunk
         } else {
-            if (let Some(info) <- this.execInfo) {
-                if(info.executor.name == "react" || info.executor.name == "plan-react") {
-                    info.dialog.addMessage(ChatMessage.assistant("${Tag.ANSWER}${buffer.toString()}${Tag.ANSWER.getCloseTag()}"))
-                } else {
-                    info.dialog.addMessage(ChatMessage.assistant(buffer.toString()))
-                }
-                
+            if (let Some(execution) <- this._execution) {
+                execution.setAnswer(buffer.toString())
             }
             return None
         }

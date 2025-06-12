@@ -3,7 +3,6 @@
  */
 package magic.tool
 
-import magic.core.agent.AgentExecutionInfo
 import magic.core.tool.*
 import magic.core.rag.*
 import magic.jsonable.{TypeSchema, ToJsonValue}

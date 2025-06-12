@@ -5,7 +5,7 @@ package magic.agent
 
 import magic.core.agent.{AgentRequest, AgentResponse}
 import magic.core.model.ChatModel
-import magic.core.message.{ChatMessage, Dialog}
+import magic.core.message.{Message, MessageList}
 import magic.core.tool.{Tool, ToolRequest}
 import magic.model.ModelUtils
 import magic.parser.{OutputParserUtils, ParserException}
@@ -74,15 +74,15 @@ public class ToolSelectAgent <: BaseAgent {
 
     override public func chat(request: AgentRequest): AgentResponse {
         let sysPrompt = TOOL_SELECT_SYSTEM_PROMPT.format(
-            // ("dialog", this.buildDialogPrompt(request.dialog ?? Dialog())),
+            // ("messageList", this.buildDialogPrompt(request.messageList ?? MessageList())),
             ("tools", this.buildToolsPrompt())
         )
         let messages = [
-            ChatMessage.system(sysPrompt.trimAscii()),
-            ChatMessage.user("Now, select the tool for the question: ${request.question}.")
+            Message.system(sysPrompt.trimAscii()),
+            Message.user("Now, select the tool for the question: ${request.question}.")
         ]
         let jsonOpt = ModelUtils.agentMakeChatGet(this, messages) {
-            msg: ChatMessage => OutputParserUtils.extractLastCode(msg.content, "json")
+            msg: Message => OutputParserUtils.extractLastCode(msg.content, "json")
         }
         LogUtils.info(this.name, "Select Tool: ${jsonOpt.toString()}")
         return AgentResponse(jsonOpt ?? "{}")
@@ -99,16 +99,16 @@ public class ToolSelectAgent <: BaseAgent {
         return strBuilder.toString()
     }
 
-    private func buildDialogPrompt(dialog: Dialog): String {
-        if (dialog.isEmpty()) {
+    private func buildConversationPrompt(messageList: MessageList): String {
+        if (messageList.isEmpty()) {
             return ""
         }
         let strBuilder = StringBuilder()
-        strBuilder.append("# Previous Dialog (with the user)\n")
-        for (msg in dialog) {
+        strBuilder.append("# Previous conversation (with the user)\n")
+        for (msg in messageList) {
             strBuilder.append("${msg}\n")
         }
-        strBuilder.append("---end of dialog---")
+        strBuilder.append("---end of conversation---")
         return strBuilder.toString()
     }
 }

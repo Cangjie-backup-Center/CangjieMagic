@@ -3,7 +3,7 @@
  */
 package magic.core.agent
 
-import magic.core.message.{Dialog, ChatMessage}
+import magic.core.message.Conversation
 
 /**
  * The execution request to an agent executor
@@ -16,9 +16,9 @@ public class AgentRequest {
     public let question: String
 
     /**
-     * Previous chat history between the user and agent
+     * Conversation between the user and agent
      */
-    public let dialog: Option<Dialog>
+    public let conversation: Option<Conversation>
 
     /**
      * Dump internal execution information
@@ -34,14 +34,14 @@ public class AgentRequest {
      * An agent request may be handled by multiple agents,
      * so this field stores previous execution info
      */
-    protected var execInfo: Option<AgentExecutionInfo> = None
+    protected var execution: Option<AgentExecution> = None
 
     public init(question: String,
-                dialog!: Option<Dialog> = None,
+                conversation!: Option<Conversation> = None,
                 verbose!: Bool = false,
                 maxTool!: Int64 = 10) {
         this.question = question
-        this.dialog = dialog
+        this.conversation = conversation
         this.verbose = verbose
         this.maxTool = maxTool
     }
