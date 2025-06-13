@@ -4,7 +4,7 @@
  
 package magic.utils
 
-public class ObjectHasher {
+protected class ObjectHasher {
     private var res: Int64 = 0
     public init(res!: Int64 = 0) {
         this.res = res
