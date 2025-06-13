@@ -45,7 +45,7 @@ foreign {
 private let POINTER_SIZE: UIntNative = 8
 
 @When[sqlite == "enable"]
-public struct SqliteUtils {
+protected struct SqliteUtils {
 
     /* sqlite3_step() 还未完成执行 */
     public static let SQLITE_ROW: Int32 = 100
@@ -299,7 +299,7 @@ public struct SqliteUtils {
 }
 
 @When[sqlite != "enable"]
-public struct SqliteUtils {
+protected struct SqliteUtils {
 
     /* sqlite3_step() 还未完成执行 */
     public static let SQLITE_ROW: Int32 = 100
