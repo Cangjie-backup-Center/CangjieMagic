@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+ */
 package magic.agent_executor.common
 
 import magic.core.agent.AgentExecutor

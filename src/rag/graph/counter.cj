@@ -2,13 +2,13 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
  */
 
-package magic.utils
+package magic.rag.graph
 
 import std.collection.*
 @When[cjc_version < "0.56.4"]
 import std.math.min
 
-public class Counter<T> where T <: Hashable & Equatable<T> {
+class Counter<T> where T <: Hashable & Equatable<T> {
     private var _cntMap: HashMap<T, Float64> = HashMap()
     private var _baseScore: Float64
 
