@@ -89,7 +89,7 @@ private func transformTemplate(input: Tokens, attr: TemplateAttr): Tokens {
     let prefix = attr.prefix ?? ""
     let template = if (let Some(path) <- attr.path) {
         if (!exists(path)) {
-            throw DslException("`include` refers to non-existing file: ${path}")
+            throw DslException("`path` refers to non-existing file: ${path}")
         }
         escapeStringForTemplate(readFile(path))
     } else {
