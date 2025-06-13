@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+ */
+
 package magic.rag.graph
 
 import magic.agent.*
@@ -17,7 +21,7 @@ import magic.tokenizer.*
 import magic.core.tokenizer.Tokenizer
 import magic.agent_executor.naive.NaiveExecutor
 import magic.prompt.Template
-import magic.utils.{calMd5, ObjectHasher, splitByMarkers, regSearch, Counter}
+import magic.utils.{calMd5, ObjectHasher}
 import magic.log.LogUtils
 import std.collection.*
 import std.sync.*

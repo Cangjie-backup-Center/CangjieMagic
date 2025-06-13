@@ -1,9 +1,12 @@
-package magic.utils
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+ */
+package magic.rag.graph
 
 import std.regex.*
 import std.collection.*
 
-public func splitByMarkers(content: String, markers: Array<String>): Array<String> {
+func splitByMarkers(content: String, markers: Array<String>): Array<String> {
     if (markers.isEmpty()) {
         return [content]
     }
@@ -23,7 +26,7 @@ public func splitByMarkers(content: String, markers: Array<String>): Array<Strin
     splits.toArray()
 }
 
-public func escape(input: String): String {
+private func escape(input: String): String {
     var specialCharacters = ##"[\.\^\$\|\?\*\+\(\)\[\]\{\}]"##
     var regex = Regex(specialCharacters)
     var matcher = regex.matcher(input)
@@ -37,7 +40,7 @@ public func escape(input: String): String {
     return String.fromUtf8(output.toArray())
 }
 
-public func regSearch(content: String, pattern: String, group!: Int64 = 0): Option<String> {
+func regSearch(content: String, pattern: String, group!: Int64 = 0): Option<String> {
     var re = Regex(pattern)
     match (re.matches(content)) {
         case Some(r) => r.matchStr(group)

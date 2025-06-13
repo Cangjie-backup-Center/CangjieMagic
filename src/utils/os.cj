@@ -64,3 +64,64 @@ protected func newProcess(name: String, args: Array<String>, env!: Array<(String
 protected func sleep2(ms: Int64): Unit {
     sleep(Duration.millisecond * ms)
 }
+
+@When[os == "Windows"]
+foreign {
+    func GetCommandLineW(): CPointer<UInt16>
+
+    func CommandLineToArgvW(
+        lpCmdLine: CPointer<UInt16>,
+        pNumArgs: CPointer<IntNative>
+    ): CPointer<CPointer<UInt16>>
+
+    func LocalFree(ptr: CPointer<CPointer<UInt16>>): Unit
+
+    func WideCharToMultiByte(
+        CodePage: UIntNative,
+        dwFlags: UInt32,
+        lpWideCharStr: CPointer<UInt16>,
+        cchWideChar: IntNative,
+        lpMultiByteStr: CPointer<Byte>,
+        cbMultiByte: IntNative,
+        lpDefaultChar: CPointer<Unit>,
+        lpUsedDefaultChar: CPointer<Unit>
+    ): IntNative
+}
+
+@When[os == "Windows"]
+unsafe func convertToUtf8(wideStr: CPointer<UInt16>): String {
+    let NULL = CPointer<Unit>()
+    let CP_UTF8: UIntNative = 65001
+    // Compute the length of UTF8 bytes
+    let len = WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, CPointer<Byte>(), 0, NULL, NULL)
+    // Allocate memory
+    let utf8bytes = LibC.malloc<Byte>(count: Int64(len + 1))
+    try {
+        // Convert to UTF8 bytes
+        WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, utf8bytes, len, NULL, NULL)
+        // Convert to String
+        return String.fromUtf8(
+            Array<Byte>(Int64(len), { i => utf8bytes.read(i) })
+        )
+    } finally {
+        LibC.free(utf8bytes)
+    }
+}
+
+@When[os == "Windows"]
+public func winGetArgs(): Array<String> {
+    var numArgs: IntNative = 0
+    let argv: CPointer<CPointer<UInt16>>
+    // Get arguments via Windows APIs
+    unsafe {
+        let cmdLine = GetCommandLineW()
+        argv = CommandLineToArgvW(cmdLine, inout numArgs)
+    }
+    // Convert arguments to UTF8 strings
+    // The first argument is the commandline, skip it
+    return Array<String>(Int64(numArgs) - 1, { i =>
+        let index = i + 1
+        let wCharPtr = unsafe { argv.read(Int64(index)) }
+        unsafe { convertToUtf8(wCharPtr) }
+    })
+}
