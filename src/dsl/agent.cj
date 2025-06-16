@@ -707,7 +707,7 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                 match (__TOOL_MANAGER__) {
                     case Some(tm) => return tm
                     case None =>
-                        let tm = SimpleToolManager([], enableFilter: $(newLiteralToken(agentAttr.enableToolFilter)))
+                        let tm = SmartToolManager([], enableFilter: $(newLiteralToken(agentAttr.enableToolFilter)))
 
                         $addTools
 

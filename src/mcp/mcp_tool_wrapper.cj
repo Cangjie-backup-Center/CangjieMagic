@@ -48,12 +48,7 @@ protected class MCPToolWrapper <: Tool {
     override public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
         let toolResponse = this.client.callTool(this.name, args.toArray())
         // If the content is error messages, truncate it
-        let runes = toolResponse.content.toRuneArray()
-        if ((toolResponse.isError) && runes.size > 100) {
-            return ToolResponse("${String(runes[..100])}...", isError: true)
-        } else {
-            return toolResponse
-        }
+        return toolResponse
         // throw ToolException("Fail to invoke the mcp function.")
     }
 

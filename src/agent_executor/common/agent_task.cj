@@ -6,6 +6,7 @@ package magic.agent_executor.common
 import magic.core.agent.*
 import magic.core.message.{Message, MessageList}
 import magic.agent.AgentExecutionInfo
+import magic.tool.SmartToolManager
 import magic.core.tool.{Tool, ToolRequest, ToolSearchConfig, ToolException}
 import magic.jsonable.ToJsonValue
 import magic.instrumentor.Instrumentor
@@ -85,6 +86,12 @@ public open class AgentTask {
             let retrieval = this.agent.retriever.getOrThrow().search(query)
             this.execution.addRetrieval(query, retrieval)
             observation = retrieval.toPrompt()
+        } else if (toolRequest.name == "__manager__tool__") {
+            let convertedArgs = HashMap<String, ToJsonValue>()
+            for ((argName, argValue) in toolRequest.args) {
+                convertedArgs.put(argName, argValue)
+            }
+            (this.agent.toolManager as SmartToolManager).getOrThrow().invoke(convertedArgs)
         } else if (let Some(tool) <- this.agent.toolManager.findTool(toolRequest.name)) {
             try {
                 // Arguments are of type JsonValue, we should convert them as ToJsonValue

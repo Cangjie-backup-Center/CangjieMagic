@@ -19,17 +19,17 @@ import std.collection.{ArrayList, HashMap, map, collectArray}
 import encoding.json.*
 
 @jsonable
-private class Response {
+protected class Response {
     let relevantTools: Array<FoundTool>
 }
 
 @jsonable
-private class FoundTool {
+protected class FoundTool {
     let name: String
     let reason: String
 }
 
-private const FILTER_TOOL_PROMPT = """
+protected const FILTER_TOOL_PROMPT = """
 Objective: Select the most relevant tool(s) for a given user question from a predefined list.
 
 # Instructions
