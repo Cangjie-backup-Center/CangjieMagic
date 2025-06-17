@@ -91,7 +91,7 @@ public open class AgentTask {
             for ((argName, argValue) in toolRequest.args) {
                 convertedArgs.put(argName, argValue)
             }
-            (this.agent.toolManager as SmartToolManager).getOrThrow().invoke(convertedArgs)
+            observation = (this.agent.toolManager as SmartToolManager).getOrThrow().invoke(convertedArgs).content
         } else if (let Some(tool) <- this.agent.toolManager.findTool(toolRequest.name)) {
             try {
                 // Arguments are of type JsonValue, we should convert them as ToJsonValue

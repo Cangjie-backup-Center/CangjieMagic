@@ -59,6 +59,7 @@ public class ManagerTool <: AbsTool {
         // The retriever model tool must accept a string
         let task = args["task"].toJsonValue().asString().getValue()
         let tools = this.manager.filterToolViaEmbedding(task)
+        LogUtils.info("=================INVOKED TOOLS: ${tools.size}")
         if (tools.size == 0) {
             return ToolResponse("# Available Tools\nNo tools")
         }
@@ -169,6 +170,7 @@ public class SmartToolManager <: ToolManager {
         for (tool in tools) {
             toolPrompts.append("${tool.name}: ${tool.description}")
         }
+        LogUtils.info("=================MAYBE TOOLS: ${tools.size}")
         let messages = [
             Message.system(
                 FILTER_TOOL_PROMPT.format(
