@@ -33,13 +33,60 @@ public class ManagerTool <: AbsTool {
 
     public prop description: String {
         get() {
-            "Get A Suitable Tool from Tool Manager"
+"""
+查询可用工具或工具集，这些工具仅提供原子性的能力，查询前需要将原始需求分解为可能要使用的工具组合
+----------------例1：
+User:武汉的旅游规划
+Assistant: 
+[Action]
+```json
+{
+    "name": "__manager__tool__",
+    "arguments": {
+        "query": "网络搜索|景点信息|车票查询|路线规划"
+    }
+}
+```
+[/Action]
+----------------例2：
+User:最新关于特斯拉的新闻
+Assistant: 
+[Action]
+```json
+{
+    "name": "__manager__tool__",
+    "arguments": {
+        "query": "网络搜索|热点资讯"
+    }
+}
+```
+[/Action]
+----------------例3：
+User:帮我阅读xx.pdf
+Assistant: 
+[Action]
+```json
+{
+    "name": "__manager__tool__",
+    "arguments": {
+        "query": "PDF阅读器"
+    }
+}
+```
+[/Action]
+"""
         }
     }
 
     public prop parameters: Array<ToolParameter> {
         get() {
-            [ToolParameter("task", "Tasks expected to be done using tools", TypeSchema.Str)]
+            [
+                ToolParameter(
+                    "query",
+                    "要查询的工具集，用顿号|分割",
+                    TypeSchema.Str
+                )
+            ]
         }
     }
 
@@ -57,8 +104,8 @@ public class ManagerTool <: AbsTool {
 
     public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
         // The retriever model tool must accept a string
-        let task = args["task"].toJsonValue().asString().getValue()
-        let tools = this.manager.filterToolViaEmbedding(task)
+        let find = args["query"].toJsonValue().asString().getValue()
+        let tools = this.manager.filterToolViaEmbedding(find)
         LogUtils.info("=================INVOKED TOOLS: ${tools.size}")
         if (tools.size == 0) {
             return ToolResponse("# Available Tools\nNo tools")
@@ -163,7 +210,7 @@ public class SmartToolManager <: ToolManager {
     protected func filterToolViaEmbedding(question: String): Array<Tool> {
         // Do not build the semantic map from scratch
         // Change it later
-        let docs = this._vdb.query(question, 5, threshold: 0.2)
+        let docs = this._vdb.query(question, 20, threshold: 0.2)
         let tools = docs |> map({doc => doc.metadata.get("name").getOrThrow()}) |> map(
             {name => findTool(name).getOrThrow()}) |> collectArray
         let toolPrompts = ArrayList<String>()
