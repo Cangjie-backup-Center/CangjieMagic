@@ -146,7 +146,7 @@ public class TemplateEngine {
 
     private func renderVariables(template: String, context: Context): String {
         // Regex to match variables in the format "{ varName }" but not "${ varName }"
-        let regex = Regex("(?:^|[^$]){\\s*([_a-zA-Z][_a-zA-Z0-9]+)\\s*}")
+        let regex = Regex("(?:^|[^$]){\\s*([_a-zA-Z][_a-zA-Z0-9]*)\\s*}")
         let matcher = regex.matcher(template)
         // Split "... {var1}...{var2}...{varN}..."
         let subStrings = matcher.split()

@@ -63,6 +63,7 @@ Parameters explained:
     enableToolFilter: true,
     mcp: [
         // ...your mcp servers...
+        http("https://mcp.amap.com...")
     ]
 ]
 class MagicAgent {
