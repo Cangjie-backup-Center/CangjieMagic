@@ -82,17 +82,24 @@ class ToolAttr <: Attr {
  * 3. generate the wrapper type
  * 4. if the function is defined inside a class, the wrapper type is omitted
  */
-public macro tool(attr: Tokens, input: Tokens): Tokens {
-    let toolAttr = ToolAttr.parse(attr)
+public macro tool(attrTokens: Tokens, input: Tokens): Tokens {
+    let attr = ToolAttr.parse(attrTokens)
     if (insideParentContext("agent")) {
-        toolAttr.insideAgent = true
+        attr.insideAgent = true
     }
+    let content = transformTool(input, attr)
+    if (attr.dump) {
+        printTokens(content)
+    }
+    return content
+}
 
+func transformTool(input: Tokens, attr: ToolAttr): Tokens {
     let funcDecl: FuncDecl = parseFuncDecl(input)
     let funcName = funcDecl.identifier.value
     setItem("internalTool", funcName) // Notify @agent
 
-    let callNativeFuncTool = buildCallNativeFuncTool(toolAttr, funcDecl)
+    let callNativeFuncTool = buildCallNativeFuncTool(attr, funcDecl)
 
     let toolImplFuncName = newIdentifierToken("${TOOL_IMPL_PREFIX}${funcName}")
     let toolWrapperClassName = newIdentifierToken("__wrapper_class_of_${funcName}")
@@ -101,7 +108,7 @@ public macro tool(attr: Tokens, input: Tokens): Tokens {
         callNativeFuncTool
     } else {
         // If `@tool` defines an internal tool, we transform it as a prop
-        if (toolAttr.insideAgent) {
+        if (attr.insideAgent) {
             quote(
                 $(renameFunction(funcDecl, toolImplFuncName))
                 $(funcDecl.modifiers) prop $(funcDecl.identifier): Tool {
@@ -120,9 +127,6 @@ public macro tool(attr: Tokens, input: Tokens): Tokens {
                 $(funcDecl.modifiers) let $(funcDecl.identifier) = $toolWrapperClassName()
             )
         }
-    }
-    if (toolAttr.dump) {
-        printTokens(content)
     }
     return content
 }
