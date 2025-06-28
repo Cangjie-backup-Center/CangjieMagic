@@ -190,7 +190,7 @@ class AgentAttr <: Attr {
                     throw DslException("Invalid temperature attribute")
                 }
             }
-            return 0.1
+            return None
         }
     }
 
@@ -482,7 +482,7 @@ func buildAgentTemperatureProp(agentAttr: AgentAttr): Tokens {
         quote(None)
     }
     return quote(
-        private var __TEMPERATURE__ = $tokens
+        private var __TEMPERATURE__: Option<Float64> = $tokens
         public override mut prop temperature: Option<Float64> {
             get() { __TEMPERATURE__ }
             set(v) { __TEMPERATURE__ = v }
