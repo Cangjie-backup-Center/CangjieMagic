@@ -312,6 +312,8 @@ ConsolePrinter.print(asyncResp, verbose: true)
 You can also implement customized printers via `TagStream
 
 ```cangjie
+import magic.parser.*
+
 class MyPrinter <: TagStreamVisitor {
     public init(chunks: Iterator<String>) {
         super(chunks)
@@ -323,11 +325,11 @@ class MyPrinter <: TagStreamVisitor {
         println("End of ${tag}")
     }
     protected func onChunk(chunk: String): Unit {
-        println("Data ${chunk})
+        println("Data ${chunk}")
     }
 }
 
-let asyncResp = agent.asyncChat("question", verbose: true)
+let asyncResp = agent.asyncChat(AgentRequest("question", verbose: true))
 let printer = MyPrinter(asyncResp.execution.verboseInfo)
 printer.start()
 ```
