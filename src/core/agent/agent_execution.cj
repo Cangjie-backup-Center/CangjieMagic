@@ -12,6 +12,10 @@ import std.collection.ArrayList
  * Provide APIs to access the agent execution information
  */
 public interface AgentExecution {
+    /**
+     * Complete messages, including system prompts, user questions, internal assistant messages
+     * Internally used thought it's public
+     */
     prop messages: MessageList
 
     /**
@@ -19,10 +23,19 @@ public interface AgentExecution {
      */
     prop verboseInfo: Iterator<String>
 
+    /**
+     * RAG info when used
+     */
     prop retrievalInfo: ArrayList<RetrievalInfo>
 
+    /**
+     * The current chat round, including the question, internal assistant execution messages, and the answer
+     */
     prop chatRound: ChatRound
 
+    /**
+     * Internally used thought it's public
+     */
     func setAnswer(answer: String): Unit
 }
 
