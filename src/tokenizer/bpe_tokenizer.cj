@@ -3,6 +3,9 @@
  */
 package magic.tokenizer
 
+import magic.utils.readFile
+import std.fs.Path
+
 public class BPETokenizer <: AbstractBPETokenizer {
     let _tokenizer_json: TokenizerJson
     let _tokenizer_config: BPETokenizerConfig
@@ -12,9 +15,12 @@ public class BPETokenizer <: AbstractBPETokenizer {
         if (!exists(modelPath)) {
             throw Exception("modelPath file:${modelPath} dos not exists")
         }
-        this._tokenizer_json = TokenizerJson.fromJson(String.fromUtf8(readFile(Path(modelPath).join("tokenizer.json"))))
+        this._tokenizer_json = TokenizerJson.fromJson(
+            readFile(Path(modelPath).join("tokenizer.json"))
+        )
         this._tokenizer_config = BPETokenizerConfig.fromJson(
-            String.fromUtf8(readFile(Path(modelPath).join("tokenizer_config.json"))))
+            readFile(Path(modelPath).join("tokenizer_config.json"))
+        )
         this._addBosToken = this._tokenizer_config._addBosToken
         this._addEosToken = this._tokenizer_config._addEosToken
         this._bosToken = this._tokenizer_config._bosToken 
@@ -22,7 +28,7 @@ public class BPETokenizer <: AbstractBPETokenizer {
         this.popRuneBiMapping()
         this.popVocab()
         this.popMergesAndBpeRanks()
-        this.buildSepcialRegex()
+        this.buildSpecialRegex()
     }
 
     /**
@@ -34,34 +40,34 @@ public class BPETokenizer <: AbstractBPETokenizer {
         var ts: Rune = '!';
         var te: Rune = '~';
         for (x in UInt32(ts)..=UInt32(te)) {
-            bs.append(UInt8(x))
-            cs.append(x)
+            bs.add(UInt8(x))
+            cs.add(x)
         }
         ts = '\u{A1}'
         te = '\u{AC}'
         for (x in UInt32(ts)..=UInt32(te)) {
-            bs.append(UInt8(x))
-            cs.append(x)
+            bs.add(UInt8(x))
+            cs.add(x)
         }
         ts = '\u{AE}'
         te = '\u{FF}'
         for (x in UInt32(ts)..=UInt32(te)) {
-            bs.append(UInt8(x))
-            cs.append(x)
+            bs.add(UInt8(x))
+            cs.add(x)
         }
         var n: UInt32 = 0;
         for (b in 0_u8..=255_u8) {
             if (!bs.contains(b)) {
-                bs.append(b)
-                cs.append(UInt32(pow(2.0, 8)) + n)
+                bs.add(b)
+                cs.add(UInt32(pow(2.0, 8)) + n)
                 n += 1
             }
         }
         var result: HashMap<UInt8, Rune> = HashMap<UInt8, Rune>()
         var resultR: HashMap<Rune, UInt8> = HashMap<Rune, UInt8>()
         for ((k, v) in bs.iterator().zip(cs.iterator())) {
-            result.put(k, Rune(v))
-            resultR.put(Rune(v), k)
+            result.add(k, Rune(v))
+            resultR.add(Rune(v), k)
         }
         this._byte2rune = result
         this._rune2byte = resultR
@@ -70,17 +76,17 @@ public class BPETokenizer <: AbstractBPETokenizer {
     private func popVocab(): Unit {
         this._vocab = this._tokenizer_json._model._vocab
         for (add_token in this._tokenizer_json._addedTokens) {
-            this._vocab.put(uniformSpecial(add_token), add_token._id)
+            this._vocab.add(uniformSpecial(add_token), add_token._id)
             // All add tokens are seemed as special in current version
-            this._specialTokens.put(uniformSpecial(add_token), add_token._content)
-            this._specialIds.put(add_token._id)
+            this._specialTokens.add(uniformSpecial(add_token), add_token._content)
+            this._specialIds.add(add_token._id)
         }
         if (let Some(unkToken) <- this._tokenizer_json._model._unkToken) {
             this._unkTokenId = this._vocab.get(unkToken)
         }
 
         for ((token, id) in this._tokenizer_json._model._vocab) {
-            this._vocabR.put(id, token)
+            this._vocabR.add(id, token)
         }
     }
 
@@ -91,7 +97,7 @@ public class BPETokenizer <: AbstractBPETokenizer {
             if (tokenPair.size != 2) {
                 throw Exception("merge line size must be two")
             }
-            mergeList.append((tokenPair[0], tokenPair[1]))
+            mergeList.add((tokenPair[0], tokenPair[1]))
         }
         let prefixLen = this._tokenizer_json._model._continuingSubwordPrefix.size;
         for ((i, (left, right)) in enumerate(mergeList)) {
@@ -100,18 +106,18 @@ public class BPETokenizer <: AbstractBPETokenizer {
             let rId: UInt32 = this._vocab.get(right).getOrThrow()
             let mergedToken: String = "${left}${right[prefixLen..]}";
             let mergedId: UInt32 = this._vocab.get(mergedToken).getOrThrow()
-            this._merges.put(Pair<UInt32>(lId, rId), (iU, mergedId))
-            this._bpeRanks.put(left + right, iU)
+            this._merges.add(Pair<UInt32>(lId, rId), (iU, mergedId))
+            this._bpeRanks.add(left + right, iU)
         }
     }
 
     private func uniformSpecial(token: Token): String {
         var content = unexpectedNormalize(token._content)
         if (token._lstrip) {
-            content = content.trimAsciiLeft()
+            content = content.trimAsciiStart()
         }
         if (token._rstrip) {
-            content = content.trimAsciiRight()
+            content = content.trimAsciiEnd()
         }
         return content
     }

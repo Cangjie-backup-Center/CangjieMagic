@@ -7,17 +7,17 @@ import magic.log.LogUtils
 import magic.utils.getEnv
 
 import std.collection.HashMap
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.socket.{SocketAddress, TcpSocket}
-@When[cjc_version >= "0.56.4"]
+@When[cjc_version >= "1.0.0"]
 import std.net.{SocketAddress, TcpSocket}
 import std.io.StringReader
-import net.tls.{TlsClientConfig, CertificateVerifyMode}
-import net.http.*
-import encoding.json.*
-import encoding.url.URL
+import stdx.net.tls.{TlsClientConfig, CertificateVerifyMode}
+import stdx.net.http.*
+import stdx.encoding.json.*
+import stdx.encoding.url.URL
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.time.Duration
 
 private func buildHttpClient(url: String, verify: Bool): Client {

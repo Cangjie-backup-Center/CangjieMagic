@@ -3,9 +3,9 @@
  */
 package magic.prompt
 
-import magic.utils.exists
+import magic.utils.{exists, readFile}
 
-import std.fs.{Path, File, FSException, OpenOption}
+import std.fs.{Path, FSException}
 import std.io.StringReader
 
 public struct PromptUtils {
@@ -13,10 +13,6 @@ public struct PromptUtils {
         if (!exists(path)) {
             throw FSException("Prompt file ${path} does not exist.")
         }
-        try (file = File(path, OpenOption.Open(true, false))) {
-            let reader = StringReader(file)
-            return reader.readToEnd()
-        }
-        throw UnsupportedException()
+        return readFile(Path(path))
     }
 }

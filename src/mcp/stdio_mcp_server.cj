@@ -52,9 +52,9 @@ public class StdioMCPServer <: AbsMCPServer {
     public static func startWith(agents: Array<Agent>): Unit {
         let allTools = ArrayList<Tool>()
         for (agent in agents) {
-            allTools.appendAll(agent.toolManager.getTools())
+            allTools.add(all: agent.toolManager.getTools())
             // The agent itself is also a tool
-            allTools.append(AgentAsTool(agent))
+            allTools.add(AgentAsTool(agent))
         }
         let server = StdioMCPServer(allTools.toArray())
         server.start()

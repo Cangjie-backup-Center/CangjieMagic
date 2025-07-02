@@ -34,7 +34,7 @@ public class Conversation <: Iterable<ChatRound> {
     }
 
     public func addChatRound(round: ChatRound): Unit {
-        this.chatRounds.append(round)
+        this.chatRounds.add(round)
     }
 
     public func addChatRound(question: String, answer: String, steps!: MessageList = MessageList()): Unit {

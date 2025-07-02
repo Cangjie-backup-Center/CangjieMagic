@@ -15,8 +15,8 @@ public class FreeGroup <: AgentGroup {
     private let members = ArrayList<Agent>()
 
     public init(a: Agent, b: Agent) {
-        members.append(a)
-        members.append(b)
+        members.add(a)
+        members.add(b)
     }
 
     override public func chat(request: AgentRequest): AgentResponse {
@@ -53,7 +53,7 @@ public class FreeGroup <: AgentGroup {
     }
 
     public operator func |(member: Agent): FreeGroup {
-        members.append(member)
+        members.add(member)
         return this
     }
 }

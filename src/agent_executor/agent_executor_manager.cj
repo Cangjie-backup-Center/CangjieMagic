@@ -25,12 +25,12 @@ public struct AgentExecutorManager {
 
     public static func register(checkFn: (String) -> Bool,
                                 buildFn: (String) -> AgentExecutor): Unit {
-        AGENT_EXECUTOR_BUILDS.append(AgentExecutorBuilder(checkFn, buildFn))
+        AGENT_EXECUTOR_BUILDS.add(AgentExecutorBuilder(checkFn, buildFn))
     }
 
     public static func register(name: String,
                                 buildFn: () -> AgentExecutor): Unit {
-        AGENT_EXECUTOR_BUILDS.append(
+        AGENT_EXECUTOR_BUILDS.add(
             AgentExecutorBuilder(
                 { n: String => n == name },
                 { n: String => buildFn() }

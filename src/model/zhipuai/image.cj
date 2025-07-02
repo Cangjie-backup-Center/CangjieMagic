@@ -8,7 +8,7 @@ import magic.utils.http.*
 import magic.dsl.jsonable
 import magic.jsonable.*
 
-import encoding.json.*
+import stdx.encoding.json.*
 import std.collection.{HashMap, ArrayList}
 
 @jsonable

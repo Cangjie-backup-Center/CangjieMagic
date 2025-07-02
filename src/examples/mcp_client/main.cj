@@ -7,7 +7,7 @@ import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
 
-import log.LogLevel
+import stdx.log.LogLevel
 
 @agent[
     model: "deepseek:deepseek-chat",

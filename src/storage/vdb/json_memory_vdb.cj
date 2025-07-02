@@ -12,7 +12,7 @@ import magic.utils.{exists, removeIfExists}
 import std.sync.*
 import std.fs.{Path, Directory}
 import std.collection.*
-import encoding.json.*
+import stdx.encoding.json.*
 import std.convert.Parsable
 
 public class JsonMemoryVectorStorage <: LocalVectorStorage {
@@ -47,7 +47,7 @@ public class JsonMemoryVectorStorage <: LocalVectorStorage {
         while (let Some(vec) <- this._vdbStorage.get(i.toString())) {
             this._vdb.addVector(Vector(vec))
             let doc = Document.fromJsonValue(JsonValue.fromStr(this._index.get(i)))
-            this._invertIndex.put(doc.id, i)
+            this._invertIndex.add(doc.id, i)
             i++
         }
     }
@@ -148,7 +148,7 @@ public class JsonMemoryVectorStorage <: LocalVectorStorage {
                 this._vdb.addVector(vec)
                 this._index.add(doc.toJsonValue().toString())
                 let offset = this._vdbStorage.insertInc(vec.vector)
-                this._invertIndex.put(doc.id, Int64.parse(offset))
+                this._invertIndex.add(doc.id, Int64.parse(offset))
             }
         } finally {
             _lock.writeMutex.unlock()

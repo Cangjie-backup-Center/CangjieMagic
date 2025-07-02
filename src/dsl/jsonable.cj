@@ -37,7 +37,7 @@ public macro jsonable(input: Tokens): Tokens {
         if (m.hasItem("fieldDesc")) {
             let s = m.getString("fieldDesc")
             let items = s.split(":", 2) // Format: ${name}:${desc}
-            jsonableAttr.variableDescriptions.put(items[0], items[1])
+            jsonableAttr.variableDescriptions.add(items[0], items[1])
         }
     }
     return transformJsonable(input, jsonableAttr)
@@ -50,7 +50,7 @@ public macro jsonable(attr: Tokens, input: Tokens): Tokens {
         if (m.hasItem("fieldDesc")) {
             let s = m.getString("fieldDesc")
             let items = s.split(":", 2) // Format: ${name}:${desc}
-            jsonableAttr.variableDescriptions.put(items[0], items[1])
+            jsonableAttr.variableDescriptions.add(items[0], items[1])
         }
     }
 
@@ -142,7 +142,7 @@ func getMemberVariables(body: Body): ArrayList<VarDecl> {
     for (decl in body.decls) {
         if (decl.isVarDecl()) {
             let varDecl = (decl as VarDecl).getOrThrow()
-            result.append(varDecl)
+            result.add(varDecl)
         }
     }
     return result
@@ -163,12 +163,12 @@ func buildCtorMethod(jsonableAttr: JsonableAttr): Tokens {
         let tyName = varDecl.declType.toTokens()
         try {
             let initExpr = varDecl.expr
-            paramsWithDefaultValue.append(quote($v!: $tyName = $initExpr))
+            paramsWithDefaultValue.add(quote($v!: $tyName = $initExpr))
         } catch (_: ASTException) {
-            params.append(quote($v!: $tyName))
+            params.add(quote($v!: $tyName))
         }
     }
-    params.appendAll(paramsWithDefaultValue)
+    params.add(all: paramsWithDefaultValue)
     let comma = Token(TokenKind.COMMA)
 
     let body: Tokens = joinTokens(
@@ -210,7 +210,7 @@ func buildGetTypeSchemaMethod(jsonableAttr: JsonableAttr): Tokens {
 
         let required = newLiteralToken(!isOption(varDecl.declType))
         body.append(quote(
-            fields.append(FieldSchema($varNameToken, $descToken, $tyName.getTypeSchema(), required: $required))
+            fields.add(FieldSchema($varNameToken, $descToken, $tyName.getTypeSchema(), required: $required))
         ))
     }
     return quote(
@@ -313,12 +313,12 @@ func buildToJsonMethod(jsonableAttr: JsonableAttr): Tokens {
                 let $tempVar = $(newIdentifierToken(varName)).toJsonValue()
                 match ($tempVar.kind()) {
                     case JsonKind.JsNull => ()
-                    case _ => map.put($(newLiteralToken(fieldName)), $tempVar)
+                    case _ => map.add($(newLiteralToken(fieldName)), $tempVar)
                 }
             ))
         } else {
             body.append(quote(
-                map.put($(newLiteralToken(fieldName)), $(newIdentifierToken(varName)).toJsonValue())
+                map.add($(newLiteralToken(fieldName)), $(newIdentifierToken(varName)).toJsonValue())
             ))
         }
     }

@@ -7,6 +7,7 @@ import magic.core.tool.*
 import magic.jsonable.*
 
 import std.collection.HashMap
+import stdx.encoding.json.JsonValue
 
 /**
  * Wrap the MCP client as a tool
@@ -45,7 +46,7 @@ protected class MCPToolWrapper <: Tool {
         get() { _extra }
     }
 
-    override public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
+    override public func invoke(args: HashMap<String, JsonValue>): ToolResponse {
         let toolResponse = this.client.callTool(this.name, args.toArray())
         // If the content is error messages, truncate it
         let runes = toolResponse.content.toRuneArray()

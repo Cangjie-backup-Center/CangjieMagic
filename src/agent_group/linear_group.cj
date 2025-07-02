@@ -9,12 +9,12 @@ public class LinearGroup <: AgentGroup {
     private let members = ArrayList<Agent>()
 
     init(prev: Agent, next: Agent) {
-        this.members.append(prev)
-        this.members.append(next)
+        this.members.add(prev)
+        this.members.add(next)
     }
 
     func addNext(next: Agent): LinearGroup {
-        this.members.append(next)
+        this.members.add(next)
         return this
     }
 

@@ -149,7 +149,7 @@ protected open class AttrParser <: Parser {
                 if (map.contains(key)) {
                     throw DslException("Duplicated attributes of `${key}`")
                 }
-                map.put(key, value)
+                map.add(key, value)
             } else if (currToken.kind == TokenKind.COMMA) {
                 forwardPosition() // ','
             } else {
@@ -190,7 +190,7 @@ protected class ArrayParser <: Parser {
         skipCurrToken(this.beginSymbol)
         while (currPos < tokens.size) {
             if (currToken.kind == kind) {
-                result.append(currToken)
+                result.add(currToken)
                 forwardPosition()
             } else if (currToken.kind == TokenKind.COMMA) {
                 forwardPosition() // ','
@@ -217,7 +217,7 @@ protected class ArrayParser <: Parser {
                 if (currTokens.size == 0) {
                     eprintln("Array contains empty value: ${tokens}")
                 } else {
-                    result.append(currTokens)
+                    result.add(currTokens)
                     currTokens = Tokens() // clear current tokens
                 }
                 forwardPosition() // ','
@@ -225,7 +225,7 @@ protected class ArrayParser <: Parser {
                 if (currTokens.size == 0) {
                     eprintln("Array contains empty value: ${tokens}")
                 } else {
-                    result.append(currTokens)
+                    result.add(currTokens)
                 }
                 break
             } else {
@@ -261,7 +261,7 @@ protected class MapParser <: Parser {
             if (value.size != 1 || value[0].kind != kind) {
                 throw DslException("`${key}` has invalid value `${value}`")
             } else {
-                result.put(key, value[0])
+                result.add(key, value[0])
             }
         }
         return result
@@ -279,7 +279,7 @@ protected class MapParser <: Parser {
                 }
                 forwardPosition() // Skip = or :
                 let value = extractValue()
-                result.put(key, value)
+                result.add(key, value)
             } else if (currToken.kind == TokenKind.COMMA) {
                 forwardPosition() // ','
             } else if (currToken.kind == TokenKind.RCURL) {

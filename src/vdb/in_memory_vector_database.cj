@@ -6,7 +6,7 @@ package magic.vdb
 import magic.log.LogUtils
 
 import std.collection.ArrayList
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.math.min
 
 struct VectorWithIndex {
@@ -19,12 +19,12 @@ public class InMemoryVectorDatabase <: VectorDatabase<InMemoryVectorDatabase> {
     let vectorBuffer = ArrayList<VectorWithIndex>()
 
     public func setVector(index: Int64, vector: Vector): Unit {
-        vectorBuffer.set(index, VectorWithIndex(index, vector))
+        vectorBuffer[index] = VectorWithIndex(index, vector)
     }
 
     public override func addVector(vector: Vector): Unit {
         let index = vectorBuffer.size
-        vectorBuffer.append(VectorWithIndex(index, vector))
+        vectorBuffer.add(VectorWithIndex(index, vector))
         // return index
     }
 
@@ -55,7 +55,7 @@ public class InMemoryVectorDatabase <: VectorDatabase<InMemoryVectorDatabase> {
                 break
             }
             LogUtils.debug("Query distance: ${dist}")
-            result.append(SearchResult(tempList[i].index, dist))
+            result.add(SearchResult(tempList[i].index, dist))
         }
         return result.toArray()
     }

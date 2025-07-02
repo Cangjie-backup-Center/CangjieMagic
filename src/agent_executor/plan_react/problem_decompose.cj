@@ -12,7 +12,7 @@ import magic.parser.OutputParserUtils
 import magic.jsonable.Jsonable
 import magic.model.ModelUtils
 
-import encoding.json.JsonValue
+import stdx.encoding.json.JsonValue
 
 // The following prompt modified from [XAgent](https://github.com/OpenBMB/XAgent/blob/main/XAgent/agent/plan_generate_agent/prompt.py)
 private let PROBLEM_DECOMPOSE_SYSTEM_PROMPT = """

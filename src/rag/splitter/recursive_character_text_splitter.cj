@@ -58,23 +58,23 @@ public class RecursiveCharacterTextSplitter <: AbsCharacterSplitter {
         var validSplits = ArrayList<String>()
         for (s in splits) {
             if (textSize(s) <= this._chunk_size) {
-                validSplits.append(s)
+                validSplits.add(s)
             } else {
                 if (!validSplits.isEmpty()) {
-                    let meregedChunks = mergeSplit(validSplits.iterator(), separator)
-                    finalChunks.appendAll(meregedChunks)
+                    let mergedChunks = mergeSplit(validSplits.iterator(), separator)
+                    finalChunks.add(all: mergedChunks)
                     validSplits.clear()
                 }
                 if (newSeparators.isEmpty()) {
-                    finalChunks.append(s)
+                    finalChunks.add(s)
                 } else {
-                    finalChunks.appendAll(recursiveSplit(s, newSeparators))
+                    finalChunks.add(all: recursiveSplit(s, newSeparators))
                 }
             }
         }
         if (!validSplits.isEmpty()) {
             let mergedChunks = mergeSplit(validSplits.iterator(), separator)
-            finalChunks.appendAll(mergedChunks)
+            finalChunks.add(all: mergedChunks)
         }
         finalChunks
     }

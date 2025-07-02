@@ -81,7 +81,7 @@ public class AgentExecutionInfo <: AgentExecution {
     }
 
     protected func addRetrieval(query: String, retrieval: Retrieval): Unit {
-        this.retrievalInfo.append(RetrievalInfo(query, retrieval))
+        this.retrievalInfo.add(RetrievalInfo(query, retrieval))
     }
 
     /**

@@ -4,8 +4,8 @@
 package magic.jsonable
 
 import std.collection.{HashMap, map, collectArray, ArrayList}
-import encoding.json.{JsonValue, JsonObject, JsonString}
-import encoding.json.JsonArray
+import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
+import stdx.encoding.json.JsonArray
 
 public struct FieldSchema {
     public FieldSchema (
@@ -47,7 +47,7 @@ public enum TypeSchema <: ToString {
                         propertiesJo.put(field.name, tsJo)
                     }
                     if (field.required) {
-                        required.append(JsonString(field.name))
+                        required.add(JsonString(field.name))
                     }
                 }
                 jo.put("properties", propertiesJo)
@@ -82,7 +82,7 @@ public enum TypeSchema <: ToString {
                 let required = ArrayList<String>()
                 for (field in fields) {
                     if (field.required) {
-                        required.append(field.name)
+                        required.add(field.name)
                     }
                 }
                 let requiredStr = String.join(

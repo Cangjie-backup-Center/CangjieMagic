@@ -10,26 +10,31 @@
 
 [target.x86_64-unknown-linux-gnu]
   compile-option = "--cfg \"ohos=false\""
+
 [target.x86_64-unknown-windows-gnu]
   compile-option = "--cfg \"ohos=false\""
+
 [target.x86_64-w64-mingw32]
   compile-option = "--cfg \"ohos=false\""
+  # [target.x86_64-w64-mingw32.bin-dependencies]
+  #   path-option = ["./libs/cangjie-stdx-windows-x64-1.0.0.1/windows_x86_64_llvm/dynamic/stdx"]
+
 [target.aarch64-unknown-linux-gnu]
   compile-option = "--cfg \"ohos=false\""
 
 [target.x86_64-apple-darwin]
   compile-option = "--cfg \"ohos=false\""
-[target.x86_64-apple-darwin.bin-dependencies]
-    path-option = [ "${X86_64_MACOS_LIBS}", "${X86_64_MACOS_MACRO_LIBS}" ]
+  [target.x86_64-apple-darwin.bin-dependencies]
+      path-option = [ "${X86_64_MACOS_LIBS}", "${X86_64_MACOS_MACRO_LIBS}" ]
+
 [target.aarch64-apple-darwin]
   compile-option = "--cfg \"ohos=false\""
   [target.aarch64-apple-darwin.bin-dependencies]
     path-option = [ "${AARCH64_MACOS_LIBS}", "${AARCH64_MACOS_MACRO_LIBS}" ]
 
-
 [package]
-  cjc-version = "0.56.4"
-  compile-option = "-Woff unused --cfg \"faiss=disable,sqlite=disable,llamacpp=disable,http=curl\" "
+  cjc-version = "1.0.0"
+  compile-option = "-Woff unused -Woff deprecated --cfg \"faiss=disable,sqlite=disable,llamacpp=disable,http=curl\" "
   description = "nothing here"
   link-option = ""
   name = "magic"
@@ -59,9 +64,6 @@
 [package.package-configuration."magic.examples.magic_agent"]
   output-type = "executable"
 
-[profile.test.build]
-  compile-option = "-Woff unused --cfg \"faiss=disable,sqlite=disable,llamacpp=disable,http=curl\" "
-
 [ffi.c]
-# sqlite = {path="./ffi_libs/"}
-# faiss_c = {path="./ffi_libs/"}
+# sqlite = {path="./libs/"}
+# faiss_c = {path="./libs/"}

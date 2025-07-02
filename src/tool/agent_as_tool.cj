@@ -5,9 +5,10 @@ package magic.tool
 
 import magic.core.agent.*
 import magic.core.tool.*
-import magic.jsonable.{TypeSchema, ToJsonValue}
+import magic.jsonable.TypeSchema
 
 import std.collection.HashMap
+import stdx.encoding.json.JsonValue
 
 protected class AgentAsTool <: AbsTool {
     protected let agent: Agent
@@ -42,10 +43,10 @@ protected class AgentAsTool <: AbsTool {
         get() { [] }
     }
 
-    public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
+    override public func invoke(args: HashMap<String, JsonValue>): ToolResponse {
         if (args.size == 1) {
             // The agent tool must receive a string
-            let question = args["question"].toJsonValue().asString().getValue()
+            let question = args["question"].asString().getValue()
             let resp = this.agent.chat(AgentRequest(question))
             return ToolResponse(resp.content)
         } else {

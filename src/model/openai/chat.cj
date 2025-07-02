@@ -11,12 +11,13 @@ import magic.dsl.jsonable
 import magic.jsonable.*
 import magic.config.Config
 import magic.log.LogUtils
+
 import std.collection.ArrayList
 import std.collection.HashMap
 import std.time.DateTime
-import encoding.json.*
+import stdx.encoding.json.*
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.time.Duration
 
 @jsonable
@@ -157,7 +158,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
             return ("", content)
         }
         let chunkResp = try {
-            ChunkResponse.fromJsonValue(content.asJsonValue())
+            ChunkResponse.fromJsonValue(JsonValue.fromStr(content))
         } catch(ex: JsonException) {
             LogUtils.error("Fail to parse http chunk data response `${data}`")
             throw ModelException("Fail to parse http chunk data response `${data}`")

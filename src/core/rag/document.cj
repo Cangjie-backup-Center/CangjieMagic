@@ -7,8 +7,8 @@ import magic.jsonable.*
 import magic.prompt.ToPrompt
 import std.collection.HashMap
 import std.collection.ArrayList
-import encoding.json.*
-import serialization.serialization.*
+import stdx.encoding.json.*
+import stdx.serialization.serialization.*
 import magic.utils.calMd5
 
 public class Document <: Jsonable<Document> & ToString & ToPrompt & Serializable<Document> & Equatable<Document> {
@@ -86,7 +86,7 @@ public class Document <: Jsonable<Document> & ToString & ToPrompt & Serializable
         return this.id == other.id && this.content == other.content && this.metadata == other.metadata
     }
 
-    @When[cjc_version < "0.56.4"]
+    @When[cjc_version < "1.0.0"]
     public operator func !=(other: Document): Bool {
         return !(this == other)
     }

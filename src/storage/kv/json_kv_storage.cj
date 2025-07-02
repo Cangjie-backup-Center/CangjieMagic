@@ -5,12 +5,12 @@ package magic.storage.kv
 
 import magic.storage.LocalStorage
 import magic.utils.{readLines, writeLines, move, removeIfExists, exists, directoryOf}
-import serialization.serialization.*
+import stdx.serialization.serialization.*
 import std.fs.{Path, File, Directory}
 import std.sync.*
 import std.collection.*
 import std.collection.concurrent.*
-import encoding.json.*
+import stdx.encoding.json.*
 
 public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
     private let _workspace: String
@@ -62,7 +62,7 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
         try {
             _lock.writeMutex.lock()
             let id = _data.size.toString()
-            _data.put(id, value)
+            _data.add(id, value)
             return id
         } finally {
             _lock.writeMutex.unlock()
@@ -72,7 +72,7 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
     public func upsert(id: String, value: T): Unit {
         try {
             _lock.writeMutex.lock()
-            _data.put(id, value)
+            _data.add(id, value)
         } finally {
             _lock.writeMutex.unlock()
         }
@@ -127,7 +127,7 @@ public class JsonKVStorage<T> <: LocalKVStorage<T> where T <: Serializable<T> {
             let id = jsonValue.asObject().get("id").getOrThrow().asString().getValue()
             let dataModel = DataModel.fromJson(jsonValue.asObject().get("data").getOrThrow())
             let data = T.deserialize(dataModel)
-            _data.put(id, data)
+            _data.add(id, data)
         }
     }
 

@@ -9,8 +9,8 @@ import std.collection.*
 import std.collection.concurrent.*
 import std.fs.{Path, File, Directory}
 import std.sync.*
-import serialization.serialization.*
-import encoding.json.*
+import stdx.serialization.serialization.*
+import stdx.encoding.json.*
 
 public interface GraphStorage<V, E> where V <: Serializable<V> & Equatable<V> & Hashable,
     E <: Serializable<E> & Equatable<E> & Hashable {
@@ -84,18 +84,28 @@ public open class BaseLocalGraphStorage<V, E> <: LocalGraphStorage<V, E> where V
             move(_storagePath, backup, true)
             File.create(_storagePath)
             let nodes = _graph.getAllNodes()
-            let vertexStrs = nodes |> map({node => node.vertex.toJsonString()}) |> collectArray
+            let vertexStrs = nodes |>
+                map { node => node.vertex.toJsonString() } |>
+                collectArray
             writeLines(_storagePath, vertexStrs)
-            let visisted = HashSet<Edge<E>>()
+            let visited = HashSet<Edge<E>>()
             for (node in nodes) {
-                var outgoingEdges = nodes |> flatMap({node => node.outgoing}) |> filter({edge => !visisted.contains(edge)}) |> inspect(
-                    {edge => visisted.put(edge)}) |> map({edge: Edge<E> => edge.toJsonString()})|> collectArray
+                var outgoingEdges = nodes |>
+                    flatMap { node => node.outgoing } |>
+                    filter { edge: Edge<E> => !visited.contains(edge) } |>
+                    inspect { edge: Edge<E> => visited.add(edge); () } |>
+                    map { edge: Edge<E> => edge.toJsonString() } |>
+                    collectArray
                 writeLines(_storagePath, outgoingEdges)
-                var incomingEdges = nodes |> flatMap({node => node.incoming}) |> filter({edge => !visisted.contains(edge)}) |> inspect(
-                    {edge => visisted.put(edge)}) |> map({edge: Edge<E> => edge.toJsonString()})|> collectArray
+                var incomingEdges = nodes |>
+                    flatMap { node => node.incoming } |>
+                    filter { edge: Edge<E> => !visited.contains(edge) } |>
+                    inspect { edge: Edge<E> => visited.add(edge); () } |>
+                    map { edge: Edge<E> => edge.toJsonString() } |>
+                    collectArray
                 writeLines(_storagePath, incomingEdges)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             removeIfExists(_storagePath)
             move(backup, _storagePath, true)
             throw Exception("Graph Commit Failed!")

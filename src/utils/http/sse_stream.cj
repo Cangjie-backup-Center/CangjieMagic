@@ -7,7 +7,7 @@ import magic.log.LogUtils
 import magic.utils.StringExt
 
 import std.collection.ArrayList
-import encoding.json.{JsonValue, JsonException}
+import stdx.encoding.json.{JsonValue, JsonException}
 
 protected struct SSEvent <: ToString {
     SSEvent(protected let event: String,

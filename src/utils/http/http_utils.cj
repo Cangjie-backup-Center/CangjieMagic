@@ -7,7 +7,7 @@ import magic.log.LogUtils
 import magic.utils.StringExt
 
 import std.collection.HashMap
-import encoding.json.JsonObject
+import stdx.encoding.json.JsonObject
 
 protected class HttpException <: Exception {
     protected init(msg: String) { super(msg) }
@@ -62,7 +62,7 @@ protected struct HttpUtils {
     */
     static protected func sseConnect(url: String, verify!: Bool = false): SSEventStream {
         let header = HashMap<String, String>()
-        header.put("Accept", "text/event-stream")
+        header.add("Accept", "text/event-stream")
         let httpStream = HttpUtils.asyncGet(url, header, None, verify: verify)
         return SSEventStream(httpStream)
     }

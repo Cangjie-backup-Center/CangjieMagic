@@ -5,7 +5,7 @@ package magic.tokenizer
 
 import magic.utils.readLines
 import std.convert.Parsable
-import encoding.base64.*
+import stdx.encoding.base64.*
 import std.sort.*
 
 class TikTokenConfig {
@@ -28,7 +28,7 @@ class TikTokenConfig {
             }
             let bs64 = arr[0]
             if (let Some(bytes) <- fromBase64String(bs64)) {
-                vocab.append((bytes, UInt32.parse(arr[1])))
+                vocab.add((bytes, UInt32.parse(arr[1])))
             }
         }
         return TikTokenConfig(vocab)
@@ -46,34 +46,34 @@ public class Cl100kTokenizer <: AbstractBPETokenizer {
         for ((bytesArr, idx) in this._config._vocab) {
             let runes = ArrayList<String>()
             for (b in bytesArr) {
-                runes.append(Rune(b).toString())
+                runes.add(Rune(b).toString())
             }
-            this._vocab.put(String.join(runes.toArray()), idx)
-            ranks.append(String.join(runes.toArray()))
+            this._vocab.add(String.join(runes.toArray()), idx)
+            ranks.add(String.join(runes.toArray()))
         }
         for (add_token in this._config._added_tokens) {
-            this._vocab.put(add_token[0], add_token[1])
+            this._vocab.add(add_token[0], add_token[1])
             // All add tokens are seemed as special in current version
-            this._specialTokens.put(add_token[0], add_token[0])
-            this._specialIds.put(add_token[1])
+            this._specialTokens.add(add_token[0], add_token[0])
+            this._specialIds.add(add_token[1])
         }
         for ((token, id) in this._vocab) {
-            this._vocabR.put(id, token)
+            this._vocabR.add(id, token)
         }
         let rankArr = ranks.toArray()
         stableSort<String>(rankArr)
         for ((i, token) in enumerate(rankArr)) {
-            this._bpeRanks.put(token, UInt32(i))
+            this._bpeRanks.add(token, UInt32(i))
         }
-        this.buildSepcialRegex()
+        this.buildSpecialRegex()
     }
 
     private func popRuneBiMapping(): Unit {
-        var result: HashMap<UInt8, Rune> = HashMap<UInt8, Rune>()
-        var resultR: HashMap<Rune, UInt8> = HashMap<Rune, UInt8>()
+        var result = HashMap<UInt8, Rune>()
+        var resultR = HashMap<Rune, UInt8>()
         for (i in 0..256) {
-            result.put(UInt8(i), Rune(UInt8(i)))
-            resultR.put(Rune(UInt8(i)), UInt8(i))
+            result.add(UInt8(i), Rune(UInt8(i)))
+            resultR.add(Rune(UInt8(i)), UInt8(i))
         }
         this._byte2rune = result
         this._rune2byte = resultR

@@ -5,8 +5,6 @@ package magic.parser
 
 import magic.utils.StringExt
 
-protected interface WithTag { }
-
 private func getTagSymbol(tag: String): (String, String) {
     if (tag.startsWith("[")) {
         return ("[", "]")
@@ -14,6 +12,13 @@ private func getTagSymbol(tag: String): (String, String) {
         return ("<", ">")
     }
     throw Exception("Invalid tag symbol `${tag}`")
+}
+
+protected interface WithTag {
+    func getCloseTag(): String
+    func withTag(tag: String): String
+    func withoutTag(tag: String): String
+    func withoutTag(): String
 }
 
 /**

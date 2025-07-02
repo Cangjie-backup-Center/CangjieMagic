@@ -48,7 +48,7 @@ class AsyncReactStep {
     private func readThoughts(): Unit {
         while (let Some(tag) <- this.parser.currTag) {
             if (tag == Tag.THOUGHT) {
-                thoughts.append(this.parser.readTagAndContent(Tag.THOUGHT))
+                thoughts.add(this.parser.readTagAndContent(Tag.THOUGHT))
             } else if (tag == Tag.ACTION || tag == Tag.ANSWER) {
                 break
             } else {

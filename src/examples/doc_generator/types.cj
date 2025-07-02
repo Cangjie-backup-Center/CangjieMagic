@@ -105,10 +105,10 @@ class MemberDef <: ToString {
             "- 描述: ${description}"
         ])
         if (!parameters.isEmpty()) {
-            s.append("- 参数:")
+            s.add("- 参数:")
         }
         for (p in parameters) {
-            s.append("  - ${p}")
+            s.add("  - ${p}")
         }
         return String.join(s.toArray(), delimiter: "\n")
     }

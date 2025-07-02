@@ -5,11 +5,11 @@ package magic.examples.fun_idea
 
 import std.io.*
 import std.collection.*
-import encoding.json.*
-import encoding.url.*
-import net.http.*
-import net.tls.*
-import log.*
+import stdx.encoding.json.*
+import stdx.encoding.url.*
+import stdx.net.http.*
+import stdx.net.tls.*
+import stdx.log.*
 
 import magic.dsl.*
 import magic.prompt.*
@@ -52,10 +52,10 @@ func getWeather(city: String): String {
 
     // 或者模拟数据
     // let weatherData = HashMap<String, String>()
-    // weatherData.put("北京", "晴 28℃")
-    // weatherData.put("上海", "多云 25℃")
-    // weatherData.put("广州", "雷阵雨 30℃")
-    // weatherData.put("成都", "阴 22℃")
+    // weatherData.add("北京", "晴 28℃")
+    // weatherData.add("上海", "多云 25℃")
+    // weatherData.add("广州", "雷阵雨 30℃")
+    // weatherData.add("成都", "阴 22℃")
     //return weatherData.get(city) ?? ""
 }
 

@@ -64,7 +64,7 @@ protected open class Attr {
         if (names.size != attrNames.size) {
             return (false, "duplicated attributes")
         }
-        names.removeAll(validAttrNames)
+        names.remove(all: validAttrNames)
         if (!names.isEmpty()) {
             return (false, "invalid attributes ${names}")
         }

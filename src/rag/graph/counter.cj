@@ -5,7 +5,7 @@
 package magic.rag.graph
 
 import std.collection.*
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.math.min
 
 class Counter<T> where T <: Hashable & Equatable<T> {
@@ -26,7 +26,7 @@ class Counter<T> where T <: Hashable & Equatable<T> {
     }
 
     public func add(ele: T, score: Float64): Unit {
-        _cntMap.put(ele, _cntMap.get(ele).getOrDefault({=> 0.0}) + score)
+        _cntMap.add(ele, _cntMap.get(ele).getOrDefault({=> 0.0}) + score)
     }
 
     public func addAll(eles: Collection<T>): Unit {
@@ -41,7 +41,7 @@ class Counter<T> where T <: Hashable & Equatable<T> {
 
     public func merge(counter: Counter<T>): Unit {
         for ((ele, cnt) in counter._cntMap) {
-            _cntMap.put(ele, _cntMap.get(ele).getOrDefault({=> 0.0}) + cnt)
+            _cntMap.add(ele, _cntMap.get(ele).getOrDefault({=> 0.0}) + cnt)
         }
     }
 

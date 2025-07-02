@@ -6,9 +6,10 @@ package magic.tool
 import magic.core.tool.*
 import magic.core.model.*
 import magic.core.message.*
-import magic.jsonable.{TypeSchema, ToJsonValue}
+import magic.jsonable.TypeSchema
 
 import std.collection.HashMap
+import stdx.encoding.json.JsonValue
 
 protected class ChatModelTool <: AbsTool {
     private let model: ChatModel
@@ -44,9 +45,9 @@ protected class ChatModelTool <: AbsTool {
         get() { [] }
     }
 
-    public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
+    override public func invoke(args: HashMap<String, JsonValue>): ToolResponse {
         // The chat model tool must accept a string
-        let question = args["question"].toJsonValue().asString().getValue()
+        let question = args["question"].asString().getValue()
         let messages = [
             Message.system("Answer user questions in brief."),
             Message.user(question)

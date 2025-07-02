@@ -8,13 +8,13 @@ import magic.utils.newProcess
 import magic.jsonable.*
 import magic.log.LogUtils
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.os.process.SubProcess
-@When[cjc_version >= "0.56.4"]
+@When[cjc_version >= "1.0.0"]
 import std.process.SubProcess
 import std.io.{StringReader, StringWriter, OutputStream, InputStream}
 import std.collection.{ArrayList, HashMap, map, collectArray}
-import encoding.json.{JsonValue, JsonObject}
+import stdx.encoding.json.{JsonValue, JsonObject}
 
 /**
  * MCP client via the stdio transport

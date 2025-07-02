@@ -7,7 +7,7 @@ import magic.core.model.{ChatModel, EmbeddingModel}
 import magic.core.tokenizer.Tokenizer
 import magic.utils.{exists, setEnv, getEnv}
 
-import log.LogLevel
+import stdx.log.LogLevel
 
 /**
  * Wrapper for providing a convenient way to get and set environment variables.

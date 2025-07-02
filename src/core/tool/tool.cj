@@ -3,8 +3,10 @@
  */
 package magic.core.tool
 
-import magic.jsonable.{TypeSchema, ToJsonValue}
+import magic.jsonable.TypeSchema
 import std.collection.HashMap
+
+import stdx.encoding.json.JsonValue
 
 public interface Tool <: ToString {
     /**
@@ -43,5 +45,5 @@ public interface Tool <: ToString {
     /**
      * Arguments and their values are grouped in a hash map
      */
-    func invoke(args: HashMap<String, ToJsonValue>): ToolResponse
+    func invoke(args: HashMap<String, JsonValue>): ToolResponse
 }

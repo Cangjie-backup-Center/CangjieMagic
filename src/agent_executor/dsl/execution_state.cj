@@ -12,7 +12,7 @@ import magic.jsonable.{Jsonable, JsonableException, FieldSchema, TypeSchema}
 import magic.parser.WithTag
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
-import encoding.json.*
+import stdx.encoding.json.*
 
 @jsonable
 struct Subtask {
@@ -88,7 +88,7 @@ public class ExecutionState {
         let strArr = ArrayList<String>()
         for (msg in this.task.execution.stepMessages) {
             if (msg.role == MessageRole.Assistant) {
-                strArr.append(msg.content.withoutTag())
+                strArr.add(msg.content.withoutTag())
             }
         }
         return String.join(strArr.toArray(), delimiter: ",\n    ")

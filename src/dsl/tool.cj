@@ -33,7 +33,7 @@ class ToolAttr <: Attr {
             if (let Some(tokens) <- getTokens("parameters")) {
                 let tokenMap = MapParser(tokens).parseMapOf(TokenKind.STRING_LITERAL)
                 for ((name, token) in tokenMap) {
-                    result.put(name, token.value)
+                    result.add(name, token.value)
                 }
             }
             _parameters = Some(result)
@@ -47,7 +47,7 @@ class ToolAttr <: Attr {
             if (let Some(tokens) <- getTokens("examples")) {
                 let tokenArray = ArrayParser(tokens).parseArrayOf(TokenKind.STRING_LITERAL)
                 for (token in tokenArray) {
-                    result.append(token.value)
+                    result.add(token.value)
                 }
             }
             return result
@@ -152,7 +152,7 @@ func buildCallNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
         let paramTy = param.paramType
         let paramDesc: String = toolAttr.parameters.get(paramName) ?? ""
 
-        parameters.append(
+        parameters.add(
             quote(($(newLiteralToken(paramName)), $(newLiteralToken(paramDesc)), $paramTy.getTypeSchema()))
         )
     }
@@ -208,13 +208,13 @@ func transformToolExecuteLambda(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens 
         let rawArg = quote(args[$(newLiteralToken(paramName))])
         let arg: Token = newIdentifierToken("arg_${i}")
          argConversion.append(quote(
-            let $arg = $paramTy.fromJsonValue($rawArg.toJsonValue())
+            let $arg = $paramTy.fromJsonValue($rawArg)
             // let $arg = $paramTy.fromJsonStr($rawArg)
         ))
-        args.append(arg)
+        args.add(arg)
     }
     let argsTokens = joinTokens(args, Token(TokenKind.COMMA))
-    return quote({ args: HashMap<String, ToJsonValue> =>
+    return quote({ args: HashMap<String, JsonValue> =>
         $argConversion
         return $toolImplFuncName($argsTokens).toString()
     })

@@ -16,12 +16,12 @@ func splitByMarkers(content: String, markers: Array<String>): Array<String> {
     var index = 0
     for (md in matches) {
         let position = md.matchPosition()
-        splits.append(content[index..position.start])
+        splits.add(content[index..position.start])
         index = position.end
     }
     let lastSplit = content[index..content.size]
     if (lastSplit.size > 0) {
-        splits.append(lastSplit)
+        splits.add(lastSplit)
     }
     splits.toArray()
 }
@@ -34,16 +34,16 @@ private func escape(input: String): String {
     var output = ArrayList<Byte>(input.toArray())
     for (i in matchDatas.size - 1..=0 : -1) {
         var matchData = matchDatas[i]
-        var matchStr = matchData.matchStr()
-        output.insert(matchData.matchPosition().start, b'\\')
+        var matchString = matchData.matchString()
+        output.add(b'\\', at: matchData.matchPosition().start)
     }
     return String.fromUtf8(output.toArray())
 }
 
 func regSearch(content: String, pattern: String, group!: Int64 = 0): Option<String> {
     var re = Regex(pattern)
-    match (re.matches(content)) {
-        case Some(r) => r.matchStr(group)
+    match (re.matcher(content).find()) {
+        case Some(r) => r.matchString(group)
         case None => None
     }
 }

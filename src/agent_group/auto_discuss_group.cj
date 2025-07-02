@@ -51,13 +51,13 @@ class AutoDiscussGroup <: DiscussGroup {
     }
 
     private func buildSelectSystemPrompt(): String {
-        let agentsStrBuilder = StringBuilder()
+        let strBuilder = StringBuilder()
         for (agent in members) {
-            agentsStrBuilder.append("[Agent] name: ${agent.name}; description: ${agent.description} [/Agent]\n")
+            strBuilder.append("[Agent] name: ${agent.name}; description: ${agent.description} [/Agent]\n")
         }
         return AUTO_SPEAKER_SELECT_PROMPT.format(
             ("numOfAgent", members.size),
-            ("agents", agentsStrBuilder),
+            ("agents", strBuilder),
             ("topic", topic),
             ("discussion", buildDiscussionPrompt())
         )

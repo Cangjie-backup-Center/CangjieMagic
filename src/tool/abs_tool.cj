@@ -7,7 +7,7 @@ import magic.core.tool.*
 import magic.jsonable.JsonUtils
 
 import std.collection.{ArrayList, HashMap}
-import encoding.json.{JsonValue, JsonObject, JsonString, JsonArray}
+import stdx.encoding.json.{JsonValue, JsonObject, JsonString, JsonArray}
 
 public abstract class AbsTool <: Tool {
     protected var _extra = HashMap<String, String>()
@@ -26,7 +26,7 @@ public abstract class AbsTool <: Tool {
                 paramTypeSchema.put("description", JsonString(param.description))
             }
             properties.put(param.name, paramTypeSchema)
-            required.append(param.name)
+            required.add(param.name)
         }
         let toolSchema = JsonUtils.buildJsonObject([
             ("name", JsonString(name)),

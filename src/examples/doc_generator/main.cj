@@ -4,16 +4,16 @@
 package magic.examples.doc_generator
 
 import magic.config.Config
-import magic.utils.{canonicalize, directoryOf, fileNameWithoutExt, isRegularFile, fileExt, exists}
+import magic.utils.{canonicalize, directoryOf, fileNameWithoutExt, isRegularFile, fileExt, exists, readFile, writeFile}
 
 import std.ast.*
 import std.collection.{ArrayList, HashMap}
 import std.sort.SortExtension
-import std.fs.{File, OpenOption, Directory, Path}
+import std.fs.{File, OpenMode, Directory, Path}
 import std.io.{StringWriter}
 
-import encoding.json.JsonValue
-import log.LogLevel
+import stdx.encoding.json.JsonValue
+import stdx.log.LogLevel
 
 private let SRC_DIR = "./src"
 private let OUT_DIR = "./temp-docs"
@@ -31,31 +31,31 @@ private func readAndFilterCJFile(path: Path): String {
         if (!isApiTypeDecl(topDecl)) {
             continue
         }
-        buffer.append(astFile.extractDeclComment(topDecl))
-        buffer.append(astFile[Int64(topDecl.beginPos.line)])
+        buffer.add(astFile.extractDeclComment(topDecl))
+        buffer.add(astFile[Int64(topDecl.beginPos.line)])
 
         if (topDecl.keyword.value == "class") {
             let classDecl = (topDecl as ClassDecl).getOrThrow()
-            buffer.appendAll(astFile.extractMemberDecls(classDecl.body, needCheck: true))
+            buffer.add(all: astFile.extractMemberDecls(classDecl.body, needCheck: true))
         } else if (topDecl.keyword.value == "struct") {
             let structDecl = (topDecl as StructDecl).getOrThrow()
-            buffer.appendAll(astFile.extractMemberDecls(structDecl.body, needCheck: true))
+            buffer.add(all: astFile.extractMemberDecls(structDecl.body, needCheck: true))
         } else if (topDecl.keyword.value == "interface") {
             let interfaceDecl = (topDecl as InterfaceDecl).getOrThrow()
-            buffer.appendAll(astFile.extractMemberDecls(interfaceDecl.body, needCheck: false))
+            buffer.add(all: astFile.extractMemberDecls(interfaceDecl.body, needCheck: false))
         } else if (topDecl.keyword.value == "enum") {
             let enumDecl = (topDecl as EnumDecl).getOrThrow()
             for (constructor in enumDecl.constructors) {
                 let pos = constructor.toTokens()[0].pos
                 // There is a bug of ast, we cannot use `constructor.beginPos` directly
-                buffer.append(astFile.extractDeclComment(pos))
-                buffer.append(astFile[Int64(pos.line)])
-                buffer.append("")
+                buffer.add(astFile.extractDeclComment(pos))
+                buffer.add(astFile[Int64(pos.line)])
+                buffer.add("")
             }
-            buffer.appendAll(astFile.extractMemberDecls(enumDecl.decls, needCheck: true))
+            buffer.add(all: astFile.extractMemberDecls(enumDecl.decls, needCheck: true))
         }
 
-        buffer.append("}")
+        buffer.add("}")
     }
     return String.join(buffer.toArray(), delimiter: "\n")
 }
@@ -79,20 +79,19 @@ let blacklist = [
 ]
 
 private func getFilesImpl(dirPath: Path, ext: String, result: ArrayList<Path>): Unit  {
-    let dir = Directory(dirPath)
-    for (fileInfo in dir.entryList()) {
+    Directory.walk(dirPath) { fileInfo => 
         let filePath = canonicalize(fileInfo.path)
         println(filePath)
         if (blacklist.contains(fileNameWithoutExt(filePath))) {
-            continue
-        }
-        if (isRegularFile(fileInfo) && fileExt(filePath) == ext) {
+            return true
+        } else if (isRegularFile(fileInfo) && fileExt(filePath) == ext) {
             if (checkFile(filePath)) {
-                result.append(fileInfo.path)
+                result.add(fileInfo.path)
             }
         } else if (fileInfo.isDirectory()) {
             getFilesImpl(filePath, ext, result)
         }
+        return true // Continue walking
     }
 }
 
@@ -134,7 +133,7 @@ func buildFileDocs(files: ArrayList<Path>, outDir: Path): ArrayList<Doc> {
             let docPath = outDir.join("${pkgName}.${path.fileNameWithoutExtension}.json")
             writeFile(docPath, doc.toJsonValue().toJsonString())
             println(doc.toJsonValue().toJsonString())
-            docs.append(doc)
+            docs.add(doc)
         }
         println("------------------------")
     }
@@ -148,9 +147,9 @@ func buildPackageToc(packageName: String, typeDefs: ArrayList<TypeDef>): String 
         if (linkNameCount.contains(linkName)) {
             let count = linkNameCount[linkName]
             linkName = "${linkName}-${count}"
-            linkNameCount.put(linkName, count + 1)
+            linkNameCount.add(linkName, count + 1)
         } else {
-            linkNameCount.put(linkName, 1)
+            linkNameCount.add(linkName, 1)
         }
         return linkName
     }
@@ -175,13 +174,13 @@ func buildPackageToc(packageName: String, typeDefs: ArrayList<TypeDef>): String 
 
 private func loadFileDocs(dirPath: Path): ArrayList<Doc> {
     let docs = ArrayList<Doc>()
-    let dir = Directory(dirPath)
-    for (fileInfo in dir.fileList()) {
+    Directory.walk(dirPath) { fileInfo =>
         if (isRegularFile(fileInfo) && fileExt(fileInfo.path) == "json") {
             let content = readFile(fileInfo.path)
             let doc = Doc.fromJsonValue(JsonValue.fromStr(content))
-            docs.append(doc)
+            docs.add(doc)
         }
+        return true
     }
     return docs
 }
@@ -191,9 +190,9 @@ func mergeFileDocs(outDir: Path, docs!: Option<ArrayList<Doc>>): Unit  {
     let allDocs = HashMap<String, ArrayList<TypeDef>>()
     for (doc in docs ?? loadFileDocs(outDir)) {
         if (!allDocs.contains(doc.packageName)) {
-            allDocs.put(doc.packageName, ArrayList<TypeDef>())
+            allDocs.add(doc.packageName, ArrayList<TypeDef>())
         }
-        allDocs[doc.packageName].appendAll(doc.typeDefs)
+        allDocs[doc.packageName].add(all: doc.typeDefs)
     }
     // Sort all package names in order
     let sortedPackageNames = allDocs.keys().toArray()
@@ -201,7 +200,7 @@ func mergeFileDocs(outDir: Path, docs!: Option<ArrayList<Doc>>): Unit  {
 
     // Create the Toc file
     try (tocFile = File(outDir.join("api_reference.md"),
-                        OpenOption.CreateOrTruncate(false))) {
+                        OpenMode.Write)) {
         let tocWriter = StringWriter(tocFile)
         tocWriter.write("# API Reference\n\n")
         for (packageName in sortedPackageNames) {
@@ -223,7 +222,7 @@ func mergeFileDocs(outDir: Path, docs!: Option<ArrayList<Doc>>): Unit  {
             return t1.name.compare(t2.name)
         })
 
-        try (packageDocFile = File(packageDocPath, OpenOption.CreateOrTruncate(false))) {
+        try (packageDocFile = File(packageDocPath, OpenMode.Write)) {
             let packageDocWriter = StringWriter(packageDocFile)
             packageDocWriter.write("## Package ${packageName}\n")
             packageDocWriter.write(buildPackageToc(packageName, typeDefs))

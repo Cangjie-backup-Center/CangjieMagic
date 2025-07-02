@@ -4,7 +4,7 @@
 package magic.core.tool
 
 import std.collection.{HashMap, map, collectArray}
-import encoding.json.JsonValue
+import stdx.encoding.json.JsonValue
 
 public struct ToolRequest <: ToString {
     public ToolRequest(

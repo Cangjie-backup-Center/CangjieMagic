@@ -29,10 +29,10 @@ protected class BoundedMessageList <: MessageList {
             }
             posOfSystemMessage = Some(this.messages.size)
         }
-        this.messages.append(msg)
+        this.messages.add(msg)
         let msgLen = this.computeFn(msg.content)
         this.currTotalLength += msgLen
-        this.messageLengthMap.append(msgLen)
+        this.messageLengthMap.add(msgLen)
         // If the total length exceeds the context length, remove messages
         if (this.currTotalLength > this.contextLength) {
             this.removeExcessMessages()
@@ -48,14 +48,14 @@ protected class BoundedMessageList <: MessageList {
         let posToRemove = (this.posOfSystemMessage ?? -1) + 1
         while (this.currTotalLength > this.contextLength &&
                messages.size > posToRemove) {
-            this.messages.remove(posToRemove)
-            this.currTotalLength -= messageLengthMap.remove(posToRemove)
+            this.messages.remove(at: posToRemove)
+            this.currTotalLength -= messageLengthMap.remove(at: posToRemove)
         }
     }
 
     public override func removeLast(): Message {
         let msg = super.removeLast()
-        this.currTotalLength -= messageLengthMap.remove(messageLengthMap.size - 1)
+        this.currTotalLength -= messageLengthMap.remove(at: messageLengthMap.size - 1)
         msg
     }
 }

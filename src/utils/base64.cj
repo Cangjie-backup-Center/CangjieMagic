@@ -3,14 +3,11 @@
  */
 package magic.utils
 
-import std.fs.{File, OpenOption}
-import std.io.SeekPosition
-import encoding.base64.toBase64String
+import std.fs.Path
+import stdx.encoding.base64.toBase64String
 
 public func imageFileToBase64(path: String, head!: Bool = true): String {
-    let file = File(path, OpenOption.Open(true, false))
-    let bytesBuf = readToEnd(file)
-    file.close()
+    let bytesBuf = readFile(Path(path)).toArray()
     let image = toBase64String(bytesBuf)
     if (head) {
         let idx = path.lastIndexOf(".")

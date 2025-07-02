@@ -7,7 +7,7 @@ import magic.jsonable.*
 import magic.dsl.jsonable
 import magic.utils.{Color, Colorful}
 
-import encoding.json.*
+import stdx.encoding.json.*
 import std.collection.{HashMap, ArrayList}
 
 /**

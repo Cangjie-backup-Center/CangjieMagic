@@ -10,7 +10,7 @@ import magic.log.LogUtils
 import magic.core.ToolResponse
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
-import encoding.json.{JsonValue, JsonObject}
+import stdx.encoding.json.{JsonValue, JsonObject}
 
 /**
  * MCP client via the stdio transport
@@ -60,18 +60,23 @@ public abstract class AbsMCPClient <: MCPClient {
         this.doBeforeRequest()
         let result = ArrayList<Tool>()
         for (t in this.listTools().tools) {
-            result.append(MCPToolWrapper(this, t))
+            result.add(MCPToolWrapper(this, t))
         }
         return result.toArray()
     }
 
     override public func callTool(name: String, args: Array<(String, ToJsonValue)>): ToolResponse {
+        let arguments = ArrayList<(String, JsonValue)>()
+        for (arg in args) {
+            arguments.add((arg[0], arg[1].toJsonValue()))
+        }
+        return this.callTool(name, arguments.toArray())
+    }
+
+    override public func callTool(name: String, args: Array<(String, JsonValue)>): ToolResponse {
         this.doBeforeRequest()
         // Prepare the request
-        let arguments = HashMap<String, JsonValue>()
-        for (arg in args) {
-            arguments.put(arg[0], arg[1].toJsonValue())
-        }
+        let arguments = HashMap<String, JsonValue>(args)
         let req = CallToolRequest(
             params: CallToolParams(
                 name: name,
