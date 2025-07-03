@@ -12,7 +12,7 @@ import std.collection.{ArrayList, HashMap, map, collectArray}
 import stdx.encoding.json.{JsonValue, JsonObject}
 
 /**
- * MCP server via the stdio transport
+ * MCP server via the stdio & sse transport
  */
 public abstract class AbsMCPServer {
     protected func send(msg: String): Unit
@@ -26,40 +26,36 @@ public abstract class AbsMCPServer {
     }
 
     protected func initialize(): Unit {
-        var hasInit = false
-        while (!hasInit) {
+        var initialized = false
+        while (!initialized) {
             try {
-                let initRequest = this.recvRequest<InitialRequest>()
-                let initResponse = InitialResponse(
-                    id: initRequest.id,
-                    result: InitialResult(
-                        capabilities: ServerCapabilities(
-                            prompts: PromptsCapability(),
-                            resources: ResourcesCapability(),
-                            tools: ToolsCapability()
-                        ),
-                        serverInfo: Implementation(
-                            name: "Cangjie Magic Agent Server",
-                            version: "0.1"
-                        )
-                    )
-                )
-                this.send(initResponse)
-                let _initNotification = this.recvRequest<InitializedNotification>()
-            } catch (_: Exception) {
-                // If exceptions are thrown during receiving requests, the server received invalid messages
-                hasInit = false
+                let initReq = this.recvRequest<InitialRequest>()
+                let initResp = this.buildInitResponse(initReq.id)
+                this.send(initResp)
+
+                let _ = this.recvRequest<InitializedNotification>()
+                initialized = true
+            } catch (e: Exception) {
+                LogUtils.error("Initialization failed: ${e.message}, retrying...")
             }
-            hasInit = true
         }
     }
 
-    public func loop(): Unit {
-        while (let Some(msg) <- this.recv()) {
-            if (let Some(resp) <- this.handleRequestMessage(msg)) {
-                this.send(resp)
-            }
-        }
+    private func buildInitResponse(id: Int): InitialResponse {
+        return InitialResponse(
+            id: id,
+            result: InitialResult(
+                capabilities: ServerCapabilities(
+                    prompts: PromptsCapability(),
+                    resources: ResourcesCapability(),
+                    tools: ToolsCapability()
+                ),
+                serverInfo: Implementation(
+                    name: "Cangjie Magic Agent Server",
+                    version: "0.1"
+                )
+            )
+        )
     }
 
     /**
@@ -67,30 +63,26 @@ public abstract class AbsMCPServer {
      */
     protected func handleRequestMessage(msg: String): Option<ToJsonValue> {
         let req = MCPRequest.fromJsonValue(JsonValue.fromStr(msg))
-        let response: ToJsonValue = match (req.method) {
+        let response: Option<ToJsonValue> = match (req.method) {
+            case "initialize" => this.buildInitResponse(req.id)
+            case "notifications/initialized" => Option<ToJsonValue>.None
+            case "notifications/cancelled" => Option<ToJsonValue>.None
+
             case "tools/list" =>
                 let mcpTools = this.tools |>
-                    map { tool: Tool =>
-                        MCPTool.fromJsonValue(JsonValue.fromStr(tool.toString()).asObject())
-                    } |>
-                    collectArray
+                    map {
+                    tool: Tool => MCPTool.fromJsonValue(JsonValue.fromStr(tool.toString()).asObject())
+                } |> collectArray
                 ListToolsResponse(
                     id: req.id,
-                    result: ListToolsResult(
-                        tools: mcpTools
-                    )
+                    result: ListToolsResult(tools: mcpTools)
                 )
-            case "tools/call" =>
-                this.handleCallTool(
-                    CallToolRequest.fromJsonValue(JsonValue.fromStr(msg))
-                )
-            case "notifications/initialized" =>
-                return None
-            case "ping" =>
-                PingResponse(
-                    id: req.id,
-                    result: PingResult()
-                )
+            case "tools/call" => this.handleCallTool(CallToolRequest.fromJsonValue(JsonValue.fromStr(msg)))
+
+            case "ping" => PingResponse(
+                id: req.id,
+                result: PingResult()
+            )
             case _ => MCPError(
                 id: req.id,
                 error: ErrorContent(
@@ -110,13 +102,7 @@ public abstract class AbsMCPServer {
             return CallToolResponse(
                 id: callToolRequest.id,
                 result: CallToolResult(
-                    content: [
-                        ToolCallContent.Text(
-                            TextContent(
-                                text: result
-                            )
-                        )
-                    ],
+                    content: [ToolCallContent.Text(TextContent(text: result))],
                     isError: false
                 )
             )
@@ -140,13 +126,12 @@ public abstract class AbsMCPServer {
         return None
     }
 
-    private func send<T>(response: T): Unit where T <: ToJsonValue {
+    protected func send<T>(response: T): Unit where T <: ToJsonValue {
         this.send(response.toJsonValue().toString())
     }
 
     private func recvRequest<T>(): T where T <: Jsonable<T> {
-        let msg = this.recv().getOrThrow({ => MCPException("Fail to get MCP response") })
+        let msg = this.recv().getOrThrow({=> MCPException("Fail to get MCP response")})
         return T.fromJsonValue(JsonValue.fromStr(msg))
     }
 }
-
