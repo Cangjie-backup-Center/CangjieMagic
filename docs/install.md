@@ -34,7 +34,7 @@ Execute the command to download and configure the Cangjie Magic project
 **Linux or MacOS**
 
 ```bash
-curl -LsSf https://raw.gitcode.com/Cangjie-TPC/CangjieMagic/raw/dev/scripts/install.sh | sh
+curl -LsSf https://raw.gitcode.com/Cangjie-TPC/CangjieMagic/raw/dev/scripts/install.sh | bash
 ```
 
 **Windows**
