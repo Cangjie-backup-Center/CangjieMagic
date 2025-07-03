@@ -16,7 +16,7 @@ import magic.parser.OutputParserUtils
 import magic.vdb.{SemanticMap, InMemoryVectorDatabase, SimpleIndexMap}
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
-import encoding.json.*
+import stdx.encoding.json.*
 
 @jsonable
 private class Response {
@@ -157,7 +157,7 @@ public class SimpleToolManager <: ToolManager {
     }
 
     override public func addTool(tool: Tool): Unit {
-        tools.put(tool.name, tool)
+        tools.add(tool.name, tool)
     }
 
     override public func delTool(tool: Tool): Unit {
@@ -189,9 +189,9 @@ public class SimpleToolManager <: ToolManager {
         let groupB = ArrayList<Tool>()
         for (tool in this.getTools()) {
             if (pred(tool)) {
-                groupA.append(tool)
+                groupA.add(tool)
             } else {
-                groupB.append(tool)
+                groupB.add(tool)
             }
         }
         return (groupA, groupB)
@@ -212,7 +212,7 @@ public class SimpleToolManager <: ToolManager {
         }
         LogUtils.info("Filtered tools: ${normalTools.size} -> ${filteredTools.size}")
         // Special tools are put first
-        specialTools.appendAll(filteredTools)
+        specialTools.add(all: filteredTools)
         return specialTools.toArray()
     }
 
@@ -237,7 +237,7 @@ public class SimpleToolManager <: ToolManager {
         let filteredTools = ArrayList<Tool>()
         for (name in semMap.search(question, number: config.number)) {
             if (let Some(t) <- this.findTool(name)) {
-                filteredTools.append(t)
+                filteredTools.add(t)
             }
         }
         return filteredTools.toArray()
@@ -251,7 +251,7 @@ public class SimpleToolManager <: ToolManager {
         }
         let toolPrompts = ArrayList<String>()
         for (tool in tools) {
-            toolPrompts.append("${tool.name}: ${tool.description}")
+            toolPrompts.add("${tool.name}: ${tool.description}")
         }
         let messages = [
             Message.system(
@@ -284,7 +284,7 @@ public class SimpleToolManager <: ToolManager {
         let filteredTools = ArrayList<Tool>()
         for (tool in (response?.relevantTools) ?? []) {
             if (let Some(t) <- this.findTool(tool.name)) {
-                filteredTools.append(t)
+                filteredTools.add(t)
             } else {
                 LogUtils.error("Invalid tool after being filtered: `${tool.name}`")
             }

@@ -99,7 +99,7 @@ protected class TagStreamParser {
     }
 
     protected func removeTag(tag: String): Unit {
-        this.resetBuffer(Tag.trimTag(this.currContent, tag).trimAsciiLeft())
+        this.resetBuffer(Tag.trimTag(this.currContent, tag).trimAsciiStart())
     }
 
     /**
@@ -116,25 +116,26 @@ protected class TagStreamParser {
         let exhausted = !this.readChunk()
         let (left, closeTag, right) = this.splitByCloseTag(tag)
         if (exhausted) {
-            // When the stream is over, the close tag must exist
-            // The answer tag is special, the LLM may not generate its close tag
             if (tag == Tag.ANSWER) {
+                // Case 1: The answer tag is special, we always treat the stream is over
+                finished = true
+                this.resetBuffer("")
+            } else if (right.trimAscii().isEmpty()) {
+                // Case 2: If the rest is empty, we can consider the tag is closed
                 finished = true
                 this.resetBuffer("")
             } else if (closeTag.isNone()) {
+                // Case 3: If the rest is not empty and does not contain the close tag
                 throw ParserException("Fail to read async react ${tag} content. Rest: `${right}`")
-            } else if (right.trimAscii().isEmpty()) {
-                finished = true
-                this.resetBuffer("")
-            } else {
+            } else { // Otherwise
                 this.resetBuffer(right)
             }
-            return (left.trimAsciiRight(), true)
+            return (left.trimAsciiEnd(), true)
         } else {
             // If the rest starts with the complete close tag, remove it
             this.resetBuffer(right)
             if (closeTag.isSome()) {
-                return (left.trimAsciiRight(), true)
+                return (left.trimAsciiEnd(), true)
             } else {
                 return (left, false)
             }
@@ -158,10 +159,10 @@ protected class TagStreamParser {
         let regexToCheck = ArrayList<Regex>()
         for (index in tagName.size..=1 : -1) {
             let prefix = tagName[0..index]
-            regexToCheck.append(Regex("\\[\\s*/\\s*${prefix}\\s*$"))
+            regexToCheck.add(Regex("\\[\\s*/\\s*${prefix}\\s*$"))
         }
         // Add the regex to check the prefix symbols of closed tags
-        regexToCheck.append(Regex("\\[\\s*/?\\s*$"))
+        regexToCheck.add(Regex("\\[\\s*/?\\s*$"))
 
         for (regex in regexToCheck) {
             let matcher = regex.matcher(content)

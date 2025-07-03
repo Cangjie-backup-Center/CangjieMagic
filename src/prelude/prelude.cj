@@ -17,5 +17,5 @@ public import magic.tool.{SimpleToolManager, NativeFuncTool, RetrieverTool}
 public import magic.mcp.*
 public import magic.agent_executor.dsl.{ExecutionOpSet, ExecutionState}
 
-public import encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
+public import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
 public import std.collection.{ArrayList, HashMap}

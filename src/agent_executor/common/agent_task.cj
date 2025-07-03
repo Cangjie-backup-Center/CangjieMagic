@@ -87,15 +87,10 @@ public open class AgentTask {
             observation = retrieval.toPrompt()
         } else if (let Some(tool) <- this.agent.toolManager.findTool(toolRequest.name)) {
             try {
-                // Arguments are of type JsonValue, we should convert them as ToJsonValue
-                let convertedArgs = HashMap<String, ToJsonValue>()
-                for ((argName, argValue) in toolRequest.args) {
-                    convertedArgs.put(argName, argValue)
-                }
                 var toolResponse = if (let Some(resp) <- Instrumentor.doInstrumentBeforeToolCall(this.agent, toolRequest)) {
                     resp
                 } else {
-                    tool.invoke(convertedArgs)
+                    tool.invoke(toolRequest.args)
                 }
                 toolResponse = Instrumentor.doInstrumentAfterToolCall(this.agent, toolRequest, toolResponse)
                 observation = toolResponse.content

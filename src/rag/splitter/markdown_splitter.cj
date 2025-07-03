@@ -106,17 +106,17 @@ public class MarkdownSplitter <: Splitter {
                 let currHeaderLevel = headerMark.count("#")
                 while (let Some(last) <- headerStack.last) {
                     if (last.level >= currHeaderLevel) {
-                        headerStack.popLast()
+                        headerStack.removeLast()
                     } else {
                         break
                     }
                 }
                 // Push the current header to the stack
                 let headerValue = strippedLine.removePrefix(headerMark).trimAscii()
-                headerStack.append(Header(currHeaderLevel, headerName, headerValue))
+                headerStack.addLast(Header(currHeaderLevel, headerName, headerValue))
 
                 if (!this.stripHeader) {
-                    linesWithMetadata.append(
+                    linesWithMetadata.add(
                         Document(line, metadata: buildCurrMetadata())
                     )
                 }
@@ -126,15 +126,15 @@ public class MarkdownSplitter <: Splitter {
             // Case 2: code
             if (let Some(fence) <- checkCodeLine(strippedLine)) {
                 let codeLines = ArrayList<String>()
-                codeLines.append(line)
+                codeLines.add(line)
                 var codeLineNo = lineNo + 1
                 while (codeLineNo < lines.size &&
                        !lines[codeLineNo].trimAscii().startsWith(fence)) {
-                    codeLines.append(lines[codeLineNo])
+                    codeLines.add(lines[codeLineNo])
                     codeLineNo += 1
                 }
-                codeLines.append("```")
-                linesWithMetadata.append(
+                codeLines.add("```")
+                linesWithMetadata.add(
                     Document(String.join(codeLines.toArray(), delimiter: "\n"),
                              metadata: buildCurrMetadata())
                 )
@@ -143,7 +143,7 @@ public class MarkdownSplitter <: Splitter {
             }
             // Case 3: others
             if (!strippedLine.isEmpty()) {
-                linesWithMetadata.append(
+                linesWithMetadata.add(
                     Document(line, metadata: buildCurrMetadata())
                 )
             }
@@ -178,9 +178,9 @@ public class MarkdownSplitter <: Splitter {
         var currContent = ArrayList<String>()
         for (line in lines) {
             if (mergeMetadata(currMetadata) == mergeMetadata(line.metadata)) {
-                currContent.append(line.content)
+                currContent.add(line.content)
             } else {
-                mergedDocs.append(
+                mergedDocs.add(
                     Document(
                         String.join(currContent.toArray(), delimiter: "\n"),
                         metadata: currMetadata
@@ -188,10 +188,10 @@ public class MarkdownSplitter <: Splitter {
                 )
                 currContent.clear()
                 currMetadata = line.metadata
-                currContent.append(line.content)
+                currContent.add(line.content)
             }
         }
-        mergedDocs.append(
+        mergedDocs.add(
             Document(
                 String.join(currContent.toArray(), delimiter: "\n"),
                 metadata: currMetadata

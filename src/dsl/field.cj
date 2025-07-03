@@ -33,7 +33,7 @@ func getAttrDescription(attr: Tokens): Option<String> {
         if (!isTokenStringLiteral(token)) {
             throw DslException("@field accepts only string values as attributes")
         }
-        buffer.append(token.value)
+        buffer.add(token.value)
     }
     return String.join(buffer.toArray(), delimiter: "\n")
 }

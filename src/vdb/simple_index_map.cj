@@ -3,10 +3,12 @@
  */
 package magic.vdb
 
-import serialization.serialization.*
+import magic.utils.{readFile, writeFile}
+
 import std.collection.HashMap
-import std.fs.{File, OpenOption}
-import encoding.json.*
+import std.fs.Path
+import stdx.serialization.serialization.*
+import stdx.encoding.json.*
 
 /**
  * A simple index -> String map
@@ -17,7 +19,7 @@ public class SimpleIndexMap <: IndexMap<SimpleIndexMap, String> &Serializable<Si
     var map = HashMap<String, String>()
 
     public func set(index: Int64, content: String): Unit {
-        map.put(index.toString(), content)
+        map.add(index.toString(), content)
     }
 
     override public func add(content: String): Unit {
@@ -43,15 +45,11 @@ public class SimpleIndexMap <: IndexMap<SimpleIndexMap, String> &Serializable<Si
     }
 
     override public func save(filePath: String): Unit {
-        try (file = File(filePath, OpenOption.CreateOrTruncate(false))) {
-            let bytes: Array<Byte> = this.serialize().toJson().toString().toArray()
-            file.write(bytes)
-        }
+        writeFile(Path(filePath), this.serialize().toJson().toString())
     }
 
     redef public static func load(filePath: String): SimpleIndexMap {
-        let bytes: Array<Byte> = File.readFrom(filePath)
-        let jsonStr: String = String.fromUtf8(bytes)
+        let jsonStr = readFile(Path(filePath))
         let jv = JsonValue.fromStr(jsonStr)
         let dm = DataModelStruct.fromJson(jv)
         return SimpleIndexMap.deserialize(dm)

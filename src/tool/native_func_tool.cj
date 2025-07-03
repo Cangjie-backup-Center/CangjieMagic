@@ -4,10 +4,12 @@
 package magic.tool
 
 import magic.core.tool.*
-import magic.jsonable.{TypeSchema, ToJsonValue}
+import magic.jsonable.TypeSchema
 import std.collection.{ArrayList, HashMap}
 
-private type ExecFn = (HashMap<String, ToJsonValue>) -> String
+import stdx.encoding.json.JsonValue
+
+private type ExecFn = (HashMap<String, JsonValue>) -> String
 
 open public class NativeFuncTool <: AbsTool {
     private let _name: String
@@ -29,17 +31,17 @@ open public class NativeFuncTool <: AbsTool {
         _description = description
         _parameters = ArrayList<ToolParameter>()
         for (item in parameters) {
-            _parameters.append(ToolParameter(item[0], item[1], item[2]))
+            _parameters.add(ToolParameter(item[0], item[1], item[2]))
         }
         _retType = retType
         _examples = ArrayList<String>()
-        _examples.appendAll(examples)
+        _examples.add(all: examples)
         _fnOpt = execFn
         if (!filterable) {
-            this._extra.put("filterable", "false")
+            this._extra.add("filterable", "false")
         }
         if (terminal) {
-            this._extra.put("terminal", "true")
+            this._extra.add("terminal", "true")
         }
     }
 
@@ -66,9 +68,9 @@ open public class NativeFuncTool <: AbsTool {
     /**
      * Each argument is represented as a string of Json value
      */
-    public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
+    override public func invoke(args: HashMap<String, JsonValue>): ToolResponse {
         if (let Some(fn) <- _fnOpt) {
-            try {
+           try {
                 let result = fn(args)
                 return ToolResponse(result)
             } catch (ex: Exception) {
@@ -80,6 +82,6 @@ open public class NativeFuncTool <: AbsTool {
     }
 
     public func addExamples(examples: Array<String>): Unit {
-        _examples.appendAll(examples)
+        _examples.add(all: examples)
     }
 }

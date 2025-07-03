@@ -9,12 +9,12 @@ internal import magic.core.tokenizer.*
 internal import std.collection.*
 internal import std.regex.*
 internal import std.fs.*
-internal import encoding.json.*
+internal import stdx.encoding.json.*
 internal import std.collection.*
 internal import std.fs.*
 internal import std.io.*
 internal import std.regex.*
-internal import serialization.serialization.*
+internal import stdx.serialization.serialization.*
 internal import std.math.pow
 
 public let UINT32_MAX = UInt32(4294967295)
@@ -448,7 +448,7 @@ public class Pair<T> <: Hashable & Equatable<Pair<T>> where T <: Hashable & Equa
         }
     }
 
-    @When[cjc_version < "0.56.4"]
+    @When[cjc_version < "1.0.0"]
     public operator func !=(other: Pair<T>): Bool {
         !(this == other)
     }
@@ -490,10 +490,10 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
     private func uniformSpecial(token: Token): String {
         var content = unexpectedNormalize(token._content)
         if (token._lstrip) {
-            content = content.trimAsciiLeft()
+            content = content.trimAsciiStart()
         }
         if (token._rstrip) {
-            content = content.trimAsciiRight()
+            content = content.trimAsciiEnd()
         }
         return content
     }
@@ -516,7 +516,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         return this._specialTokens.get(token).getOrDefault({=> token})
     }
 
-    func buildSepcialRegex() {
+    func buildSpecialRegex() {
         var sb: StringBuilder = StringBuilder()
         sb.append("(")
         for ((i, spToken) in enumerate(this._specialTokens.keys())) {
@@ -532,13 +532,13 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
     public func decode(tokens: Array<UInt32>): String {
         let strList = ArrayList<String>()
         for ((i, tokenId) in enumerate(tokens)) {
-            strList.append(this._vocabR.get(tokenId).getOrThrow())
+            strList.add(this._vocabR.get(tokenId).getOrThrow())
         }
         let datas = ArrayList<UInt8>()
         for (str in strList) {
             for (rune in str.toRuneArray()) {
                 let byte: UInt8 = this._rune2byte[rune];
-                datas.append(byte)
+                datas.add(byte)
             }
         }
         return String.fromUtf8(datas.toArray())
@@ -553,12 +553,15 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         var text = uniformed
         // replace special tokens with empty blank
         for (specMd in specMathDatas) {
-            let specialToken = specMd.matchStr()
-            specialTokenMap.put(
+            let specialToken = specMd.matchString()
+            specialTokenMap.add(
                 specMd.matchPosition().start,
                 this._vocab.get(specialToken).getOrThrow()
             )
-            specialTokenIndexes.put(Pair(specMd.matchPosition().start, specMd.matchPosition().end))
+            specialTokenIndexes.add(Pair(
+                specMd.matchPosition().start,
+                specMd.matchPosition().end
+            ))
             var space = ""
             var i = 0;
             while (i < specialToken.size) {
@@ -573,7 +576,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         if (this._addBosToken) {
             if (let Some(bosToken) <- this._bosToken) {
                 if (let Some(bosId) <- this._vocab.get(bosToken)) {
-                    ids.append(bosId)
+                    ids.add(bosId)
                 }
             }
         }
@@ -583,19 +586,19 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             let orgStr = uniformed[ms..me]
             // find special token
             if (this._specialTokens.contains(orgStr)) {
-                ids.append(this._vocab[orgStr])
+                ids.add(this._vocab[orgStr])
                 continue
             }
-            let matchedStr = matchData.matchStr()
+            let matchedStr = matchData.matchString()
             var runeLevelStr: String
             var runeList = ArrayList<String>()
             if (this._vocab.contains(matchedStr)) {
-                runeList.append(matchedStr)
+                runeList.add(matchedStr)
                 runeLevelStr = matchedStr
             } else {
                 for (b in matchedStr.toArray()) {
                     let rune = this._byte2rune[b]
-                    runeList.append(rune.toString())
+                    runeList.add(rune.toString())
                 }
                 runeLevelStr = String.join(runeList.toArray())
             }
@@ -603,17 +606,17 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             if (this._cache.contains(runeLevelStr)) {
                 let cacheLst = this._cache[runeLevelStr]
                 for (cache in cacheLst) {
-                    ids.append(this._vocab[cache])
+                    ids.add(this._vocab[cache])
                 }
                 continue;
             }
             let mergeVocabs = this.bpe(runeList.toArray())
             // update cache
-            this._cache.put(runeLevelStr, mergeVocabs)
+            this._cache.add(runeLevelStr, mergeVocabs)
             for (mv in mergeVocabs) {
                 try {
                     let id = this._vocab.get(mv).getOrDefault({=> this._unkTokenId.getOrThrow()})
-                    ids.append(id)
+                    ids.add(id)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -622,7 +625,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
         if (this._addEosToken) {
             if (let Some(eosToken) <- this._eosToken) {
                 if (let Some(eosId) <- this._vocab.get(eosToken)) {
-                    ids.append(eosId)
+                    ids.add(eosId)
                 }
             }
         }
@@ -664,11 +667,11 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             while (i < finalTokens.size) {
                 let j = find<String>(finalTokens, i, pairs[toMerge])
                 if (j >= 0) {
-                    bestTokens.appendAll(finalTokens[i..j])
-                    bestTokens.append(left + right)
+                    bestTokens.add(all: finalTokens[i..j])
+                    bestTokens.add(left + right)
                     i = j + 2
                 } else {
-                    bestTokens.appendAll(finalTokens[i..])
+                    bestTokens.add(all: finalTokens[i..])
                     break
                 }
             }
@@ -695,7 +698,7 @@ public abstract class AbstractBPETokenizer <: Tokenizer {
             return pairs
         }
         for (i in 0..tokens.size - 1) {
-            pairs.append(Pair<String>(tokens[i].toString(), tokens[i + 1].toString()))
+            pairs.add(Pair<String>(tokens[i].toString(), tokens[i + 1].toString()))
         }
         return pairs
     }

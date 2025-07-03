@@ -20,14 +20,14 @@ public open class MessageList <: ToString & Iterable<Message> {
     }
 
     public open func addMessage(msg: Message): Unit {
-        messages.append(msg)
+        messages.add(msg)
     }
 
     public open func removeLast(): Message {
         if (messages.isEmpty()) {
             throw Exception("Remove the last message from an empty history")
         }
-        return messages.remove(messages.size - 1)
+        return messages.remove(at: messages.size - 1)
     }
 
     public func addMessages(messages: Array<Message>): Unit {

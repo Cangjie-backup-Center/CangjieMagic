@@ -8,6 +8,8 @@ import magic.prelude.*
 import magic.utils.*
 import magic.config.Config
 
+import std.fs.Path
+
 @agent[
     model: "ark:deepseek-v3-250324",
     executor: "naive",
@@ -16,7 +18,7 @@ class DocAgent {
     @prompt(
         """
         # Background
-        ${readFile("./src/examples/doc_generator/cj-lang.md")}
+        ${readFile(Path("./src/examples/doc_generator/cj-lang.md"))}
 
         # Instruction
         Given a Cangjie program, you are required to generate API documents for it.

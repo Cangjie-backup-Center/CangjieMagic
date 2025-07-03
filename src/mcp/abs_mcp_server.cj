@@ -9,7 +9,7 @@ import magic.jsonable.*
 import magic.log.LogUtils
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
-import encoding.json.{JsonValue, JsonObject}
+import stdx.encoding.json.{JsonValue, JsonObject}
 
 /**
  * MCP server via the stdio transport
@@ -56,15 +56,16 @@ public abstract class AbsMCPServer {
 
     public func loop(): Unit {
         while (let Some(msg) <- this.recv()) {
-            let resp = this.handleRequestMessage(msg)
-            this.send(resp)
+            if (let Some(resp) <- this.handleRequestMessage(msg)) {
+                this.send(resp)
+            }
         }
     }
 
     /**
      * Currently, only tool list and call requests are supported.
      */
-    protected func handleRequestMessage(msg: String): ToJsonValue {
+    protected func handleRequestMessage(msg: String): Option<ToJsonValue> {
         let req = MCPRequest.fromJsonValue(JsonValue.fromStr(msg))
         let response: ToJsonValue = match (req.method) {
             case "tools/list" =>
@@ -83,6 +84,13 @@ public abstract class AbsMCPServer {
                 this.handleCallTool(
                     CallToolRequest.fromJsonValue(JsonValue.fromStr(msg))
                 )
+            case "notifications/initialized" =>
+                return None
+            case "ping" =>
+                PingResponse(
+                    id: req.id,
+                    result: PingResult()
+                )
             case _ => MCPError(
                 id: req.id,
                 error: ErrorContent(
@@ -97,16 +105,7 @@ public abstract class AbsMCPServer {
     private func handleCallTool(callToolRequest: CallToolRequest): ToJsonValue {
         let name = callToolRequest.params.name
         if (let Some(tool) <- this.findTool(name)) {
-            let args = if (let Some(arguments) <- callToolRequest.params.arguments) {
-                // Type conversion of the value: JsonValue to ToJsonValue
-                let args = HashMap<String, ToJsonValue>()
-                for ((k, v) in arguments.getFields()) {
-                    args.put(k, v)
-                }
-                args
-            } else {
-                HashMap<String, ToJsonValue>() // No arguments
-            }
+            let args = (callToolRequest.params.arguments ?? JsonObject()).getFields()
             let result = tool.invoke(args).content
             return CallToolResponse(
                 id: callToolRequest.id,

@@ -15,7 +15,7 @@ import magic.memory.*
 import magic.tool.*
 import magic.log.LogUtils
 
-import encoding.json.JsonValue
+import stdx.encoding.json.JsonValue
 import std.collection.{ArrayList, HashMap}
 
 private func doSqliteQuery(ppDb: CPointer<CPointer<Unit>>, query: String): String {
@@ -25,7 +25,7 @@ private func doSqliteQuery(ppDb: CPointer<CPointer<Unit>>, query: String): Strin
         let columnCount = SqliteUtils.sqlColumnCount(ppStmt)
         while (SqliteUtils.sqlStep(ppStmt) != SqliteUtils.SQLITE_DONE) {
             for (i in 0..columnCount) {
-                result.append(SqliteUtils.sqlColumnText(ppStmt, i))
+                result.add(SqliteUtils.sqlColumnText(ppStmt, i))
             }
         }
         return result.toString()
@@ -76,7 +76,7 @@ class SqliteAgent {
         try {
             if (this.table.isEmpty()) {
                 while (SqliteUtils.sqlStep(ppStmt) != SqliteUtils.SQLITE_DONE) {
-                    result.append(SqliteUtils.sqlColumnText(ppStmt, 1))
+                    result.add(SqliteUtils.sqlColumnText(ppStmt, 1))
                 }
             } else {
                 let tables = this.table.split(",")
@@ -84,11 +84,11 @@ class SqliteAgent {
                 while (SqliteUtils.sqlStep(ppStmt) != SqliteUtils.SQLITE_DONE) {
                     let currTable = SqliteUtils.sqlColumnText(ppStmt, 0)
                     if (tables.contains(currTable)) {
-                        result.append(SqliteUtils.sqlColumnText(ppStmt, 1))
+                        result.add(SqliteUtils.sqlColumnText(ppStmt, 1))
                         // LogUtils.info(currTable)
                         // Sample the first 5 rows
                         let data = doSqliteQuery(ppDb, "SELECT * FROM ${currTable} LIMIT 5")
-                        result.append(data)
+                        result.add(data)
                         // LogUtils.info(data)
                     }
                 }

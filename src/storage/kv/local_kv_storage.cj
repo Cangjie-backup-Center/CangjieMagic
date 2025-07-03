@@ -3,7 +3,7 @@
  */
 package magic.storage.kv
 
-import serialization.serialization.*
+import stdx.serialization.serialization.*
 import magic.storage.LocalStorage
 
 public interface KVStorage<T> where T <: Serializable<T> {

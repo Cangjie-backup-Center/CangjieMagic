@@ -7,7 +7,7 @@ import magic.log.LogUtils
 import magic.config.Config
 
 import std.collection.HashMap
-import encoding.json.*
+import stdx.encoding.json.*
 import std.collection.concurrent.BlockingQueue
 @When[ohos == "true"]
 import ohos.net.http.*

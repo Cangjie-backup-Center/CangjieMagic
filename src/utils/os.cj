@@ -3,46 +3,46 @@
  */
 package magic.utils
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.time.Duration
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.sync.sleep
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.os.process.{Process, ProcessRedirect, SubProcess}
 //--------------------------------------------------------
-@When[cjc_version >= "0.56.4"]
+@When[cjc_version >= "1.0.0"]
 import std.process.{Process, ProcessRedirect, SubProcess}
 //======================================================
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.os.getEnv as stdGetEnv
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.os.setEnv as stdSetEnv
 
 import std.collection.HashMap
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 protected func getEnv(envVarName: String): Option<String> {
     stdGetEnv(envVarName)
 }
-@When[cjc_version >= "0.56.4"]
+@When[cjc_version >= "1.0.0"]
 protected func getEnv(envVarName: String): Option<String> {
     Process.current.getEnv(envVarName)
 }
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 protected func setEnv(envVarName: String, value: String): Unit {
     stdSetEnv(envVarName, value)
 }
-@When[cjc_version >= "0.56.4"]
+@When[cjc_version >= "1.0.0"]
 protected func setEnv(envVarName: String, value: String): Unit {
     Process.current.setEnv(envVarName, value)
 }
 
 protected func newProcess(name: String, args: Array<String>, env!: Array<(String, String)> = [], redirectErr!: Bool = true): SubProcess {
     let allEnv = HashMap(Process.current.environment)
-    allEnv.putAll(env)
+    allEnv.add(all: env)
     if (redirectErr) {
         return Process.start(
             name, args,

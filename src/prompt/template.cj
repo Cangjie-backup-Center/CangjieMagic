@@ -28,11 +28,11 @@ private class Context {
     }
 
     func set(key: String, value: String): Unit {
-        variables.put(key, value)
+        variables.add(key, value)
     }
 
     func set(key: String, value: Array<String>): Unit {
-        arrays.put(key, value)
+        arrays.add(key, value)
     }
 
     func get(key: String): Option<String> {
@@ -118,15 +118,15 @@ public class TemplateEngine {
 
     private func renderLoop(loop: MatchData, context: Context): String {
         let sb = StringBuilder()
-        let itemVar = loop.matchStr(1)
-        let arrayName = loop.matchStr(2)
-        var loopBody = loop.matchStr(3)
+        let itemVar = loop.matchString(1)
+        let arrayName = loop.matchString(2)
+        var loopBody = loop.matchString(3)
         // Remove prefix newline (aka. the special symbol) and suffix whitespaces
         if (loopBody.startsWith(ESCAPED_NEWLINE)) {
             loopBody = loopBody[3..]
         }
-        if (loopBody.trimAsciiRight().endsWith(ESCAPED_NEWLINE)) {
-            loopBody = loopBody.trimAsciiRight()
+        if (loopBody.trimAsciiEnd().endsWith(ESCAPED_NEWLINE)) {
+            loopBody = loopBody.trimAsciiEnd()
         }
 
         let array = context.getArray(arrayName).getOrThrow({ =>
@@ -153,7 +153,7 @@ public class TemplateEngine {
         // And find all variables
         let vars = match (matcher.findAll()) {
             case Some(mdArray) =>
-                mdArray |> map { md => md.matchStr(1) } |> collectArray
+                mdArray |> map { md => md.matchString(1) } |> collectArray
             case None => Array<String>()
         }
         if (subStrings.size != vars.size + 1) {

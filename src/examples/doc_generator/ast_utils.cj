@@ -101,8 +101,8 @@ class AstFile {
                 continue
             }
             let declContent = extractDeclWithComment(memberDecl)
-            buffer.append(declContent)
-            buffer.append("")
+            buffer.add(declContent)
+            buffer.add("")
         }
         return buffer
     }

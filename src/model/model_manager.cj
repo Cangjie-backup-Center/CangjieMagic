@@ -180,7 +180,7 @@ public struct ModelManager {
 
     public static func registerChatModel(modelName: String,
                                          buildFn: () -> ChatModel): Unit {
-        CHAT_MODEL_BUILD_FN_MAP.put(modelName, buildFn)
+        CHAT_MODEL_BUILD_FN_MAP.add(modelName, buildFn)
     }
 
     public static func createChatModel(modelName: String, temperature!: Option<Float64> = None): ChatModel {
@@ -206,7 +206,7 @@ public struct ModelManager {
 
     public static func registerEmbeddingModel(modelName: String,
                                               buildFn: () -> EmbeddingModel): Unit {
-        EMBEDDING_MODEL_BUILD_FN_MAP.put(modelName, buildFn)
+        EMBEDDING_MODEL_BUILD_FN_MAP.add(modelName, buildFn)
     }
 
     public static func createEmbeddingModel(modelName: String): EmbeddingModel {
@@ -236,7 +236,7 @@ public struct ModelManager {
 
     public static func registerImageModel(modelName: String,
                                           buildFn: () -> ImageModel): Unit {
-        IMAGE_MODEL_BUILD_FN_MAP.put(modelName, buildFn)
+        IMAGE_MODEL_BUILD_FN_MAP.add(modelName, buildFn)
     }
 
     public static func createImageModel(modelName: String): ImageModel {

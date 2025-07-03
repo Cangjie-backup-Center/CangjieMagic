@@ -116,7 +116,7 @@ private class Transformer <: Visitor {
             let toolIds = ArrayList<Token>()
             for (token in callExpr.arguments[0].expr.toTokens()) {
                 if (token.kind == TokenKind.IDENTIFIER) {
-                    toolIds.append(token)
+                    toolIds.add(token)
                 } else if (token.kind != TokenKind.PIPELINE) {
                     throw DslException("Invalid token ${token.value} in the execution tool operation.")
                 }

@@ -4,8 +4,9 @@
 package magic.rag.splitter
 
 import magic.core.rag.Document
+import magic.utils.readFile
 
-import std.fs.{File, OpenOption}
+import std.fs.Path
 import std.io.StringReader
 import std.collection.{ArrayList, HashMap}
 
@@ -15,22 +16,15 @@ public class DocumentLoader {
     ) { }
 
     public func load(): Array<Document> {
-        try (file = File(this.filePath, OpenOption.Open(true, false))) {
-            let reader = StringReader(file)
-            let content = reader.readToEnd()
-
-            let metadata = HashMap<String, String>([("source", filePath)])
-            return [ Document(content, metadata: metadata) ]
-        }
-        throw UnsupportedException()
+        let content = readFile(Path(this.filePath))
+        let metadata = HashMap<String, String>([("source", filePath)])
+        return [ Document(content, metadata: metadata) ]
     }
 
     public func loadSplit(splitter: Splitter): Array<Document> {
         let allDocs = ArrayList<Document>()
         for (doc in this.load()) {
-            allDocs.appendAll(
-                splitter.split(doc.content)
-            )
+            allDocs.add(all: splitter.split(doc.content))
         }
         return allDocs.toArray()
     }

@@ -8,7 +8,7 @@ import magic.prelude.*
 import magic.config.Config
 import magic.mcp.StdioMCPServer
 
-import log.LogLevel
+import stdx.log.LogLevel
 
 @tool[description: "Add two numbers"]
 func add(a: Int64, b: Int64): Int64 {

@@ -1,6 +1,6 @@
 ## Third-party Libraries
 
-Following the instructions to build dynamic libs and put all these libs to the dir `ffi_libs`。
+Following the instructions to build dynamic libs and put all these libs to the dir `libs`。
 
 ### Sqlite
 
@@ -42,6 +42,6 @@ cmake --build build --config Release
 ```
 
 ```bash
-cd ffi_libs
+cd libs
 gcc tokenize.c -fPIC -shared -L. -lllama -o libtokenize.so
 ```

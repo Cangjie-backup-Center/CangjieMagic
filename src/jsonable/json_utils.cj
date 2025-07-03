@@ -3,7 +3,7 @@
  */
 package magic.jsonable
 
-import encoding.json.*
+import stdx.encoding.json.*
 import std.collection.{map, collectArray}
 
 protected struct JsonUtils {

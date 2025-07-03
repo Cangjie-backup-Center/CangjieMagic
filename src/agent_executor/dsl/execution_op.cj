@@ -18,7 +18,7 @@ import magic.jsonable.Jsonable
 import magic.jsonable.TypeSchema
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
-import encoding.json.*
+import stdx.encoding.json.*
 
 public type ExecutionOp = (ExecutionState) -> ExecutionState
 
@@ -237,11 +237,11 @@ public struct ExecutionOpSet {
 
             // Build the system prompt to solve the subtask
             let prompts = ArrayList<String>()
-            prompts.append(state.task.agent.systemPrompt)
-            prompts.append("# Guideline")
-            prompts.appendAll(subtask.guidelines)
-            prompts.append("# Background")
-            prompts.append(subtask.background)
+            prompts.add(state.task.agent.systemPrompt)
+            prompts.add("# Guideline")
+            prompts.add(all: subtask.guidelines)
+            prompts.add("# Background")
+            prompts.add(subtask.background)
             let sysPrompt = String.join(prompts.toArray(), delimiter: "\n")
 
             let subtaskState = ExecutionState(

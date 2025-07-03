@@ -3,7 +3,7 @@
  */
 package magic.core.model
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 import std.time.Duration
 
 public class ChatUsage <: ToString {

@@ -10,8 +10,9 @@ import magic.utils.readToEnd
 import magic.tokenizer.Cl100kTokenizer
 import magic.dsl.*
 import magic.prelude.*
+import magic.utils.readFile
 import magic.config.Config
-import log.LogLevel
+import stdx.log.LogLevel
 import std.fs.*
 
 @agent[
@@ -46,11 +47,10 @@ func miniRagRetriever(): Retriever {
 
 func buildGraph(): Unit {
     let miniRag = instantiate()
-    for (entry in Directory("resource/mini_rag/data")) {
-        try (file = File.openRead(entry.path)) {
-            let content = String.fromUtf8(readToEnd(file))
-            miniRag.insert(content)
-        }
+    Directory.walk("resource/mini_rag/data") { fileInfo =>
+        let content = readFile(fileInfo.path)
+        miniRag.insert(content)
+        return true
     }
     miniRag.commit()
 }

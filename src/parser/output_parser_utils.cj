@@ -6,7 +6,7 @@ package magic.parser
 import magic.core.tool.ToolRequest
 import magic.jsonable.JsonUtils
 
-import encoding.json.*
+import stdx.encoding.json.*
 
 public struct OutputParserUtils {
     private static func extractCode(str: String, lang: String, last!: Bool): Option<String> {

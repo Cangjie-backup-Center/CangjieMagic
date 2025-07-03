@@ -10,7 +10,7 @@ import magic.dsl.jsonable
 import magic.jsonable.*
 import magic.config.Config
 import magic.utils.StringExt
-import encoding.json.*
+import stdx.encoding.json.*
 import std.time.DateTime
 import std.collection.ArrayList
 import std.collection.HashMap

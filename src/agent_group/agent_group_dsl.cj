@@ -9,7 +9,15 @@ import magic.agent.AbsAgent
 /**
  * This interface is used to extend agent-collaboration for agents
  */
-public interface AgentCollaboration { }
+public interface AgentCollaboration {
+    operator func <=(members: Array<Agent>): LeaderGroup
+
+    operator func ()(prev: Agent): LinearGroup
+
+    operator func ()(prev: LinearGroup): LinearGroup
+
+    operator func |(member: Agent): FreeGroup
+}
 
 extend AbsAgent <: AgentCollaboration {
     /**

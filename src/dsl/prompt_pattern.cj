@@ -31,7 +31,7 @@ public macro promptPattern(input: Tokens): Tokens {
     for (m in getChildMessages("element")) {
         if (m.hasItem("elementName")) {
             let name = m.getString("elementName")
-            promptPatternAttr.elementNames.append(name)
+            promptPatternAttr.elementNames.add(name)
         }
     }
     return transformPromptPattern(input, promptPatternAttr)
@@ -42,7 +42,7 @@ public macro promptPattern(attr: Tokens, input: Tokens): Tokens {
     for (m in getChildMessages("element")) {
         if (m.hasItem("elementName")) {
             let name = m.getString("elementName")
-            promptPatternAttr.elementNames.append(name)
+            promptPatternAttr.elementNames.add(name)
         }
     }
     let content = transformPromptPattern(input, promptPatternAttr)

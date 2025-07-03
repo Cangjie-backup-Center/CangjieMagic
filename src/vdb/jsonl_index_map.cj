@@ -5,11 +5,12 @@ package magic.vdb
 
 import magic.jsonable.Jsonable
 import magic.prompt.ToPrompt
+import magic.utils.writeFile
 
-import std.fs.{File, OpenOption}
+import std.fs.{Path, File, OpenMode}
 import std.io.{StringReader, StringWriter}
-import std.collection.{ArrayList, map, filter, collectArrayList}
-import encoding.json.JsonValue
+import std.collection.{ArrayList, map, filter, collectArrayList, collectArray}
+import stdx.encoding.json.JsonValue
 
 /**
  * A index -> jsonvalue map
@@ -27,7 +28,7 @@ public class JsonlIndexMap<T> <: IndexMap<JsonlIndexMap<T>, T> where T <: Jsonab
     }
 
     override public func add(content: T): Unit {
-        values.append(content)
+        values.add(content)
     }
 
     override public func get(index: Int64): T {
@@ -35,14 +36,11 @@ public class JsonlIndexMap<T> <: IndexMap<JsonlIndexMap<T>, T> where T <: Jsonab
     }
 
     override public func save(filePath: String): Unit {
-        try (file = File(filePath, OpenOption.CreateOrTruncate(false))) {
-            let writer = StringWriter(file)
-            for (v in this.values) {
-                writer.write(v.toJsonValue().toString())
-                writer.write("\n")
-            }
-            writer.flush()
-        }
+        let content = String.join(
+            this.values |> map { v => v.toJsonValue().toString() } |> collectArray,
+            delimiter: "\n"
+        )
+        writeFile(Path(filePath), content)
     }
 
     redef public static func load(filePath: String): JsonlIndexMap<T> {
@@ -51,7 +49,7 @@ public class JsonlIndexMap<T> <: IndexMap<JsonlIndexMap<T>, T> where T <: Jsonab
     }
 
     private static func loadJsonl(filePath: String): ArrayList<T> {
-        try (file = File(filePath, OpenOption.Open(true, false))) {
+        try (file = File(filePath, OpenMode.Read)) {
             let reader = StringReader(file)
             return reader.lines() |>
                 filter { line: String =>

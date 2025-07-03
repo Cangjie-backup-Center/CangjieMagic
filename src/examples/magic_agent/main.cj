@@ -8,7 +8,7 @@ import magic.prelude.*
 import magic.config.Config
 import magic.agent_executor.common.ConsolePrinter
 
-import log.LogLevel
+import stdx.log.LogLevel
 import std.console.Console
 
 // Modified from: https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9

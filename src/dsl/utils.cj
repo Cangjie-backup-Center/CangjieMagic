@@ -5,21 +5,19 @@ macro package magic.dsl
 
 import std.collection.{ArrayList, map, collectArray}
 import std.ast.*
-@When[cjc_version >= "0.56.4"]
+@When[cjc_version >= "1.0.0"]
 internal import std.fs.exists
-@When[cjc_version < "0.56.4"]
-import std.fs.{Directory}
 
-import std.fs.{File, OpenOption}
+import std.fs.{File, OpenMode}
 import std.io.StringReader
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 protected func exists(path: String): Bool {
     return File.exists(path) || Directory.exists(path)
 }
 
 protected func readFile(path: String): String {
-    try (file = File(path, OpenOption.Open(true, false))) {
+    try (file = File(path, OpenMode.Read)) {
         let reader = StringReader(file)
         return reader.readToEnd()
     }
@@ -33,7 +31,7 @@ protected func newIdentifierToken(id: String): Token {
 protected func newArrayOfIdentifierToken(ids: Array<String>): Array<Token> {
     let result = ArrayList<Token>()
     for (id in ids) {
-        result.append(newIdentifierToken(id))
+        result.add(newIdentifierToken(id))
     }
     return result.toArray()
 }
@@ -53,7 +51,7 @@ protected func newLiteralToken(v: String): Token {
 protected func newArrayOfLiteralToken(values: Array<String>): Array<Token> {
     let result = ArrayList<Token>()
     for (v in values) {
-        result.append(newLiteralToken(v))
+        result.add(newLiteralToken(v))
     }
     return result.toArray()
 }

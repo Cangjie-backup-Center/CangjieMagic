@@ -24,7 +24,7 @@ protected class PromptBuilder {
 
     public func system(prompt: String): PromptBuilder {
         if (!prompt.trimAscii().isEmpty()) {
-            this.systemMessages.append(Message.system(prompt))
+            this.systemMessages.add(Message.system(prompt))
         }
         this
     }
@@ -61,20 +61,20 @@ protected class PromptBuilder {
         // Merge system prompt messageList message, and user messages
         let res = ArrayList<Message>()
         if (!systemPrompt.trimAscii().isEmpty()) {
-            res.append(Message.system(systemPrompt))
+            res.add(Message.system(systemPrompt))
         }
         // Add conversation messages in reverse order
         if (let Some(con) <- this._conversation) {
             for (i in (con.size - 1)..=0:-1) {
                 let chatRound = con[i]
-                res.append(Message.user(chatRound.question))
+                res.add(Message.user(chatRound.question))
                 for (msg in chatRound.steps) {
-                    res.append(msg)
+                    res.add(msg)
                 }
                 if(executor.name == "react" || executor.name == "plan-react") {
-                    res.append(Message.assistant(chatRound.answer.withTag(Tag.ANSWER)))
+                    res.add(Message.assistant(chatRound.answer.withTag(Tag.ANSWER)))
                 } else {
-                    res.append(Message.assistant(chatRound.answer))
+                    res.add(Message.assistant(chatRound.answer))
                 }
             }
         }

@@ -8,26 +8,26 @@ import magic.core.message.MessageList
 import magic.config.Config
 import magic.utils.exists
 
-import std.fs.{File, OpenOption, Directory, Path}
+import std.fs.{File, OpenMode, Directory, Path}
 import std.console.Console
 import std.collection.HashMap
 import std.io.OutputStream
-import std.log.LogLevel as EnumLogLevel
-import log.LogLevel
 
-@When[cjc_version < "0.56.4"]
+import stdx.log.LogLevel
+
+@When[cjc_version < "1.0.0"]
 import std.log.SimpleLogger
 
-@When[cjc_version >= "0.56.4"]
-import logger.SimpleLogger
+@When[cjc_version >= "1.0.0"]
+import stdx.logger.SimpleLogger
 
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 private func buildSimpleLogger(output: OutputStream): SimpleLogger {
     let logger = SimpleLogger("logger", EnumLogLevel.INFO, output)
     logger.level = convertLogLevel(Config.logLevel)
     return logger
 }
-@When[cjc_version < "0.56.4"]
+@When[cjc_version < "1.0.0"]
 private func convertLogLevel(logLevel: LogLevel): EnumLogLevel {
     if (logLevel == LogLevel.OFF) {
         return EnumLogLevel.OFF
@@ -47,7 +47,7 @@ private func convertLogLevel(logLevel: LogLevel): EnumLogLevel {
     throw UnsupportedException()
 }
 
-@When[cjc_version >= "0.56.4"]
+@When[cjc_version >= "1.0.0"]
 private func buildSimpleLogger(output: OutputStream): SimpleLogger {
     let logger = SimpleLogger(output)
     logger.level = Config.logLevel
@@ -69,7 +69,7 @@ public struct LogUtils {
                     } else if (Config.logFile == "stderr") {
                         buildSimpleLogger(Console.stdErr)
                     } else {
-                        let file = File(Config.logFile, OpenOption.CreateOrTruncate(false))
+                        let file = File(Config.logFile, OpenMode.Write)
                         buildSimpleLogger(file)
                     }
                     _LOGGER = logger
@@ -88,7 +88,7 @@ public struct LogUtils {
             Directory.create(Config.agentLogDir, recursive: true)
         }
         let path = Path(Config.agentLogDir).join("${name}.log")
-        let file = File(path, OpenOption.CreateOrTruncate(false))
+        let file = File(path, OpenMode.Write)
         let logger = buildSimpleLogger(file)
         NAMED_LOGGERS[name] = logger
         return logger

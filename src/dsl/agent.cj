@@ -4,7 +4,7 @@
 macro package magic.dsl
 
 import std.ast.*
-import std.regex.Regex
+import std.regex.{Regex, MatchData}
 import std.sort.SortExtension
 import std.convert.Parsable
 import std.collection.{ArrayList, HashMap, map, collectArrayList, collectArray}
@@ -27,8 +27,8 @@ enum McpAttr {
         let regex = Regex(##"(?:[^\s"\']|"(?:\\.|[^"])*"|\'(?:\\.|[^\'])*\')+"##)
         let matcher = regex.matcher(cmdArgs)
         return (matcher.findAll() ?? []) |>
-             map { md =>
-                let s = md.matchStr()
+             map { md: MatchData =>
+                let s = md.matchString()
                 // Remove the quote marks if necessary
                 if (s.startsWith('"') && s.startsWith('"') ||
                     s.startsWith("'") && s.startsWith("'")) {
@@ -47,7 +47,8 @@ enum McpAttr {
     static func parseStdio(rawAttr: Tokens): McpAttr {
         if (rawAttr.size < 4 ||
             rawAttr[1].kind != TokenKind.LPAREN ||
-            rawAttr[2].kind != TokenKind.STRING_LITERAL ||
+            (rawAttr[2].kind != TokenKind.STRING_LITERAL &&
+             rawAttr[2].kind != TokenKind.SINGLE_QUOTED_STRING_LITERAL) ||
             rawAttr[rawAttr.size-1].kind != TokenKind.RPAREN) {
             throw DslException("Invalid MCP stdio server config `${rawAttr}`")
         }
@@ -244,7 +245,7 @@ class AgentAttr <: Attr {
                     // The deprecated syntax of specifying the MCP as a map
                     if (mcpTokens[0].kind == TokenKind.LCURL) {
                         let rawMapAttr = MapParser(mcpTokens).parseMap()
-                        result.append(McpAttr.parse(rawMapAttr))
+                        result.add(McpAttr.parse(rawMapAttr))
                     } else {
                         let peekedToken = mcpTokens[0]
                         let mcpAttr = match (peekedToken.value) {
@@ -253,7 +254,7 @@ class AgentAttr <: Attr {
                             case "tools" => McpAttr.parseTools(mcpTokens)
                             case _ => throw DslException("Invalid syntax for MCP `${mcpTokens}`")
                         }
-                        result.append(mcpAttr)
+                        result.add(mcpAttr)
                     }
                 }
                 _mcp = result.toArray()
@@ -276,7 +277,7 @@ public macro agent(input: Tokens): Tokens {
     for (m in getChildMessages("tool")) {
         if (m.hasItem("internalTool")) {
             let name = m.getString("internalTool")
-            agentAttr.internalTools.append(name)
+            agentAttr.internalTools.add(name)
         }
     }
     for (m in getChildMessages("prompt")) {
@@ -300,7 +301,7 @@ public macro agent(attr: Tokens, input: Tokens): Tokens {
     for (m in getChildMessages("tool")) {
         if (m.hasItem("internalTool")) {
             let name = m.getString("internalTool")
-            agentAttr.internalTools.append(name)
+            agentAttr.internalTools.add(name)
         }
     }
     for (m in getChildMessages("prompt")) {

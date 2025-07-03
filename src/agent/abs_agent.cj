@@ -15,7 +15,7 @@ import magic.log.LogUtils
 import magic.parser.OutputParserUtils
 import magic.prompt.Template
 
-import encoding.json.{JsonValue, JsonException}
+import stdx.encoding.json.{JsonValue, JsonException}
 
 private let QUESTION_WITH_JSON_CONSTRAINT = """
 The output must be a valid JSON value wrapped by ```json and ```.

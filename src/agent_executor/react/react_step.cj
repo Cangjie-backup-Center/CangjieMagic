@@ -7,7 +7,7 @@ import magic.parser.{OutputParserUtils, ParserException}
 import magic.core.tool.ToolRequest
 import magic.log.LogUtils
 
-import encoding.json.JsonException
+import stdx.encoding.json.JsonException
 
 protected enum FailureLevel {
     | Repairable

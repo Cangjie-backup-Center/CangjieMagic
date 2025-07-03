@@ -7,7 +7,7 @@ import magic.dsl.jsonable
 import magic.jsonable.*
 
 import std.collection.{HashMap, ArrayList}
-import encoding.json.*
+import stdx.encoding.json.*
 
 //--------------------------------------------------------------------------------------------
 // https://github.com/modelcontextprotocol/specification/blob/main/schema/2024-11-05/schema.ts
@@ -70,6 +70,17 @@ class PingRequest {
     var id: Int64 = getRequestID()
     var method: String = "ping"
 }
+
+@jsonable
+class PingResult { }
+
+@jsonable
+class PingResponse {
+    var jsonrpc: String = JSONRPC_VERSION
+    var id: Int64
+    let result: PingResult
+}
+
 
 @jsonable
 public class Annotation {

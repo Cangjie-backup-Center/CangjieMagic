@@ -66,7 +66,7 @@ class IndependentStringCollector <: Visitor {
                     let token = litExpr.literal
                     match (token.kind) {
                         case TokenKind.STRING_LITERAL | TokenKind.MULTILINE_STRING =>
-                            indepStringLiteralPositions.put(HashPosition(token.pos))
+                            indepStringLiteralPositions.add(HashPosition(token.pos))
                         case _ => ()
                     }
                 }

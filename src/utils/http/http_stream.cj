@@ -8,7 +8,7 @@ import magic.utils.StringExt
 
 import std.collection.concurrent.BlockingQueue
 import std.collection.{HashMap, ArrayList}
-import encoding.json.JsonObject
+import stdx.encoding.json.JsonObject
 import std.io.{InputStream, StringReader}
 import magic.dsl.prompt
 
@@ -47,7 +47,7 @@ protected class HttpStream <: Iterator<String> & InputStream {
                 LogUtils.debug("Http byte stream finished")
                 return false
             case Bytes(bytes) =>
-                this.byteBuffer.appendAll(bytes)
+                this.byteBuffer.add(all: bytes)
                 return true
         } 
     }

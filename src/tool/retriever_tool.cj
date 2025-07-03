@@ -5,9 +5,10 @@ package magic.tool
 
 import magic.core.tool.*
 import magic.core.rag.*
-import magic.jsonable.{TypeSchema, ToJsonValue}
+import magic.jsonable.TypeSchema
 
 import std.collection.{HashMap, map, collectArray}
+import stdx.encoding.json.JsonValue
 
 public class RetrieverTool <: AbsTool {
     private let retriever: Retriever
@@ -42,9 +43,9 @@ public class RetrieverTool <: AbsTool {
         get() { [] }
     }
 
-    public func invoke(args: HashMap<String, ToJsonValue>): ToolResponse {
+    public func invoke(args: HashMap<String, JsonValue>): ToolResponse {
         // The retriever model tool must accept a string
-        let query = args["query"].toJsonValue().asString().getValue()
+        let query = args["query"].asString().getValue()
         let retrieval = retriever.search(query)
         return ToolResponse(retrieval.toPrompt())
     }

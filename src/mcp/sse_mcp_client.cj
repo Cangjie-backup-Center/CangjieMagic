@@ -14,7 +14,7 @@ import magic.config.Config
 import std.io.{StringReader, StringWriter, OutputStream, InputStream}
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import std.time.DateTime
-import encoding.json.{JsonValue, JsonObject}
+import stdx.encoding.json.{JsonValue, JsonObject}
 
 /**
  * MCP client via the stdio transport

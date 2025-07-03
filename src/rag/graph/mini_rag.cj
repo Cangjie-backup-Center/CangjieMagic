@@ -26,8 +26,8 @@ import magic.log.LogUtils
 import std.collection.*
 import std.sync.*
 import std.sort.*
-import encoding.json.JsonObject
-import serialization.serialization.*
+import stdx.encoding.json.JsonObject
+import stdx.serialization.serialization.*
 
 let DEFAULT_ENEITY_EXTRACT_TEMPLATE = """
 ---Goal---
@@ -340,11 +340,11 @@ public class Entity <: Serializable<Entity> & Equatable<Entity> & Hashable {
     }
 
     public func addDesc(desc: String) {
-        _descs.append(desc)
+        _descs.add(desc)
     }
 
     public func addSource(source: String) {
-        _sources.append(source)
+        _sources.add(source)
     }
 
     public func hashCode(): Int64 {
@@ -383,7 +383,7 @@ public class Entity <: Serializable<Entity> & Equatable<Entity> & Hashable {
         this.name == other.name && this.descs == other.descs && this.sources == other.sources
     }
 
-    @When[cjc_version < "0.56.4"]
+    @When[cjc_version < "1.0.0"]
     public operator func !=(other: Entity): Bool {
         !(this == other)
     }
@@ -420,15 +420,15 @@ public class Relationship <: Serializable<Relationship> & Equatable<Relationship
     }
 
     public func addDesc(desc: String) {
-        _descs.append(desc)
+        _descs.add(desc)
     }
 
     public func addSource(source: String) {
-        _sources.append(source)
+        _sources.add(source)
     }
 
     public func addKeyword(keyword: String) {
-        _keywords.put(keyword)
+        _keywords.add(keyword)
     }
 
     public func hashCode(): Int64 {
@@ -469,7 +469,7 @@ public class Relationship <: Serializable<Relationship> & Equatable<Relationship
         this.descs == other.descs && this.keywords == other.keywords && this.sources == other.sources
     }
 
-    @When[cjc_version < "0.56.4"]
+    @When[cjc_version < "1.0.0"]
     public operator func !=(other: Relationship): Bool {
         !(this == other)
     }
@@ -805,8 +805,8 @@ public class MiniRag {
             let docsWithScore = this
                 ._entityNameVdb
                 .queryWithScore(entityName, queryParam.topK, threshold: queryParam.threshold)
-            docsWithScoreFromQuery.appendAll(docsWithScore)
-            entitiesFromQueryMap.putIfAbsent(entityName, docsWithScore |> map {ds => ds[0].content} |> collectArrayList)
+            docsWithScoreFromQuery.add(all: docsWithScore)
+            entitiesFromQueryMap.addIfAbsent(entityName, docsWithScore |> map {ds => ds[0].content} |> collectArrayList)
         }
         // structure:{entityName: {score:0.0, routes:[]}}
         let crpMap = HashMap<String, CandidateReasoningPath>()
@@ -815,13 +815,13 @@ public class MiniRag {
             forEach {ds => fillCandidateRouteMap(ds, crpMap)}
         // fill 2hops of entity
         for ((entityName, crp) in crpMap) {
-            crp.routes.appendAll(this.queryNeighborsWithinKHops(entityName, 2))
-            appeardEntityIds.append(entityName)
+            crp.routes.add(all: this.queryNeighborsWithinKHops(entityName, 2))
+            appeardEntityIds.add(entityName)
         }
 
         let answerVertexCandidates = this.getVerticesFromTypes(answerTypes)
         let entityIdsFromAnswer = answerVertexCandidates |> map({vertex => vertex.id}) |> collectArray
-        appeardEntityIds.appendAll(entityIdsFromAnswer)
+        appeardEntityIds.add(all: entityIdsFromAnswer)
         calEntityScore(crpMap, entityIdsFromAnswer)
 
         let edgeDocs = searchEdgeDocs(queryParam, entitiesFromQuery, appeardEntityIds)
@@ -841,11 +841,11 @@ public class MiniRag {
         let content = docWithScore[0].content
         let route = CandidateReasoningPath(this._graph.getVertex(content).getOrThrow(), docWithScore[1])
         if (!crpMap.contains(content)) {
-            crpMap.put(content, route)
+            crpMap.add(content, route)
         } else {
             var curCrp = crpMap.get(content).getOrThrow()
             if (curCrp.score < route.score) {
-                crpMap.put(content, route)
+                crpMap.add(content, route)
             }
         }
     }
@@ -943,14 +943,14 @@ public class MiniRag {
                 let sources = ArrayList<String>()
                 let usedEdges = route.usedEdges
                 if (route.usedEdges.size > 0) {
-                    sources.appendAll(route.usedEdges.get(0).getOrThrow().data.getOrThrow().sources)
+                    sources.add(all: route.usedEdges.get(0).getOrThrow().data.getOrThrow().sources)
                 }
-                sources.appendAll(immediateEntity.sources)
+                sources.add(all: immediateEntity.sources)
                 for (i in 1..route.trace.size) {
                     let entityName = route.trace.get(i).getOrThrow()
                     let immediateSources: Array<String>
                     if (let Some(immediateSources) <- visitedSources.get(entityName)) {
-                        sources.appendAll(immediateSources)
+                        sources.add(all: immediateSources)
                         continue
                     }
                     if (let Some(entity) <- this._graph.getVertex(entityName)) {
@@ -958,8 +958,8 @@ public class MiniRag {
                     } else {
                         immediateSources = []
                     }
-                    sources.appendAll(immediateSources)
-                    visitedSources.put(entityName, immediateSources)
+                    sources.add(all: immediateSources)
+                    visitedSources.add(entityName, immediateSources)
                 }
                 let totalScore = route.entityScore + route.relationScore + 1
                 let counter = Counter<String>(sources, Float64(totalScore))
@@ -967,7 +967,7 @@ public class MiniRag {
             }
             if (!chunkIds.isEmpty()) {
                 let topChunks = chunkIds.getMostCommon(maxChunks)
-                resoningPath.chunkIds.appendAll(topChunks)
+                resoningPath.chunkIds.add(all: topChunks)
             }
         }
     }
@@ -996,10 +996,10 @@ public class MiniRag {
         for ((i, desc) in enumerate(descs)) {
             let descTokens = desc.toAsciiLower().toRuneArray()
             let intersection = HashSet(descTokens)
-            intersection.retainAll(queryTokens)
+            intersection.retain(all: queryTokens)
             let union = HashSet(descTokens)
-            union.putAll(queryTokens)
-            scores.append((i, Float64(intersection.size) / Float64(union.size)))
+            union.add(all: queryTokens)
+            scores.add((i, Float64(intersection.size) / Float64(union.size)))
         }
         // reverse sorted by similarity
         scores.sortBy(stable: true) {
@@ -1040,7 +1040,7 @@ public class MiniRag {
             }
             if (let Some(relation) <- this._graph.getEdge(edge[0], edge[1], "DEFAULT")) {
                 route.relationScore += 1
-                route.usedEdges.append(relation)
+                route.usedEdges.add(relation)
             }
         }
     }
@@ -1075,7 +1075,7 @@ public class MiniRag {
             for (route in routes) {
                 let trace = route.trace
                 let rSet = HashSet(trace)
-                rSet.retainAll(cSet)
+                rSet.retain(all: cSet)
                 route.entityScore = rSet.size
             }
         }
@@ -1087,7 +1087,7 @@ public class MiniRag {
         let vertexList = ArrayList<Vertex<Entity>>()
         for (vertex in vertices) {
             if (typeSet.contains(vertex.vType)) {
-                vertexList.append(vertex)
+                vertexList.add(vertex)
             }
         }
         vertexList
@@ -1107,7 +1107,7 @@ public class MiniRag {
             for (trace in tracesClone) {
                 var extendRoutes = getRoutes(trace[trace.size - 1])
                 let mergedTraces = mergeTrace(trace, extendRoutes)
-                traces.appendAll(mergedTraces)
+                traces.add(all: mergedTraces)
             }
         }
         return traces |> map({trace => Route(trace)}) |> collectArray
@@ -1126,12 +1126,12 @@ public class MiniRag {
         let sourceSet = HashSet<String>(trace)
         for (exTrace in extendTraces) {
             // remove duplicate
-            if (sourceSet.containsAll(exTrace)) {
+            if (sourceSet.contains(all: exTrace)) {
                 continue
             }
             var newTrace = trace.clone()
-            newTrace.append(exTrace[exTrace.size - 1])
-            mergedTraces.append(newTrace)
+            newTrace.add(exTrace[exTrace.size - 1])
+            mergedTraces.add(newTrace)
         }
         mergedTraces
     }
@@ -1179,17 +1179,17 @@ public class MiniRag {
             let (vertices, edges) = this.extractEntities(chunk)
             for (vertex in vertices) {
                 if (!entityMap.contains(vertex.id)) {
-                    entityMap.put(vertex.id, ArrayList())
+                    entityMap.add(vertex.id, ArrayList())
                 }
                 let entities = entityMap.get(vertex.id).getOrThrow()
-                entities.append(vertex)
+                entities.add(vertex)
             }
             for (edge in edges) {
                 if (!relationMap.contains(edge.uniqueId)) {
-                    relationMap.put(edge.uniqueId, ArrayList())
+                    relationMap.add(edge.uniqueId, ArrayList())
                 }
                 let relations = relationMap.get(edge.uniqueId).getOrThrow()
-                relations.append(edge)
+                relations.add(edge)
             }
         }
 
@@ -1212,15 +1212,15 @@ public class MiniRag {
         let allDescriptions = HashSet<String>()
 
         if (let Some(v) <- this._graph.getVertex(vId)) {
-            allEntityTypes.append(v.vType)
-            allDescriptions.putAll(v.data.getOrThrow().descs)
-            allSources.putAll(v.data.getOrThrow().sources)
+            allEntityTypes.add(v.vType)
+            allDescriptions.add(all: v.data.getOrThrow().descs)
+            allSources.add(all: v.data.getOrThrow().sources)
         }
 
         for (v in vertexes) {
-            allEntityTypes.append(v.vType)
-            allDescriptions.putAll(v.data.getOrThrow().descs)
-            allSources.putAll(v.data.getOrThrow().sources)
+            allEntityTypes.add(v.vType)
+            allDescriptions.add(all: v.data.getOrThrow().descs)
+            allSources.add(all: v.data.getOrThrow().sources)
         }
         let vType = bestType(allEntityTypes).getOrThrow()
         let allDescs = allDescriptions.toArray()
@@ -1249,16 +1249,16 @@ public class MiniRag {
         let allKeywords = HashSet<String>()
         let allWeights = ArrayList<Float64>()
         if (let Some(e) <- this._graph.getEdge(srcId, tgtId, eType)) {
-            allWeights.append(e.weight)
-            allDescriptions.appendAll(e.data.getOrThrow().descs)
-            allSources.appendAll(e.data.getOrThrow().sources)
-            allKeywords.putAll(e.data.getOrThrow().keywords)
+            allWeights.add(e.weight)
+            allDescriptions.add(all: e.data.getOrThrow().descs)
+            allSources.add(all: e.data.getOrThrow().sources)
+            allKeywords.add(all: e.data.getOrThrow().keywords)
         }
         for (e in relations) {
-            allWeights.append(e.weight)
-            allDescriptions.appendAll(e.data.getOrThrow().descs)
-            allSources.appendAll(e.data.getOrThrow().sources)
-            allKeywords.putAll(e.data.getOrThrow().keywords)
+            allWeights.add(e.weight)
+            allDescriptions.add(all: e.data.getOrThrow().descs)
+            allSources.add(all: e.data.getOrThrow().sources)
+            allKeywords.add(all: e.data.getOrThrow().keywords)
         }
         let allDescs = allDescriptions.toArray()
         allDescs.sort()
@@ -1273,9 +1273,9 @@ public class MiniRag {
             let edgeDoc = Document(
                 "${String.join(relationShip.keywords,delimiter:" ")}\n${edge.srcId}\n${edge.tgtId}\n${String.join(relationShip.descs, delimiter: this._config.graphFieldDelimiter)}"
             )
-            edgeDoc.metadata.put("srcId", edge.srcId)
-            edgeDoc.metadata.put("tgtId", edge.tgtId)
-            edgeDoc.metadata.put("eType", edge.eType)
+            edgeDoc.metadata.add("srcId", edge.srcId)
+            edgeDoc.metadata.add("tgtId", edge.tgtId)
+            edgeDoc.metadata.add("eType", edge.eType)
             this._relationshipVdb.add(edgeDoc)
         } catch (e: Exception) {
             LogUtils.error("Upsert Edge ${edge.srcId}-${edge.tgtId} Failed.\n ${e}")
@@ -1355,10 +1355,10 @@ public class MiniRag {
             let _record = roption.getOrThrow()
             let recordAttis = splitByMarkers(_record, [this._config.tupleDelimiter])
             if (let Some(entity) <- instanceEntity(source, recordAttis)) {
-                entityVertexs.append(entity)
+                entityVertexs.add(entity)
             }
             if (let Some(relationShip) <- instanceRelationShip(source, recordAttis)) {
-                relationEdges.append(relationShip)
+                relationEdges.add(relationShip)
             }
         }
         LogUtils.info("===${entityVertexs.size} entities and ${relationEdges.size} relationships extracted.")
@@ -1405,9 +1405,9 @@ public class MiniRag {
             {
                 chunk =>
                 for ((k, v) in doc.metadata) {
-                    chunk.metadata.putIfAbsent(k, v)
+                    chunk.metadata.addIfAbsent(k, v)
                 }
-                chunk.metadata.put("doc_id", doc.id)
+                chunk.metadata.add("doc_id", doc.id)
             }
         ) |> filter({chunk => this._chunkKv.get(chunk.id).isNone()}) |> collectArray
     }

@@ -38,12 +38,12 @@ public abstract class AbsCharacterSplitter <: Splitter {
                 }
                 let chunk = String.join(currChunk.toArray(), delimiter: separator).trimAscii()
                 if (!chunk.isEmpty()) {
-                    chunks.append(chunk)
+                    chunks.add(chunk)
                 }
 
                 while ((total > this._chunk_overlap) || ((total + len + separatorSizeToAdd) > this._chunk_size &&
                         total > 0)) {
-                    let firstChunk = currChunk.popFirst()
+                    let firstChunk = currChunk.removeFirst()
                     separatorSizeToAdd = 0
                     if (currChunk.size > 0) {
                         separatorSizeToAdd = separatorSize
@@ -54,12 +54,12 @@ public abstract class AbsCharacterSplitter <: Splitter {
                     }
                 }
             }
-            currChunk.append(split)
+            currChunk.addLast(split)
             total += len + separatorSizeToAdd
         }
         let chunk = String.join(currChunk.toArray(), delimiter: separator).trimAscii()
         if (!chunk.isEmpty()) {
-            chunks.append(chunk)
+            chunks.add(chunk)
         }
         return chunks.toArray()
     }

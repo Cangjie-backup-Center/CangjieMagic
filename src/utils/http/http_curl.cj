@@ -11,41 +11,41 @@ import std.io.InputStream
 import std.io.StringReader
 import std.collection.HashMap
 import std.collection.ArrayList
-import encoding.json.*
-@When[cjc_version < "0.56.4"]
+import stdx.encoding.json.*
+@When[cjc_version < "1.0.0"]
 import std.time.Duration
 
 private func prepareCurlArgs(method: String, url: String, header: HashMap<String, String>, body: Option<JsonObject>, verify: Bool): Array<String> {
     let args = ArrayList<String>()
-    args.append("-X")
-    args.append(method)
-    args.append("--write-out")  // Defines a custom output format
-    args.append("\n%{http_code}")
-    args.append("--no-buffer")  // Disable output buffering
-    args.append("--silent")     // Disables curl's default progress
-    args.append("--show-error") // Show error messages (but keeps other output silent)
-    // args.append("--connect-timeout") // Do not set the timeout currently
-    // args.append("${Config.httpConnectTimeout / 1000}")
-    // args.append("--max-time")
-    // args.append("${(Config.httpConnectTimeout + Config.httpReadTimeout) / 1000}")
-    args.append("--location")
-    args.append("${url}")
-    args.append("--noproxy")
-    args.append("localhost,127.0.0.1")
+    args.add("-X")
+    args.add(method)
+    args.add("--write-out")  // Defines a custom output format
+    args.add("\n%{http_code}")
+    args.add("--no-buffer")  // Disable output buffering
+    args.add("--silent")     // Disables curl's default progress
+    args.add("--show-error") // Show error messages (but keeps other output silent)
+    // args.add("--connect-timeout") // Do not set the timeout currently
+    // args.add("${Config.httpConnectTimeout / 1000}")
+    // args.add("--max-time")
+    // args.add("${(Config.httpConnectTimeout + Config.httpReadTimeout) / 1000}")
+    args.add("--location")
+    args.add("${url}")
+    args.add("--noproxy")
+    args.add("localhost,127.0.0.1")
     for ((k, v) in header) {
-        args.append("--header")
-        args.append("${k}: ${v}")
+        args.add("--header")
+        args.add("${k}: ${v}")
     }
     if (!verify) {
-        args.append("--insecure")
+        args.add("--insecure")
     }
     if (let Some(b) <- body) {
-        args.append("--data")
+        args.add("--data")
         // Since the length of the argument passed to the Process.start is limited,
         // we save the http body in a file and pass its path.
         // This argument must be the last one
         let tempPath = saveTempFile(Config.modelRequestDir, b.toJsonString())
-        args.append("@${tempPath}")
+        args.add("@${tempPath}")
     }
     return args.toArray()
 }

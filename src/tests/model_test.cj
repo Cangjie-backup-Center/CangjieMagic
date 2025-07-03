@@ -3,7 +3,7 @@
  */
 package magic.tests
 
-import log.LogLevel
+import stdx.log.LogLevel
 
 import magic.core.message.*
 import magic.core.model.*

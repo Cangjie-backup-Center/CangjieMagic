@@ -8,9 +8,9 @@ import std.collection.*
 import std.convert.*
 import std.math.*
 import std.io.*
-import encoding.hex.*
-import std.format.*
 import std.crypto.digest.*
+
+import stdx.encoding.hex.*
 
 public class Md5 {
     private let SHIFT: Array<Int64> = [0, 8, 16, 24]

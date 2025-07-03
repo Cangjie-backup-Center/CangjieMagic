@@ -14,7 +14,7 @@ import magic.utils.{exists, removeIfExists}
 import std.sync.*
 import std.fs.*
 import std.collection.*
-import encoding.json.*
+import stdx.encoding.json.*
 
 @When[faiss == "enable"]
 public class FaissVectorStorage <: LocalVectorStorage {

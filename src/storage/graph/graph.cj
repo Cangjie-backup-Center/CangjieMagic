@@ -4,9 +4,9 @@
 package magic.storage.graph
 
 import std.collection.*
-import serialization.serialization.*
+import stdx.serialization.serialization.*
 import magic.utils.{ObjectHasher, calMd5}
-import encoding.json.*
+import stdx.encoding.json.*
 
 public class IllegalEdgeException <: Exception {
     public init(message: String) {
@@ -46,7 +46,7 @@ public class Vertex<V> <: Equatable<Vertex<V>> & Hashable & Serializable<Vertex<
         this.id == other.id
     }
 
-    @When[cjc_version < "0.56.4"]
+    @When[cjc_version < "1.0.0"]
     public operator func !=(other: Vertex<V>): Bool {
         this.id != other.id
     }
@@ -150,7 +150,7 @@ public class Edge<E> <: Equatable<Edge<E>> & Hashable & Serializable<Edge<E>> wh
             .weight && this.data == other.data
     }
 
-    @When[cjc_version < "0.56.4"]
+    @When[cjc_version < "1.0.0"]
     public operator func !=(other: Edge<E>): Bool {
         !(this == other)
     }
@@ -215,7 +215,7 @@ public class NodeContainer<V, E> where V <: Serializable<V> & Equatable<V> & Has
     }
 
     public func addIncomingEdge(e: Edge<E>): Unit {
-        this._incoming.put(e.uniqueId, e)
+        this._incoming.add(e.uniqueId, e)
     }
 
     public func removeIncomingEdge(e: Edge<E>): Unit {
@@ -223,7 +223,7 @@ public class NodeContainer<V, E> where V <: Serializable<V> & Equatable<V> & Has
     }
 
     public func addOutgoingEdge(e: Edge<E>): Unit {
-        this._outgoing.put(e.uniqueId, e)
+        this._outgoing.add(e.uniqueId, e)
     }
 
     public func removeOutgoingEdge(e: Edge<E>): Unit {
@@ -264,9 +264,9 @@ public class BaseGraph<V, E> where V <: Serializable<V> & Equatable<V> & Hashabl
         match (ec) {
             case Some(x) => x.vertex = v
             case _ =>
-                _vertexMap.put(v.id, NodeContainer<V, E>(v))
+                _vertexMap.add(v.id, NodeContainer<V, E>(v))
                 var cnt = _vertexTypes.get(v.vType).getOrDefault({=> 0})
-                _vertexTypes.put(v.vType, cnt + 1)
+                _vertexTypes.add(v.vType, cnt + 1)
         }
     }
 
@@ -288,7 +288,7 @@ public class BaseGraph<V, E> where V <: Serializable<V> & Equatable<V> & Hashabl
         let containers = Array<NodeContainer<V, E>>()
         let nodes = ArrayList<Vertex<V>>()
         for ((id, nc) in _vertexMap) {
-            nodes.append(nc.vertex)
+            nodes.add(nc.vertex)
         }
         nodes.toArray()
     }
@@ -296,7 +296,7 @@ public class BaseGraph<V, E> where V <: Serializable<V> & Equatable<V> & Hashabl
     public func removeVertex(id: String): Unit {
         if (let Some(nc) <- _vertexMap.remove(id)) {
             var cnt = _vertexTypes.get(nc.vertex.vType).getOrDefault({=> 1})
-            _vertexTypes.put(nc.vertex.vType, cnt - 1)
+            _vertexTypes.add(nc.vertex.vType, cnt - 1)
         }
     }
 
@@ -323,7 +323,7 @@ public class BaseGraph<V, E> where V <: Serializable<V> & Equatable<V> & Hashabl
             let edgeSet = sc.outgoing
             let tc = _vertexMap.get(tgtId).getOrThrow();
             let edgeSetIncome = tc.incoming
-            edgeSet.retainAll(edgeSetIncome)
+            edgeSet.retain(all: edgeSetIncome)
             return collectArray<Edge<E>>(edgeSet)
         }
         return []

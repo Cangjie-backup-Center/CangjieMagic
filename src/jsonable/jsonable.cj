@@ -3,10 +3,8 @@
  */
 package magic.jsonable
 
-import encoding.json.*
 import std.collection.{ArrayList, HashMap, map, collectArray}
-
-import encoding.json.JsonNull
+import stdx.encoding.json.*
 
 public interface ToJsonValue {
     func toJsonValue(): JsonValue
@@ -184,7 +182,7 @@ extend<T> HashMap<String, T> <: Jsonable<HashMap<String, T>> where T <: Jsonable
                 => JsonableException("Convert to HashMap error. Value: ${json.toJsonString()}")
         })
         for ((key, value) in jsObj.getFields()) {
-            map.put(key, T.fromJsonValue(value))
+            map.add(key, T.fromJsonValue(value))
         }
         return map
     }
@@ -192,19 +190,23 @@ extend<T> HashMap<String, T> <: Jsonable<HashMap<String, T>> where T <: Jsonable
     public func toJsonValue(): JsonValue {
         let map = HashMap<String, JsonValue>()
         for ((key, value) in this) {
-            map.put(key, value.toJsonValue())
+            map.add(key, value.toJsonValue())
         }
         return JsonObject(map)
     }
 }
 
-extend JsonValue <: ToJsonValue {
+// extend JsonValue <: ToJsonValue {
+//     public func toJsonValue(): JsonValue {
+//         return this
+//     }
+// }
+
+extend JsonObject <: Jsonable<JsonObject> {
     public func toJsonValue(): JsonValue {
         return this
     }
-}
 
-extend JsonObject <: Jsonable<JsonObject> {
     public static func getTypeSchema(): TypeSchema {
         throw JsonableException("Unsupported method")
     }
