@@ -2,6 +2,7 @@
 - [Package agent_executor.tool_loop](#package-agent_executor.tool_loop)
   - [class ToolLoopExecutor](#class-toolloopexecutor)
     - [func asyncRun](#func-asyncrun)
+    - [prop name](#prop-name)
     - [func run](#func-run)
 
 ### class ToolLoopExecutor
@@ -9,18 +10,24 @@
 ```
 func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步执行代理任务并返回结果
-- 参数:
-  - `agent`: `Agent`, 代理实例
-  - `request`: `AgentRequest`, 代理请求
+- Description: Executes the agent's task asynchronously and returns a future response.
+- Parameters:
+  - `agent`: `Agent`, The agent to be executed.
+  - `request`: `AgentRequest`, The request containing the task details.
+
+#### prop name
+```
+prop name: String
+```
+- Description: Returns the name of the executor as 'tool-loop'.
 
 #### func run
 ```
 func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
-- 描述: 执行代理任务并返回结果
-- 参数:
-  - `agent`: `Agent`, 代理实例
-  - `request`: `AgentRequest`, 代理请求
+- Description: Executes the agent's task synchronously and returns the response.
+- Parameters:
+  - `agent`: `Agent`, The agent to be executed.
+  - `request`: `AgentRequest`, The request containing the task details.
 
 

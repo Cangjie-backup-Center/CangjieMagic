@@ -1,26 +1,6 @@
 ## Package jsonable
 - [Package jsonable](#package-jsonable)
   - [struct FieldSchema](#struct-fieldschema)
-  - [struct JsonUtils](#struct-jsonutils)
-    - [func appendJsonObject](#func-appendjsonobject)
-    - [func asJsonArray](#func-asjsonarray)
-    - [func asJsonObject](#func-asjsonobject)
-    - [func buildJsonArray](#func-buildjsonarray)
-    - [func buildJsonObject](#func-buildjsonobject)
-    - [func buildJsonObject](#func-buildjsonobject-1)
-    - [func buildJsonObject](#func-buildjsonobject-1)
-    - [func getBool](#func-getbool)
-    - [func getFloat](#func-getfloat)
-    - [func getInt](#func-getint)
-    - [func getJsonArray](#func-getjsonarray)
-    - [func getJsonObject](#func-getjsonobject)
-    - [func getJsonValue](#func-getjsonvalue)
-    - [func getString](#func-getstring)
-    - [func toBool](#func-tobool)
-    - [func toFloat](#func-tofloat)
-    - [func toFloatArray](#func-tofloatarray)
-    - [func toInt](#func-toint)
-    - [func toString](#func-tostring)
   - [interface Jsonable](#interface-jsonable)
     - [func fromJsonValue](#func-fromjsonvalue)
     - [func getTypeSchema](#func-gettypeschema)
@@ -36,187 +16,24 @@
     - [enumeration Obj](#enumeration-obj)
     - [enumeration Str](#enumeration-str)
     - [func toJsonValue](#func-tojsonvalue-1)
-    - [func toString](#func-tostring-1)
+    - [func toString](#func-tostring)
 
 ### struct FieldSchema
-
-### struct JsonUtils
-#### func appendJsonObject
-```
-public static func appendJsonObject(obj: JsonObject, items: Array<(String, String)>): JsonObject
-```
-- 描述: 向现有的JsonObject对象追加键值对
-- 参数:
-  - `obj`: `JsonObject`, 目标JsonObject对象
-  - `items`: `Array<(String, String)>`, 包含键值对的数组
-
-#### func asJsonArray
-```
-public static func asJsonArray(j: JsonValue): Option<JsonArray>
-```
-- 描述: 将JsonValue转换为JsonArray对象
-- 参数:
-  - `j`: `JsonValue`, 待转换的JsonValue
-
-#### func asJsonObject
-```
-public static func asJsonObject(j: JsonValue): Option<JsonObject>
-```
-- 描述: 将JsonValue转换为JsonObject对象
-- 参数:
-  - `j`: `JsonValue`, 待转换的JsonValue
-
-#### func buildJsonArray
-```
-public static func buildJsonArray(items: Array<String>): JsonArray
-```
-- 描述: 根据字符串数组构建一个JsonArray对象
-- 参数:
-  - `items`: `Array<String>`, 包含字符串的数组
-
-#### func buildJsonObject
-```
-public static func buildJsonObject(key: String, value: String): JsonObject
-```
-- 描述: 根据给定的键值对构建一个JsonObject对象
-- 参数:
-  - `key`: `String`, JSON对象的键
-  - `value`: `String`, JSON对象的值
-
-#### func buildJsonObject
-```
-public static func buildJsonObject(items: Array<(String, String)>): JsonObject
-```
-- 描述: 根据键值对数组构建一个JsonObject对象
-- 参数:
-  - `items`: `Array<(String, String)>`, 包含键值对的数组
-
-#### func buildJsonObject
-```
-public static func buildJsonObject(items: Array<(String, JsonValue)>): JsonObject
-```
-- 描述: 根据键和JsonValue数组构建一个JsonObject对象
-- 参数:
-  - `items`: `Array<(String, JsonValue)>`, 包含键和JsonValue的数组
-
-#### func getBool
-```
-public static func getBool(j: JsonValue, key: String): Option<Bool>
-```
-- 描述: 从JsonValue中获取指定键的布尔值
-- 参数:
-  - `j`: `JsonValue`, 源JsonValue
-  - `key`: `String`, 要获取的键
-
-#### func getFloat
-```
-public static func getFloat(j: JsonValue, key: String): Option<Float64>
-```
-- 描述: 从JsonValue中获取指定键的浮点数值
-- 参数:
-  - `j`: `JsonValue`, 源JsonValue
-  - `key`: `String`, 要获取的键
-
-#### func getInt
-```
-public static func getInt(key: String, j: JsonValue): Option<Int64>
-```
-- 描述: 从JsonValue中获取指定键的整数值
-- 参数:
-  - `key`: `String`, 要获取的键
-  - `j`: `JsonValue`, 源JsonValue
-
-#### func getJsonArray
-```
-public static func getJsonArray(j: JsonValue, key: String): Option<JsonArray>
-```
-- 描述: 从JsonValue中获取指定键的JsonArray
-- 参数:
-  - `j`: `JsonValue`, 源JsonValue
-  - `key`: `String`, 要获取的键
-
-#### func getJsonObject
-```
-public static func getJsonObject(j: JsonValue, key: String): Option<JsonObject>
-```
-- 描述: 从JsonValue中获取指定键的JsonObject
-- 参数:
-  - `j`: `JsonValue`, 源JsonValue
-  - `key`: `String`, 要获取的键
-
-#### func getJsonValue
-```
-public static func getJsonValue(j: JsonValue, key: String): Option<JsonValue>
-```
-- 描述: 从JsonValue中获取指定键的值
-- 参数:
-  - `j`: `JsonValue`, 源JsonValue
-  - `key`: `String`, 要获取的键
-
-#### func getString
-```
-public static func getString(j: JsonValue, key: String): Option<String>
-```
-- 描述: 从JsonValue中获取指定键的字符串值
-- 参数:
-  - `j`: `JsonValue`, 源JsonValue
-  - `key`: `String`, 要获取的键
-
-#### func toBool
-```
-public static func toBool(j: JsonValue): Option<Bool>
-```
-- 描述: 将JsonValue转换为布尔值
-- 参数:
-  - `j`: `JsonValue`, 待转换的JsonValue
-
-#### func toFloat
-```
-public static func toFloat(j: JsonValue): Option<Float64>
-```
-- 描述: 将JsonValue转换为浮点数
-- 参数:
-  - `j`: `JsonValue`, 待转换的JsonValue
-
-#### func toFloatArray
-```
-public static func toFloatArray(j: JsonArray): Array<Float64>
-```
-- 描述: 将JsonArray转换为浮点数数组
-- 参数:
-  - `j`: `JsonArray`, 源JsonArray
-
-#### func toInt
-```
-public static func toInt(j: JsonValue): Option<Int64>
-```
-- 描述: 将JsonValue转换为整数
-- 参数:
-  - `j`: `JsonValue`, 待转换的JsonValue
-
-#### func toString
-```
-public static func toString(j: JsonValue): Option<String>
-```
-- 描述: 将JsonValue转换为字符串
-- 参数:
-  - `j`: `JsonValue`, 待转换的JsonValue
-
 
 ### interface Jsonable
 #### func fromJsonValue
 ```
 static func fromJsonValue(json: JsonValue): T
 ```
-- 描述: 从JsonValue反序列化为类型T的对象
-- 参数:
-  - `json`: `JsonValue`, 输入的Json值
+- Description: Deserializes an object of type T from a JsonValue.
+- Parameters:
+  - `json`: `JsonValue`, The JsonValue to deserialize from.
 
 #### func getTypeSchema
 ```
 static func getTypeSchema(): TypeSchema
 ```
-- 描述: 获取类型T的模式
+- Description: Retrieves the type schema of the generic type T.
 
 
 ### class JsonableException
@@ -224,9 +41,9 @@ static func getTypeSchema(): TypeSchema
 ```
 public init(msg: String)
 ```
-- 描述: 构造函数，初始化JsonableException
-- 参数:
-  - `msg`: `String`, 异常消息
+- Description: Constructs a JsonableException with the specified error message.
+- Parameters:
+  - `msg`: `String`, The error message describing the exception.
 
 
 ### interface ToJsonValue
@@ -234,7 +51,7 @@ public init(msg: String)
 ```
 func toJsonValue(): JsonValue
 ```
-- 描述: 将对象转换为JsonValue类型
+- Description: Converts the implementing object to a JsonValue.
 
 
 ### enum TypeSchema
@@ -242,52 +59,52 @@ func toJsonValue(): JsonValue
 ```
 Arr(TypeSchema)
 ```
-- 描述: 数组类型
-- 参数:
-  - `TypeSchema`: `TypeSchema`, 数组元素的类型
+- Description: Represents an array type with elements of the specified TypeSchema.
+- Parameters:
+  - `TypeSchema`: `TypeSchema`, The type schema of the array elements.
 
 ####  Boolean
 ```
 Boolean
 ```
-- 描述: 布尔类型
+- Description: Represents a boolean type.
 
 ####  Float
 ```
 Float
 ```
-- 描述: 浮点数类型
+- Description: Represents a floating-point type.
 
 ####  Int
 ```
 Int
 ```
-- 描述: 整数类型
+- Description: Represents an integer type.
 
 ####  Obj
 ```
 Obj(Array<FieldSchema>)
 ```
-- 描述: 对象类型
-- 参数:
-  - `Array<FieldSchema>`: `Array<FieldSchema>`, 对象的字段数组
+- Description: Represents an object type with fields specified by an array of FieldSchema.
+- Parameters:
+  - `Array<FieldSchema>`: `Array<FieldSchema>`, An array of FieldSchema defining the object's fields.
 
 ####  Str
 ```
 Str
 ```
-- 描述: 字符串类型
+- Description: Represents a string type.
 
 #### func toJsonValue
 ```
 func toJsonValue(): JsonValue
 ```
-- 描述: 将类型模式转换为JSON值
+- Description: Converts the TypeSchema to a JsonValue representation.
 
 #### func toString
 ```
 func toString(): String
 ```
-- 描述: 将类型模式转换为字符串表示
+- Description: Converts the TypeSchema to a string representation.
 
 

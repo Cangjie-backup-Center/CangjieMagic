@@ -24,171 +24,172 @@
 ### class ModelConfig
 #### func init
 ```
-init(service: String, kind: String, name: String, apiKey: String = "", baseURL: String = "")
+public init(service: String, kind: String, name: String, apiKey: String = "", baseURL: String = "", contextLength: ?Int64 = None)
 ```
-- 描述: 初始化模型配置。如果未指定apiKey，将使用XX_API_KEY；如果未指定baseURL，将使用XX_BASE_URL。
-- 参数:
-  - `service`: `String`, 服务名称
-  - `kind`: `String`, 模型类型
-  - `name`: `String`, 模型名称
-  - `apiKey`: `String`, API密钥，默认为空字符串
-  - `baseURL`: `String`, 基础URL，默认为空字符串
+- Description: Initializes a new ModelConfig instance with the specified parameters. If apiKey or baseURL are not provided, default values will be used.
+- Parameters:
+  - `service`: `String`, The service name for the model.
+  - `kind`: `String`, The kind of the model.
+  - `name`: `String`, The name of the model.
+  - `apiKey`: `String`, The API key for the model. If not specified, a default key will be used.
+  - `baseURL`: `String`, The base URL for the model. If not specified, a default URL will be used.
+  - `contextLength`: `?Int64`, The context length for the model. If not specified, a default length will be used.
 
 
 ### struct ModelManager
 #### func createChatModel
 ```
-static func createChatModel(modelName: String, temperature: Option<Float64> = None): ChatModel
+public static func createChatModel(modelName: String, temperature: Option<Float64> = None): ChatModel
 ```
-- 描述: 创建聊天模型。
-- 参数:
-  - `modelName`: `String`, 模型名称
-  - `temperature`: `Option<Float64>`, 温度参数，控制生成文本的随机性
+- Description: Creates a chat model with the specified name and optional temperature.
+- Parameters:
+  - `modelName`: `String`, The name of the chat model to create.
+  - `temperature`: `Option<Float64>`, The temperature parameter for the chat model. If not specified, a default value will be used.
 
 #### func createChatModel
 ```
-static func createChatModel(modelConfig: ModelConfig, temperature: Option<Float64> = None): ChatModel
+public static func createChatModel(modelConfig: ModelConfig, temperature: Option<Float64> = None): ChatModel
 ```
-- 描述: 根据模型配置创建聊天模型。
-- 参数:
-  - `modelConfig`: `ModelConfig`, 模型配置
-  - `temperature`: `Option<Float64>`, 温度参数，控制生成文本的随机性
+- Description: Creates a chat model with the specified model configuration and optional temperature.
+- Parameters:
+  - `modelConfig`: `ModelConfig`, The configuration for the chat model.
+  - `temperature`: `Option<Float64>`, The temperature parameter for the chat model. If not specified, a default value will be used.
 
 #### func createEmbeddingModel
 ```
-static func createEmbeddingModel(modelName: String): EmbeddingModel
+public static func createEmbeddingModel(modelName: String): EmbeddingModel
 ```
-- 描述: 创建嵌入模型。
-- 参数:
-  - `modelName`: `String`, 模型名称
+- Description: Creates an embedding model with the specified name.
+- Parameters:
+  - `modelName`: `String`, The name of the embedding model to create.
 
 #### func createEmbeddingModel
 ```
-static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel
+public static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel
 ```
-- 描述: 根据模型配置创建嵌入模型。
-- 参数:
-  - `modelConfig`: `ModelConfig`, 模型配置
+- Description: Creates an embedding model with the specified model configuration.
+- Parameters:
+  - `modelConfig`: `ModelConfig`, The configuration for the embedding model.
 
 #### func createImageModel
 ```
-static func createImageModel(modelName: String): ImageModel
+public static func createImageModel(modelName: String): ImageModel
 ```
-- 描述: 创建图像模型。
-- 参数:
-  - `modelName`: `String`, 模型名称
+- Description: Creates an image model with the specified name.
+- Parameters:
+  - `modelName`: `String`, The name of the image model to create.
 
 #### func createImageModel
 ```
-static func createImageModel(modelConfig: ModelConfig): ImageModel
+public static func createImageModel(modelConfig: ModelConfig): ImageModel
 ```
-- 描述: 根据模型配置创建图像模型。
-- 参数:
-  - `modelConfig`: `ModelConfig`, 模型配置
+- Description: Creates an image model with the specified model configuration.
+- Parameters:
+  - `modelConfig`: `ModelConfig`, The configuration for the image model.
 
 #### func registerChatModel
 ```
-static func registerChatModel(modelName: String, buildFn: () -> ChatModel): Unit
+public static func registerChatModel(modelName: String, buildFn: () -> ChatModel): Unit
 ```
-- 描述: 注册聊天模型。
-- 参数:
-  - `modelName`: `String`, 模型名称
-  - `buildFn`: `() -> ChatModel`, 构建聊天模型的函数
+- Description: Registers a chat model with the specified name and build function.
+- Parameters:
+  - `modelName`: `String`, The name of the chat model to register.
+  - `buildFn`: `() -> ChatModel`, A function that builds the chat model.
 
 #### func registerEmbeddingModel
 ```
-static func registerEmbeddingModel(modelName: String, buildFn: () -> EmbeddingModel): Unit
+public static func registerEmbeddingModel(modelName: String, buildFn: () -> EmbeddingModel): Unit
 ```
-- 描述: 注册嵌入模型。
-- 参数:
-  - `modelName`: `String`, 模型名称
-  - `buildFn`: `() -> EmbeddingModel`, 构建嵌入模型的函数
+- Description: Registers an embedding model with the specified name and build function.
+- Parameters:
+  - `modelName`: `String`, The name of the embedding model to register.
+  - `buildFn`: `() -> EmbeddingModel`, A function that builds the embedding model.
 
 #### func registerImageModel
 ```
-static func registerImageModel(modelName: String, buildFn: () -> ImageModel): Unit
+public static func registerImageModel(modelName: String, buildFn: () -> ImageModel): Unit
 ```
-- 描述: 注册图像模型。
-- 参数:
-  - `modelName`: `String`, 模型名称
-  - `buildFn`: `() -> ImageModel`, 构建图像模型的函数
+- Description: Registers an image model with the specified name and build function.
+- Parameters:
+  - `modelName`: `String`, The name of the image model to register.
+  - `buildFn`: `() -> ImageModel`, A function that builds the image model.
 
 
 ### struct ModelUtils
 #### func agentMakeChat
 ```
-public static func agentMakeChat(agent: Agent, messages: Array<ChatMessage>): Option<ChatMessage>
+public static func agentMakeChat(agent: Agent, messages: Array<Message>): Option<Message>
 ```
-- 描述: 根据给定的代理和消息列表，生成聊天消息
-- 参数:
-  - `agent`: `Agent`, 代理对象
-  - `messages`: `Array<ChatMessage>`, 消息列表
+- Description: Creates a chat message using an agent and array of messages.
+- Parameters:
+  - `agent`: `Agent`, The agent to use for generating the message.
+  - `messages`: `Array<Message>`, The array of messages to use as context.
 
 #### func agentMakeChatGet
 ```
-public static func agentMakeChatGet<T>(agent: Agent, messages: Array<ChatMessage>, getFn!: (ChatMessage) -> Option<T>): Option<T>
+public static func agentMakeChatGet<T>(agent: Agent, messages: Array<Message>, getFn!: (Message) -> Option<T>): Option<T>
 ```
-- 描述: 根据给定的代理和消息列表，生成聊天消息并应用获取函数
-- 参数:
-  - `agent`: `Agent`, 代理对象
-  - `messages`: `Array<ChatMessage>`, 消息列表
-  - `getFn`: `(ChatMessage) -> Option<T>`, 获取函数，用于从聊天消息中提取特定类型的数据
+- Description: Creates a chat message using an agent and applies a get function to the result, returning an optional value of type T.
+- Parameters:
+  - `agent`: `Agent`, The agent to use for generating the message.
+  - `messages`: `Array<Message>`, The array of messages to use as context.
+  - `getFn`: `(Message) -> Option<T>`, The function to apply to the generated message.
 
 #### func makeChat
 ```
-public static func makeChat(model: ChatModel, dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
+public static func makeChat(model: ChatModel, messageList: MessageList, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<Message>
 ```
-- 描述: 根据给定的聊天模型和对话，生成聊天消息
-- 参数:
-  - `model`: `ChatModel`, 聊天模型
-  - `dialog`: `Dialog`, 对话内容
-  - `temperature`: `Option<Float64>`, 温度参数，控制生成消息的随机性
-  - `stop`: `Option<Array<String>>`, 停止词列表，用于控制生成消息的终止条件
+- Description: Creates a chat message using a chat model and message list with optional temperature and stop parameters.
+- Parameters:
+  - `model`: `ChatModel`, The chat model to use for generating the message.
+  - `messageList`: `MessageList`, The list of messages to use as context.
+  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
+  - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
 
 #### func makeChat
 ```
-public static func makeChat(model: ChatModel, messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
+public static func makeChat(model: ChatModel, messages: Array<Message>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<Message>
 ```
-- 描述: 根据给定的聊天模型和消息列表，生成聊天消息
-- 参数:
-  - `model`: `ChatModel`, 聊天模型
-  - `messages`: `Array<ChatMessage>`, 消息列表
-  - `temperature`: `Option<Float64>`, 温度参数，控制生成消息的随机性
-  - `stop`: `Option<Array<String>>`, 停止词列表，用于控制生成消息的终止条件
+- Description: Creates a chat message using a chat model and array of messages with optional temperature and stop parameters.
+- Parameters:
+  - `model`: `ChatModel`, The chat model to use for generating the message.
+  - `messages`: `Array<Message>`, The array of messages to use as context.
+  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
+  - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
 
 #### func makeChat
 ```
-public static func makeChat(name: String, model: ChatModel, dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
+public static func makeChat(name: String, model: ChatModel, messageList: MessageList, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<Message>
 ```
-- 描述: 根据给定的名称、聊天模型和对话，生成聊天消息
-- 参数:
-  - `name`: `String`, 名称标识
-  - `model`: `ChatModel`, 聊天模型
-  - `dialog`: `Dialog`, 对话内容
-  - `temperature`: `Option<Float64>`, 温度参数，控制生成消息的随机性
-  - `stop`: `Option<Array<String>>`, 停止词列表，用于控制生成消息的终止条件
+- Description: Creates a chat message with a specified name using a chat model and message list with optional temperature and stop parameters.
+- Parameters:
+  - `name`: `String`, The name associated with the chat.
+  - `model`: `ChatModel`, The chat model to use for generating the message.
+  - `messageList`: `MessageList`, The list of messages to use as context.
+  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
+  - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
 
 #### func makeChat
 ```
-public static func makeChat(name: String, model: ChatModel, messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatMessage>
+public static func makeChat(name: String, model: ChatModel, messages: Array<Message>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<Message>
 ```
-- 描述: 根据给定的名称、聊天模型和消息列表，生成聊天消息
-- 参数:
-  - `name`: `String`, 名称标识
-  - `model`: `ChatModel`, 聊天模型
-  - `messages`: `Array<ChatMessage>`, 消息列表
-  - `temperature`: `Option<Float64>`, 温度参数，控制生成消息的随机性
-  - `stop`: `Option<Array<String>>`, 停止词列表，用于控制生成消息的终止条件
+- Description: Creates a chat message with a specified name using a chat model and array of messages with optional temperature and stop parameters.
+- Parameters:
+  - `name`: `String`, The name associated with the chat.
+  - `model`: `ChatModel`, The chat model to use for generating the message.
+  - `messages`: `Array<Message>`, The array of messages to use as context.
+  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
+  - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
 
 #### func makeChatGet
 ```
-public static func makeChatGet<T>(name: String, model: ChatModel, messages: Array<ChatMessage>, getFn!: (ChatMessage) -> Option<T>): Option<T>
+public static func makeChatGet<T>(name: String, model: ChatModel, messages: Array<Message>, getFn!: (Message) -> Option<T>): Option<T>
 ```
-- 描述: 根据给定的名称、聊天模型和消息列表，生成聊天消息并应用获取函数
-- 参数:
-  - `name`: `String`, 名称标识
-  - `model`: `ChatModel`, 聊天模型
-  - `messages`: `Array<ChatMessage>`, 消息列表
-  - `getFn`: `(ChatMessage) -> Option<T>`, 获取函数，用于从聊天消息中提取特定类型的数据
+- Description: Creates a chat message and applies a get function to the result, returning an optional value of type T.
+- Parameters:
+  - `name`: `String`, The name associated with the chat.
+  - `model`: `ChatModel`, The chat model to use for generating the message.
+  - `messages`: `Array<Message>`, The array of messages to use as context.
+  - `getFn`: `(Message) -> Option<T>`, The function to apply to the generated message.
 
 

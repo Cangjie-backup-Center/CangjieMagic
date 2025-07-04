@@ -13,27 +13,27 @@
 ```
 public static func extractFirstCode(str: String, lang: String): Option<String>
 ```
-- 描述: 从字符串中提取第一段指定语言的代码
-- 参数:
-  - `str`: `String`, 需要解析的字符串
-  - `lang`: `String`, 目标代码的语言
+- Description: Extracts the first code block from a string for a specified language.
+- Parameters:
+  - `str`: `String`, The input string containing the code blocks.
+  - `lang`: `String`, The programming language of the code block to extract.
 
 #### func extractLastCode
 ```
 public static func extractLastCode(str: String, lang: String): Option<String>
 ```
-- 描述: 从字符串中提取最后一段指定语言的代码
-- 参数:
-  - `str`: `String`, 需要解析的字符串
-  - `lang`: `String`, 目标代码的语言
+- Description: Extracts the last code block from a string for a specified language.
+- Parameters:
+  - `str`: `String`, The input string containing the code blocks.
+  - `lang`: `String`, The programming language of the code block to extract.
 
 #### func parseToolRequest
 ```
 public static func parseToolRequest(str: String): ToolRequest
 ```
-- 描述: 解析工具请求字符串并返回ToolRequest对象
-- 参数:
-  - `str`: `String`, 需要解析的工具请求字符串
+- Description: Parses a tool request from a JSON string.
+- Parameters:
+  - `str`: `String`, The JSON string representing the tool request.
 
 
 ### class ParserException
@@ -41,14 +41,14 @@ public static func parseToolRequest(str: String): ToolRequest
 ```
 init(reason: String)
 ```
-- 描述: 初始化解析异常
-- 参数:
-  - `reason`: `String`, 解析异常的原因
+- Description: Initializes a new ParserException with the given reason
+- Parameters:
+  - `reason`: `String`, The reason for the parser exception
 
 #### let reason
 ```
 let reason: String
 ```
-- 描述: 解析异常的原因
+- Description: The reason for the parser exception
 
 

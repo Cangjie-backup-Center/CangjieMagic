@@ -1,9 +1,21 @@
 ## Package agent
 - [Package agent](#package-agent)
+  - [class AgentExecutionInfo](#class-agentexecutioninfo)
+    - [func addMessage](#func-addmessage)
+    - [func addMessages](#func-addmessages)
+    - [func addQuestion](#func-addquestion)
+    - [func addStepMessage](#func-addstepmessage)
+    - [prop chatRound](#prop-chatround)
+    - [func init](#func-init)
+    - [prop messages](#prop-messages)
+    - [func removeLastMessage](#func-removelastmessage)
+    - [prop retrievalInfo](#prop-retrievalinfo)
+    - [func setAnswer](#func-setanswer)
+    - [prop verboseInfo](#prop-verboseinfo)
   - [class BaseAgent](#class-baseagent)
     - [prop description](#prop-description)
     - [prop executor](#prop-executor)
-    - [func init](#func-init)
+    - [func init](#func-init-1)
     - [prop interceptor](#prop-interceptor)
     - [prop memory](#prop-memory)
     - [prop model](#prop-model)
@@ -35,83 +47,163 @@
     - [func init](#func-init-1)
     - [func select](#func-select)
 
-### class BaseAgent
-#### prop description
+### class AgentExecutionInfo
+#### func addMessage
 ```
-override public prop description: String
+public func addMessage(msg: Message): Unit
 ```
-- 描述: 获取代理的描述
+- Description: Adds a message to the message list
+- Parameters:
+  - `msg`: `Message`, The message to add
 
-#### prop executor
+#### func addMessages
 ```
-override public mut prop executor: AgentExecutor
+public func addMessages(msgs: Array<Message>): Unit
 ```
-- 描述: 获取或设置代理执行器
+- Description: Adds multiple messages to the message list
+- Parameters:
+  - `msgs`: `Array<Message>`, The messages to add
+
+#### func addQuestion
+```
+public func addQuestion(question: String): Unit
+```
+- Description: Adds a question to the message list
+- Parameters:
+  - `question`: `String`, The question to add
+
+#### func addStepMessage
+```
+public func addStepMessage(msg: Message): Unit
+```
+- Description: Adds a message to both the message list and step messages
+- Parameters:
+  - `msg`: `Message`, The message to add
+
+#### prop chatRound
+```
+override public prop chatRound: ChatRound
+```
+- Description: Gets the chat round information
 
 #### func init
 ```
-public init(model!: ChatModel, name!: String = "Base Agent", description!: String = "", temperature!: Option<Float64> = None, systemPrompt!: String = "", toolManager!: ToolManager = SimpleToolManager(), executor!: Option<AgentExecutor> = None, retriever!: Option<Retriever> = None, memory!: Option<Memory> = None, interceptor!: Option<Interceptor> = None)
+public init(agent: Agent)
 ```
-- 描述: 构造函数，用于初始化BaseAgent类的实例
-- 参数:
-  - `model`: `ChatModel`, 聊天模型，用于处理对话
-  - `name`: `String`, 代理的名称，默认为"Base Agent"
-  - `description`: `String`, 代理的描述，默认为空字符串
-  - `temperature`: `Option<Float64>`, 温度参数，控制生成文本的随机性，默认为None
-  - `systemPrompt`: `String`, 系统提示，默认为空字符串
-  - `toolManager`: `ToolManager`, 工具管理器，默认为SimpleToolManager
-  - `executor`: `Option<AgentExecutor>`, 代理执行器，默认为None
-  - `retriever`: `Option<Retriever>`, 检索器，默认为None
-  - `memory`: `Option<Memory>`, 记忆模块，默认为None
-  - `interceptor`: `Option<Interceptor>`, 拦截器，默认为None
+- Description: Initializes the AgentExecutionInfo with the given agent
+- Parameters:
+  - `agent`: `Agent`, The agent to initialize with
+
+#### prop messages
+```
+override public prop messages: MessageList
+```
+- Description: Gets the message list
+
+#### func removeLastMessage
+```
+public func removeLastMessage(): Unit
+```
+- Description: Removes the last message from the message list
+
+#### prop retrievalInfo
+```
+override public prop retrievalInfo: ArrayList<RetrievalInfo>
+```
+- Description: Bookkeeping information during the agent execution
+
+#### func setAnswer
+```
+override public func setAnswer(answer: String): Unit
+```
+- Description: Sets the answer
+- Parameters:
+  - `answer`: `String`, The answer to set
+
+#### prop verboseInfo
+```
+override public prop verboseInfo: Iterator<String>
+```
+- Description: Gets verbose information, only accessible when verbose is set to true in AgentRequest
+
+
+### class BaseAgent
+#### prop description
+```
+prop description: String
+```
+- Description: Gets the description of the agent
+
+#### prop executor
+```
+prop executor: AgentExecutor
+```
+- Description: Gets or sets the executor for the agent
+
+#### func init
+```
+init(model: ChatModel, name: String = "Base Agent", description: String = "", temperature: Option<Float64> = None, systemPrompt: String = "", toolManager: ToolManager = SimpleToolManager(), executor: Option<AgentExecutor> = None, retriever: Option<Retriever> = None, memory: Option<Memory> = None, interceptor: Option<Interceptor> = None)
+```
+- Description: Constructor for BaseAgent class
+- Parameters:
+  - `model`: `ChatModel`, The chat model to be used by the agent
+  - `name`: `String`, The name of the agent, defaults to "Base Agent"
+  - `description`: `String`, Description of the agent, defaults to empty string
+  - `temperature`: `Option<Float64>`, Temperature parameter for the agent, defaults to None
+  - `systemPrompt`: `String`, System prompt for the agent, defaults to empty string
+  - `toolManager`: `ToolManager`, Tool manager for the agent, defaults to SimpleToolManager
+  - `executor`: `Option<AgentExecutor>`, Executor for the agent, defaults to None
+  - `retriever`: `Option<Retriever>`, Retriever for the agent, defaults to None
+  - `memory`: `Option<Memory>`, Memory for the agent, defaults to None
+  - `interceptor`: `Option<Interceptor>`, Interceptor for the agent, defaults to None
 
 #### prop interceptor
 ```
-override public mut prop interceptor: Option<Interceptor>
+prop interceptor: Option<Interceptor>
 ```
-- 描述: 获取或设置拦截器
+- Description: Gets or sets the interceptor for the agent
 
 #### prop memory
 ```
-override public mut prop memory: Option<Memory>
+prop memory: Option<Memory>
 ```
-- 描述: 获取或设置记忆模块
+- Description: Gets or sets the memory for the agent
 
 #### prop model
 ```
-override public mut prop model: ChatModel
+prop model: ChatModel
 ```
-- 描述: 获取或设置聊天模型
+- Description: Gets or sets the chat model for the agent
 
 #### prop name
 ```
-override public prop name: String
+prop name: String
 ```
-- 描述: 获取代理的名称
+- Description: Gets the name of the agent
 
 #### prop retriever
 ```
-override public mut prop retriever: Option<Retriever>
+prop retriever: Option<Retriever>
 ```
-- 描述: 获取或设置检索器
+- Description: Gets or sets the retriever for the agent
 
 #### prop systemPrompt
 ```
-override public mut prop systemPrompt: String
+prop systemPrompt: String
 ```
-- 描述: 获取或设置系统提示
+- Description: Gets or sets the system prompt for the agent
 
 #### prop temperature
 ```
-override public mut prop temperature: Option<Float64>
+prop temperature: Option<Float64>
 ```
-- 描述: 获取或设置温度参数，控制生成文本的随机性
+- Description: Gets or sets the temperature parameter for the agent
 
 #### prop toolManager
 ```
-override public prop toolManager: ToolManager
+prop toolManager: ToolManager
 ```
-- 描述: 获取工具管理器
+- Description: Gets the tool manager for the agent
 
 
 ### class ConversationAgent
@@ -119,25 +211,25 @@ override public prop toolManager: ToolManager
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步处理聊天请求并保存聊天消息
-- 参数:
-  - `request`: `AgentRequest`, 包含用户问题的请求对象
+- Description: Processes an asynchronous chat request, wraps the response, and returns it.
+- Parameters:
+  - `request`: `AgentRequest`, The asynchronous chat request to be processed.
 
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理聊天请求并保存聊天消息
-- 参数:
-  - `request`: `AgentRequest`, 包含用户问题的请求对象
+- Description: Processes a chat request, saves the conversation, and returns the response.
+- Parameters:
+  - `request`: `AgentRequest`, The chat request to be processed.
 
 #### func init
 ```
 init(agent: Agent)
 ```
-- 描述: 初始化ConversationAgent，将给定的Agent包装为能够保存聊天消息的对话代理
-- 参数:
-  - `agent`: `Agent`, 被包装的基础Agent对象
+- Description: Initializes a new ConversationAgent with the given agent.
+- Parameters:
+  - `agent`: `Agent`, The agent to be wrapped as a conversation agent.
 
 
 ### class DispatchAgent
@@ -145,25 +237,25 @@ init(agent: Agent)
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步处理用户请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 用户请求
+- Description: Processes the chat request asynchronously and dispatches it to the appropriate agent.
+- Parameters:
+  - `request`: `AgentRequest`, The request containing the user's question.
 
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理用户请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 用户请求
+- Description: Processes the chat request and dispatches it to the appropriate agent.
+- Parameters:
+  - `request`: `AgentRequest`, The request containing the user's question.
 
 #### func init
 ```
 init(model: String)
 ```
-- 描述: 初始化DispatchAgent实例
-- 参数:
-  - `model`: `String`, 模型名称
+- Description: Initializes the DispatchAgent with the specified model.
+- Parameters:
+  - `model`: `String`, The model to be used by the DispatchAgent.
 
 
 ### class GroupAsAgent
@@ -171,26 +263,26 @@ init(model: String)
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步处理聊天请求
-- 参数:
-  - `request`: `AgentRequest`, 代理请求
+- Description: Dispatches the chat request asynchronously to the group and returns the response.
+- Parameters:
+  - `request`: `AgentRequest`, The chat request to be dispatched asynchronously.
 
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理聊天请求
-- 参数:
-  - `request`: `AgentRequest`, 代理请求
+- Description: Dispatches the chat request to the group and returns the response.
+- Parameters:
+  - `request`: `AgentRequest`, The chat request to be dispatched.
 
 #### func init
 ```
 init(group: AgentGroup, description!: String)
 ```
-- 描述: 初始化GroupAsAgent实例
-- 参数:
-  - `group`: `AgentGroup`, 代理组
-  - `description`: `String`, 描述信息
+- Description: Initializes the GroupAsAgent with a group and description.
+- Parameters:
+  - `group`: `AgentGroup`, The group of agents to dispatch the question to.
+  - `description`: `String`, The description of the agent.
 
 
 ### class HumanAgent
@@ -198,17 +290,17 @@ init(group: AgentGroup, description!: String)
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理聊天请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 包含用户问题的请求对象
+- Description: Processes the chat request by delegating the question to the configured question-answer function and returns the response.
+- Parameters:
+  - `request`: `AgentRequest`, The request containing the question to be answered.
 
 #### func init
 ```
 init(qaFunc!: Option<(String) -> String> = None)
 ```
-- 描述: 初始化HumanAgent实例
-- 参数:
-  - `qaFunc`: `Option<(String) -> String>`, 可选参数，用于处理问题的函数，默认为None
+- Description: Initializes the HumanAgent with an optional question-answer function. If not provided, defaults to a console UI.
+- Parameters:
+  - `qaFunc!`: `Option<(String) -> String>`, An optional function that takes a string question and returns a string answer.
 
 
 ### class ToolAgent<T>
@@ -216,17 +308,17 @@ init(qaFunc!: Option<(String) -> String> = None)
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理聊天请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 包含用户问题的请求对象
+- Description: Processes the agent request by executing the provided function and returns an agent response.
+- Parameters:
+  - `request`: `AgentRequest`, The request containing the question to be processed by the agent.
 
 #### func init
 ```
 init(fn!: (String) -> T)
 ```
-- 描述: 初始化ToolAgent实例
-- 参数:
-  - `fn`: `(String) -> T`, 用于回答问题的函数
+- Description: Initializes the ToolAgent with a function that takes a String and returns a generic type T.
+- Parameters:
+  - `fn!`: `(String) -> T`, A function that processes a String input and returns a generic type T.
 
 
 ### class ToolSelectAgent
@@ -234,25 +326,25 @@ init(fn!: (String) -> T)
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理代理请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 代理请求
+- Description: Processes the agent request and returns a response.
+- Parameters:
+  - `request`: `AgentRequest`, The request to be processed by the agent.
 
 #### func init
 ```
 init(model: ChatModel, tools: Array<Tool>)
 ```
-- 描述: 初始化工具选择代理
-- 参数:
-  - `model`: `ChatModel`, 聊天模型
-  - `tools`: `Array<Tool>`, 可用工具列表
+- Description: Initializes the ToolSelectAgent with a chat model and a list of tools.
+- Parameters:
+  - `model`: `ChatModel`, The chat model to be used by the agent.
+  - `tools`: `Array<Tool>`, A list of tools available for selection.
 
 #### func select
 ```
 func select(question: String): Option<ToolRequest>
 ```
-- 描述: 根据问题选择合适的工具
-- 参数:
-  - `question`: `String`, 需要解决的问题
+- Description: Selects a proper tool for the given question.
+- Parameters:
+  - `question`: `String`, The question for which a tool needs to be selected.
 
 

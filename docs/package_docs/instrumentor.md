@@ -17,86 +17,86 @@
 ### class Instrumentor
 #### var AFTER_AGENT_RUN_FN
 ```
-public static var AFTER_AGENT_RUN_FN: Option<(Agent, AgentRequest, AgentResponse) -> Option<AgentResponse>>
+static var AFTER_AGENT_RUN_FN: Option<(Agent, AgentRequest, AgentResponse) -> Option<AgentResponse>>
 ```
-- 描述: 在Agent运行后调用的函数
+- Description: A static variable that holds a function to be called after agent run.
 
 #### var AFTER_TOOL_CALL_FN
 ```
-public static var AFTER_TOOL_CALL_FN: Option<(Agent, ToolRequest, ToolResponse) -> Option<ToolResponse>>
+static var AFTER_TOOL_CALL_FN: Option<(Agent, ToolRequest, ToolResponse) -> Option<ToolResponse>>
 ```
-- 描述: 在Tool调用后调用的函数
+- Description: A static variable that holds a function to be called after tool call.
 
 #### var BEFORE_AGENT_RUN_FN
 ```
-public static var BEFORE_AGENT_RUN_FN: Option<(Agent, AgentRequest) -> Option<AgentResponse>>
+static var BEFORE_AGENT_RUN_FN: Option<(Agent, AgentRequest) -> Option<AgentResponse>>
 ```
-- 描述: 在Agent运行前调用的函数
+- Description: A static variable that holds a function to be called before agent run.
 
 #### var BEFORE_CHAT_MODEL_FN
 ```
-public static var BEFORE_CHAT_MODEL_FN: Option<(ChatModel, ChatRequest) -> Option<ChatResponse>>
+static var BEFORE_CHAT_MODEL_FN: Option<(ChatModel, ChatRequest) -> Option<ChatResponse>>
 ```
-- 描述: 在ChatModel处理请求前调用的函数
+- Description: A static variable that holds a function to be called before chat model processing.
 
 #### var BEFORE_CHAT_MODEL_FN2
 ```
-public static var BEFORE_CHAT_MODEL_FN2: Option<(String, ChatModel, ChatRequest) -> Option<ChatResponse>>
+static var BEFORE_CHAT_MODEL_FN2: Option<(String, ChatModel, ChatRequest) -> Option<ChatResponse>>
 ```
-- 描述: 在ChatModel处理请求前调用的函数，带有一个字符串参数
+- Description: A static variable that holds a function to be called before chat model processing, with an additional String parameter.
 
 #### var BEFORE_TOOL_CALL_FN
 ```
-public static var BEFORE_TOOL_CALL_FN: Option<(Agent, ToolRequest) -> Option<ToolResponse>>
+static var BEFORE_TOOL_CALL_FN: Option<(Agent, ToolRequest) -> Option<ToolResponse>>
 ```
-- 描述: 在Tool调用前调用的函数
+- Description: A static variable that holds a function to be called before tool call.
 
 #### func registerAfterAgentRun
 ```
-public static func registerAfterAgentRun(fn: (Agent, AgentRequest, AgentResponse) -> Option<AgentResponse>)
+static func registerAfterAgentRun(fn: (Agent, AgentRequest, AgentResponse) -> Option<AgentResponse>)
 ```
-- 描述: 注册在Agent运行后调用的函数
-- 参数:
-  - `fn`: `(Agent, AgentRequest, AgentResponse) -> Option<AgentResponse>`, 接收Agent、AgentRequest和AgentResponse并返回Option<AgentResponse>的函数
+- Description: Registers a function to be called after agent run.
+- Parameters:
+  - `fn`: `(Agent, AgentRequest, AgentResponse) -> Option<AgentResponse>`, The function to register.
 
 #### func registerAfterToolCall
 ```
-public static func registerAfterToolCall(fn: (Agent, ToolRequest, ToolResponse) -> Option<ToolResponse>)
+static func registerAfterToolCall(fn: (Agent, ToolRequest, ToolResponse) -> Option<ToolResponse>)
 ```
-- 描述: 注册在Tool调用后调用的函数
-- 参数:
-  - `fn`: `(Agent, ToolRequest, ToolResponse) -> Option<ToolResponse>`, 接收Agent、ToolRequest和ToolResponse并返回Option<ToolResponse>的函数
+- Description: Registers a function to be called after tool call.
+- Parameters:
+  - `fn`: `(Agent, ToolRequest, ToolResponse) -> Option<ToolResponse>`, The function to register.
 
 #### func registerBeforeAgentRun
 ```
-public static func registerBeforeAgentRun(fn: (Agent, AgentRequest) -> Option<AgentResponse>)
+static func registerBeforeAgentRun(fn: (Agent, AgentRequest) -> Option<AgentResponse>)
 ```
-- 描述: 注册在Agent运行前调用的函数
-- 参数:
-  - `fn`: `(Agent, AgentRequest) -> Option<AgentResponse>`, 接收Agent和AgentRequest并返回Option<AgentResponse>的函数
+- Description: Registers a function to be called before agent run.
+- Parameters:
+  - `fn`: `(Agent, AgentRequest) -> Option<AgentResponse>`, The function to register.
 
 #### func registerBeforeChatModel
 ```
-public static func registerBeforeChatModel(fn: (ChatModel, ChatRequest) -> Option<ChatResponse>)
+static func registerBeforeChatModel(fn: (ChatModel, ChatRequest) -> Option<ChatResponse>)
 ```
-- 描述: 注册在ChatModel处理请求前调用的函数
-- 参数:
-  - `fn`: `(ChatModel, ChatRequest) -> Option<ChatResponse>`, 接收ChatModel和ChatRequest并返回Option<ChatResponse>的函数
+- Description: Registers a function to be called before chat model processing.
+- Parameters:
+  - `fn`: `(ChatModel, ChatRequest) -> Option<ChatResponse>`, The function to register.
 
 #### func registerBeforeChatModel
 ```
-public static func registerBeforeChatModel(fn: (String, ChatModel, ChatRequest) -> Option<ChatResponse>)
+static func registerBeforeChatModel(fn: (String, ChatModel, ChatRequest) -> Option<ChatResponse>)
 ```
-- 描述: 注册在ChatModel处理请求前调用的函数，带有一个字符串参数
-- 参数:
-  - `fn`: `(String, ChatModel, ChatRequest) -> Option<ChatResponse>`, 接收String、ChatModel和ChatRequest并返回Option<ChatResponse>的函数
+- Description: Registers a function to be called before chat model processing, with an additional String parameter.
+- Parameters:
+  - `fn`: `(String, ChatModel, ChatRequest) -> Option<ChatResponse>`, The function to register.
 
 #### func registerBeforeToolCall
 ```
-public static func registerBeforeToolCall(fn: (Agent, ToolRequest) -> Option<ToolResponse>)
+static func registerBeforeToolCall(fn: (Agent, ToolRequest) -> Option<ToolResponse>)
 ```
-- 描述: 注册在Tool调用前调用的函数
-- 参数:
-  - `fn`: `(Agent, ToolRequest) -> Option<ToolResponse>`, 接收Agent和ToolRequest并返回Option<ToolResponse>的函数
+- Description: Registers a function to be called before tool call.
+- Parameters:
+  - `fn`: `(Agent, ToolRequest) -> Option<ToolResponse>`, The function to register.
 
 

@@ -2,6 +2,7 @@
 
 - 📁 [agent](./package_docs/agent.md)
 - 📁 [agent_executor](./package_docs/agent_executor.md)
+- 📁 [agent_executor.common](./package_docs/agent_executor.common.md)
 - 📁 [agent_executor.naive](./package_docs/agent_executor.naive.md)
 - 📁 [agent_executor.react](./package_docs/agent_executor.react.md)
 - 📁 [agent_executor.tool_loop](./package_docs/agent_executor.tool_loop.md)

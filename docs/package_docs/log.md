@@ -33,214 +33,214 @@
 ```
 public static func debug(msg: String): Unit
 ```
-- 描述: 输出调试级别的日志信息
-- 参数:
-  - `msg`: `String`, 需要输出的调试信息
+- Description: Logs a debug message.
+- Parameters:
+  - `msg`: `String`, The debug message to log.
 
 #### func debug
 ```
 public static func debug(name: String, msg: String): Unit
 ```
-- 描述: 输出带有名称的调试级别日志信息
-- 参数:
-  - `name`: `String`, 日志名称
-  - `msg`: `String`, 需要输出的调试信息
+- Description: Logs a debug message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the debug message.
+  - `msg`: `String`, The debug message to log.
 
 #### func error
 ```
 public static func error(msg: String): Unit
 ```
-- 描述: 输出错误级别的日志信息
-- 参数:
-  - `msg`: `String`, 需要输出的错误信息
+- Description: Logs an error message.
+- Parameters:
+  - `msg`: `String`, The error message to log.
 
 #### func error
 ```
 public static func error(name: String, msg: String): Unit
 ```
-- 描述: 输出带有名称的错误级别日志信息
-- 参数:
-  - `name`: `String`, 日志名称
-  - `msg`: `String`, 需要输出的错误信息
+- Description: Logs an error message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the error message.
+  - `msg`: `String`, The error message to log.
 
 #### func info
 ```
 public static func info(msg: String): Unit
 ```
-- 描述: 输出信息级别的日志信息
-- 参数:
-  - `msg`: `String`, 需要输出的信息
+- Description: Logs an info message.
+- Parameters:
+  - `msg`: `String`, The info message to log.
 
 #### func info
 ```
 public static func info(name: String, msg: String): Unit
 ```
-- 描述: 输出带有名称的信息级别日志信息
-- 参数:
-  - `name`: `String`, 日志名称
-  - `msg`: `String`, 需要输出的信息
+- Description: Logs an info message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the info message.
+  - `msg`: `String`, The info message to log.
 
 #### func info
 ```
-public static func info(msg: ChatMessage): Unit
+public static func info(msg: Message): Unit
 ```
-- 描述: 输出聊天消息的信息级别日志
-- 参数:
-  - `msg`: `ChatMessage`, 需要输出的聊天消息
+- Description: Logs an info message for a chat message.
+- Parameters:
+  - `msg`: `Message`, The chat message to log.
 
 #### func info
 ```
-public static func info(name: String, msg: ChatMessage): Unit
+public static func info(name: String, msg: Message): Unit
 ```
-- 描述: 输出带有名称的聊天消息信息级别日志
-- 参数:
-  - `name`: `String`, 日志名称
-  - `msg`: `ChatMessage`, 需要输出的聊天消息
+- Description: Logs an info message for a chat message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the info message.
+  - `msg`: `Message`, The chat message to log.
 
 #### func info
 ```
-public static func info(history: Dialog): Unit
+public static func info(history: MessageList): Unit
 ```
-- 描述: 输出对话历史的信息级别日志
-- 参数:
-  - `history`: `Dialog`, 需要输出的对话历史
+- Description: Logs info messages for a list of chat messages.
+- Parameters:
+  - `history`: `MessageList`, The list of chat messages to log.
 
 #### func info
 ```
-public static func info(name: String, history: Dialog): Unit
+public static func info(name: String, history: MessageList): Unit
 ```
-- 描述: 输出带有名称的对话历史信息级别日志
-- 参数:
-  - `name`: `String`, 日志名称
-  - `history`: `Dialog`, 需要输出的对话历史
+- Description: Logs info messages for a list of chat messages with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the info messages.
+  - `history`: `MessageList`, The list of chat messages to log.
 
 #### func info
 ```
-public static func info(messages: Array<ChatMessage>): Unit
+public static func info(messages: Array<Message>): Unit
 ```
-- 描述: 输出聊天消息数组的信息级别日志
-- 参数:
-  - `messages`: `Array<ChatMessage>`, 需要输出的聊天消息数组
+- Description: Logs info messages for an array of chat messages.
+- Parameters:
+  - `messages`: `Array<Message>`, The array of chat messages to log.
 
 #### func info
 ```
-public static func info(name: String, messages: Array<ChatMessage>): Unit
+public static func info(name: String, messages: Array<Message>): Unit
 ```
-- 描述: 输出带有名称的聊天消息数组信息级别日志
-- 参数:
-  - `name`: `String`, 日志名称
-  - `messages`: `Array<ChatMessage>`, 需要输出的聊天消息数组
+- Description: Logs info messages for an array of chat messages with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the info messages.
+  - `messages`: `Array<Message>`, The array of chat messages to log.
 
 
 ### struct LogUtils
 #### func debug
 ```
-static func debug(msg: String): Unit
+public static func debug(msg: String): Unit
 ```
-- 描述: 打印调试信息
-- 参数:
-  - `msg`: `String`, 需要打印的调试信息
+- Description: Logs a debug message.
+- Parameters:
+  - `msg`: `String`, The debug message to log.
 
 #### func debug
 ```
-static func debug(name: String, msg: String): Unit
+public static func debug(name: String, msg: String): Unit
 ```
-- 描述: 打印带有名称的调试信息
-- 参数:
-  - `name`: `String`, 调试信息的名称
-  - `msg`: `String`, 需要打印的调试信息
+- Description: Logs a debug message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the debug message.
+  - `msg`: `String`, The debug message to log.
 
 #### func debug
 ```
-static func debug(ex: Exception): Unit
+public static func debug(ex: Exception): Unit
 ```
-- 描述: 打印异常堆栈信息
-- 参数:
-  - `ex`: `Exception`, 需要打印的异常
+- Description: Logs the stack trace of an exception as debug messages.
+- Parameters:
+  - `ex`: `Exception`, The exception whose stack trace is to be logged.
 
 #### func error
 ```
-static func error(msg: String): Unit
+public static func error(msg: String): Unit
 ```
-- 描述: 打印错误信息
-- 参数:
-  - `msg`: `String`, 需要打印的错误信息
+- Description: Logs an error message.
+- Parameters:
+  - `msg`: `String`, The error message to log.
 
 #### func error
 ```
-static func error(name: String, msg: String): Unit
+public static func error(name: String, msg: String): Unit
 ```
-- 描述: 打印带有名称的错误信息
-- 参数:
-  - `name`: `String`, 错误信息的名称
-  - `msg`: `String`, 需要打印的错误信息
+- Description: Logs an error message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the error message.
+  - `msg`: `String`, The error message to log.
 
 #### func info
 ```
-static func info(msg: String): Unit
+public static func info(msg: String): Unit
 ```
-- 描述: 打印普通信息
-- 参数:
-  - `msg`: `String`, 需要打印的信息
+- Description: Logs an informational message.
+- Parameters:
+  - `msg`: `String`, The informational message to log.
 
 #### func info
 ```
-static func info(name: String, msg: String): Unit
+public static func info(name: String, msg: String): Unit
 ```
-- 描述: 打印带有名称的普通信息
-- 参数:
-  - `name`: `String`, 信息的名称
-  - `msg`: `String`, 需要打印的信息
+- Description: Logs an informational message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the informational message.
+  - `msg`: `String`, The informational message to log.
 
 #### func info
 ```
-static func info(msg: ChatMessage): Unit
+public static func info(msg: Message): Unit
 ```
-- 描述: 打印聊天消息
-- 参数:
-  - `msg`: `ChatMessage`, 需要打印的聊天消息
+- Description: Logs a chat message as an informational message.
+- Parameters:
+  - `msg`: `Message`, The chat message to log.
 
 #### func info
 ```
-static func info(name: String, msg: ChatMessage): Unit
+public static func info(name: String, msg: Message): Unit
 ```
-- 描述: 打印带有名称的聊天消息
-- 参数:
-  - `name`: `String`, 聊天消息的名称
-  - `msg`: `ChatMessage`, 需要打印的聊天消息
+- Description: Logs a chat message with a name prefix as an informational message.
+- Parameters:
+  - `name`: `String`, The name prefix for the chat message.
+  - `msg`: `Message`, The chat message to log.
 
 #### func info
 ```
-static func info(history: Dialog): Unit
+public static func info(history: MessageList): Unit
 ```
-- 描述: 打印对话历史
-- 参数:
-  - `history`: `Dialog`, 需要打印的对话历史
+- Description: Logs a list of chat messages as informational messages.
+- Parameters:
+  - `history`: `MessageList`, The list of chat messages to log.
 
 #### func info
 ```
-static func info(name: String, history: Dialog): Unit
+public static func info(name: String, history: MessageList): Unit
 ```
-- 描述: 打印带有名称的对话历史
-- 参数:
-  - `name`: `String`, 对话历史的名称
-  - `history`: `Dialog`, 需要打印的对话历史
+- Description: Logs a list of chat messages with a name prefix as informational messages.
+- Parameters:
+  - `name`: `String`, The name prefix for the chat messages.
+  - `history`: `MessageList`, The list of chat messages to log.
 
 #### func info
 ```
-static func info(messages: Array<ChatMessage>): Unit
+public static func info(messages: Array<Message>): Unit
 ```
-- 描述: 打印聊天消息数组
-- 参数:
-  - `messages`: `Array<ChatMessage>`, 需要打印的聊天消息数组
+- Description: Logs an array of chat messages as informational messages.
+- Parameters:
+  - `messages`: `Array<Message>`, The array of chat messages to log.
 
 #### func info
 ```
-static func info(name: String, messages: Array<ChatMessage>): Unit
+public static func info(name: String, messages: Array<Message>): Unit
 ```
-- 描述: 打印带有名称的聊天消息数组
-- 参数:
-  - `name`: `String`, 聊天消息数组的名称
-  - `messages`: `Array<ChatMessage>`, 需要打印的聊天消息数组
+- Description: Logs an array of chat messages with a name prefix as informational messages.
+- Parameters:
+  - `name`: `String`, The name prefix for the chat messages.
+  - `messages`: `Array<Message>`, The array of chat messages to log.
 
 

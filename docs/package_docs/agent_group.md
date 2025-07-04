@@ -1,6 +1,10 @@
 ## Package agent_group
 - [Package agent_group](#package-agent_group)
   - [interface AgentCollaboration](#interface-agentcollaboration)
+    - [func ()](#func-())
+    - [func ()](#func-()-1)
+    - [func <=](#func-<=)
+    - [func |](#func-|)
   - [class FreeGroup](#class-freegroup)
     - [func chat](#func-chat)
     - [func chat](#func-chat-1)
@@ -12,72 +16,104 @@
     - [enumeration Auto](#enumeration-auto)
     - [enumeration RoundRobin](#enumeration-roundrobin)
   - [class LeaderGroup](#class-leadergroup)
-    - [func []](#func-[])
     - [func asyncChat](#func-asyncchat)
     - [func chat](#func-chat-1)
     - [func chat](#func-chat-1)
+    - [func operator []](#func-operator-[]-1)
   - [class LinearGroup](#class-lineargroup)
-    - [func []](#func-[]-1)
     - [func asyncChat](#func-asyncchat-1)
     - [func chat](#func-chat-1)
     - [func chat](#func-chat-1)
+    - [func operator []](#func-operator-[]-1)
 
 ### interface AgentCollaboration
+#### func operator ()
+```
+operator func ()(prev: Agent): LinearGroup
+```
+- Description: Creates a LinearGroup from a single agent.
+- Parameters:
+  - `prev`: `Agent`, The agent to start the linear group.
+
+#### func operator ()
+```
+operator func ()(prev: LinearGroup): LinearGroup
+```
+- Description: Extends an existing LinearGroup.
+- Parameters:
+  - `prev`: `LinearGroup`, The existing linear group to extend.
+
+#### func operator <=
+```
+operator func <=(members: Array<Agent>): LeaderGroup
+```
+- Description: Creates a LeaderGroup from an array of agents.
+- Parameters:
+  - `members`: `Array<Agent>`, An array of agents to form the group.
+
+#### func operator |
+```
+operator func |(member: Agent): FreeGroup
+```
+- Description: Creates a FreeGroup with a single agent.
+- Parameters:
+  - `member`: `Agent`, The agent to include in the free group.
+
 
 ### class FreeGroup
 #### func chat
 ```
 chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理Agent请求，返回Agent响应
-- 参数:
-  - `request`: `AgentRequest`, Agent请求
+- Description: Processes a chat request with default maximum rounds
+- Parameters:
+  - `request`: `AgentRequest`, The chat request to process
 
 #### func chat
 ```
 chat(request: AgentRequest, maxRound: Int64): AgentResponse
 ```
-- 描述: 处理Agent请求，指定最大轮数，返回Agent响应
-- 参数:
-  - `request`: `AgentRequest`, Agent请求
-  - `maxRound`: `Int64`, 最大讨论轮数
+- Description: Processes a chat request with specified maximum rounds
+- Parameters:
+  - `request`: `AgentRequest`, The chat request to process
+  - `maxRound`: `Int64`, Maximum number of discussion rounds
 
 #### func discuss
 ```
 discuss(topic: String, initiator: String, speech: String, mode: FreeGroupMode = FreeGroupMode.Auto, maxRound: Int64 = DISCUSSION_MAX_ROUND): String
 ```
-- 描述: 根据指定模式和参数进行讨论，返回讨论结果
-- 参数:
-  - `topic`: `String`, 讨论主题
-  - `initiator`: `String`, 发起者
-  - `speech`: `String`, 发言内容
-  - `mode`: `FreeGroupMode`, 讨论模式，默认为自动选择
-  - `maxRound`: `Int64`, 最大讨论轮数，默认为DISCUSSION_MAX_ROUND
+- Description: Initiates a discussion with specified parameters and mode
+- Parameters:
+  - `topic`: `String`, Topic of the discussion
+  - `initiator`: `String`, Name of the initiator
+  - `speech`: `String`, Initial speech content
+  - `mode`: `FreeGroupMode`, Mode of discussion (Auto or RoundRobin)
+  - `maxRound`: `Int64`, Maximum number of discussion rounds
 
 #### func init
 ```
 init(a: Agent, b: Agent)
 ```
-- 描述: 初始化FreeGroup，添加两个Agent成员
-- 参数:
-  - `a`: `Agent`, 第一个Agent成员
-  - `b`: `Agent`, 第二个Agent成员
+- Description: Initializes a FreeGroup with two agents
+- Parameters:
+  - `a`: `Agent`, First agent to add to the group
+  - `b`: `Agent`, Second agent to add to the group
 
 #### func operator operator []
 ```
 operator [](memberName: String): Agent
 ```
-- 描述: 通过成员名称访问Agent
-- 参数:
-  - `memberName`: `String`, 成员名称
+- Description: Accesses an agent member by name
+- Parameters:
+  - `memberName`: `String`, Name of the agent to access
 
 #### func operator operator |
 ```
 operator |(member: Agent): FreeGroup
 ```
-- 描述: 添加Agent成员并返回FreeGroup
-- 参数:
-  - `member`: `Agent`, 要添加的Agent成员
+- Description: Adds a new member to the group
+- Parameters:
+  - `member`: `Agent`, Agent to add to the group
 
 
 ### enum FreeGroupMode
@@ -85,82 +121,82 @@ operator |(member: Agent): FreeGroup
 ```
 Auto
 ```
-- 描述: 由LLM自动选择发言者
+- Description: The speaker will be selected by LLM automatically
 
 ####  RoundRobin
 ```
 RoundRobin
 ```
-- 描述: 轮询模式
+- Description: 
 
 
 ### class LeaderGroup
-#### func operator []
-```
-operator func [](memberName: String): Agent
-```
-- 描述: 通过成员名称获取对应的Agent对象
-- 参数:
-  - `memberName`: `String`, 成员名称
-
 #### func asyncChat
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步处理聊天请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求对象
+- Description: Processes a chat request asynchronously and returns an asynchronous agent response.
+- Parameters:
+  - `request`: `AgentRequest`, The chat request to be processed asynchronously.
 
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理聊天请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求对象
+- Description: Processes a chat request and returns an agent response.
+- Parameters:
+  - `request`: `AgentRequest`, The chat request to be processed.
 
 #### func chat
 ```
 func chat(request: AgentRequest, maxRound: Int64): AgentResponse
 ```
-- 描述: 处理聊天请求并返回响应，可指定最大轮次
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求对象
-  - `maxRound`: `Int64`, 最大聊天轮次
+- Description: Processes a chat request with a specified maximum number of rounds and returns an agent response.
+- Parameters:
+  - `request`: `AgentRequest`, The chat request to be processed.
+  - `maxRound`: `Int64`, The maximum number of rounds for the chat.
+
+#### func operator operator []
+```
+operator func [](memberName: String): Agent
+```
+- Description: Retrieves an agent member by name.
+- Parameters:
+  - `memberName`: `String`, The name of the agent member to retrieve.
 
 
 ### class LinearGroup
-#### func operator []
-```
-operator func [](memberName: String): Agent
-```
-- 描述: 获取指定名称的成员代理
-- 参数:
-  - `memberName`: `String`, 成员名称
-
 #### func asyncChat
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- 描述: 异步处理聊天请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求对象
+- Description: Processes a chat request asynchronously through all agents in the group sequentially.
+- Parameters:
+  - `request`: `AgentRequest`, The initial request to be processed by the agent group.
 
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- 描述: 处理聊天请求并返回响应
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求对象
+- Description: Processes a chat request through all agents in the group sequentially.
+- Parameters:
+  - `request`: `AgentRequest`, The initial request to be processed by the agent group.
 
 #### func chat
 ```
 func chat(request: AgentRequest, maxRound: Int64): AgentResponse
 ```
-- 描述: 处理聊天请求并返回响应，可指定最大轮数
-- 参数:
-  - `request`: `AgentRequest`, 聊天请求对象
-  - `maxRound`: `Int64`, 最大聊天轮数
+- Description: Processes a chat request through all agents in the group sequentially with a specified maximum number of rounds.
+- Parameters:
+  - `request`: `AgentRequest`, The initial request to be processed by the agent group.
+  - `maxRound`: `Int64`, The maximum number of rounds for processing the request.
+
+#### func operator operator []
+```
+operator func [](memberName: String): Agent
+```
+- Description: Throws an UnsupportedException when trying to access an agent by name.
+- Parameters:
+  - `memberName`: `String`, The name of the agent to access.
 
 

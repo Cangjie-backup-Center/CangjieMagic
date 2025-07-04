@@ -17,11 +17,11 @@
 ### class CharacterTextSplitter
 #### func split
 ```
-func split(text: String): Array<Document>
+public override func split(text: String): Array<Document>
 ```
-- 描述: 将文本分割成多个文档
-- 参数:
-  - `text`: `String`, 需要分割的文本
+- Description: Splits the input text into an array of Document objects based on the specified chunk size and separator.
+- Parameters:
+  - `text`: `String`, The input text to be split into documents.
 
 
 ### class DocumentLoader
@@ -29,35 +29,35 @@ func split(text: String): Array<Document>
 ```
 func load(): Array<Document>
 ```
-- 描述: 加载文档内容并返回文档数组
+- Description: Loads documents from a file path and returns them as an array.
 
 #### func loadSplit
 ```
 func loadSplit(splitter: Splitter): Array<Document>
 ```
-- 描述: 根据指定的分割器加载并分割文档内容，返回分割后的文档数组
-- 参数:
-  - `splitter`: `Splitter`, 用于分割文档的分割器
+- Description: Loads documents from a file path, splits them using the provided splitter, and returns them as an array.
+- Parameters:
+  - `splitter`: `Splitter`, The splitter used to divide the document content.
 
 
 ### class MarkdownSplitter
 #### func init
 ```
-public init(headersToSplit!: Array<(String, String)> = DEFAULT_HEADERS_TO_SPLIT, returnEachLine!: Bool = false, stripHeader!: Bool = true)
+public init(headersToSplit: Array<(String, String)> = DEFAULT_HEADERS_TO_SPLIT, returnEachLine: Bool = false, stripHeader: Bool = true)
 ```
-- 描述: 初始化 MarkdownSplitter 类
-- 参数:
-  - `headersToSplit`: `Array<(String, String)>`, 需要跟踪的标题
-  - `returnEachLine`: `Bool`, 是否返回每行及其关联的标题
-  - `stripHeader`: `Bool`, 是否从块内容中去除分割标题
+- Description: Initializes the MarkdownSplitter with specified headers to split, whether to return each line with associated headers, and whether to strip split headers from the content.
+- Parameters:
+  - `headersToSplit`: `Array<(String, String)>`, Headers we want to track.
+  - `returnEachLine`: `Bool`, Whether to return each line with associated headers.
+  - `stripHeader`: `Bool`, Whether to strip split headers from the content of the chunk.
 
 #### func split
 ```
 override public func split(text: String): Array<Document>
 ```
-- 描述: 分割 Markdown 文件
-- 参数:
-  - `text`: `String`, Markdown 文件内容
+- Description: Splits the markdown file into an array of documents based on the specified headers.
+- Parameters:
+  - `text`: `String`, The markdown file to split.
 
 
 ### class RecursiveCharacterTextSplitter
@@ -65,20 +65,20 @@ override public func split(text: String): Array<Document>
 ```
 init(separators!: Array<String> = ["\n\n", "\n", " ", ""], chunkSize!: Int64 = 1024, chunkOverlap!: Int64 = 256, keepSeparator!: Bool = false)
 ```
-- 描述: 初始化递归字符文本分割器
-- 参数:
-  - `separators`: `Array<String>`, 分隔符数组，默认为["\n\n", "\n", " ", ""]
-  - `chunkSize`: `Int64`, 块大小，默认为1024
-  - `chunkOverlap`: `Int64`, 块重叠大小，默认为256
-  - `keepSeparator`: `Bool`, 是否保留分隔符，默认为false
+- Description: Initializes the RecursiveCharacterTextSplitter with specified separators, chunk size, chunk overlap, and keep separator flag.
+- Parameters:
+  - `separators`: `Array<String>`, An array of strings used as separators for splitting text. Defaults to ["\n\n", "\n", " ", ""].
+  - `chunkSize`: `Int64`, The maximum size of each chunk. Defaults to 1024.
+  - `chunkOverlap`: `Int64`, The number of characters that chunks should overlap. Defaults to 256.
+  - `keepSeparator`: `Bool`, A flag indicating whether to keep the separator in the split chunks. Defaults to false.
 
 #### func split
 ```
 split(text: String): Array<Document>
 ```
-- 描述: 分割文本为文档数组
-- 参数:
-  - `text`: `String`, 待分割的文本
+- Description: Splits the input text into an array of Document objects using the specified separators.
+- Parameters:
+  - `text`: `String`, The text to be split into chunks.
 
 
 ### interface Splitter
@@ -86,8 +86,8 @@ split(text: String): Array<Document>
 ```
 func split(text: String): Array<Document>
 ```
-- 描述: 将文本分割成文档数组
-- 参数:
-  - `text`: `String`, 需要分割的文本
+- Description: Splits the input text into an array of documents.
+- Parameters:
+  - `text`: `String`, The text to be split.
 
 

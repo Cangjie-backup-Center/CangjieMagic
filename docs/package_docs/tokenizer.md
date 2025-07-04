@@ -1,6 +1,7 @@
 ## Package tokenizer
 - [Package tokenizer](#package-tokenizer)
   - [class AbstractBPETokenizer](#class-abstractbpetokenizer)
+    - [func countToken](#func-counttoken)
     - [func decode](#func-decode)
     - [func encode](#func-encode)
   - [class BPETokenizer](#class-bpetokenizer)
@@ -22,24 +23,43 @@
   - [struct TokenizerJson](#struct-tokenizerjson)
     - [func deserialize](#func-deserialize-1)
   - [class TokenizerLoader](#class-tokenizerloader)
+    - [func default](#func-default)
     - [func load](#func-load)
+  - [enum TokenizerType](#enum-tokenizertype)
+    - [enumeration Cl100k](#enumeration-cl100k)
+    - [enumeration DeepSeek](#enumeration-deepseek)
+    - [enumeration Qwen](#enumeration-qwen)
+    - [func fromString](#func-fromstring)
+    - [func toString](#func-tostring)
+  - [class UnicodeTokenizer](#class-unicodetokenizer)
+    - [func countToken](#func-counttoken-1)
+    - [func decode](#func-decode-1)
+    - [func encode](#func-encode-1)
 
 ### class AbstractBPETokenizer
+#### func countToken
+```
+public func countToken(input: String): Int64
+```
+- Description: Counts the number of tokens in a string.
+- Parameters:
+  - `input`: `String`, The string to count tokens in.
+
 #### func decode
 ```
 public func decode(tokens: Array<UInt32>): String
 ```
-- 描述: 将token数组解码为字符串
-- 参数:
-  - `tokens`: `Array<UInt32>`, 要解码的token数组
+- Description: Decodes an array of token IDs into a string.
+- Parameters:
+  - `tokens`: `Array<UInt32>`, The array of token IDs to decode.
 
 #### func encode
 ```
 public func encode(input: String): Array<UInt32>
 ```
-- 描述: 将字符串编码为token数组
-- 参数:
-  - `input`: `String`, 要编码的字符串
+- Description: Encodes a string into an array of token IDs.
+- Parameters:
+  - `input`: `String`, The string to encode.
 
 
 ### class BPETokenizer
@@ -47,9 +67,9 @@ public func encode(input: String): Array<UInt32>
 ```
 init(modelPath: String)
 ```
-- 描述: 初始化BPETokenizer，加载tokenizer配置
-- 参数:
-  - `modelPath`: `String`, 模型路径，用于加载tokenizer配置
+- Description: Initializes the BPETokenizer with the specified model path.
+- Parameters:
+  - `modelPath`: `String`, The path to the model files.
 
 
 ### struct BPETokenizerConfig
@@ -57,9 +77,9 @@ init(modelPath: String)
 ```
 static func deserialize(dm: DataModel): BPETokenizerConfig
 ```
-- 描述: 从DataModel反序列化BPETokenizerConfig对象
-- 参数:
-  - `dm`: `DataModel`, 包含BPETokenizerConfig数据的DataModel
+- Description: Deserializes a DataModel into a BPETokenizerConfig object.
+- Parameters:
+  - `dm`: `DataModel`, The DataModel to deserialize.
 
 
 ### class Cl100kTokenizer
@@ -67,9 +87,9 @@ static func deserialize(dm: DataModel): BPETokenizerConfig
 ```
 init(path: String)
 ```
-- 描述: 初始化Cl100kTokenizer实例
-- 参数:
-  - `path`: `String`, 配置文件的路径
+- Description: Initializes the Cl100kTokenizer with a configuration file path.
+- Parameters:
+  - `path`: `String`, The path to the configuration file.
 
 
 ### interface JsonDeserializable<T>
@@ -77,15 +97,15 @@ init(path: String)
 ```
 static func fromJson(str: String)
 ```
-- 描述: 从JSON字符串反序列化对象
-- 参数:
-  - `str`: `String`, JSON格式的字符串
+- Description: Deserializes a JSON string into an object.
+- Parameters:
+  - `str`: `String`, The JSON string to deserialize.
 
 #### func serialize
 ```
 func serialize(): DataModel
 ```
-- 描述: 将对象序列化为DataModel
+- Description: Serializes the object into a DataModel.
 
 
 ### class Pair<T>
@@ -93,44 +113,44 @@ func serialize(): DataModel
 ```
 public operator func !=(other: Pair<T>): Bool
 ```
-- 描述: 比较两个Pair是否不相等
-- 参数:
-  - `other`: `Pair<T>`, 要比较的另一个Pair
+- Description: Checks if two pairs are not equal.
+- Parameters:
+  - `other`: `Pair<T>`, The other pair to compare with.
 
 #### func operator ==
 ```
 public operator func ==(other: Pair<T>): Bool
 ```
-- 描述: 比较两个Pair是否相等
-- 参数:
-  - `other`: `Pair<T>`, 要比较的另一个Pair
+- Description: Checks if two pairs are equal.
+- Parameters:
+  - `other`: `Pair<T>`, The other pair to compare with.
 
 #### func hashCode
 ```
 public func hashCode(): Int64
 ```
-- 描述: 计算Pair的哈希值
+- Description: Computes the hash code of the pair.
 
 #### func init
 ```
 public init(left: T, right: T)
 ```
-- 描述: 初始化Pair对象
-- 参数:
-  - `left`: `T`, Pair的左值
-  - `right`: `T`, Pair的右值
+- Description: Initializes a new Pair with the given left and right values.
+- Parameters:
+  - `left`: `T`, The left value of the pair.
+  - `right`: `T`, The right value of the pair.
 
 #### prop left
 ```
 public prop left: T
 ```
-- 描述: 获取Pair的左值
+- Description: Gets the left value of the pair.
 
 #### prop right
 ```
 public prop right: T
 ```
-- 描述: 获取Pair的右值
+- Description: Gets the right value of the pair.
 
 
 ### struct TokenizerJson
@@ -138,18 +158,85 @@ public prop right: T
 ```
 static func deserialize(dm: DataModel): TokenizerJson
 ```
-- 描述: 从DataModel反序列化TokenizerJson对象
-- 参数:
-  - `dm`: `DataModel`, 包含TokenizerJson数据的DataModel
+- Description: Deserializes a DataModel into a TokenizerJson object.
+- Parameters:
+  - `dm`: `DataModel`, The DataModel to deserialize.
 
 
 ### class TokenizerLoader
+#### func default
+```
+func default(): Tokenizer
+```
+- Description: Returns the default tokenizer based on configuration or falls back to UnicodeTokenizer
+
 #### func load
 ```
-public static func load(modelNameOrPath: String): Tokenizer
+func load(tokenizerType: TokenizerType, vocabPath: String): Tokenizer
 ```
-- 描述: 加载指定模型名称或路径的分词器
-- 参数:
-  - `modelNameOrPath`: `String`, 模型名称或路径
+- Description: Loads a tokenizer of the specified type with the given vocabulary path
+- Parameters:
+  - `tokenizerType`: `TokenizerType`, The type of tokenizer to load
+  - `vocabPath`: `String`, The path to the vocabulary file for the tokenizer
+
+
+### enum TokenizerType
+####  Cl100k
+```
+Cl100k
+```
+- Description: Represents the Cl100k tokenizer type
+
+####  DeepSeek
+```
+DeepSeek
+```
+- Description: Represents the DeepSeek tokenizer type
+
+####  Qwen
+```
+Qwen
+```
+- Description: Represents the Qwen tokenizer type
+
+#### func fromString
+```
+func fromString(ttype: String): TokenizerType
+```
+- Description: Converts a string to the corresponding TokenizerType enum value
+- Parameters:
+  - `ttype`: `String`, The string representation of the tokenizer type
+
+#### func toString
+```
+func toString()
+```
+- Description: Converts the tokenizer type to a string representation
+
+
+### class UnicodeTokenizer
+#### func countToken
+```
+func countToken(input: String): Int64
+```
+- Description: Counts the number of tokens in a string, adjusting for different character types.
+- Parameters:
+  - `input`: `String`, The string for which tokens are to be counted.
+
+#### func decode
+```
+func decode(tokens: Array<UInt32>): String
+```
+- Description: Decodes an array of tokens into a string.
+- Parameters:
+  - `tokens`: `Array<UInt32>`, An array of tokens to be decoded.
+
+#### func encode
+```
+func encode(input: String): Array<UInt32>
+```
+- Description: Encodes a string into an array of tokens.
+- Parameters:
+  - `input`: `String`, The string to be encoded.
 
 
