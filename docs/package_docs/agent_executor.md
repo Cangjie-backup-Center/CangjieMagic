@@ -8,28 +8,28 @@
 ### struct AgentExecutorManager
 #### func create
 ```
-static func create(name: String): AgentExecutor
+public static func create(name: String): AgentExecutor
 ```
-- 描述: 根据名称创建对应的代理执行器
-- 参数:
-  - `name`: `String`, 代理执行器的名称
+- Description: Creates an agent executor based on the provided name.
+- Parameters:
+  - `name`: `String`, The name of the executor to create.
 
 #### func register
 ```
-static func register(name: String, buildFn: () -> AgentExecutor): Unit
+public static func register(name: String, buildFn: () -> AgentExecutor): Unit
 ```
-- 描述: 注册一个指定名称的代理执行器构建器
-- 参数:
-  - `name`: `String`, 代理执行器的名称
-  - `buildFn`: `() -> AgentExecutor`, 构建函数，用于创建代理执行器
+- Description: Registers a new agent executor builder with a specific name and a build function.
+- Parameters:
+  - `name`: `String`, The name of the executor to register.
+  - `buildFn`: `() -> AgentExecutor`, A function that builds the executor.
 
 #### func register
 ```
-static func register(checkFn: (String) -> Bool, buildFn: (String) -> AgentExecutor): Unit
+public static func register(checkFn: (String) -> Bool, buildFn: (String) -> AgentExecutor): Unit
 ```
-- 描述: 注册一个代理执行器构建器，包含检查函数和构建函数
-- 参数:
-  - `checkFn`: `(String) -> Bool`, 检查函数，用于判断是否使用该构建器
-  - `buildFn`: `(String) -> AgentExecutor`, 构建函数，用于创建代理执行器
+- Description: Registers a new agent executor builder with a check function and a build function.
+- Parameters:
+  - `checkFn`: `(String) -> Bool`, A function that checks if the executor name matches.
+  - `buildFn`: `(String) -> AgentExecutor`, A function that builds the executor.
 
 

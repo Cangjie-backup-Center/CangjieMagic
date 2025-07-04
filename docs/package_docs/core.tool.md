@@ -38,45 +38,45 @@
 ```
 prop description: String
 ```
-- 描述: 工具的描述，LLM将根据描述选择工具
+- Description: Description of the tool. LLM will choose the tool according to the description
 
 #### prop examples
 ```
 prop examples: Array<String>
 ```
-- 描述: 工具调用的示例，可选
+- Description: Examples of how to call the tool. Optional.
 
 #### prop extra
 ```
 prop extra: HashMap<String, String>
 ```
-- 描述: 额外的自定义属性
+- Description: Extra customized attributes
 
 #### func invoke
 ```
-func invoke(args: HashMap<String, ToJsonValue>): ToolResponse
+func invoke(args: HashMap<String, JsonValue>): ToolResponse
 ```
-- 描述: 参数及其值分组在哈希表中
-- 参数:
-  - `args`: `HashMap<String, ToJsonValue>`, 参数及其值的哈希表
+- Description: Arguments and their values are grouped in a hash map
+- Parameters:
+  - `args`: `HashMap<String, JsonValue>`, Arguments and their values
 
 #### prop name
 ```
 prop name: String
 ```
-- 描述: 工具的唯一标识符
+- Description: Unique id of a tool
 
 #### prop parameters
 ```
 prop parameters: Array<ToolParameter>
 ```
-- 描述: 工具输入的类型模式
+- Description: Type schema of tool inputs
 
 #### prop retType
 ```
 prop retType: TypeSchema
 ```
-- 描述: 工具的返回类型，目前未使用
+- Description: Return type of the tool. Not used currently.
 
 
 ### class ToolException
@@ -84,15 +84,15 @@ prop retType: TypeSchema
 ```
 init(reason: String)
 ```
-- 描述: 初始化ToolException实例
-- 参数:
-  - `reason`: `String`, 异常原因描述
+- Description: Initializes a new instance of ToolException with the specified reason
+- Parameters:
+  - `reason`: `String`, The reason for the exception
 
 #### let reason
 ```
 let reason: String
 ```
-- 描述: 异常原因描述
+- Description: The reason for the exception
 
 
 ### interface ToolManager
@@ -100,60 +100,60 @@ let reason: String
 ```
 func addTool(tool: Tool): Unit
 ```
-- 描述: 添加一个新工具
-- 参数:
-  - `tool`: `Tool`, 要添加的工具
+- Description: Add a new tool
+- Parameters:
+  - `tool`: `Tool`, The tool to be added
 
 #### func addTools
 ```
 func addTools(tools: Array<Tool>): Unit
 ```
-- 描述: 添加多个新工具
-- 参数:
-  - `tools`: `Array<Tool>`, 要添加的工具列表
+- Description: Add new tools
+- Parameters:
+  - `tools`: `Array<Tool>`, The tools to be added
 
 #### func clear
 ```
 func clear(): Unit
 ```
-- 描述: 删除所有工具
+- Description: Delete all tools
 
 #### func delTool
 ```
 func delTool(tool: Tool): Unit
 ```
-- 描述: 删除一个工具（如果存在）
-- 参数:
-  - `tool`: `Tool`, 要删除的工具
+- Description: Delete a tool if it exists
+- Parameters:
+  - `tool`: `Tool`, The tool to be deleted
 
 #### prop enableFilter
 ```
 prop enableFilter: Bool
 ```
-- 描述: 是否启用工具语义搜索
+- Description: Whether filtering tools is enabled
 
 #### func filterTool
 ```
 func filterTool(question: String, config: ToolSearchConfig): Array<Tool>
 ```
-- 描述: 根据问题搜索相关工具
-- 参数:
-  - `question`: `String`, 用户问题
-  - `config`: `ToolSearchConfig`, 搜索配置
+- Description: Filter related tools to the question
+- Parameters:
+  - `question`: `String`, The question to filter tools
+  - `config`: `ToolSearchConfig`, The configuration for tool search
 
 #### func findTool
 ```
 func findTool(name: String): Option<Tool>
 ```
-- 描述: 根据名称查找工具
-- 参数:
-  - `name`: `String`, 要查找的工具名称
+- Description: Find a tool according to its name
+- Parameters:
+  - `name`: `String`, The name of the tool to find
 
 #### func getTools
 ```
 func getTools(): Array<Tool>
 ```
-- 描述: 获取所有工具
+- Description: Get all tools
 
 
 ### struct ToolParameter
@@ -161,29 +161,29 @@ func getTools(): Array<Tool>
 ```
 let description: String
 ```
-- 描述: 参数的描述
+- Description: The description of the tool parameter.
 
 #### func init
 ```
 public init(name: String, description: String, typeSchema: TypeSchema)
 ```
-- 描述: 初始化ToolParameter
-- 参数:
-  - `name`: `String`, 参数的名称
-  - `description`: `String`, 参数的描述
-  - `typeSchema`: `TypeSchema`, 参数的类型模式
+- Description: Initializes a new ToolParameter with the specified name, description, and type schema.
+- Parameters:
+  - `name`: `String`, The name of the tool parameter.
+  - `description`: `String`, The description of the tool parameter.
+  - `typeSchema`: `TypeSchema`, The type schema of the tool parameter.
 
 #### let name
 ```
 let name: String
 ```
-- 描述: 参数的名称
+- Description: The name of the tool parameter.
 
 #### let typeSchema
 ```
 let typeSchema: TypeSchema
 ```
-- 描述: 参数的类型模式
+- Description: The type schema of the tool parameter.
 
 
 ### struct ToolRequest
@@ -191,7 +191,7 @@ let typeSchema: TypeSchema
 ```
 override public func toString(): String
 ```
-- 描述: 将ToolRequest对象转换为字符串表示形式
+- Description: Converts the ToolRequest object to a string representation.
 
 
 ### struct ToolResponse
@@ -199,22 +199,22 @@ override public func toString(): String
 ```
 let content: String
 ```
-- 描述: 工具调用的结果内容
+- Description: Content of the tool response
 
 #### func init
 ```
 init(content: String, isError: Bool = false)
 ```
-- 描述: 初始化工具响应
-- 参数:
-  - `content`: `String`, 工具调用的结果内容
-  - `isError`: `Bool`, 指示工具调用是否出错，默认为false
+- Description: Initializes a ToolResponse with content and error status
+- Parameters:
+  - `content`: `String`, Content of the tool response
+  - `isError`: `Bool`, Indicates if the tool response is an error, defaults to false
 
 #### let isError
 ```
 let isError: Bool
 ```
-- 描述: 指示工具调用是否出错
+- Description: Indicates if the tool response is an error
 
 
 ### struct ToolSearchConfig

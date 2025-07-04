@@ -93,107 +93,107 @@
 ```
 func clear(): Unit
 ```
-- 描述: 清空图
+- Description: Clears the graph
 
 #### func getAllNodes
 ```
 func getAllNodes(): Array<NodeContainer<V, E>>
 ```
-- 描述: 获取所有节点容器
+- Description: Gets all node containers
 
 #### func getEdges
 ```
 func getEdges(srcId: String, tgtId: String): Array<Edge<E>>
 ```
-- 描述: 获取边
-- 参数:
-  - `srcId`: `String`, 源顶点ID
-  - `tgtId`: `String`, 目标顶点ID
+- Description: Gets edges between two vertices
+- Parameters:
+  - `srcId`: `String`, The source vertex ID
+  - `tgtId`: `String`, The target vertex ID
 
 #### func getIncomingEdgesOf
 ```
 func getIncomingEdgesOf(id: String): Array<Edge<E>>
 ```
-- 描述: 获取顶点的入边
-- 参数:
-  - `id`: `String`, 顶点ID
+- Description: Gets incoming edges of a vertex
+- Parameters:
+  - `id`: `String`, The vertex ID
 
 #### func getOutgoingEdgesOf
 ```
 func getOutgoingEdgesOf(id: String): Array<Edge<E>>
 ```
-- 描述: 获取顶点的出边
-- 参数:
-  - `id`: `String`, 顶点ID
+- Description: Gets outgoing edges of a vertex
+- Parameters:
+  - `id`: `String`, The vertex ID
 
 #### func getVertex
 ```
 func getVertex(id: String): ?Vertex<V>
 ```
-- 描述: 根据ID获取顶点
-- 参数:
-  - `id`: `String`, 顶点ID
+- Description: Gets a vertex by ID
+- Parameters:
+  - `id`: `String`, The vertex ID
 
 #### func getVertexTypes
 ```
 func getVertexTypes(): Set<String>
 ```
-- 描述: 获取所有顶点类型
+- Description: Gets all vertex types
 
 #### func getVertices
 ```
 func getVertices(): Array<Vertex<V>>
 ```
-- 描述: 获取所有顶点
+- Description: Gets all vertices
 
 #### func hasEdge
 ```
 func hasEdge(srcId: String, tgtId: String): Bool
 ```
-- 描述: 判断是否存在边
-- 参数:
-  - `srcId`: `String`, 源顶点ID
-  - `tgtId`: `String`, 目标顶点ID
+- Description: Checks if an edge exists between two vertices
+- Parameters:
+  - `srcId`: `String`, The source vertex ID
+  - `tgtId`: `String`, The target vertex ID
 
 #### func hasVertex
 ```
 func hasVertex(id: String): Bool
 ```
-- 描述: 判断是否存在顶点
-- 参数:
-  - `id`: `String`, 顶点ID
+- Description: Checks if a vertex exists
+- Parameters:
+  - `id`: `String`, The vertex ID
 
 #### func removeEdge
 ```
 func removeEdge(e: Edge<E>): Unit
 ```
-- 描述: 移除边
-- 参数:
-  - `e`: `Edge<E>`, 边
+- Description: Removes an edge
+- Parameters:
+  - `e`: `Edge<E>`, The edge to remove
 
 #### func removeVertex
 ```
 func removeVertex(id: String): Unit
 ```
-- 描述: 移除顶点
-- 参数:
-  - `id`: `String`, 顶点ID
+- Description: Removes a vertex by ID
+- Parameters:
+  - `id`: `String`, The vertex ID
 
 #### func upsertEdge
 ```
 func upsertEdge(e: Edge<E>): Unit
 ```
-- 描述: 更新或插入边
-- 参数:
-  - `e`: `Edge<E>`, 边
+- Description: Updates or inserts an edge
+- Parameters:
+  - `e`: `Edge<E>`, The edge to upsert
 
 #### func upsertVertex
 ```
 func upsertVertex(v: Vertex<V>): Unit
 ```
-- 描述: 更新或插入顶点
-- 参数:
-  - `v`: `Vertex<V>`, 顶点
+- Description: Updates or inserts a vertex
+- Parameters:
+  - `v`: `Vertex<V>`, The vertex to upsert
 
 
 ### class BaseLocalGraphStorage<V, E>
@@ -201,144 +201,144 @@ func upsertVertex(v: Vertex<V>): Unit
 ```
 public func close(): Unit
 ```
-- 描述: 关闭图存储
+- Description: Closes the graph storage.
 
 #### prop collection
 ```
 public prop collection: String
 ```
-- 描述: 获取存储的集合名称
+- Description: Gets the collection name of the graph storage.
 
 #### func commit
 ```
 public func commit(): Unit
 ```
-- 描述: 提交所有更改到存储
+- Description: Commits all changes to the graph storage.
 
 #### func getAllVertices
 ```
 public func getAllVertices(): Array<Vertex<V>>
 ```
-- 描述: 获取图中的所有顶点
+- Description: Retrieves all vertices in the graph.
 
 #### func getEdge
 ```
 public func getEdge(srcId: String, tgtId: String, eType: String): Option<Edge<E>>
 ```
-- 描述: 获取指定源顶点、目标顶点和边类型的边
-- 参数:
-  - `srcId`: `String`, 源顶点的唯一标识符
-  - `tgtId`: `String`, 目标顶点的唯一标识符
-  - `eType`: `String`, 边的类型
+- Description: Retrieves an edge between the source and target vertices with the specified type.
+- Parameters:
+  - `srcId`: `String`, The ID of the source vertex.
+  - `tgtId`: `String`, The ID of the target vertex.
+  - `eType`: `String`, The type of the edge to retrieve.
 
 #### func getEdges
 ```
 public func getEdges(srcId: String, tgtId: String): Array<Edge<E>>
 ```
-- 描述: 获取从源顶点到目标顶点的所有边
-- 参数:
-  - `srcId`: `String`, 源顶点的唯一标识符
-  - `tgtId`: `String`, 目标顶点的唯一标识符
+- Description: Retrieves all edges between the source and target vertices.
+- Parameters:
+  - `srcId`: `String`, The ID of the source vertex.
+  - `tgtId`: `String`, The ID of the target vertex.
 
 #### func getIncomingEdgesOf
 ```
 public func getIncomingEdgesOf(id: String): Array<Edge<E>>
 ```
-- 描述: 获取指向指定顶点的所有边
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Retrieves all incoming edges of a vertex.
+- Parameters:
+  - `id`: `String`, The ID of the vertex.
 
 #### func getOutgoingEdgesOf
 ```
 public func getOutgoingEdgesOf(id: String): Array<Edge<E>>
 ```
-- 描述: 获取从指定顶点出发的所有边
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Retrieves all outgoing edges of a vertex.
+- Parameters:
+  - `id`: `String`, The ID of the vertex.
 
 #### func getVertex
 ```
 public func getVertex(id: String): Option<Vertex<V>>
 ```
-- 描述: 获取指定ID的顶点
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Retrieves a vertex by its ID.
+- Parameters:
+  - `id`: `String`, The ID of the vertex to retrieve.
 
 #### func getVertexTypes
 ```
 public func getVertexTypes(): Set<String>
 ```
-- 描述: 获取图中所有顶点的类型
+- Description: Retrieves all vertex types in the graph.
 
 #### func hasEdge
 ```
 public func hasEdge(srcId: String, tgtId: String): Bool
 ```
-- 描述: 检查图中是否存在从源顶点到目标顶点的边
-- 参数:
-  - `srcId`: `String`, 源顶点的唯一标识符
-  - `tgtId`: `String`, 目标顶点的唯一标识符
+- Description: Checks if an edge exists between the source and target vertices.
+- Parameters:
+  - `srcId`: `String`, The ID of the source vertex.
+  - `tgtId`: `String`, The ID of the target vertex.
 
 #### func hasVertex
 ```
 public func hasVertex(id: String): Bool
 ```
-- 描述: 检查图中是否存在指定ID的顶点
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Checks if a vertex with the given ID exists in the graph.
+- Parameters:
+  - `id`: `String`, The ID of the vertex to check.
 
 #### func init
 ```
 public init(workspace!: String = ".storage", collection!: String = "default")
 ```
-- 描述: 初始化本地图存储
-- 参数:
-  - `workspace`: `String`, 存储的工作目录
-  - `collection`: `String`, 存储的集合名称
+- Description: Initializes the graph storage with the specified workspace and collection.
+- Parameters:
+  - `workspace`: `String`, The workspace directory for storage.
+  - `collection`: `String`, The collection name for the graph.
 
 #### func removeEdge
 ```
 public func removeEdge(e: Edge<E>): Unit
 ```
-- 描述: 移除指定的边
-- 参数:
-  - `e`: `Edge<E>`, 要移除的边
+- Description: Removes an edge from the graph.
+- Parameters:
+  - `e`: `Edge<E>`, The edge to remove.
 
 #### func removeVertex
 ```
 public func removeVertex(id: String): Unit
 ```
-- 描述: 移除指定ID的顶点
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Removes a vertex from the graph.
+- Parameters:
+  - `id`: `String`, The ID of the vertex to remove.
 
 #### func reset
 ```
 public func reset(): Unit
 ```
-- 描述: 重置图存储
+- Description: Resets the graph storage by clearing all data.
 
 #### func upsertEdge
 ```
 public func upsertEdge(edge: Edge<E>): Unit
 ```
-- 描述: 插入或更新边
-- 参数:
-  - `edge`: `Edge<E>`, 要插入或更新的边
+- Description: Inserts or updates an edge in the graph.
+- Parameters:
+  - `edge`: `Edge<E>`, The edge to insert or update.
 
 #### func upsertVertex
 ```
 public func upsertVertex(vertex: Vertex<V>): Unit
 ```
-- 描述: 插入或更新顶点
-- 参数:
-  - `vertex`: `Vertex<V>`, 要插入或更新的顶点
+- Description: Inserts or updates a vertex in the graph.
+- Parameters:
+  - `vertex`: `Vertex<V>`, The vertex to insert or update.
 
 #### prop workspace
 ```
 public prop workspace: String
 ```
-- 描述: 获取存储的工作目录
+- Description: Gets the workspace directory of the graph storage.
 
 
 ### class Edge<E>
@@ -346,99 +346,99 @@ public prop workspace: String
 ```
 operator func !=(other: Edge<E>): Bool
 ```
-- 描述: 判断两条边是否不相等
-- 参数:
-  - `other`: `Edge<E>`, 另一条边
+- Description: Checks if two edges are not equal
+- Parameters:
+  - `other`: `Edge<E>`, The other edge to compare
 
 #### func operator ==
 ```
 operator func ==(other: Edge<E>): Bool
 ```
-- 描述: 判断两条边是否相等
-- 参数:
-  - `other`: `Edge<E>`, 另一条边
+- Description: Checks if two edges are equal
+- Parameters:
+  - `other`: `Edge<E>`, The other edge to compare
 
 #### prop data
 ```
 prop data: Option<E>
 ```
-- 描述: 获取边数据
+- Description: Gets the edge data
 
 #### func deserialize
 ```
 static func deserialize(dm: DataModel)
 ```
-- 描述: 反序列化边
-- 参数:
-  - `dm`: `DataModel`, 数据模型
+- Description: Deserializes a DataModel to an Edge
+- Parameters:
+  - `dm`: `DataModel`, The DataModel to deserialize
 
 #### prop eType
 ```
 prop eType: String
 ```
-- 描述: 获取边类型
+- Description: Gets the edge type
 
 #### func fromJson
 ```
 static func fromJson(str: String): Edge<E>
 ```
-- 描述: 从JSON字符串中解析边
-- 参数:
-  - `str`: `String`, JSON字符串
+- Description: Creates an edge from a JSON string
+- Parameters:
+  - `str`: `String`, The JSON string
 
 #### func hashCode
 ```
 func hashCode(): Int64
 ```
-- 描述: 计算边的哈希值
+- Description: Computes the hash code of the edge
 
 #### func init
 ```
 init(srcId: String, tgtId: String, eType!: String = "DEFAULT", weight!: Float64 = 1.0, data!: Option<E> = None)
 ```
-- 描述: 构造函数，初始化边
-- 参数:
-  - `srcId`: `String`, 源顶点ID
-  - `tgtId`: `String`, 目标顶点ID
-  - `eType`: `String`, 边类型，默认为"DEFAULT"
-  - `weight`: `Float64`, 边权重，默认为1.0
-  - `data`: `Option<E>`, 边数据，默认为None
+- Description: Constructor for Edge
+- Parameters:
+  - `srcId`: `String`, The source vertex ID
+  - `tgtId`: `String`, The target vertex ID
+  - `eType`: `String`, The edge type
+  - `weight`: `Float64`, The edge weight
+  - `data`: `Option<E>`, The edge data
 
 #### func serialize
 ```
 func serialize(): DataModel
 ```
-- 描述: 序列化边
+- Description: Serializes the edge to a DataModel
 
 #### prop srcId
 ```
 prop srcId: String
 ```
-- 描述: 获取源顶点ID
+- Description: Gets the source vertex ID
 
 #### prop tgtId
 ```
 prop tgtId: String
 ```
-- 描述: 获取目标顶点ID
+- Description: Gets the target vertex ID
 
 #### func toJsonString
 ```
 func toJsonString(): String
 ```
-- 描述: 将边转换为JSON字符串
+- Description: Converts the edge to a JSON string
 
 #### prop uniqueId
 ```
 prop uniqueId: String
 ```
-- 描述: 获取边的唯一ID
+- Description: Gets the unique ID of the edge
 
 #### prop weight
 ```
 mut prop weight: Float64
 ```
-- 描述: 获取或设置边权重
+- Description: Gets or sets the edge weight
 
 
 ### interface GraphStorage<V, E>
@@ -446,105 +446,105 @@ mut prop weight: Float64
 ```
 func getAllVertices(): Array<Vertex<V>>
 ```
-- 描述: 获取图中的所有顶点
+- Description: Retrieves all vertices in the graph.
 
 #### func getEdge
 ```
 func getEdge(srcId: String, tgtId: String, eType: String): Option<Edge<E>>
 ```
-- 描述: 获取指定源顶点、目标顶点和边类型的边
-- 参数:
-  - `srcId`: `String`, 源顶点的唯一标识符
-  - `tgtId`: `String`, 目标顶点的唯一标识符
-  - `eType`: `String`, 边的类型
+- Description: Retrieves an edge between the source and target vertices with the specified type.
+- Parameters:
+  - `srcId`: `String`, The ID of the source vertex.
+  - `tgtId`: `String`, The ID of the target vertex.
+  - `eType`: `String`, The type of the edge to retrieve.
 
 #### func getEdges
 ```
 func getEdges(srcId: String, tgtId: String): Array<Edge<E>>
 ```
-- 描述: 获取从源顶点到目标顶点的所有边
-- 参数:
-  - `srcId`: `String`, 源顶点的唯一标识符
-  - `tgtId`: `String`, 目标顶点的唯一标识符
+- Description: Retrieves all edges between the source and target vertices.
+- Parameters:
+  - `srcId`: `String`, The ID of the source vertex.
+  - `tgtId`: `String`, The ID of the target vertex.
 
 #### func getIncomingEdgesOf
 ```
 func getIncomingEdgesOf(id: String): Array<Edge<E>>
 ```
-- 描述: 获取指向指定顶点的所有边
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Retrieves all incoming edges of a vertex.
+- Parameters:
+  - `id`: `String`, The ID of the vertex.
 
 #### func getOutgoingEdgesOf
 ```
 func getOutgoingEdgesOf(id: String): Array<Edge<E>>
 ```
-- 描述: 获取从指定顶点出发的所有边
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Retrieves all outgoing edges of a vertex.
+- Parameters:
+  - `id`: `String`, The ID of the vertex.
 
 #### func getVertex
 ```
 func getVertex(id: String): Option<Vertex<V>>
 ```
-- 描述: 获取指定ID的顶点
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Retrieves a vertex by its ID.
+- Parameters:
+  - `id`: `String`, The ID of the vertex to retrieve.
 
 #### func getVertexTypes
 ```
 func getVertexTypes(): Set<String>
 ```
-- 描述: 获取图中所有顶点的类型
+- Description: Retrieves all vertex types in the graph.
 
 #### func hasEdge
 ```
 func hasEdge(srcId: String, tgtId: String): Bool
 ```
-- 描述: 检查图中是否存在从源顶点到目标顶点的边
-- 参数:
-  - `srcId`: `String`, 源顶点的唯一标识符
-  - `tgtId`: `String`, 目标顶点的唯一标识符
+- Description: Checks if an edge exists between the source and target vertices.
+- Parameters:
+  - `srcId`: `String`, The ID of the source vertex.
+  - `tgtId`: `String`, The ID of the target vertex.
 
 #### func hasVertex
 ```
 func hasVertex(id: String): Bool
 ```
-- 描述: 检查图中是否存在指定ID的顶点
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Checks if a vertex with the given ID exists in the graph.
+- Parameters:
+  - `id`: `String`, The ID of the vertex to check.
 
 #### func removeEdge
 ```
 func removeEdge(e: Edge<E>): Unit
 ```
-- 描述: 移除指定的边
-- 参数:
-  - `e`: `Edge<E>`, 要移除的边
+- Description: Removes an edge from the graph.
+- Parameters:
+  - `e`: `Edge<E>`, The edge to remove.
 
 #### func removeVertex
 ```
 func removeVertex(id: String): Unit
 ```
-- 描述: 移除指定ID的顶点
-- 参数:
-  - `id`: `String`, 顶点的唯一标识符
+- Description: Removes a vertex from the graph.
+- Parameters:
+  - `id`: `String`, The ID of the vertex to remove.
 
 #### func upsertEdge
 ```
 func upsertEdge(edge: Edge<E>): Unit
 ```
-- 描述: 插入或更新边
-- 参数:
-  - `edge`: `Edge<E>`, 要插入或更新的边
+- Description: Inserts or updates an edge in the graph.
+- Parameters:
+  - `edge`: `Edge<E>`, The edge to insert or update.
 
 #### func upsertVertex
 ```
 func upsertVertex(vertex: Vertex<V>): Unit
 ```
-- 描述: 插入或更新顶点
-- 参数:
-  - `vertex`: `Vertex<V>`, 要插入或更新的顶点
+- Description: Inserts or updates a vertex in the graph.
+- Parameters:
+  - `vertex`: `Vertex<V>`, The vertex to insert or update.
 
 
 ### class IllegalEdgeException
@@ -552,9 +552,9 @@ func upsertVertex(vertex: Vertex<V>): Unit
 ```
 init(message: String)
 ```
-- 描述: 构造函数，初始化异常信息
-- 参数:
-  - `message`: `String`, 异常信息
+- Description: Constructor for IllegalEdgeException
+- Parameters:
+  - `message`: `String`, The error message
 
 
 ### interface LocalGraphStorage<V, E>
@@ -564,51 +564,51 @@ init(message: String)
 ```
 func addIncomingEdge(e: Edge<E>): Unit
 ```
-- 描述: 添加入边
-- 参数:
-  - `e`: `Edge<E>`, 边
+- Description: Adds an incoming edge to the node
+- Parameters:
+  - `e`: `Edge<E>`, The edge to add
 
 #### func addOutgoingEdge
 ```
 func addOutgoingEdge(e: Edge<E>): Unit
 ```
-- 描述: 添加出边
-- 参数:
-  - `e`: `Edge<E>`, 边
+- Description: Adds an outgoing edge to the node
+- Parameters:
+  - `e`: `Edge<E>`, The edge to add
 
 #### prop incoming
 ```
 prop incoming: Set<Edge<E>>
 ```
-- 描述: 获取入边集合
+- Description: Gets the set of incoming edges
 
 #### prop outgoing
 ```
 prop outgoing: Set<Edge<E>>
 ```
-- 描述: 获取出边集合
+- Description: Gets the set of outgoing edges
 
 #### func removeIncomingEdge
 ```
 func removeIncomingEdge(e: Edge<E>): Unit
 ```
-- 描述: 移除入边
-- 参数:
-  - `e`: `Edge<E>`, 边
+- Description: Removes an incoming edge from the node
+- Parameters:
+  - `e`: `Edge<E>`, The edge to remove
 
 #### func removeOutgoingEdge
 ```
 func removeOutgoingEdge(e: Edge<E>): Unit
 ```
-- 描述: 移除出边
-- 参数:
-  - `e`: `Edge<E>`, 边
+- Description: Removes an outgoing edge from the node
+- Parameters:
+  - `e`: `Edge<E>`, The edge to remove
 
 #### prop vertex
 ```
 mut prop vertex: Vertex<V>
 ```
-- 描述: 获取或设置顶点
+- Description: Gets or sets the vertex of the node
 
 
 ### class Vertex<V>
@@ -616,78 +616,78 @@ mut prop vertex: Vertex<V>
 ```
 operator func !=(other: Vertex<V>): Bool
 ```
-- 描述: 判断两个顶点是否不相等
-- 参数:
-  - `other`: `Vertex<V>`, 另一个顶点
+- Description: Checks if two vertices are not equal
+- Parameters:
+  - `other`: `Vertex<V>`, The other vertex to compare
 
 #### func operator ==
 ```
 operator func ==(other: Vertex<V>): Bool
 ```
-- 描述: 判断两个顶点是否相等
-- 参数:
-  - `other`: `Vertex<V>`, 另一个顶点
+- Description: Checks if two vertices are equal
+- Parameters:
+  - `other`: `Vertex<V>`, The other vertex to compare
 
 #### prop data
 ```
 prop data: Option<V>
 ```
-- 描述: 获取顶点数据
+- Description: Gets the vertex data
 
 #### func deserialize
 ```
 static func deserialize(dm: DataModel): Vertex<V>
 ```
-- 描述: 反序列化顶点
-- 参数:
-  - `dm`: `DataModel`, 数据模型
+- Description: Deserializes a DataModel to a Vertex
+- Parameters:
+  - `dm`: `DataModel`, The DataModel to deserialize
 
 #### func fromJsonString
 ```
 static func fromJsonString(str: String): Vertex<V>
 ```
-- 描述: 从JSON字符串中解析顶点
-- 参数:
-  - `str`: `String`, JSON字符串
+- Description: Creates a vertex from a JSON string
+- Parameters:
+  - `str`: `String`, The JSON string
 
 #### func hashCode
 ```
 func hashCode(): Int64
 ```
-- 描述: 计算顶点的哈希值
+- Description: Computes the hash code of the vertex
 
 #### prop id
 ```
 prop id: String
 ```
-- 描述: 获取顶点ID
+- Description: Gets the vertex ID
 
 #### func init
 ```
 init(id: String, vType!: String = "DEFAULT", data!: Option<V> = None)
 ```
-- 描述: 构造函数，初始化顶点
-- 参数:
-  - `id`: `String`, 顶点ID
-  - `vType`: `String`, 顶点类型，默认为"DEFAULT"
-  - `data`: `Option<V>`, 顶点数据，默认为None
+- Description: Constructor for Vertex
+- Parameters:
+  - `id`: `String`, The vertex ID
+  - `vType`: `String`, The vertex type
+  - `data`: `Option<V>`, The vertex data
 
 #### func serialize
 ```
 func serialize(): DataModel
 ```
-- 描述: 序列化顶点
+- Description: Serializes the vertex to a DataModel
 
 #### func toJsonString
 ```
 func toJsonString(): String
 ```
-- 描述: 将顶点转换为JSON字符串
+- Description: Converts the vertex to a JSON string
 
 #### prop vType
 ```
 prop vType: String
 ```
-- 描述: 获取顶点类型
+- Description: Gets the vertex type
 
 

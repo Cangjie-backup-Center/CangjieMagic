@@ -4,26 +4,26 @@
     - [func toString](#func-tostring)
   - [class AsyncChatResponse](#class-asyncchatresponse)
     - [let chunks](#let-chunks)
-    - [prop dialog](#prop-dialog)
     - [func iter](#func-iter)
+    - [prop messageList](#prop-messagelist)
     - [let model](#let-model)
-    - [func next](#func-next)
     - [func toString](#func-tostring-1)
     - [prop usage](#prop-usage)
   - [interface ChatModel](#interface-chatmodel)
     - [func asyncCreate](#func-asynccreate)
+    - [prop contextLength](#prop-contextlength)
     - [func create](#func-create)
   - [class ChatRequest](#class-chatrequest)
-    - [let dialog](#let-dialog)
     - [func init](#func-init)
     - [func init](#func-init-1)
     - [func init](#func-init-1)
+    - [let messageList](#let-messagelist)
     - [let stop](#let-stop)
     - [let temperature](#let-temperature)
     - [func toString](#func-tostring-1)
   - [struct ChatResponse](#struct-chatresponse)
-    - [let dialog](#let-dialog-1)
     - [func init](#func-init-1)
+    - [let messageList](#let-messagelist-1)
     - [let model](#let-model-1)
     - [func toString](#func-tostring-1)
     - [let usage](#let-usage)
@@ -59,7 +59,7 @@
 ```
 override public func toString(): String
 ```
-- 描述: 将AsyncChatChunk对象转换为字符串表示
+- Description: Converts the AsyncChatChunk object to a string representation.
 
 
 ### class AsyncChatResponse
@@ -67,45 +67,39 @@ override public func toString(): String
 ```
 public let chunks: Iterator<AsyncChatChunk>
 ```
-- 描述: 异步聊天块的迭代器
-
-#### prop dialog
-```
-public prop dialog: Dialog
-```
-- 描述: 获取同步的聊天对话框
+- Description: An iterator over the chunks of the chat response.
 
 #### func iter
 ```
 public func iter(withReason!: Bool = true): Iterator<String>
 ```
-- 描述: 获取聊天内容的迭代器
-- 参数:
-  - `withReason`: `Bool`, 是否包含原因
+- Description: Returns an iterator over the chat response strings, optionally including the reason.
+- Parameters:
+  - `withReason`: `Bool`, Whether to include the reason in the iterator.
+
+#### prop messageList
+```
+public prop messageList: MessageList
+```
+- Description: Gets the list of messages from the chat response, waiting for completion if necessary.
 
 #### let model
 ```
 public let model: String
 ```
-- 描述: 聊天模型名称
-
-#### func next
-```
-override public func next(): Option<AsyncChatChunk>
-```
-- 描述: 获取下一个聊天块
+- Description: The model used for the chat response.
 
 #### func toString
 ```
 public func toString(): String
 ```
-- 描述: 将AsyncChatResponse对象转换为字符串表示
+- Description: Converts the AsyncChatResponse object to a string representation.
 
 #### prop usage
 ```
 public prop usage: Option<ChatUsage>
 ```
-- 描述: 获取聊天使用情况
+- Description: Gets the usage information of the chat response if it has finished.
 
 
 ### interface ChatModel
@@ -113,150 +107,156 @@ public prop usage: Option<ChatUsage>
 ```
 func asyncCreate(request: ChatRequest): AsyncChatResponse
 ```
-- 描述: 聊天模型的异步API
-- 参数:
-  - `request`: `ChatRequest`, 聊天请求参数
+- Description: Asynchronous API of the chat model
+- Parameters:
+  - `request`: `ChatRequest`, The chat request
+
+#### prop contextLength
+```
+prop contextLength: Int64
+```
+- Description: The context length of the chat model
 
 #### func create
 ```
 func create(request: ChatRequest): ChatResponse
 ```
-- 描述: 聊天模型的同步API
-- 参数:
-  - `request`: `ChatRequest`, 聊天请求参数
+- Description: Synchronous API of the chat model
+- Parameters:
+  - `request`: `ChatRequest`, The chat request
 
 
 ### class ChatRequest
-#### let dialog
+#### func init
 ```
-let dialog: Dialog
+init(message: String)
 ```
-- 描述: 对话内容
+- Description: Constructor that initializes the chat request with a single user message
+- Parameters:
+  - `message`: `String`, The user message to initialize the chat request
 
 #### func init
 ```
-public init(message: String)
+init(messages: Array<Message>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None)
 ```
-- 描述: 初始化ChatRequest，使用单条消息
-- 参数:
-  - `message`: `String`, 用户消息
+- Description: Constructor that initializes the chat request with an array of messages and optional parameters
+- Parameters:
+  - `messages`: `Array<Message>`, Array of messages to initialize the chat request
+  - `temperature`: `Option<Float64>`, Optional temperature setting for the chat request
+  - `stop`: `Option<Array<String>>`, Optional stop conditions for the chat request
 
 #### func init
 ```
-public init(messages: Array<ChatMessage>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None)
+init(messageList: MessageList, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None)
 ```
-- 描述: 初始化ChatRequest，使用消息数组
-- 参数:
-  - `messages`: `Array<ChatMessage>`, 消息数组
-  - `temperature`: `Option<Float64>`, 温度参数，可选
-  - `stop`: `Option<Array<String>>`, 停止条件，可选
+- Description: Constructor that initializes the chat request with a MessageList and optional parameters
+- Parameters:
+  - `messageList`: `MessageList`, MessageList to initialize the chat request
+  - `temperature`: `Option<Float64>`, Optional temperature setting for the chat request
+  - `stop`: `Option<Array<String>>`, Optional stop conditions for the chat request
 
-#### func init
+#### let messageList
 ```
-public init(dialog: Dialog, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None)
+let messageList: MessageList
 ```
-- 描述: 初始化ChatRequest，使用Dialog对象
-- 参数:
-  - `dialog`: `Dialog`, 对话对象
-  - `temperature`: `Option<Float64>`, 温度参数，可选
-  - `stop`: `Option<Array<String>>`, 停止条件，可选
+- Description: List of messages in the chat request
 
 #### let stop
 ```
 let stop: Option<Array<String>>
 ```
-- 描述: 停止条件
+- Description: Optional stop conditions for the chat request
 
 #### let temperature
 ```
 let temperature: Option<Float64>
 ```
-- 描述: 温度参数
+- Description: Optional temperature setting for the chat request
 
 #### func toString
 ```
-public func toString(): String
+func toString(): String
 ```
-- 描述: 将ChatRequest对象转换为字符串表示
+- Description: Converts the chat request to a string representation
 
 
 ### struct ChatResponse
-#### let dialog
-```
-let dialog: Dialog
-```
-- 描述: 对话内容
-
 #### func init
 ```
-public init(dialog: Dialog, model: String, usage!: Option<ChatUsage> = None)
+init(messageList: MessageList, model: String, usage: Option<ChatUsage> = None)
 ```
-- 描述: 初始化ChatResponse
-- 参数:
-  - `dialog`: `Dialog`, 对话内容
-  - `model`: `String`, 模型名称
-  - `usage`: `Option<ChatUsage>`, 使用情况统计
+- Description: Initializes a new ChatResponse with the given message list, model, and optional usage statistics.
+- Parameters:
+  - `messageList`: `MessageList`, List of messages to include in the response.
+  - `model`: `String`, The model used for generating the response.
+  - `usage`: `Option<ChatUsage>`, Optional usage statistics for the response.
+
+#### let messageList
+```
+let messageList: MessageList
+```
+- Description: List of messages in the chat response.
 
 #### let model
 ```
 let model: String
 ```
-- 描述: 模型名称
+- Description: The model used for generating the chat response.
 
 #### func toString
 ```
-public func toString(): String
+func toString(): String
 ```
-- 描述: 将ChatResponse转换为字符串表示
+- Description: Converts the ChatResponse to a string representation.
 
 #### let usage
 ```
 let usage: Option<ChatUsage>
 ```
-- 描述: 使用情况统计
+- Description: Usage statistics of the chat response.
 
 
 ### class ChatUsage
 #### let completionTokens
 ```
-public let completionTokens: Int64
+let completionTokens: Int64
 ```
-- 描述: 表示完成令牌的数量
+- Description: Number of tokens used in the completion
 
 #### func init
 ```
-public init(promptTokens!: Int64, completionTokens!: Int64, totalTokens!: Int64, timeCost!: Option<Duration>)
+init(promptTokens: Int64, completionTokens: Int64, totalTokens: Int64, timeCost: Option<Duration>)
 ```
-- 描述: 初始化ChatUsage类的实例
-- 参数:
-  - `promptTokens`: `Int64`, 提示令牌的数量
-  - `completionTokens`: `Int64`, 完成令牌的数量
-  - `totalTokens`: `Int64`, 总令牌的数量
-  - `timeCost`: `Option<Duration>`, 时间消耗的可选值
+- Description: Constructor for ChatUsage
+- Parameters:
+  - `promptTokens`: `Int64`, Number of tokens used in the prompt
+  - `completionTokens`: `Int64`, Number of tokens used in the completion
+  - `totalTokens`: `Int64`, Total number of tokens used
+  - `timeCost`: `Option<Duration>`, Time cost of the operation
 
 #### let promptTokens
 ```
-public let promptTokens: Int64
+let promptTokens: Int64
 ```
-- 描述: 表示提示令牌的数量
+- Description: Number of tokens used in the prompt
 
 #### let timeCost
 ```
-public let timeCost: Option<Duration>
+let timeCost: Option<Duration>
 ```
-- 描述: 表示时间消耗的可选值
+- Description: Time cost of the operation
 
 #### func toString
 ```
-public func toString(): String
+func toString(): String
 ```
-- 描述: 将ChatUsage实例转换为字符串表示
+- Description: Converts the ChatUsage object to a string representation
 
 #### let totalTokens
 ```
-public let totalTokens: Int64
+let totalTokens: Int64
 ```
-- 描述: 表示总令牌的数量
+- Description: Total number of tokens used
 
 
 ### interface EmbeddingModel
@@ -264,9 +264,9 @@ public let totalTokens: Int64
 ```
 func create(request: EmbeddingRequest): EmbeddingResponse
 ```
-- 描述: 根据请求创建嵌入向量
-- 参数:
-  - `request`: `EmbeddingRequest`, 嵌入请求，包含需要生成嵌入向量的文本
+- Description: Creates an embedding based on the provided request.
+- Parameters:
+  - `request`: `EmbeddingRequest`, The request containing the data needed to create an embedding.
 
 
 ### struct EmbeddingRequest
@@ -274,22 +274,22 @@ func create(request: EmbeddingRequest): EmbeddingResponse
 ```
 let dimensions: Option<Int64>
 ```
-- 描述: 可选的嵌入维度大小
+- Description: Optional dimensions for the embedding output
 
 #### func init
 ```
 init(prompt: String, dimensions!: Option<Int> = None)
 ```
-- 描述: 初始化EmbeddingRequest结构体
-- 参数:
-  - `prompt`: `String`, 输入的提示文本
-  - `dimensions`: `Option<Int>`, 可选的嵌入维度大小，默认为None
+- Description: Initializes an EmbeddingRequest with the given prompt and optional dimensions
+- Parameters:
+  - `prompt`: `String`, The input prompt for generating embeddings
+  - `dimensions`: `Option<Int>`, Optional dimensions for the embedding output
 
 #### let prompt
 ```
 let prompt: String
 ```
-- 描述: 输入的提示文本
+- Description: The input prompt for generating embeddings
 
 
 ### struct EmbeddingResponse
@@ -297,21 +297,21 @@ let prompt: String
 ```
 let data: Array<Float64>
 ```
-- 描述: 存储嵌入向量的数组
+- Description: An array of floating-point numbers representing the embedding data
 
 #### func init
 ```
 init(data: Array<Float64>)
 ```
-- 描述: 初始化EmbeddingResponse实例
-- 参数:
-  - `data`: `Array<Float64>`, 嵌入向量数组
+- Description: Initializes the EmbeddingResponse with the given data
+- Parameters:
+  - `data`: `Array<Float64>`, An array of floating-point numbers representing the embedding data
 
 #### func toString
 ```
 func toString(): String
 ```
-- 描述: 将EmbeddingResponse转换为字符串表示
+- Description: Converts the embedding data to a string representation
 
 
 ### interface ImageModel
@@ -319,9 +319,9 @@ func toString(): String
 ```
 func create(request: ImageRequest): ImageResponse
 ```
-- 描述: 根据图像请求创建图像响应
-- 参数:
-  - `request`: `ImageRequest`, 包含图像生成所需参数的请求对象
+- Description: Creates an image based on the provided request.
+- Parameters:
+  - `request`: `ImageRequest`, The request containing details for image creation.
 
 
 ### struct ImageRequest
@@ -333,13 +333,13 @@ func create(request: ImageRequest): ImageResponse
 ```
 prop name: String
 ```
-- 描述: 模型名称，例如gpt-4o
+- Description: The model name, e.g., gpt-4o
 
 #### prop service
 ```
 prop service: String
 ```
-- 描述: 服务名称，例如openai
+- Description: The service name of the model, e.g., openai
 
 
 ### class ModelException
@@ -347,8 +347,8 @@ prop service: String
 ```
 init(msg: String)
 ```
-- 描述: 初始化ModelException异常
-- 参数:
-  - `msg`: `String`, 异常消息
+- Description: Constructor for ModelException
+- Parameters:
+  - `msg`: `String`, The error message for the exception
 
 

@@ -34,108 +34,108 @@
 ### class Document
 #### func operator !=
 ```
-public operator func !=(other: Document):Bool
+public operator func !=(other: Document): Bool
 ```
-- 描述: 比较两个文档是否不相等
-- 参数:
-  - `other`: `Document`, 另一个文档
+- Description: Checks if two documents are not equal
+- Parameters:
+  - `other`: `Document`, Document to compare with
 
 #### func operator ==
 ```
-public operator func ==(other: Document):Bool
+public operator func ==(other: Document): Bool
 ```
-- 描述: 比较两个文档是否相等
-- 参数:
-  - `other`: `Document`, 另一个文档
+- Description: Checks if two documents are equal
+- Parameters:
+  - `other`: `Document`, Document to compare with
 
 #### let content
 ```
 public let content: String
 ```
-- 描述: 文档的内容
+- Description: Content of the document
 
 #### func deserialize
 ```
 public static func deserialize(dm: DataModel)
 ```
-- 描述: 从数据模型反序列化为文档
-- 参数:
-  - `dm`: `DataModel`, 数据模型
+- Description: Deserializes a document from a data model
+- Parameters:
+  - `dm`: `DataModel`, Data model to deserialize
 
 #### func fromJsonValue
 ```
 public static func fromJsonValue(json: JsonValue): Document
 ```
-- 描述: 从JSON值反序列化为文档
-- 参数:
-  - `json`: `JsonValue`, JSON值
+- Description: Creates a document from a JSON value
+- Parameters:
+  - `json`: `JsonValue`, JSON value to deserialize
 
 #### func getTypeSchema
 ```
 public static func getTypeSchema(): TypeSchema
 ```
-- 描述: 获取文档的类型模式
+- Description: Returns the type schema of the document
 
 #### let id
 ```
 public let id: String
 ```
-- 描述: 文档的唯一标识符
+- Description: Unique identifier for the document
 
 #### func init
 ```
 public init(content: String, metadata!: HashMap<String, String> = HashMap())
 ```
-- 描述: 根据内容和元数据初始化文档
-- 参数:
-  - `content`: `String`, 文档的内容
-  - `metadata`: `HashMap<String, String>`, 文档的元数据，默认为空
+- Description: Initializes a document with content and optional metadata
+- Parameters:
+  - `content`: `String`, Content of the document
+  - `metadata`: `HashMap<String, String>`, Metadata associated with the document
 
 #### func init
 ```
 public init(id: String, content: String, metadata!: HashMap<String, String>)
 ```
-- 描述: 根据ID、内容和元数据初始化文档
-- 参数:
-  - `id`: `String`, 文档的唯一标识符
-  - `content`: `String`, 文档的内容
-  - `metadata`: `HashMap<String, String>`, 文档的元数据
+- Description: Initializes a document with id, content, and metadata
+- Parameters:
+  - `id`: `String`, Unique identifier for the document
+  - `content`: `String`, Content of the document
+  - `metadata`: `HashMap<String, String>`, Metadata associated with the document
 
 #### let metadata
 ```
 public let metadata: HashMap<String, String>
 ```
-- 描述: 文档的元数据，存储为键值对
+- Description: Metadata associated with the document
 
 #### func serialize
 ```
 public func serialize(): DataModel
 ```
-- 描述: 将文档序列化为数据模型
+- Description: Serializes the document to a data model
 
 #### func toJsonString
 ```
 public func toJsonString(): String
 ```
-- 描述: 将文档转换为JSON字符串
+- Description: Converts the document to a JSON string
 
 #### func toJsonValue
 ```
 public func toJsonValue(): JsonValue
 ```
-- 描述: 将文档序列化为JSON值
+- Description: Converts the document to a JSON value
 
 #### func toPrompt
 ```
 public override func toPrompt(): String
 ```
-- 描述: 将文档转换为提示字符串
+- Description: Converts the document to a prompt string
 
 #### func toString
 ```
 public override func toString(): String
 ```
-- 描述: 将文档转换为字符串表示
+- Description: Converts the document to a string representation
 
 
 ### interface Retrieval
@@ -143,7 +143,7 @@ public override func toString(): String
 ```
 prop sources: Array<Document>
 ```
-- 描述: 检索器的结果来源
+- Description: Result of the retriever
 
 
 ### struct RetrievalInfo
@@ -153,21 +153,21 @@ prop sources: Array<Document>
 ```
 prop description: String
 ```
-- 描述: 描述检索器将搜索的内容。在动态模式下使用。
+- Description: Describe what the retriever will search. Used under the dynamic mode.
 
 #### prop mode
 ```
 mut prop mode: RetrieverMode
 ```
-- 描述: 检索器的模式。
+- Description: The mode of the retriever.
 
 #### func search
 ```
 func search(query: String): Retrieval
 ```
-- 描述: 根据查询字符串执行搜索操作。
-- 参数:
-  - `query`: `String`, 搜索查询字符串。
+- Description: Search for a query.
+- Parameters:
+  - `query`: `String`, The query to search for.
 
 
 ### class RetrieverException
@@ -175,9 +175,9 @@ func search(query: String): Retrieval
 ```
 init(msg: String)
 ```
-- 描述: 构造函数，用于创建RetrieverException实例
-- 参数:
-  - `msg`: `String`, 异常消息
+- Description: Constructor for RetrieverException
+- Parameters:
+  - `msg`: `String`, The error message for the exception
 
 
 ### enum RetrieverMode
@@ -185,28 +185,28 @@ init(msg: String)
 ```
 operator func !=(other: RetrieverMode): Bool
 ```
-- 描述: 比较两个RetrieverMode是否不相等
-- 参数:
-  - `other`: `RetrieverMode`, 要比较的另一个RetrieverMode实例
+- Description: Compares two RetrieverMode instances for inequality
+- Parameters:
+  - `other`: `RetrieverMode`, The other RetrieverMode instance to compare with
 
 #### func operator ==
 ```
 operator func ==(other: RetrieverMode): Bool
 ```
-- 描述: 比较两个RetrieverMode是否相等
-- 参数:
-  - `other`: `RetrieverMode`, 要比较的另一个RetrieverMode实例
+- Description: Compares two RetrieverMode instances for equality
+- Parameters:
+  - `other`: `RetrieverMode`, The other RetrieverMode instance to compare with
 
 ####  Dynamic
 ```
 Dynamic
 ```
-- 描述: 检索器将在代理解决问题过程中使用
+- Description: The retriever will be used during the agent solving the problem
 
 ####  Static
 ```
 Static
 ```
-- 描述: 检索器将在代理回答问题前用于搜索相关内容
+- Description: The retriever will be used to search related content before the agent answer the question
 
 

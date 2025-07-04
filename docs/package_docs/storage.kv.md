@@ -22,73 +22,73 @@
 ```
 public func close(): Unit
 ```
-- 描述: 关闭存储
+- Description: Closes the storage.
 
 #### prop collection
 ```
 public prop collection: String
 ```
-- 描述: 获取当前存储的集合名称
+- Description: Gets the name of the collection.
 
 #### func commit
 ```
 public func commit(): Unit
 ```
-- 描述: 提交当前的所有更改
+- Description: Commits all changes to the storage.
 
 #### func get
 ```
 public func get(id: String): Option<T>
 ```
-- 描述: 根据ID获取存储的值
-- 参数:
-  - `id`: `String`, 要获取的值的ID
+- Description: Retrieves the value associated with the specified ID.
+- Parameters:
+  - `id`: `String`, The ID of the value to retrieve.
 
 #### func init
 ```
 public init(workspace!: String = ".storage", collection!: String = "default")
 ```
-- 描述: 初始化JsonKVStorage实例
-- 参数:
-  - `workspace`: `String`, 存储的工作目录，默认为".storage"
-  - `collection`: `String`, 存储的集合名称，默认为"default"
+- Description: Initializes a new instance of JsonKVStorage with specified workspace and collection.
+- Parameters:
+  - `workspace`: `String`, The directory path where the storage files will be kept. Defaults to '.storage'.
+  - `collection`: `String`, The name of the collection. Defaults to 'default'.
 
 #### func insertInc
 ```
 public func insertInc(value: T): String
 ```
-- 描述: 使用自增的ID插入值
-- 参数:
-  - `value`: `T`, 要插入的值
+- Description: Inserts a value with an auto-incremented ID.
+- Parameters:
+  - `value`: `T`, The value to insert.
 
 #### func remove
 ```
 public func remove(id: String): Option<T>
 ```
-- 描述: 根据ID移除存储的值
-- 参数:
-  - `id`: `String`, 要移除的值的ID
+- Description: Removes the value associated with the specified ID.
+- Parameters:
+  - `id`: `String`, The ID of the value to remove.
 
 #### func reset
 ```
 public func reset(): Unit
 ```
-- 描述: 重置存储，清空所有数据
+- Description: Clears all data in the storage and commits the changes.
 
 #### func upsert
 ```
 public func upsert(id: String, value: T): Unit
 ```
-- 描述: 更新或插入值
-- 参数:
-  - `id`: `String`, 要更新或插入的值的ID
-  - `value`: `T`, 要更新或插入的值
+- Description: Updates or inserts a value with the specified ID.
+- Parameters:
+  - `id`: `String`, The ID of the value to update or insert.
+  - `value`: `T`, The value to update or insert.
 
 #### prop workspace
 ```
 public prop workspace: String
 ```
-- 描述: 获取当前存储的工作目录
+- Description: Gets the workspace directory path.
 
 
 ### interface KVStorage<T>
@@ -96,26 +96,26 @@ public prop workspace: String
 ```
 func get(id: String): Option<T>
 ```
-- 描述: 根据给定的ID获取存储的值
-- 参数:
-  - `id`: `String`, 要获取的值的唯一标识符
+- Description: Retrieves a value associated with the given ID.
+- Parameters:
+  - `id`: `String`, The identifier of the value to retrieve.
 
 #### func remove
 ```
 func remove(id: String): Option<T>
 ```
-- 描述: 根据给定的ID移除存储的值
-- 参数:
-  - `id`: `String`, 要移除的值的唯一标识符
+- Description: Removes a value associated with the given ID.
+- Parameters:
+  - `id`: `String`, The identifier of the value to remove.
 
 #### func upsert
 ```
 func upsert(id: String, value: T): Unit
 ```
-- 描述: 插入或更新存储的值
-- 参数:
-  - `id`: `String`, 要插入或更新的值的唯一标识符
-  - `value`: `T`, 要存储的值
+- Description: Updates or inserts a value associated with the given ID.
+- Parameters:
+  - `id`: `String`, The identifier of the value to update or insert.
+  - `value`: `T`, The value to be updated or inserted.
 
 
 ### interface LocalKVStorage<T>

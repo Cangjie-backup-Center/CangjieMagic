@@ -244,7 +244,8 @@ main() {
         Directory.create(OUT_DIR, recursive: true)
     }
 
-    let files = getCJFiles(Path(SRC_DIR))
-    let docs = buildFileDocs(files, Path(OUT_DIR))
-    mergeFileDocs(Path(OUT_DIR), docs: docs)
+    // let files = getCJFiles(Path(SRC_DIR))
+    // let docs = buildFileDocs(files, Path(OUT_DIR))
+    // mergeFileDocs(Path(OUT_DIR), docs: docs)
+    mergeFileDocs(Path(OUT_DIR), docs: None)
 }

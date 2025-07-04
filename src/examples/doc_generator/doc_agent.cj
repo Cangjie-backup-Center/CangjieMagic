@@ -25,7 +25,7 @@ class DocAgent {
         Only generate documents for public type definitions and public member definitions.
         This is an import requirement.
         You must follow Cangjie syntax, e.g., function definition, class definition.
-        Function descriptions and parameter descriptions are in Chinese.
+        Function descriptions and parameter descriptions are in English.
         """
     )
     @user(
@@ -35,7 +35,7 @@ class DocAgent {
         {code}
         ```
         Generate the document now.
-        Descriptions and parameter descriptions must be in Chinese.
+        Descriptions and parameter descriptions must be in English.
         """
     )
 }

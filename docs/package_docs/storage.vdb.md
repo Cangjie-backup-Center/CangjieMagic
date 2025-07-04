@@ -8,6 +8,7 @@
     - [prop embeddingModel](#prop-embeddingmodel)
     - [func init](#func-init)
     - [func query](#func-query)
+    - [func queryWithScore](#func-querywithscore)
     - [func reset](#func-reset)
     - [prop workspace](#prop-workspace)
   - [class JsonMemoryVectorStorage](#class-jsonmemoryvectorstorage)
@@ -18,10 +19,10 @@
     - [prop embeddingModel](#prop-embeddingmodel-1)
     - [func init](#func-init-1)
     - [func query](#func-query-1)
-    - [func queryWithScore](#func-querywithscore)
+    - [func queryWithScore](#func-querywithscore-1)
     - [func reset](#func-reset-1)
     - [prop workspace](#prop-workspace-1)
-  - [class LocalVectorStorage](#class-localvectorstorage)
+  - [interface LocalVectorStorage](#interface-localvectorstorage)
   - [interface VectorStorage](#interface-vectorstorage)
     - [func add](#func-add-1)
     - [prop embeddingModel](#prop-embeddingmodel-1)
@@ -33,65 +34,75 @@
 ```
 func add(doc: Document): Unit
 ```
-- 描述: 添加文档到存储
-- 参数:
-  - `doc`: `Document`, 文档对象
+- Description: Adds a document to the vector database.
+- Parameters:
+  - `doc`: `Document`, The document to add.
 
 #### func close
 ```
 func close(): Unit
 ```
-- 描述: 关闭存储
+- Description: Closes the vector database.
 
 #### prop collection
 ```
 prop collection: String
 ```
-- 描述: 获取集合名称
+- Description: Gets the collection name.
 
 #### func commit
 ```
 func commit(): Unit
 ```
-- 描述: 提交更改到存储
+- Description: Commits changes to the vector database and index.
 
 #### prop embeddingModel
 ```
 prop embeddingModel: EmbeddingModel
 ```
-- 描述: 获取嵌入模型
+- Description: Gets the embedding model.
 
 #### func init
 ```
-init(embeddingModel: EmbeddingModel, workspace!: String = ".storage", collection!: String = "default")
+init(embeddingModel: EmbeddingModel, workspace: String = ".storage", collection: String = "default")
 ```
-- 描述: 初始化Faiss向量存储
-- 参数:
-  - `embeddingModel`: `EmbeddingModel`, 嵌入模型
-  - `workspace`: `String`, 工作区路径
-  - `collection`: `String`, 集合名称
+- Description: Initializes the FaissVectorStorage with the given embedding model, workspace path, and collection name.
+- Parameters:
+  - `embeddingModel`: `EmbeddingModel`, The embedding model to be used for vector creation.
+  - `workspace`: `String`, The path to the workspace directory. Defaults to ".storage".
+  - `collection`: `String`, The name of the collection. Defaults to "default".
 
 #### func query
 ```
-func query(query: String, topK: Int64, threshold!: Float64 = 0.6): Array<Document>
+func query(query: String, topK: Int64, threshold: Float64 = 0.6): Array<Document>
 ```
-- 描述: 查询文档
-- 参数:
-  - `query`: `String`, 查询字符串
-  - `topK`: `Int64`, 返回结果数量
-  - `threshold`: `Float64`, 相似度阈值
+- Description: Queries the vector database for documents similar to the given query string.
+- Parameters:
+  - `query`: `String`, The query string to search for.
+  - `topK`: `Int64`, The number of top results to return.
+  - `threshold`: `Float64`, The minimum similarity threshold for results. Defaults to 0.6.
+
+#### func queryWithScore
+```
+func queryWithScore(query: String, topK: Int64, threshold: Float64 = 0.6): Array<(Document, Float64)>
+```
+- Description: Queries the vector database for documents similar to the given query string, including similarity scores.
+- Parameters:
+  - `query`: `String`, The query string to search for.
+  - `topK`: `Int64`, The number of top results to return.
+  - `threshold`: `Float64`, The minimum similarity threshold for results. Defaults to 0.6.
 
 #### func reset
 ```
 func reset(): Unit
 ```
-- 描述: 重置存储
+- Description: Resets the vector database and index.
 
 #### prop workspace
 ```
 prop workspace: String
 ```
-- 描述: 获取工作区路径
+- Description: Gets the workspace path.
 
 
 ### class JsonMemoryVectorStorage
@@ -99,112 +110,112 @@ prop workspace: String
 ```
 public func add(doc: Document): Unit
 ```
-- 描述: 添加或更新文档到存储中
-- 参数:
-  - `doc`: `Document`, 要添加或更新的文档
+- Description: Adds a document to the storage.
+- Parameters:
+  - `doc`: `Document`, The document to add.
 
 #### func close
 ```
 public func close(): Unit
 ```
-- 描述: 关闭存储并释放资源
+- Description: Closes the storage.
 
 #### prop collection
 ```
 public prop collection: String
 ```
-- 描述: 获取集合名称
+- Description: Gets the collection name.
 
 #### func commit
 ```
 public func commit(): Unit
 ```
-- 描述: 提交所有未保存的更改
+- Description: Commits changes to the storage.
 
 #### prop embeddingModel
 ```
 public prop embeddingModel: EmbeddingModel
 ```
-- 描述: 获取用于生成嵌入向量的模型
+- Description: Gets the embedding model.
 
 #### func init
 ```
 public init(embeddingModel: EmbeddingModel, workspace!: String = ".storage", collection!: String = "default")
 ```
-- 描述: 初始化JsonMemoryVectorStorage实例
-- 参数:
-  - `embeddingModel`: `EmbeddingModel`, 用于生成嵌入向量的模型
-  - `workspace`: `String`, 存储向量数据的目录路径，默认为".storage"
-  - `collection`: `String`, 集合名称，默认为"default"
+- Description: Initializes the JsonMemoryVectorStorage with the given embedding model, workspace, and collection.
+- Parameters:
+  - `embeddingModel`: `EmbeddingModel`, The embedding model to use for vector creation.
+  - `workspace`: `String`, The workspace directory for storage. Defaults to '.storage'.
+  - `collection`: `String`, The collection name. Defaults to 'default'.
 
 #### func query
 ```
 public func query(query: String, topK: Int64, threshold!: Float64 = 0.6): Array<Document>
 ```
-- 描述: 查询与输入字符串最相关的文档
-- 参数:
-  - `query`: `String`, 查询字符串
-  - `topK`: `Int64`, 返回的最相关文档数量
-  - `threshold`: `Float64`, 相似度阈值，默认为0.6
+- Description: Queries the storage for documents matching the query string.
+- Parameters:
+  - `query`: `String`, The query string.
+  - `topK`: `Int64`, The maximum number of documents to return.
+  - `threshold`: `Float64`, The minimum similarity threshold. Defaults to 0.6.
 
 #### func queryWithScore
 ```
 public func queryWithScore(query: String, topK: Int64, threshold!: Float64 = 0.6): Array<(Document, Float64)>
 ```
-- 描述: 查询与输入字符串最相关的文档及其相似度分数
-- 参数:
-  - `query`: `String`, 查询字符串
-  - `topK`: `Int64`, 返回的最相关文档数量
-  - `threshold`: `Float64`, 相似度阈值，默认为0.6
+- Description: Queries the storage for documents matching the query string and returns them with their similarity scores.
+- Parameters:
+  - `query`: `String`, The query string.
+  - `topK`: `Int64`, The maximum number of documents to return.
+  - `threshold`: `Float64`, The minimum similarity threshold. Defaults to 0.6.
 
 #### func reset
 ```
 public func reset(): Unit
 ```
-- 描述: 重置存储，清除所有数据
+- Description: Resets the storage to its initial state.
 
 #### prop workspace
 ```
 public prop workspace: String
 ```
-- 描述: 获取存储向量数据的目录路径
+- Description: Gets the workspace directory.
 
 
-### class LocalVectorStorage
+### interface LocalVectorStorage
 
 ### interface VectorStorage
 #### func add
 ```
 func add(doc: Document): Unit
 ```
-- 描述: 向存储中添加一个新文档
-- 参数:
-  - `doc`: `Document`, 要添加的文档
+- Description: Adds a document to the vector storage
+- Parameters:
+  - `doc`: `Document`, The document to add to the storage
 
 #### prop embeddingModel
 ```
 prop embeddingModel: EmbeddingModel
 ```
-- 描述: 获取或设置嵌入模型
+- Description: The embedding model used for vector storage
 
 #### func query
 ```
 func query(query: String, topK: Int64, threshold!: Float64): Array<Document>
 ```
-- 描述: 查询与输入字符串最相关的文档
-- 参数:
-  - `query`: `String`, 查询字符串
-  - `topK`: `Int64`, 返回的文档数量上限
-  - `threshold!`: `Float64`, 相似度阈值，低于此值的文档将被过滤
+- Description: Queries the vector storage with a given query string and returns top K documents above the threshold
+- Parameters:
+  - `query`: `String`, The query string to search for
+  - `topK`: `Int64`, The number of top documents to return
+  - `threshold!`: `Float64`, The minimum similarity score threshold for documents to be returned
 
 #### func queryWithScore
 ```
 func queryWithScore(query: String, topK: Int64, threshold!: Float64): Array<(Document, Float64)>
 ```
-- 描述: 查询与输入字符串最相关的文档，并返回相似度分数
-- 参数:
-  - `query`: `String`, 查询字符串
-  - `topK`: `Int64`, 返回的文档数量上限
-  - `threshold!`: `Float64`, 相似度阈值，低于此值的文档将被过滤
+- Description: Queries the vector storage with a given query string and returns top K documents with their scores above the threshold
+- Parameters:
+  - `query`: `String`, The query string to search for
+  - `topK`: `Int64`, The number of top documents to return
+  - `threshold!`: `Float64`, The minimum similarity score threshold for documents to be returned
 
 

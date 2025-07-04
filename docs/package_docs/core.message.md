@@ -1,18 +1,30 @@
 ## Package core.message
 - [Package core.message](#package-core.message)
-  - [class ChatMessage](#class-chatmessage)
+  - [struct ChatRound](#struct-chatround)
+    - [func toString](#func-tostring)
+  - [class Conversation](#class-conversation)
+    - [func []](#func-[])
+    - [func addChatRound](#func-addchatround)
+    - [func addChatRound](#func-addchatround-1)
+    - [func clear](#func-clear)
+    - [func init](#func-init)
+    - [func init](#func-init-1)
+    - [func isEmpty](#func-isempty)
+    - [func iterator](#func-iterator)
+    - [prop size](#prop-size)
+  - [class Message](#class-message)
     - [func assistant](#func-assistant)
     - [let content](#let-content)
     - [let image](#let-image)
-    - [func init](#func-init)
+    - [func init](#func-init-1)
     - [let name](#let-name)
     - [let reason](#let-reason)
     - [let role](#let-role)
     - [func system](#func-system)
     - [func toLogString](#func-tologstring)
-    - [func toString](#func-tostring)
+    - [func toString](#func-tostring-1)
     - [func user](#func-user)
-  - [enum ChatMessageRole](#enum-chatmessagerole)
+  - [enum MessageRole](#enum-messagerole)
     - [func !=](#func-!=)
     - [func ==](#func-==)
     - [enumeration Assistant](#enumeration-assistant)
@@ -21,246 +33,216 @@
     - [enumeration User](#enumeration-user)
     - [func fromStr](#func-fromstr)
     - [func toString](#func-tostring-1)
-  - [class Dialog](#class-dialog)
-    - [func addMessage](#func-addmessage)
-    - [func addMessage](#func-addmessage-1)
-    - [func clear](#func-clear)
-    - [func clone](#func-clone)
-    - [func init](#func-init-1)
-    - [func init](#func-init-1)
-    - [func init](#func-init-1)
-    - [func isEmpty](#func-isempty)
-    - [func iterator](#func-iterator)
-    - [func operator func[]](#func-operator-func[])
-    - [func removeLast](#func-removelast)
-    - [prop size](#prop-size)
-    - [func toString](#func-tostring-1)
 
-### class ChatMessage
-#### func assistant
-```
-static func assistant(content: String, name: String = ""): ChatMessage
-```
-- 描述: 创建助手消息
-- 参数:
-  - `content`: `String`, 消息内容
-  - `name`: `String`, 发送者名称
-
-#### let content
-```
-let content: String
-```
-- 描述: 消息内容
-
-#### let image
-```
-let image: Option<String>
-```
-- 描述: 图片URL或Base64编码
-
-#### func init
-```
-init(role: ChatMessageRole, content: String, name: String = "", image: Option<String> = None, reason: Option<String> = None)
-```
-- 描述: 初始化聊天消息
-- 参数:
-  - `role`: `ChatMessageRole`, 发送者角色
-  - `content`: `String`, 消息内容
-  - `name`: `String`, 发送者名称
-  - `image`: `Option<String>`, 图片URL或Base64编码
-  - `reason`: `Option<String>`, 推理内容
-
-#### let name
-```
-let name: String
-```
-- 描述: 发送者名称
-
-#### let reason
-```
-let reason: Option<String>
-```
-- 描述: 推理内容
-
-#### let role
-```
-let role: ChatMessageRole
-```
-- 描述: 发送者角色
-
-#### func system
-```
-static func system(content: String): ChatMessage
-```
-- 描述: 创建系统消息
-- 参数:
-  - `content`: `String`, 消息内容
-
-#### func toLogString
-```
-func toLogString(): String
-```
-- 描述: 将消息转换为日志字符串
-
+### struct ChatRound
 #### func toString
 ```
-func toString(): String
+override public func toString(): String
 ```
-- 描述: 将消息转换为字符串
-
-#### func user
-```
-static func user(content: String, image: Option<String> = None): ChatMessage
-```
-- 描述: 创建用户消息
-- 参数:
-  - `content`: `String`, 消息内容
-  - `image`: `Option<String>`, 图片URL或Base64编码
+- Description: Converts the ChatRound object to a string representation.
 
 
-### enum ChatMessageRole
-#### func operator !=
+### class Conversation
+#### func operator []
 ```
-operator func !=(other: ChatMessageRole): Bool
+public operator func [](index: Int64): ChatRound
 ```
-- 描述: 比较两个角色是否不相等
-- 参数:
-  - `other`: `ChatMessageRole`, 另一个角色
+- Description: Retrieves the ChatRound at the specified index.
+- Parameters:
+  - `index`: `Int64`, The index of the ChatRound to retrieve.
 
-#### func operator ==
+#### func addChatRound
 ```
-operator func ==(other: ChatMessageRole): Bool
+public func addChatRound(round: ChatRound): Unit
 ```
-- 描述: 比较两个角色是否相等
-- 参数:
-  - `other`: `ChatMessageRole`, 另一个角色
+- Description: Adds a ChatRound to the Conversation.
+- Parameters:
+  - `round`: `ChatRound`, The ChatRound to add.
 
-####  Assistant
+#### func addChatRound
 ```
-Assistant
+public func addChatRound(question: String, answer: String, steps!: MessageList = MessageList()): Unit
 ```
-- 描述: 助手角色
-
-####  System
-```
-System
-```
-- 描述: 系统角色
-
-####  Unknown
-```
-Unknown
-```
-- 描述: 未知角色
-
-####  User
-```
-User
-```
-- 描述: 用户角色
-
-#### func fromStr
-```
-static func fromStr(str: String): ChatMessageRole
-```
-- 描述: 从字符串转换为角色
-- 参数:
-  - `str`: `String`, 表示角色的字符串
-
-#### func toString
-```
-func toString(): String
-```
-- 描述: 将角色转换为字符串
-
-
-### class Dialog
-#### func addMessage
-```
-public func addMessage(msg: ChatMessage): Unit
-```
-- 描述: 添加一条聊天消息到对话集合中
-- 参数:
-  - `msg`: `ChatMessage`, 要添加的聊天消息
-
-#### func addMessage
-```
-public func addMessage(messages: Array<ChatMessage>): Unit
-```
-- 描述: 添加多条聊天消息到对话集合中
-- 参数:
-  - `messages`: `Array<ChatMessage>`, 要添加的聊天消息数组
+- Description: Creates and adds a ChatRound to the Conversation with the given question, answer, and optional steps.
+- Parameters:
+  - `question`: `String`, The question part of the ChatRound.
+  - `answer`: `String`, The answer part of the ChatRound.
+  - `steps`: `MessageList`, Optional execution step messages.
 
 #### func clear
 ```
 public func clear(): Unit
 ```
-- 描述: 清空对话集合中的所有消息
-
-#### func clone
-```
-public func clone(): Dialog
-```
-- 描述: 克隆当前的对话集合
+- Description: Removes all ChatRounds from the Conversation.
 
 #### func init
 ```
 public init()
 ```
-- 描述: 初始化一个空的对话集合
+- Description: Initializes an empty Conversation.
 
 #### func init
 ```
-public init(messages: ArrayList<ChatMessage>)
+public init(round: ChatRound)
 ```
-- 描述: 使用已有的ArrayList<ChatMessage>初始化对话集合
-- 参数:
-  - `messages`: `ArrayList<ChatMessage>`, 包含聊天消息的ArrayList
-
-#### func init
-```
-public init(messages: Array<ChatMessage>)
-```
-- 描述: 使用已有的Array<ChatMessage>初始化对话集合
-- 参数:
-  - `messages`: `Array<ChatMessage>`, 包含聊天消息的Array
+- Description: Initializes a Conversation with a single ChatRound.
+- Parameters:
+  - `round`: `ChatRound`, The initial ChatRound to add to the Conversation.
 
 #### func isEmpty
 ```
 public func isEmpty(): Bool
 ```
-- 描述: 检查对话集合是否为空
+- Description: Checks if the Conversation is empty.
 
 #### func iterator
 ```
-public func iterator(): Iterator<ChatMessage>
+override public func iterator(): Iterator<ChatRound>
 ```
-- 描述: 返回对话集合的迭代器
-
-#### func operator operator func[]
-```
-public operator func[](index: Int64): ChatMessage
-```
-- 描述: 通过索引获取对话集合中的消息
-- 参数:
-  - `index`: `Int64`, 消息的索引位置
-
-#### func removeLast
-```
-public func removeLast(): ChatMessage
-```
-- 描述: 移除并返回对话集合中的最后一条消息
+- Description: Returns an iterator over the ChatRounds in the Conversation.
 
 #### prop size
 ```
 public prop size: Int64
 ```
-- 描述: 获取对话集合中消息的数量
+- Description: Gets the number of ChatRounds in the Conversation.
+
+
+### class Message
+#### func assistant
+```
+public static func assistant(content: String, name!: String = ""): Message
+```
+- Description: Creates an assistant message
+- Parameters:
+  - `content`: `String`, Content of the assistant message
+  - `name`: `String`, Name of the assistant
+
+#### let content
+```
+public let content: String
+```
+- Description: Content of the message
+
+#### let image
+```
+public let image: Option<String>
+```
+- Description: URL or base64 encoded image
+
+#### func init
+```
+public init(role: MessageRole, content: String, name!: String = "", image!: Option<String> = None, reason!: Option<String> = None)
+```
+- Description: Initializes a new Message instance
+- Parameters:
+  - `role`: `MessageRole`, Role of the sender
+  - `content`: `String`, Content of the message
+  - `name`: `String`, Name of the sender
+  - `image`: `Option<String>`, URL or base64 encoded image
+  - `reason`: `Option<String>`, Reasoning content generated by a model
+
+#### let name
+```
+public let name: String
+```
+- Description: Name of the sender
+
+#### let reason
+```
+public let reason: Option<String>
+```
+- Description: Reasoning content generated by a model
+
+#### let role
+```
+public let role: MessageRole
+```
+- Description: Role of the sender
+
+#### func system
+```
+public static func system(content: String): Message
+```
+- Description: Creates a system message
+- Parameters:
+  - `content`: `String`, Content of the system message
+
+#### func toLogString
+```
+public func toLogString(): String
+```
+- Description: Converts the message to a log-friendly string representation
 
 #### func toString
 ```
 public func toString(): String
 ```
-- 描述: 将对话集合中的所有消息转换为字符串
+- Description: Converts the message to a string representation
+
+#### func user
+```
+public static func user(content: String, image!: Option<String> = None): Message
+```
+- Description: Creates a user message
+- Parameters:
+  - `content`: `String`, Content of the user message
+  - `image`: `Option<String>`, URL or base64 encoded image
+
+
+### enum MessageRole
+#### func operator !=
+```
+public operator func !=(other: MessageRole): Bool
+```
+- Description: Compares two MessageRole instances for inequality
+- Parameters:
+  - `other`: `MessageRole`, The other MessageRole to compare with
+
+#### func operator ==
+```
+public operator func ==(other: MessageRole): Bool
+```
+- Description: Compares two MessageRole instances for equality
+- Parameters:
+  - `other`: `MessageRole`, The other MessageRole to compare with
+
+####  Assistant
+```
+Assistant
+```
+- Description: Represents an assistant message role
+
+####  System
+```
+System
+```
+- Description: Represents a system message role
+
+####  Unknown
+```
+Unknown
+```
+- Description: Represents an unknown message role
+
+####  User
+```
+User
+```
+- Description: Represents a user message role
+
+#### func fromStr
+```
+public static func fromStr(str: String): MessageRole
+```
+- Description: Converts a string to the corresponding MessageRole
+- Parameters:
+  - `str`: `String`, The string representation of the message role
+
+#### func toString
+```
+func toString(): String
+```
+- Description: Converts the MessageRole to its string representation
 
 

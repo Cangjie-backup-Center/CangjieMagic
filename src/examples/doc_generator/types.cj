@@ -102,10 +102,10 @@ class MemberDef <: ToString {
             "```",
             "${signature}",
             "```",
-            "- 描述: ${description}"
+            "- Description: ${description}"
         ])
         if (!parameters.isEmpty()) {
-            s.add("- 参数:")
+            s.add("- Parameters:")
         }
         for (p in parameters) {
             s.add("  - ${p}")

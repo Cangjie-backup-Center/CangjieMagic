@@ -9,16 +9,16 @@
 ```
 func search(question: String): Array<String>
 ```
-- 描述: 根据用户问题，在内存中查找相关内容
-- 参数:
-  - `question`: `String`, 用户的问题
+- Description: According to the user question, find related content in the memory.
+- Parameters:
+  - `question`: `String`, The user question to search for related content in the memory.
 
 #### func update
 ```
 func update(segment: String): Unit
 ```
-- 描述: 更新内存中的片段
-- 参数:
-  - `segment`: `String`, 要更新的内存片段
+- Description: Add a segment of text to the memory.
+- Parameters:
+  - `segment`: `String`, The segment of text to be added to the memory.
 
 

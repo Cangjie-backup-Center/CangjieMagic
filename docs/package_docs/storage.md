@@ -12,30 +12,30 @@
 ```
 func close(): Unit
 ```
-- 描述: 关闭当前存储连接
+- Description: Closes the storage connection
 
 #### prop collection
 ```
 prop collection: String
 ```
-- 描述: 获取当前存储集合的名称
+- Description: Represents the collection name
 
 #### func commit
 ```
 func commit(): Unit
 ```
-- 描述: 提交所有未保存的更改
+- Description: Commits changes to the storage
 
 #### func reset
 ```
 func reset(): Unit
 ```
-- 描述: 重置存储状态
+- Description: Resets the storage to its initial state
 
 #### prop workspace
 ```
 prop workspace: String
 ```
-- 描述: 获取当前工作空间的路径
+- Description: Represents the workspace path
 
 
