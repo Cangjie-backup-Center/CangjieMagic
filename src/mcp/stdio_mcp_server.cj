@@ -33,6 +33,14 @@ public class StdioMCPServer <: AbsMCPServer {
         this.loop()
     }
 
+    public func loop(): Unit {
+        while (let Some(msg) <- this.recv()) {
+            if (let Some(resp) <- this.handleRequestMessage(msg)) {
+                this.send(resp)
+            }
+        }
+    }
+
     override protected func send(msg: String): Unit {
         LogUtils.debug("Send: ${msg}")
         writer.writeln(msg)
