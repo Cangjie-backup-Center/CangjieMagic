@@ -7,7 +7,7 @@ internal import magic.core.model.*
 internal import magic.core.agent.*
 internal import magic.prompt.Template
 internal import magic.log.LogUtils
-internal import magic.parser.OutputParserUtils
+internal import magic.parser.ParserUtils
 internal import magic.core.message.{Message, MessageRole, MessageList}
 
 import std.collection.ArrayList
@@ -92,7 +92,7 @@ abstract class DiscussGroup {
     private func makeSpeech(speaker: Agent): Option<String> {
         let question = buildSpeakPrompt(speaker.name)
         let result = speaker.chat(AgentRequest(question)).content
-        return OutputParserUtils.extractLastCode(result, "speech")
+        return ParserUtils.extractLastCode(result, "speech")
     }
 
     func buildDiscussionPrompt(): String {

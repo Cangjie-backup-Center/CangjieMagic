@@ -61,9 +61,9 @@ Parameters explained:
     executor: "tool-loop",
     // executor: "react",
     enableToolFilter: true,
-    mcp: [
+    tools: [
         // ...your mcp servers...
-        http("https://mcp.amap.com...")
+        httpMCP("https://mcp.amap.com...")
     ]
 ]
 class MagicAgent {

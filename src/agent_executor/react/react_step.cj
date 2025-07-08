@@ -3,11 +3,9 @@
  */
 package magic.agent_executor.react
 
-import magic.parser.{OutputParserUtils, ParserException}
+import magic.parser.{ParserUtils, ParserException}
 import magic.core.tool.ToolRequest
 import magic.log.LogUtils
-
-import stdx.encoding.json.JsonException
 
 protected enum FailureLevel {
     | Repairable
@@ -92,24 +90,13 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
         match ((thought, action)) {
             case (_, Some(_action)) =>
                 try {
-                    let json = OutputParserUtils.extractLastCode(_action, "json").getOrThrow({
-                        => ParserException("There is no valid JSON content wrapped by ```json and ```")
-                    })
-                    let request = OutputParserUtils.parseToolRequest(json)
+                    let request = ParserUtils.extractLastToolRequest(_action)
                     return ReactStep.Action(
                         ToolCall(
                             text: _action,
                             thought: thought ?? "",
                             request: request
                         )
-                    )
-                } catch (_: JsonException) {
-                    LogUtils.error("Tool invocation has invalid syntax")
-                    return ReactStep.Failure(
-                        FailureInfo(FailureLevel.Repairable,
-                                    message: content,
-                                    reason: "Tool invocation has invalid syntax",
-                                    suggestion: "You must follow the required syntax to use a tool.")
                     )
                 } catch (ex: ParserException) {
                     LogUtils.error("Parsing action failed: ${ex.reason}")

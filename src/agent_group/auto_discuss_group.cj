@@ -5,7 +5,6 @@ package magic.agent_group
 
 import magic.prompt.Template
 import magic.log.LogUtils
-import magic.parser.OutputParserUtils
 import magic.core.agent.*
 import magic.core.message.{Message, MessageRole, MessageList}
 import magic.model.ModelUtils

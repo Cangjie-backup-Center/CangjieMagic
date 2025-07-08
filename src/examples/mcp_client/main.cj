@@ -11,8 +11,10 @@ import stdx.log.LogLevel
 
 @agent[
     model: "deepseek:deepseek-chat",
-    mcp: [
-        { command: "cjpm", args: ["run", "--skip-build", "--name", "magic.examples.mcp_server"] }
+    tools: [
+        // The following two lines are examples of how to use MCP servers.
+        stdioMCP("cjpm run --skip-build --name magic.examples.mcp_server")
+        // { command: "cjpm", args: ["run", "--skip-build", "--name", "magic.examples.mcp_server"] }
     ]
 ]
 class HomeworkAssistant {
@@ -25,8 +27,10 @@ class HomeworkAssistant {
 @agent[
     model: "deepseek:deepseek-chat",
     executor: "react",
-    mcp: [
-        { url: "https://mcp.amap.com/sse?key=<your key>" }
+    tools: [
+        // The following lines are examples of how to use MCP servers.
+        httpMCP("https://mcp.amap.com/sse?key=<your key>")
+        // { url: "https://mcp.amap.com/sse?key=<your key>" }
     ]
 ]
 class TravelAgent {

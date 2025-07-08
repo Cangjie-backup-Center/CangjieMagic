@@ -72,7 +72,7 @@ protected func concatTokens(tokensList: ArrayList<Tokens>): Tokens {
     return ret
 }
 
-protected func joinTokens(tokensList: ArrayList<Tokens>, separator: Token): Tokens {
+protected func joinTokens(tokensList: Array<Tokens>, separator: Token): Tokens {
     if (tokensList.isEmpty()) {
         return Tokens()
     } else if (tokensList.size == 1) {
@@ -84,6 +84,10 @@ protected func joinTokens(tokensList: ArrayList<Tokens>, separator: Token): Toke
         }
         return ret
     }
+}
+
+protected func joinTokens(tokensList: ArrayList<Tokens>, separator: Token): Tokens {
+    return joinTokens(tokensList.toArray(), separator)
 }
 
 protected func joinTokens(tokenList: Array<Token>, separator: Token): Tokens {

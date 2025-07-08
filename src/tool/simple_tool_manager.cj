@@ -12,7 +12,7 @@ import magic.log.LogUtils
 import magic.jsonable.*
 import magic.model.{ModelManager, ModelUtils}
 import magic.prompt.Template
-import magic.parser.OutputParserUtils
+import magic.parser.{ParserUtils, ParserException}
 import magic.vdb.{SemanticMap, InMemoryVectorDatabase, SimpleIndexMap}
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
@@ -263,22 +263,12 @@ public class SimpleToolManager <: ToolManager {
             )
         ]
         let model = config.chatModel.getOrThrow()
-        let response = ModelUtils.makeChatGet<Response>(
-            "Simple Tool Manager", model, messages) { msg: Message =>
-            if (let Some(jsonStr) <- OutputParserUtils.extractLastCode(msg.content, "json")) {
-                // LogUtils.info("Tool filtered response: ${jsonStr}")
-                try {
-                    let json = JsonValue.fromStr(jsonStr)
-                    return Response.fromJsonValue(json)
-                } catch(_: JsonableException) {
-                    LogUtils.error("Failed to parse the chat model response `${jsonStr}` as Jsonable")
-                    return None
-                } catch (_: JsonException) {
-                    LogUtils.error("Failed to parse the chat model response `${jsonStr}` as JsonValue")
-                    return None
-                }
+        let response = ModelUtils.makeChatGet<Response>("Simple Tool Manager", model, messages) { msg: Message =>
+            try {
+                return ParserUtils.extractLastValue<Response>(msg.content)
+            } catch (ex: ParserException) {
+                LogUtils.error("Failed to parse the chat model response `${msg.content}`; ${ex.reason}")
             }
-            LogUtils.error("Failed to parse the chat model response")
             return None
         }
         let filteredTools = ArrayList<Tool>()

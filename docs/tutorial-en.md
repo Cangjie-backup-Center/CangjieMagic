@@ -429,60 +429,56 @@ Limitations on tool functions:
 
 ### Using Tools and MCP Servers
 
-Agents configure MCP servers via the `mcp` attribute, which takes multiple MCP server configurations. Each configuration uses the following syntax:
+The `tools` attribute configures the MCP servers and custom tool functions used by the Agent. This attribute accepts multiple MCP servers or tool functions, each configured with the following syntax:  
 
-- `stdio` transport: `stdio(<command>, <env-kv-pair>*)` (launch command + optional environment variables). Example: `stdio("command and arguments", ENV_1: "value1", ENV_2: "value2")`.
-- `HTTP/SSE` transport: `http(<url>)` (server address). Example: `http("https://abc.com/mcp")`.
-- `tools`: Aggregates tool functions into a "virtual MCP server" (`tools(<func-id>+)`). Example: `tools(foo, bar)`.
+- **MCP server using the `stdio` protocol:** `stdioMCP(<command>, <env-kv-pair>*)` specifies the command to start the MCP server along with optional environment variables.  
+  Example: `stdioMCP("command and arguments", ENV_1: "value1", ENV_2: "value2")`.  
 
-⚠️Note: Tools defined inside an Agent class can be used directly (**without** explicit declaration in the `tools` attribute).
+- **MCP server using the `http/sse` protocol:** `mcpHttp(<url>)` specifies the URL of the MCP server.  
+  Example: `httpMCP("https://abc.com/mcp")`.  
 
-```cangjie
-@agent[
-    mcp: [
-        stdio("node index.js args"),
-        stdio("python main.py args", SOME_API_KEY: "xxx"),
-        http("http://abc.mcp.server.com"),
-        tools(toolA, toolB)
-    ]
-]
-class Foo { ... }
-```
+- **Tool functions:** `<func-id>+`, such as `foo, bar`.  
+  ⚠️ Note: If a tool is defined within the `Agent` class, it can be used directly by that Agent without explicit declaration in the `tools` attribute.  
 
-Alternatively, MCP tools can be configured via API:
+```cangjie  
+@agent[  
+    tools: [  
+        stdioMCP("node index.js args"),  
+        stdioMCP("python main.py args", SOME_API_KEY: "xxx"),  
+        httpMCP("http://abc.mcp.server.com"),  
+        toolA,  
+        toolB  
+    ]  
+]  
+class Foo { ... }  
+```  
 
-```cangjie
-// Initialize MCP client
-let client = MCPClient("node", ["args"])
-let agent = SomeAgent()
-// Add MCP tools
-agent.toolManager.addTools(client.getTools())
-```
+Alternatively, MCP tools can be configured via API:  
 
-⚠️Note: Currently, MCP servers only support tool-related protocols.
+```cangjie  
+// Initialize MCP client  
+let client = MCPClient("node", ["args"])  
+let agent = SomeAgent()  
+// Add MCP tools  
+agent.toolManager.addTools(client.getTools())  
+```  
 
-**The following tool/MCP configuration syntax is deprecated:**
+⚠️ Note: Currently, MCP servers only support tool-related MCP protocols.  
 
-Tool function configuration:
+Additionally, **MCP servers can be configured in JSON syntax** within the `tools` attribute:  
 
-```cangjie
-@agent[
-    tools: [toolA, toolB]
-]
-class Foo { ... }
-```
+- **`stdio` transport:** Configured with `command` (startup command), `args` (startup arguments), and optionally `env` (environment variables).  
+- **`HTTP/SSE` transport:** Configured with `url` (MCP server address).  
 
-MCP configuration syntax for `stdio` and `HTTP SSE`:
-
-```cangjie
-@agent[
-    mcp: [
-        { command: "node", args: [ "index.js", "args" ] },
-        { command: "python", args: [ "main.py", "args" ], env: { SOME_API_KEY: "xxx" } },
-        { url: "http://abc.mcp.server.com" }
-    ]
-]
-class Foo { ... }
+```cangjie  
+@agent[  
+    tools: [  
+        { command: "node", args: ["index.js", "args"] },  
+        { command: "python", args: ["main.py", "args"], env: { SOME_API_KEY: "xxx" } },  
+        { url: "http://abc.mcp.server.com" }  
+    ]  
+]  
+class Foo { ... }  
 ```
 
 ## Planning
@@ -494,8 +490,9 @@ Each Agent has an `executor` property specifying which executor to use (differen
 | `naive`  | Direct Q&A  |
 | `react` | The Agent selects one tool per solving step, evaluates the execution result to determine completion, and iterates until the task is solved |
 | `plan-react` | Performs initial task planning, then uses React mode to solve each subtask |
+| `tool-loop` | Functionally similar to react, but without an explicit reasoning process |
 
-The `react` executor can specify maximum iterations using `react:<number>` format, e.g., `react:5`.
+The `react` and `tool-loop` executor can specify maximum iterations using `react:<number>` format, e.g., `react:5`.
 
 **Example: Configuring Planning Method**
 
@@ -751,15 +748,36 @@ ag1 | subGroup(ag2 <= [ag3], description: "An subgroup attempts to ...") | ag4 /
 
 ## AI Function Shortcut
 
-The `@ai` decorator configures functions similarly to `@agent`. Decorated functions can contain interpolated strings that form prompts for model generation.
+`@ai` can be used to annotate functions, indicating that the function's execution will be performed by an LLM.  
 
-```cangjie
-@ai[model: "deepseek:deepseek-chat"]
-func foo(topic: String): String {
-    "Generate PPT content about ${topic}"
-    "Output format: JSON"
-}
-```
+Functions decorated with `@ai` must be declared as `foreign`, meaning their implementation resides on the model side, making them foreign functions from the perspective of the current code.  
+**Requirements**: **The parameter types and return type of the function must satisfy the `Jsonable` interface.**
+
+Additionally, the `@ai` decorator supports the following attributes:  
+
+| Attribute    | Type      | Description |  
+|--------------|-----------|-------------|  
+| `prompt`     | `String`  | Additional instructions for the AI function. |  
+| `model`      | `String`  | Specifies the LLM model service to use. |  
+| `tools`      | `Array`   | Configures the external tools available for use. |  
+| `temperature`| `Float`   | The `temperature` value used by the agent when invoking the LLM. |  
+| `dump`       | `Bool`    | Used for debugging—if `true`, prints the agent's transformed AST; defaults to `false`. |  
+
+**Example**:  
+
+```cangjie  
+@tool[description: "Fetches the html content of a URL."]  
+func fetch(url: String): String { ... }  
+
+@ai[  
+    prompt: "No more than 3 keywords",  
+    tools: [fetch]  
+]  
+foreign func keywordsOf(url: String): Array<String>  
+
+main() { keywordsOf("https://cangjie-lang.cn/") }  
+```  
+
 
 ## Model Configuration
 

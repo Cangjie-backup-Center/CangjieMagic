@@ -9,7 +9,6 @@ import magic.core.model.{ChatRequest}
 import magic.config.Config
 import magic.agent_executor.common.{AgentTask, FutureIteratorWrapper}
 import magic.agent_executor.dsl.{ExecutionOpSet, ExecutionState}
-import magic.parser.OutputParserUtils
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.parser.{Tag, WithTag}
@@ -27,7 +26,7 @@ public class ToolLoopExecutor <: AgentExecutor {
     ) { }
 
      override public prop name: String {
-        get() {"tool-loop"}
+        get() { "tool-loop" }
     }
 
     private func doRun(task: AgentTask): String {

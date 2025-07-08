@@ -8,7 +8,6 @@ import magic.core.message.{Message, MessageList}
 import magic.core.model.ChatRequest
 import magic.prompt.Template
 import magic.log.LogUtils
-import magic.parser.OutputParserUtils
 import magic.model.ModelUtils
 
 private let RESULT_SUMMARIZE_USER_PROMPT = """

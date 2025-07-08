@@ -8,11 +8,9 @@ import magic.core.message.Message
 import magic.agent_executor.react.ReactPromptUtils
 import magic.prompt.Template
 import magic.log.LogUtils
-import magic.parser.OutputParserUtils
+import magic.parser.ParserUtils
 import magic.jsonable.Jsonable
 import magic.model.ModelUtils
-
-import stdx.encoding.json.JsonValue
 
 // The following prompt modified from [XAgent](https://github.com/OpenBMB/XAgent/blob/main/XAgent/agent/plan_generate_agent/prompt.py)
 private let PROBLEM_DECOMPOSE_SYSTEM_PROMPT = """
@@ -75,10 +73,8 @@ protected func problemDecompose(agent: Agent, request: AgentRequest): Array<Subt
         Message.system(sysPrompt),
         Message.user(userPrompt)
     ]
-    let jsonStr = ModelUtils.agentMakeChatGet(agent, messages) {
-        msg: Message =>
-            OutputParserUtils.extractLastCode(msg.content, "json")
-    }
-    let json = JsonValue.fromStr(jsonStr.getOrThrow({ => AgentExecutionException("Fail to get valid chat model response")}))
-    return Array<Subtask>.fromJsonValue(json)
+    let msg = ModelUtils.agentMakeChat(agent, messages).getOrThrow({ =>  
+        AgentExecutionException("Fail to get valid chat model response")
+    })
+    return ParserUtils.extractLastValue<Array<Subtask>>(msg.content)
 }
