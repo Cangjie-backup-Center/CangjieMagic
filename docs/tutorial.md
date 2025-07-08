@@ -73,7 +73,6 @@ Cangjie Agent DSL 被设计为仓颉语言的 eDSL，即在仓颉语言中通过
 | `description` | `String` | Agent 的功能描述；默认未设置时，将由 LLM 从提示词中自动总结出 |
 | `model` | `String` | 配置使用到的 LLM 模型服务；默认使用 gpt-4o |
 | `tools` | `Array` | 配置能够使用的外部工具 |
-| `mcp` | `Array` | 配置接入的 MCP 服务器 |
 | `rag` |   `Map` | 配置外部的知识源 |
 | `memory` |  `Bool` | 是否使用记忆，即保存 Agent 的多次问答记录（目前记忆仅支持 in-memory 非持久化数据）；默认为 `false` |
 | `executor` | `String` | 规划模式；默认为 `react` |
@@ -542,25 +541,26 @@ class A {
 
 ### 使用工具和 MCP 服务器
 
-Agent 通过 `mcp` 属性可以配置使用的 MCP 服务器。该属性接收多个 MCP 服务器配置，每个配置可采用如下的语法：
+Agent 通过 `tools` 属性配置使用的 MCP 服务器以及自定义工具函数。该属性接收多个 MCP 服务器/工具函数，每个配置可采用如下的语法：
 
-- `stdio` 传输协议的 MCP 服务器，`stdio(<command>, <env-kv-pair>*)`，编写启动 MCP 服务器的命令行以及可选的环境变量设置。例如，`stdio("command and arguments", ENV_1: "value1", ENV_2, "value2")`。
-- `http/sse` 传输协议的 MCP 服务器，`http(<url>)`，编写 MCP 服务器的地址。例如，  `http("https://abc.com/mcp")`。
-- `tools` 将需要使用的工具函数聚集为一个“虚拟的 MCP 服务器”，`tools(<func-id>+)`。例如，`tools(foo, bar)`。注意 ⚠️：如果工具被定义在 Agent 类的内部，那么它能被其所属的 Agent 直接使用，即**无需**在 `tools` 属性中显式指定。
+- `stdio` 传输协议的 MCP 服务器，`stdioMCP(<command>, <env-kv-pair>*)`，编写启动 MCP 服务器的命令行以及可选的环境变量设置。例如，`stdioMCP("command and arguments", ENV_1: "value1", ENV_2, "value2")`。
+- `http/sse` 传输协议的 MCP 服务器，`mcpHttp(<url>)`，编写 MCP 服务器的地址。例如， `httpMCP("https://abc.com/mcp")`。
+- 工具函数 `<func-id>+`。例如，`foo, bar`。注意 ⚠️：如果工具被定义在 Agent 类的内部，那么它能被其所属的 Agent 直接使用，即**无需**在 `tools` 属性中显式指定。
 
 ```cangjie
 @agent[
-    mcp: [
-        stdio("node index.js args" ),
-        stdio("python main.py args", SOME_API_KEY: "xxx"),
-        http("http://abc.mcp.server.com"),
-        tools(toolA, toolB)
+    tools: [
+        stdioMCP("node index.js args" ),
+        stdioMCP("python main.py args", SOME_API_KEY: "xxx"),
+        httpMCP("http://abc.mcp.server.com"),
+        toolA,
+        toolB
     ]
 ]
 class Foo { ... }
 ```
 
-此外，我们也可以直接通过 API 方式给 Agent 配置 MCP 工具。
+我们也可以直接通过 API 方式给 Agent 配置 MCP 工具。
 
 ```cangjie
 // 初始化 MCP client
@@ -572,25 +572,14 @@ agent.toolManager.addTools(client.getTools())
 
 ⚠️注意：目前 MCP 服务器仅支持工具相关的 MCP 协议。
 
-**以下是过时的工具和 MCP 配置语法**（即将废弃）：
-
-工具函数配置语法：在 `@agent` 宏的 `tools` 属性中配置，该属性接收一个列表。
-
-```cangjie
-@agent[
-    tools: [toolA, toolB]
-]
-class Foo { ... }
-```
-
-MCP 配置语法在 `@agent` 宏的 `mcp` 属性中配置，该属性接收一个列表。
+此外，在 `tools` 配置中**同样支持以 JSON 配置的语法设置 MCP 服务器**：
 
 - `stdio` 传输，配置方式为：由 `command`（启动命令）和 `args`（启动参数）构成，并可选设置启动的环境变量  `env`。
 - `HTTP SSE` 传输，配置方式为：通过 `url` 指定 MCP 服务器的地址
 
 ```cangjie
 @agent[
-    mcp: [
+    tools: [
         { command: "node", args: [ "index.js", "args" ] },
         { command: "python", args: [ "main.py", "args" ], env: { SOME_API_KEY: "xxx" } },
         { url: "http://abc.mcp.server.com" }
@@ -608,8 +597,9 @@ class Foo { ... }
 | `naive`  | 直接问答  |
 | `react` | Agent 每次选择使用一个工具完成一个求解步骤，然后根据工具的执行结果判断是否执行完成，不断迭代上述过程直至任务求解完成 |
 | `plan-react` | 首先完成一次任务规划，然后对每个规划出来的子任务使用 React 模式进行求解 |
+| `tool-loop` | 功能接近 `react`，但没有显式的思考过程 |
 
-其中，`react` 执行器可以通过形式 `react:<number>` 类指定迭代的最大次数，如 `react:5`。
+其中，`react` 和 `tool-loop` 执行器可以通过形式 `react:<number>` 类指定迭代的最大次数，如 `react:5`。
 
 **示例：配置规划方法**
 
@@ -868,15 +858,29 @@ ag1 | subGroup(ag2 <= [ag3], description: "An subgroup attempts to ...") | ag4 /
 
 ## 快捷 AI 函数
 
-`@ai` 可用于修饰函数，其接收的属性和 `@agent` 一致。
-被 `@ai` 修饰的函数体内可包含任意多个插值字符串，这些字符串将依次拼接组成提示词，并交由指定的模型生成输出。
+`@ai` 可用于修饰函数，表明函数的执行将由 LLM 执行完成。`@ai` 修饰的函数必须是 `foreign` 函数，这相当于该函数的实现在模型侧，对当前代码而言是一个外部函数。要求：**函数的形参类型和返回值类型必须满足 `Jsonable` 接口**。并且，`@ai` 允许属性：
+
+| 属性名 | 值类型 | 说明 |
+|-------|-------|-------|
+| `prompt` | `String` | AI 函数的额外知道 |
+| `model` | `String` | 配置使用到的 LLM 模型服务；默认使用 gpt-4o |
+| `tools` | `Array` | 配置能够使用的外部工具 |
+| `temperature` | `Float` | Agent 使用 LLM 时的 temperature 值；默认为 `0.5` |
+| `dump` | `Bool` | 调试代码用，是否打印 Agent 变换后的 AST；默认为 `false` |
+
+**示例**：
 
 ```cangjie
-@ai[model: "deepseek:deepseek-chat"]
-func foo(topic: String): String {
-    "根据主题 ${topic} 生成一份 PPT 内容"
-    "输出格式为 JSON"
-}
+@tool[description: "Fetches the html content of a URL."]
+func fetch(url: String): String { ... }
+
+@ai[
+    prompt: "不超过 3 个关键字",
+    tools: [fetch]
+]
+foreign func keywordsOf(url: String): Array<String>
+
+main() { keywordsOf("https://cangjie-lang.cn/") }
 ```
 
 ## 模型配置
@@ -903,7 +907,7 @@ func foo(topic: String): String {
 | 阿里云 | ✔️ | ✔️ | ❌ |
 | DeepSeek | ✔️ | ❌️ | ❌ |
 | 火山方舟 | ✔️ | ✔️ | ❌ |
-| Llama.cpp | ✔️ | ✔️ | ❌ |
+| Llama.cpp | ✔️ | ❌  | ❌ |
 | Ollama | ✔️ | ✔️ | ❌ |
 | OpenAI | ✔️ | ✔️ | ✔️ |
 | SiliconFlow | ✔️ | ✔️ | ✔️ |

@@ -12,10 +12,8 @@ import magic.jsonable.Jsonable
 import std.collection.{HashMap, map, collectArray}
 import magic.instrumentor.Instrumentor
 import magic.log.LogUtils
-import magic.parser.OutputParserUtils
+import magic.parser.{ParserUtils, ParserException}
 import magic.prompt.Template
-
-import stdx.encoding.json.{JsonValue, JsonException}
 
 private let QUESTION_WITH_JSON_CONSTRAINT = """
 The output must be a valid JSON value wrapped by ```json and ```.
@@ -97,10 +95,8 @@ public abstract class AbsAgent <: Agent {
         for (_ in 0..Config.outputRepairRetryNumber) {
             // Convert the answer to a value of type T
             try {
-                let jsonStr = OutputParserUtils.extractLastCode(answer, "json").getOrThrow({ => JsonException("Output does not contain JSON value")})
-                let jv = JsonValue.fromStr(jsonStr)
-                return T.fromJsonValue(jv)
-            } catch(_: JsonException) {
+                return ParserUtils.extractLastValue<T>(answer)
+            } catch(_: ParserException) {
                 let userMsg = Message.user("Output does not obey the type schema.")
                 LogUtils.info(this.name, userMsg)
                 messageList.addMessage(userMsg)

@@ -4,17 +4,42 @@
 package magic.mcp
 
 import magic.core.tool.Tool
-import magic.utils.newProcess
 import magic.jsonable.*
 import magic.log.LogUtils
+import magic.utils.newProcess
 
-@When[cjc_version < "1.0.0"]
-import std.os.process.SubProcess
-@When[cjc_version >= "1.0.0"]
+import std.regex.Regex
 import std.process.SubProcess
 import std.io.{StringReader, StringWriter, OutputStream, InputStream}
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import stdx.encoding.json.{JsonValue, JsonObject}
+
+/**
+ * Split the command line
+ */
+private func splitCommandLine(commandLine: String): (String, Array<String>) {
+    // The regex matches: letters | "..." | '...'
+    let regex = Regex(##"(?:[^\s"\']|"(?:\\.|[^"])*"|\'(?:\\.|[^\'])*\')+"##)
+    let cmdArgs = regex.findAll(commandLine, group: true) |>
+        map { md =>
+            let s = md.matchString()
+            // Remove the quote marks if necessary
+            if (s.startsWith('"') && s.endsWith('"') ||
+                s.startsWith("'") && s.endsWith("'")) {
+                return s[1..(s.size-1)]
+            } else {
+                return s
+            }
+        } |>
+        collectArray
+    if (cmdArgs.size == 0) {
+        throw Exception("Invalid command line: ${commandLine}")
+    } else if (cmdArgs.size == 1) {
+        return (cmdArgs[0], [])
+    } else {
+        return (cmdArgs[0], cmdArgs[1..])
+    }   
+}
 
 /**
  * MCP client via the stdio transport
@@ -23,6 +48,17 @@ public class StdioMCPClient <: AbsMCPClient {
     private let server: SubProcess
     private let writer: StringWriter<OutputStream>
     private let reader: StringReader<InputStream>
+
+    public init(commandLine: String, env!: Array<(String, String)> = []) {
+        // Parse the command line
+        let (command, args) = splitCommandLine(commandLine)
+        // Start the MCP server process
+        LogUtils.info("Start MCP Server: `${command} ${String.join(args, delimiter: " ")}`")
+        server = newProcess(command, args, env: env, redirectErr: false)
+        writer = StringWriter(server.stdIn)
+        reader = StringReader(server.stdOut)
+        this.initialize() 
+    }
 
     public init(command: String, args: Array<String>, env!: Array<(String, String)> = []) {
         // Start the MCP server process

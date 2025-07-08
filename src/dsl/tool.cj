@@ -11,7 +11,7 @@ import std.ast.*
  * Since ToolAttr is special that will contain multiple attributes with the same key,
  * we cannot use a hashmap to store its attributes.
  */
-class ToolAttr <: Attr {
+private class ToolAttr <: Attr {
 
     init(map: AttrMap) { super(map) }
 
@@ -94,7 +94,7 @@ public macro tool(attrTokens: Tokens, input: Tokens): Tokens {
     return content
 }
 
-func transformTool(input: Tokens, attr: ToolAttr): Tokens {
+private func transformTool(input: Tokens, attr: ToolAttr): Tokens {
     let funcDecl: FuncDecl = parseFuncDecl(input)
     let funcName = funcDecl.identifier.value
     setItem("internalTool", funcName) // Notify @agent
@@ -140,7 +140,7 @@ func transformTool(input: Tokens, attr: ToolAttr): Tokens {
                   execFn: ...)
  * ```
  */
-func buildCallNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
+private func buildCallNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
     let modifier = funcDecl.modifiers
     let funcName = newLiteralToken(funcDecl.identifier.value)
     let funcParams: ArrayList<FuncParam> = funcDecl.funcParams
@@ -195,7 +195,7 @@ func buildCallNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
  * }
  * ```
  */
-func transformToolExecuteLambda(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
+private func transformToolExecuteLambda(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
     let toolImplFuncName = newIdentifierToken("${TOOL_IMPL_PREFIX}${funcDecl.identifier.value}")
     let funcParams: ArrayList<FuncParam> = funcDecl.funcParams
 

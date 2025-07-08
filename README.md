@@ -10,14 +10,31 @@
 <!-- code_chunk_output -->
 
 - [Cangjie Magic: Make Apps Grow Intelligence and Creativity](#cangjie-magic-make-apps-grow-intelligence-and-creativity)
+  - [Hello Example](#hello-example)
   - [Install 🔨](#install-)
   - [Tutorial 📚](#tutorial-)
   - [API Manual 📖](#api-manual-)
   - [Examples 🚀](#examples-)
   - [Cangjie Magic 官方开发者讨论群组](#cangjie-magic-官方开发者讨论群组)
   - [Other Tutorials](#other-tutorials)
+  - [重要变更/Import Changes](#重要变更import-changes)
 
 <!-- /code_chunk_output -->
+
+## Hello Example
+
+```cangjie
+import magic.dsl.*
+import magic.prelude.*
+
+@ai[model: "deepseek:deepseek-chat"]
+foreign func translate(text: String, targetLang: String): String
+
+main() {
+  let msg = translate("你好，Cangjie Magic!", "en")
+  println(msg)
+}
+```
 
 ## Install 🔨
 
@@ -83,3 +100,9 @@ MCP Server Collection Example: https://gitcode.com/Cangjie-TPC/CangjieMagic-MCPS
 
 大家可以在B站学习东北大学 张引 老师分享的教程
 https://www.bilibili.com/video/BV1hQQzYAEHL/?spm_id_from=333.337.search-card.all.click&vd_source=ac4d1bb6a8e4a3751bba687720bd6fd9
+
+## 重要变更/Import Changes
+
+**2025/7/8**: 
+- `@agent` 的工具配置语法变更；修改 `@ai` 函数语法；新语法详见 [docs/tutorial.md](./docs/tutorial.md)
+  The tool configuration syntax for `@agent` has been updated, and the `@ai` function syntax has been modified. Refer to [docs/tutorial-en.md](./docs/tutorial-en.md) for the new syntax details.

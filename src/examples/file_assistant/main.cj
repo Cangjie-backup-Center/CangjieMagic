@@ -17,7 +17,7 @@ const DEEPSEEK_API_KEY = "<your api key>"
 @agent[
     model: "deepseek:deepseek-chat",
     executor: "react",
-    mcp: [
+    tools: [
         { command: "node", args: ["${MARKDOWNIFY_DIR}/dist/index.js"] },
         { command: "docker", args: [
             "run",

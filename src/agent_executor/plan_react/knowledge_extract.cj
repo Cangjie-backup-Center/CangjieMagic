@@ -7,7 +7,7 @@ import magic.core.agent.*
 import magic.core.message.Message
 import magic.prompt.Template
 import magic.log.LogUtils
-import magic.parser.OutputParserUtils
+import magic.parser.ParserUtils
 import magic.model.ModelUtils
 
 private let KNOWLEDGE_EXTRACT_SYSTEM_PROMPT = """
@@ -53,7 +53,7 @@ func knowledgeExtract(agent: Agent, request: AgentRequest): String {
     ]
 
     let knowledge = ModelUtils.agentMakeChatGet(agent, messages) {
-        msg: Message => OutputParserUtils.extractLastCode(msg.content, "knowledge")
+        msg: Message => ParserUtils.extractLastCode(msg.content, "knowledge")
     }
     return knowledge ?? ""
 }

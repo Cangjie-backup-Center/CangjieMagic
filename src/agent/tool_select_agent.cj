@@ -8,7 +8,7 @@ import magic.core.model.ChatModel
 import magic.core.message.{Message, MessageList}
 import magic.core.tool.{Tool, ToolRequest}
 import magic.model.ModelUtils
-import magic.parser.{OutputParserUtils, ParserException}
+import magic.parser.{ParserUtils, ParserException}
 import magic.jsonable.Jsonable
 import magic.prompt.Template
 import magic.log.LogUtils
@@ -66,7 +66,9 @@ public class ToolSelectAgent <: BaseAgent {
     public func select(question: String): Option<ToolRequest> {
         let resp = this.chat(AgentRequest(question))
         try {
-            return OutputParserUtils.parseToolRequest(resp.content)
+            let toolRequest = ParserUtils.extractLastToolRequest(resp.content)
+            LogUtils.info(this.name, "Select Tool: ${toolRequest.toString()}")
+            return toolRequest
         } catch (_: ParserException) {
             return None
         }
@@ -81,11 +83,10 @@ public class ToolSelectAgent <: BaseAgent {
             Message.system(sysPrompt.trimAscii()),
             Message.user("Now, select the tool for the question: ${request.question}.")
         ]
-        let jsonOpt = ModelUtils.agentMakeChatGet(this, messages) {
-            msg: Message => OutputParserUtils.extractLastCode(msg.content, "json")
-        }
-        LogUtils.info(this.name, "Select Tool: ${jsonOpt.toString()}")
-        return AgentResponse(jsonOpt ?? "{}")
+
+        return AgentResponse(
+            (ModelUtils.agentMakeChat(this, messages))?.content ?? "Failed to get chat model response"
+        )
     }
 
     private func buildToolsPrompt(): String {

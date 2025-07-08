@@ -65,7 +65,7 @@ private class Context {
 /**
  * This code implements a simple template engine that supports variable substitution and loops.
  */
-public class TemplateEngine {
+private class TemplateEngine {
     private static const ESCAPED_NEWLINE = "#^#"
 
     private let context = Context()
@@ -189,10 +189,38 @@ extend String <: Template {
     }
 
     public func format(kv: HashMap<String, ToString>): String {
+        return formatWithRegex(kv)
+    }
+
+    private func formatWithTemplateEngine(kv: HashMap<String, ToString>): String {
         let engine = TemplateEngine()
         for ((key, value) in kv) {
             engine.set(key, value.toString())
         }
         return engine.render(this)
+    }
+
+    private func formatWithRegex(kv: HashMap<String, ToString>): String {
+       let regex = Regex("{\\s*([_a-zA-Z][_a-zA-Z0-9]+)\\s*}")
+        let matcher = regex.matcher(this)
+        let subStrings = matcher.split()
+        let keys = match (matcher.findAll()) {
+            case Some(mdArray) =>
+                Array<String>(mdArray.size, { i: Int64 =>
+                    mdArray[i].matchString(1)
+                })
+            case None => Array<String>()
+        }
+        if (subStrings.size != keys.size + 1) {
+            throw Exception("String format error")
+        }
+        // "... {key1}...{key2}...{keyN}..."
+        let sb = StringBuilder()
+        sb.append(subStrings[0])
+        for (i in 0..keys.size) {
+            sb.append(kv[keys[i]])
+            sb.append(subStrings[i+1])
+        }
+        return sb.toString()
     }
 }

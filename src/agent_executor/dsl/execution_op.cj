@@ -4,14 +4,14 @@
 package magic.agent_executor.dsl
 
 import magic.core.agent.*
-import magic.core.tool.Tool
+import magic.core.tool.{Tool, ToolException}
 import magic.core.message.{Message, MessageList}
 import magic.core.model.{ChatRequest}
 import magic.agent_executor.react.{ReactPromptUtils, ToolCall}
 import magic.agent_executor.common.AgentTask
 import magic.model.ModelUtils
 import magic.prompt.Template
-import magic.parser.{Tag, WithTag, OutputParserUtils}
+import magic.parser.{Tag, WithTag, ParserUtils}
 import magic.tool.NativeFuncTool
 import magic.log.LogUtils
 import magic.jsonable.Jsonable
@@ -45,14 +45,26 @@ public struct OnCase {
  * It includes operations like planning, thinking, invoking tools, and handling subtasks.
  */
 public struct ExecutionOpSet {
-    // A special fake tool
+    /**
+     * A special fake tool
+     * This tool is used to provide the final answer after all steps are completed
+     * There is an internal **trick** that we can inject our answer tool with the same name
+     */ 
     static let ANSWER_TOOL = NativeFuncTool(
         name: "_answer_",
         description: "This is a special tool that can only be used after you complete all the steps and resolve the task. You use this tool to provide the user with the final answer. If you interact with them using this tool without finishing the task, the user will get upset.",
         parameters: [
             ("result", "The final result", TypeSchema.Str)
         ],
-        filterable: false
+        terminal: true,
+        filterable: false,
+        execFn: { args: HashMap<String, JsonValue> =>
+            // The result is the final answer
+            return args.get("result")
+                .getOrThrow({ => ToolException("The result parameter is required for the answer tool") })
+                .asString()
+                .getValue()
+        }
     )
 
     private static func chatWithOperation(state: ExecutionState,
@@ -111,17 +123,20 @@ public struct ExecutionOpSet {
             state.execution.verboseChannel.put(message.content, Tag.ACTION)
         }
         // If the content does not contain ```json ... ```, treat the content as a json value
-        let jsonStr = OutputParserUtils.extractFirstCode(message.content, "json") ?? message.content.trimAscii()
+        let jsonStr = ParserUtils.extractFirstCode(message.content, "json") ?? message.content.trimAscii()
         let json = JsonValue.fromStr(jsonStr).asObject()
         // Parse the content
-        let toolRequest = OutputParserUtils.parseToolRequest(jsonStr)
-        // The special answer tool means the completion of execution
-        if (toolRequest.name == ANSWER_TOOL.name) {
-            state.answer = toolRequest.args["result"].asString().getValue()
-            return state
-        }
+        let toolRequest = ParserUtils.parseToolRequest(jsonStr)
         // Execute the tool
         let observation = state.task.invokeTool(toolRequest)
+        // Special terminal tools may stop the execution
+        if (let Some(stopInfo) <- state.task.stopInfo) {
+            state.task.execution.addStepMessage(Message.assistant(stopInfo.result.withTag(Tag.ANSWER)))
+            if (state.task.request.verbose) {
+                state.execution.verboseChannel.put(stopInfo.result, Tag.ANSWER)
+            }
+            return state
+        }
         LogUtils.info(state.task.agent.name, "Observation: ${observation}")
         if (state.task.request.verbose) {
             state.execution.verboseChannel.put(observation, Tag.OBSERVATION)
@@ -141,7 +156,11 @@ public struct ExecutionOpSet {
             return state
         }
         // Inject a special tool
-        state.task.agent.toolManager.addTool(ANSWER_TOOL)
+        var isInjected = false
+        if (let None <- state.task.agent.toolManager.findTool(ANSWER_TOOL.name)) {
+            state.task.agent.toolManager.addTool(ANSWER_TOOL)
+            isInjected = true
+        }
         let prompt = ACTION_PROMPT.format([
             ("tools", ReactPromptUtils.buildAgentToolsPrompt(state.task))
         ])
@@ -153,7 +172,10 @@ public struct ExecutionOpSet {
             }
             return doInvokeTool(state, msg)
         } finally {
-            state.task.agent.toolManager.delTool(ANSWER_TOOL)
+            // Remove the injected tool
+            if (isInjected) {
+                state.task.agent.toolManager.delTool(ANSWER_TOOL)
+            }
         }
     }
 
@@ -224,7 +246,7 @@ public struct ExecutionOpSet {
         let msg = chatWithOperation(state, DIVIDE_PROMPT, stop: [])
         LogUtils.info(state.task.agent.name, "Subtask Division: ${msg.content}")
         // If the content does not contain ```json ... ```, treat the content as a json value
-        let jsonStr = OutputParserUtils.extractFirstCode(msg.content, "json") ?? msg.content.trimAscii()
+        let jsonStr = ParserUtils.extractFirstCode(msg.content, "json") ?? msg.content.trimAscii()
         let json = JsonValue.fromStr(jsonStr).asObject()
         // Parse the content
         let subtasks = Array<Subtask>.fromJsonValue(json.get("subtasks").getOrThrow())
