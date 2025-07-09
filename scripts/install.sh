@@ -22,28 +22,36 @@ function clone_cangjie_magic() {
 
 function download_cangjie_stdx() {
     # Determine the current OS type
-    OS=""
+    OS="unknown"
     case "$(uname -s)" in
-        Linux*)     OS="linux";;
-        Darwin*)    OS="mac";;
-        *)          echo "Unsupported OS" >&2; exit 1;;
+        Linux)     OS="linux" ;;
+        Darwin)    OS="mac" ;;
+        *)         echo "Unknown OS"; exit 1 ;;
     esac
 
-    # Define version
+    # Detect CPU architecture (x64 or aarch64)
+    ARCH="unknown"
+    case "$(uname -m)" in
+        x86_64)    ARCH="x64" ;;
+        aarch64)   ARCH="aarch64" ;;
+        arm64)     ARCH="aarch64" ;;  # macOS reports ARM64 as "arm64"
+        *)         echo "Unsupported CPU architecture"; exit 1 ;;
+    esac
+
     VERSION="1.0.0.1"
 
-    # Construct download URL
-    URL="https://gitcode.com/Cangjie/cangjie-stdx/releases/download/v1.0.0.1/cangjie-stdx-${OS}-x64-${VERSION}.zip"
+    # Construct the download URL
+    URL="https://gitcode.com/Cangjie/cangjie-stdx/releases/download/v${VERSION}/cangjie-stdx-${OS}-${ARCH}-${VERSION}.zip"
 
     # Create target directories if they don't exist
     INSTALL_DIR="./CangjieMagic/libs"
-    TARGET_DIR="${INSTALL_DIR}/cangjie-stdx-${OS}-x64-${VERSION}"
+    TARGET_DIR="${INSTALL_DIR}/cangjie-stdx-${OS}-${ARCH}-${VERSION}"
 
     mkdir -p "${INSTALL_DIR}"
 
     # Download the file
     echo "Downloading from ${URL}..."
-    ZIP_FILE="${INSTALL_DIR}/cangjie-stdx-${OS}-x64-${VERSION}.zip"
+    ZIP_FILE="${INSTALL_DIR}/cangjie-stdx-${OS}-${ARCH}-${VERSION}.zip"
 
     if command -v curl &> /dev/null; then
         curl -L -o "${ZIP_FILE}" "${URL}"
