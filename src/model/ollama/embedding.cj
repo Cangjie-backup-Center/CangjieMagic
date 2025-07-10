@@ -26,7 +26,7 @@ public class OllamaEmbeddingModel <: EmbeddingModel {
     private let baseURL: String
     private let head = HashMap<String, String>([("Content-Type", "application/json")])
 
-    override public prop service: String {
+    override public prop provider: String {
         get() { "ollama" }
     }
 

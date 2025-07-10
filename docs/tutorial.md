@@ -885,7 +885,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 
 ## 模型配置
 
-模型配置使用格式 `<service>:<model>`，当前支持如下的模型服务商。
+模型配置使用格式 `<provider>:<model>`，当前支持如下的模型服务商。
 
 | 服务商名称  | 示例  | 配置说明 | 服务 URL 配置 |
 |---|---|---|---|
@@ -897,6 +897,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 | OpenAI  | `openai:gpt-4o` | `OPENAI_API_KEY` | `OPENAI_BASE_URL`，默认 `https://api.openai.com/v1` |
 | SiliconFlow | `siliconflow:deepseek-ai/DeepSeek-V3` | `SILICONFLOW_API_KEY` | `SILICONFLOW_BASE_URL`，默认 `https://api.siliconflow.cn/v1` |
 | 智谱 AI | `zhipuai:glm-4` | `ZHIPUAI_API_KEY` | `ZHIPUAI_BASE_URL`，默认 `https://open.bigmodel.cn/api/paas/v4` |
+| Google | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` | `GOOGLE_BASE_URL`，默认 `https://generativelanguage.googleapis.com/v1beta/openai` |
 
 模型配置不仅可以在 `@agent` 的 `model` 属性中使用，还可以直接通过 `ModelManager` 的静态成员方法来直接构造模型实例：`static func createChatModel(modelName: String): ChatModel`。
 
@@ -912,7 +913,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 | OpenAI | ✔️ | ✔️ | ✔️ |
 | SiliconFlow | ✔️ | ✔️ | ✔️ |
 | 智谱 AI | ✔️ | ❌ | ❌ |
-
+| Google | ✔️ | ❌ | ❌ |
 
 如果需要接入新的模型，可参考直接使用 API 设置（见下文）。
 

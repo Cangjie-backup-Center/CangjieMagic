@@ -5,11 +5,11 @@ package magic.core.model
 
 /**
  * A model consist of
- * - a service name, e.g., openai
+ * - a provider name, e.g., openai
  * - a model name, e.g., gpt-4o
  * There are different models, e.g., chat model, image model, audio model, etc.
  */
 public interface Model {
-    prop service: String
+    prop provider: String
     prop name: String
 }

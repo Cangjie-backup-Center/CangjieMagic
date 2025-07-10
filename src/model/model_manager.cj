@@ -21,64 +21,62 @@ import std.collection.HashMap
 import std.collection.{filter, collectArray}
 
 //====================================================================================
-private struct ServiceConfig {
-    ServiceConfig(
+private struct ProviderConfig {
+    ProviderConfig(
         let urlEnvVar: String,
         let urlEnvValue: String,
         let keyEnvVar: String
     ) { }
 }
 
-private let DEFAULT_SERVICE_MAP = HashMap<String, ServiceConfig>([
-    ("openai", ServiceConfig("OPENAI_BASE_URL",
-                             "https://api.openai.com/v1",
-                             "OPENAI_API_KEY")),
-    ("dashscope", ServiceConfig("DASHSCOPE_BASE_URL", // openai-compatible
-                                "https://dashscope.aliyuncs.com/compatible-mode/v1",
-                                "DASHSCOPE_API_KEY")),
-    ("ark",       ServiceConfig("ARK_BASE_URL",       // openai-compatible
-                                "https://ark.cn-beijing.volces.com/api/v3",
-                                "ARK_API_KEY")),
-    ("deepseek",  ServiceConfig("DEEPSEEK_BASE_URL",  // openai-compatible
-                                "https://api.deepseek.com",
-                                "DEEPSEEK_API_KEY")),
-    ("siliconflow", ServiceConfig("SILICONFLOW_BASE_URL", // openai-compatible
-                                  "https://api.siliconflow.cn/v1",
-                                  "SILICONFLOW_API_KEY")),
-    ("zhipuai",   ServiceConfig("ZHIPU_BASE_URL", // openai-compatible
-                                "https://open.bigmodel.cn/api/paas/v4",
-                                "ZHIPU_API_KEY")),
-    ("maas",   ServiceConfig("MAAS_BASE_URL", // openai-compatible
-                             "",
-                            "MAAS_API_KEY")),
-    ("ollama",    ServiceConfig("OLLAMA_BASE_URL",
-                                "http://localhost:11434",
-                                "")),
-    ("llamacpp",  ServiceConfig("LLAMACPP_BASE_URL",
-                                "http://localhost:8080",
-                                ""))
+private let DEFAULT_PROVIDER_MAP = HashMap<String, ProviderConfig>([
+    ("openai", ProviderConfig("OPENAI_BASE_URL",
+                              "https://api.openai.com/v1",
+                              "OPENAI_API_KEY")),
+    ("dashscope", ProviderConfig("DASHSCOPE_BASE_URL", // openai-compatible
+                                 "https://dashscope.aliyuncs.com/compatible-mode/v1",
+                                 "DASHSCOPE_API_KEY")),
+    ("ark",       ProviderConfig("ARK_BASE_URL",       // openai-compatible
+                                 "https://ark.cn-beijing.volces.com/api/v3",
+                                 "ARK_API_KEY")),
+    ("deepseek",  ProviderConfig("DEEPSEEK_BASE_URL",  // openai-compatible
+                                 "https://api.deepseek.com",
+                                 "DEEPSEEK_API_KEY")),
+    ("siliconflow", ProviderConfig("SILICONFLOW_BASE_URL", // openai-compatible
+                                   "https://api.siliconflow.cn/v1",
+                                   "SILICONFLOW_API_KEY")),
+    ("zhipuai",   ProviderConfig("ZHIPU_BASE_URL", // openai-compatible
+                                 "https://open.bigmodel.cn/api/paas/v4",
+                                 "ZHIPU_API_KEY")),
+    ("maas",   ProviderConfig("MAAS_BASE_URL", // openai-compatible
+                              "",
+                              "MAAS_API_KEY")),
+    ("google", ProviderConfig("GOOGLE_BASE_URL", // openai-compatible
+                              "https://generativelanguage.googleapis.com/v1beta/openai",
+                              "GOOGLE_API_KEY")),
+    ("ollama",    ProviderConfig("OLLAMA_BASE_URL",
+                                 "http://localhost:11434",
+                                 "")),
+    ("llamacpp",  ProviderConfig("LLAMACPP_BASE_URL",
+                                 "http://localhost:8080",
+                                  ""))
 ])
 
-private func getAllServiceNames(): Array<String> {
-    return DEFAULT_SERVICE_MAP.keys().toArray()
+private func getAllProviderNames(): Array<String> {
+    return DEFAULT_PROVIDER_MAP.keys().toArray()
 }
 
-func checkService(service: String): Bool {
-    for (s in DEFAULT_SERVICE_MAP.keys()) {
-        if (s == service) {
-            return true
-        }
-    }
-    return false
+private func checkProvider(provider: String): Bool {
+    return DEFAULT_PROVIDER_MAP.keys().contains(provider)
 }
 
-private func getDefaultBaseURL(service: String, kind: String): String {
-    let config = DEFAULT_SERVICE_MAP[service]
+private func getDefaultBaseURL(provider: String, kind: String): String {
+    let config = DEFAULT_PROVIDER_MAP[provider]
     let envVarName = config.urlEnvVar
     // Special cases of default values
-    let defaultValue = if (kind == "embedding" && service == "dashscope") {
+    let defaultValue = if (kind == "embedding" && provider == "dashscope") {
         "https://dashscope.aliyuncs.com/api/v1"
-    } else if (service == "maas") {
+    } else if (provider == "maas") {
         match (getEnv(envVarName)) {
             case Some(v) => v
             case None => throw Exception("Fail to get env variable ${envVarName}.")
@@ -89,8 +87,8 @@ private func getDefaultBaseURL(service: String, kind: String): String {
     return getEnv(envVarName) ?? defaultValue
 }
 
-func getDefaultApiKey(service: String): String {
-    let config = DEFAULT_SERVICE_MAP[service]
+func getDefaultApiKey(provider: String): String {
+    let config = DEFAULT_PROVIDER_MAP[provider]
     let envVarName = config.keyEnvVar
     if (envVarName == "") {
         return ""
@@ -118,7 +116,7 @@ private func getDefaultContextLen(): Int64 {
 }
 
 public class ModelConfig {
-    let service: String // Model service, like "openai"
+    let provider: String // Model provider, like "openai"
     let kind: String    // "chat", "embedding", or "image"
     let name: String    // Model name, like "gpt-4o", "text-embedding-ada-002"
     let apiKey: String
@@ -129,21 +127,21 @@ public class ModelConfig {
      * If apiKey is not specified, XX_API_KEY will be used.
      * If baseURL is not specified, XX_BASE_URL will be used.
      */
-    public init(service!: String, kind!: String, name!: String, apiKey!: String = "", baseURL!: String = "",
+    public init(provider!: String, kind!: String, name!: String, apiKey!: String = "", baseURL!: String = "",
         contextLength!: ?Int64 = None) {
-        if (!checkService(service)) {
-            LogUtils.error("Only ${getAllServiceNames()} are supported now.")
+        if (!checkProvider(provider)) {
+            LogUtils.error("Only ${getAllProviderNames()} are supported now.")
         }
-        this.service = service
+        this.provider = provider
         this.kind = kind
         this.name = name
         if (apiKey == "") {
-            this.apiKey = getDefaultApiKey(service)
+            this.apiKey = getDefaultApiKey(provider)
         } else {
             this.apiKey = apiKey
         }
         if (baseURL == "") {
-            this.baseURL = getDefaultBaseURL(service, kind)
+            this.baseURL = getDefaultBaseURL(provider, kind)
         } else {
             this.baseURL = baseURL
         }
@@ -156,23 +154,23 @@ public class ModelConfig {
 }
 
 /**
- * The model contains a service name and a model name, splitted by a ':'
+ * The model contains a provider name and a model name, splitted by a ':'
  */
 private func parseModel(model: String, kind!: String): ModelConfig {
     let items = model.split(":", 2)
     if (items.size == 1) {
         if (items[0] == "llamacpp") {
-            return ModelConfig(service: "llamacpp", kind: kind, name: "unknown")
+            return ModelConfig(provider: "llamacpp", kind: kind, name: "unknown")
         }
     } else if (items.size == 2) {
-        let service = items[0].trimAscii()
+        let provider = items[0].trimAscii()
         let modelName = items[1].trimAscii()
-        if (!checkService(service)) {
-            throw ModelException("${model} is invalid. Only ${getAllServiceNames()} are supported now.")
+        if (!checkProvider(provider)) {
+            throw ModelException("${model} is invalid. Only ${getAllProviderNames()} are supported now.")
         }
-        return ModelConfig(service: service, kind: kind, name: modelName)
+        return ModelConfig(provider: provider, kind: kind, name: modelName)
     }
-    throw ModelException("${model} is invalid. Only ${getAllServiceNames()} are supported now.")
+    throw ModelException("${model} is invalid. Only ${getAllProviderNames()} are supported now.")
 }
 
 public struct ModelManager {
@@ -192,8 +190,9 @@ public struct ModelManager {
     }
 
     public static func createChatModel(modelConfig: ModelConfig, temperature!: Option<Float64> = None): ChatModel {
-        match (modelConfig.service) {
-            case "openai" | "dashscope" | "ark" | "deepseek" | "siliconflow" | "zhipuai" | "maas" =>
+        match (modelConfig.provider) {
+            case "openai" | "dashscope" | "ark" | "deepseek" |
+                 "siliconflow" | "zhipuai" | "maas" | "google" =>
                 return OpenAIChatModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL, temperature: temperature)
             case "ollama" =>
                 return OllamaChatModel(modelConfig.name, baseURL: modelConfig.baseURL, temperature: temperature)
@@ -218,7 +217,7 @@ public struct ModelManager {
     }
 
     public static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel {
-        match (modelConfig.service) {
+        match (modelConfig.provider) {
             case "openai" | "ark" | "siliconflow" =>
                 return OpenAIEmbeddingModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
             case "dashscope" =>
@@ -248,7 +247,7 @@ public struct ModelManager {
     }
 
     public static func createImageModel(modelConfig: ModelConfig): ImageModel {
-        match (modelConfig.service) {
+        match (modelConfig.provider) {
             case "openai" =>
                 return OpenAIImageModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
             case "siliconflow" =>

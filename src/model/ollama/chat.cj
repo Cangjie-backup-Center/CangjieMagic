@@ -83,7 +83,7 @@ public class OllamaChatModel <: ChatModel {
         this._contextLength = contextLength
     }
 
-    override public prop service: String {
+    override public prop provider: String {
         get() { "ollama" }
     }
 

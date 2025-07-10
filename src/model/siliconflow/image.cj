@@ -38,7 +38,7 @@ public class SiliconflowImageModel <: ImageModel {
         this.baseURL = baseURL
     }
 
-    override public prop service: String {
+    override public prop provider: String {
         get() { "siliconflow" }
     }
 

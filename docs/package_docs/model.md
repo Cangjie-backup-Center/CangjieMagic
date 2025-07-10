@@ -24,11 +24,11 @@
 ### class ModelConfig
 #### func init
 ```
-public init(service: String, kind: String, name: String, apiKey: String = "", baseURL: String = "", contextLength: ?Int64 = None)
+public init(provider: String, kind: String, name: String, apiKey: String = "", baseURL: String = "", contextLength: ?Int64 = None)
 ```
 - Description: Initializes a new ModelConfig instance with the specified parameters. If apiKey or baseURL are not provided, default values will be used.
 - Parameters:
-  - `service`: `String`, The service name for the model.
+  - `provider`: `String`, The provider name for the model.
   - `kind`: `String`, The kind of the model.
   - `name`: `String`, The name of the model.
   - `apiKey`: `String`, The API key for the model. If not specified, a default key will be used.
