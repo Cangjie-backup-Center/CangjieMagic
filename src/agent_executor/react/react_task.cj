@@ -79,22 +79,48 @@ protected class ReactTask <: AgentTask {
         return None
     }
 
-    //------------------------------------------------------
+    private func sendVerbose(step: ReactStep): Unit {
+        match (step) {
+            case Action(toolCall) =>
+                if (!toolCall.thought.isEmpty()) {
+                    this.execution.verboseChannel.put(toolCall.thought, Tag.THOUGHT)
+                }
+                this.execution.verboseChannel.put(toolCall.text, Tag.ACTION)
+            case Thought(thought) =>
+                this.execution.verboseChannel.put(thought, Tag.THOUGHT)
+            case Answer(answer) =>
+                if (!answer.thought.isEmpty()) {
+                    this.execution.verboseChannel.put(answer.thought, Tag.THOUGHT)
+                }
+                this.execution.verboseChannel.put(answer.content, Tag.ANSWER)
+                this.execution.verboseChannel.close()
+            case Failure(_) => ()
+        }
+    }
 
-    protected func runOnce(): Option<AgentResponse> {
+    //------------------------------------------------------
+    protected func runOnce(): Option<String> {
         LogUtils.info(this.agent.name, "Step #${this.step}")
         this.step += 1
-        // Add a hint message
-        this.execution.addMessage(
-            Message.system("Decide what to do next. Output a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}, or a single ${Tag.ANSWER}")
-        )
-        let step = this.getNextReactStep()
-        // Remove the hint message
-        this.execution.removeLastMessage()
-        if (let Some(answer) <- handleStep(step)) {
-            return AgentResponse(answer, execution: this.execution)
+        let step = try {
+            // Add a hint message
+            this.execution.addMessage(
+                Message.system("Decide what to do next. Output a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}, or a single ${Tag.ANSWER}")
+            )
+            this.getNextReactStep()
+        } finally {
+            // Remove the hint message
+            this.execution.removeLastMessage()
         }
-        return None
+
+        if (this.request.verbose) {
+            this.sendVerbose(step)
+        }
+        if (let Some(answer) <- handleStep(step)) {
+            return answer
+        } else {
+            return None
+        }
     }
 
     private func getNextReactStep(): ReactStep {
@@ -136,20 +162,19 @@ protected class ReactTask <: AgentTask {
     /**
      * Summarize an answer according to the react execution history.
      **/
-    protected func summarize(): AgentResponse {
+    protected func summarize(): String {
         let messages = ReactPromptUtils.buildReactSummarizePrompt(this)
         let answer = ModelUtils.agentMakeChatGet(this.agent, messages) { msg: Message =>
             Tag.extract(msg.content, Tag.ANSWER)
         }
-        return AgentResponse(
-            answer.getOrThrow({ => AgentExecutionException("Fail to get chat model response") }),
-            execution: this.execution
-        )
+        return answer.getOrThrow({ => AgentExecutionException("Fail to get chat model response") })
     }
 
-    //------------------------------------------------------------
-
-    func asyncRunOnce(): Option<AsyncReactAnswer> {
+    //-----------------------------------------------------------------------------------------
+    // The following methods are used to implement asynchronous execution,
+    // but these are outdated implementations with bugs (they may directly pass incorrect LLM outputs to verbose info).
+    // These methods are currently not in use and are temporarily retained for reference.
+    private func asyncRunOnce(): Option<AsyncReactAnswer> {
         LogUtils.info(this.agent.name, "Step #${this.step}")
         this.step += 1
         // Add a hint message
@@ -214,7 +239,7 @@ protected class ReactTask <: AgentTask {
     /**
      * Summarize an answer according to the react execution history.
      **/
-    func asyncSummarize(): AsyncReactAnswer {
+    private func asyncSummarize(): AsyncReactAnswer {
         let asyncChatResp = agent.model.asyncCreate(
             ChatRequest(ReactPromptUtils.buildReactSummarizePrompt(this))
         )

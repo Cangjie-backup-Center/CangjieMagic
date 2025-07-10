@@ -133,6 +133,13 @@ main() {
 
 **Step** 4️⃣: Run `cjpm run --name <package-name>` to start the program
 
+如果在 MacOS 上执行程序有报错：`stdx` 中的库无法打开（例如 `'...dylib' not valid for use in process: library load disallowed by system policy`），执行以下命令（注意修改所下载的 `stdx` 库路径）：
+
+If you encounter an error when running a program on macOS: a library in `stdx` fails to open (e.g., `'...dylib' not valid for use in process: library load disallowed by system policy`), execute the following command (note to modify the path of the downloaded `stdx` library accordingly)b
+
+```bash
+sudo xattr -rd com.apple.quarantine /path/to/stdx/dylib
+```
 
 ## Cangjie 鸿蒙版/HarmonyOS Edition
 
