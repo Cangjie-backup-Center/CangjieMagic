@@ -11,7 +11,7 @@ import magic.tokenizer.TokenizerLoader
 
 import std.collection.ArrayList
 import std.collection.concurrent.BlockingQueue
-import std.sync.ReentrantMutex
+import std.sync.Mutex
 
 /**
  * Bookkeeping information during the agent execution
@@ -88,7 +88,7 @@ public class AgentExecutionInfo <: AgentExecution {
      * A communication channel to transfer verbose information during the agent execution
      */
     protected var _verboseChannel: Option<TagChannel> = None
-    private let mutex = ReentrantMutex()
+    private let mutex = Mutex()
     protected prop verboseChannel: TagChannel {
         get() {
             synchronized(this.mutex) {

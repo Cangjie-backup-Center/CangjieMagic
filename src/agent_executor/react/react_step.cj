@@ -86,14 +86,13 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
                             content: answer)
             )
         }
-        let action = Tag.extract(content, Tag.ACTION)
-        match ((thought, action)) {
-            case (_, Some(_action)) =>
+        match ((thought, Tag.extract(content, Tag.ACTION))) {
+            case (_, Some(action)) =>
                 try {
-                    let request = ParserUtils.extractLastToolRequest(_action)
+                    let request = ParserUtils.extractLastToolRequest(action)
                     return ReactStep.Action(
                         ToolCall(
-                            text: _action,
+                            text: action,
                             thought: thought ?? "",
                             request: request
                         )
