@@ -22,7 +22,7 @@ public class LlamacppEmbeddingModel <: EmbeddingModel {
     private let baseURL: String
     private let header = HashMap<String, String>([("Content-Type", "application/json")])
 
-    override public prop service: String {
+    override public prop provider: String {
         get() { "llamacpp" }
     }
 

@@ -60,7 +60,7 @@ The `@agent` macro supports the following attributes. Refer to the corresponding
 | Attribute | Value Type | Description |
 |-----------|------------|-------------|
 | `description` | `String` | A functional description of the Agent. If not set, the LLM will automatically summarize it from the system prompt. |
-| `model` | `String` | Configures the LLM model service to use. Defaults to `gpt-4o`. |
+| `model` | `String` | Configures the LLM model provider to use. |
 | `tools` | `Array` | Configures external tools available to the Agent. |
 | `mcp` | `Array` | Configures the MCP servers to connect to. |
 | `rag` | `Map` | Configures external knowledge sources. |
@@ -758,7 +758,7 @@ Additionally, the `@ai` decorator supports the following attributes:
 | Attribute    | Type      | Description |  
 |--------------|-----------|-------------|  
 | `prompt`     | `String`  | Additional instructions for the AI function. |  
-| `model`      | `String`  | Specifies the LLM model service to use. |  
+| `model`      | `String`  | Specifies the LLM model provider to use. |  
 | `tools`      | `Array`   | Configures the external tools available for use. |  
 | `temperature`| `Float`   | The `temperature` value used by the agent when invoking the LLM. |  
 | `dump`       | `Bool`    | Used for debugging—if `true`, prints the agent's transformed AST; defaults to `false`. |  
@@ -781,7 +781,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 
 ## Model Configuration
 
-Models are configured as `<service>:<model>`. Current providers:
+Models are configured as `<provider>:<model>`. Current providers:
 
 | Provider | Example | Config | URL Config |
 |---|---|---|---|
@@ -793,6 +793,7 @@ Models are configured as `<service>:<model>`. Current providers:
 | OpenAI  | `openai:gpt-4o` | `OPENAI_API_KEY` | `OPENAI_BASE_URL` (default: `https://api.openai.com/v1`) |
 | SiliconFlow | `siliconflow:deepseek-ai/DeepSeek-V3` | `SILICONFLOW_API_KEY` | `SILICONFLOW_BASE_URL` (default: `https://api.siliconflow.cn/v1`) |
 | Zhipu AI | `zhipuai:glm-4` | `ZHIPUAI_API_KEY` | `ZHIPUAI_BASE_URL` (default: `https://open.bigmodel.cn/api/paas/v4`) |
+| Google | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` | `GOOGLE_BASE_URL`，(default: `https://generativelanguage.googleapis.com/v1beta/openai`) |
 
 **Model Support Matrix**
 
@@ -806,6 +807,7 @@ Models are configured as `<service>:<model>`. Current providers:
 | OpenAI | ✔️ | ✔️ | ✔️ |
 | SiliconFlow | ✔️ | ✔️ | ✔️ |
 | Zhipu AI | ✔️ | ❌ | ❌ |
+| Google | ✔️ | ❌ | ❌ |
 
 ## Core API Reference
 

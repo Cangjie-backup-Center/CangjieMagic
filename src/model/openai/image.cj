@@ -39,7 +39,7 @@ public class OpenAIImageModel <: ImageModel {
         this.baseURL = baseURL
     }
 
-    override public prop service: String {
+    override public prop provider: String {
         get() { "openai" }
     }
 

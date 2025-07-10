@@ -50,7 +50,7 @@
   - [struct ImageResponse](#struct-imageresponse)
   - [interface Model](#interface-model)
     - [prop name](#prop-name)
-    - [prop service](#prop-service)
+    - [prop provider](#prop-provider)
   - [class ModelException](#class-modelexception)
     - [func init](#func-init-1)
 
@@ -335,11 +335,11 @@ prop name: String
 ```
 - Description: The model name, e.g., gpt-4o
 
-#### prop service
+#### prop provider
 ```
-prop service: String
+prop provider: String
 ```
-- Description: The service name of the model, e.g., openai
+- Description: The provider name of the model, e.g., openai
 
 
 ### class ModelException
