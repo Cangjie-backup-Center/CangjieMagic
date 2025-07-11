@@ -14,10 +14,7 @@
     - [func registerImageModel](#func-registerimagemodel)
   - [struct ModelUtils](#struct-modelutils)
     - [func agentMakeChat](#func-agentmakechat)
-    - [func agentMakeChatGet](#func-agentmakechatget)
     - [func makeChat](#func-makechat)
-    - [func makeChat](#func-makechat-1)
-    - [func makeChat](#func-makechat-1)
     - [func makeChat](#func-makechat-1)
     - [func makeChatGet](#func-makechatget)
 
@@ -114,26 +111,7 @@ public static func registerImageModel(modelName: String, buildFn: () -> ImageMod
   - `modelName`: `String`, The name of the image model to register.
   - `buildFn`: `() -> ImageModel`, A function that builds the image model.
 
-
 ### struct ModelUtils
-#### func agentMakeChat
-```
-public static func agentMakeChat(agent: Agent, messages: Array<Message>): Option<Message>
-```
-- Description: Creates a chat message using an agent and array of messages.
-- Parameters:
-  - `agent`: `Agent`, The agent to use for generating the message.
-  - `messages`: `Array<Message>`, The array of messages to use as context.
-
-#### func agentMakeChatGet
-```
-public static func agentMakeChatGet<T>(agent: Agent, messages: Array<Message>, getFn!: (Message) -> Option<T>): Option<T>
-```
-- Description: Creates a chat message using an agent and applies a get function to the result, returning an optional value of type T.
-- Parameters:
-  - `agent`: `Agent`, The agent to use for generating the message.
-  - `messages`: `Array<Message>`, The array of messages to use as context.
-  - `getFn`: `(Message) -> Option<T>`, The function to apply to the generated message.
 
 #### func makeChat
 ```
@@ -143,17 +121,6 @@ public static func makeChat(model: ChatModel, messageList: MessageList, temperat
 - Parameters:
   - `model`: `ChatModel`, The chat model to use for generating the message.
   - `messageList`: `MessageList`, The list of messages to use as context.
-  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
-  - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
-
-#### func makeChat
-```
-public static func makeChat(model: ChatModel, messages: Array<Message>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<Message>
-```
-- Description: Creates a chat message using a chat model and array of messages with optional temperature and stop parameters.
-- Parameters:
-  - `model`: `ChatModel`, The chat model to use for generating the message.
-  - `messages`: `Array<Message>`, The array of messages to use as context.
   - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
   - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
 

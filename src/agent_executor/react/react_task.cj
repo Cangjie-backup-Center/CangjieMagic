@@ -15,7 +15,7 @@ protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
         super(agent, request)
         this.execution.addMessages(ReactPromptUtils.buildReactPrompt(this))
-        this.execution.addQuestion(request.question)
+        this.execution.addRequest(request)
         LogUtils.info(agent.name, "----- Build Agent Task -----")
         LogUtils.info(agent.name, this.execution.messages)
         LogUtils.info(agent.name, "----- End of Build Agent Task -----")
@@ -131,9 +131,9 @@ protected class ReactTask <: AgentTask {
         // [Observation] ... [Observation],
         // so we truncate it with `stop` words.
         try {
-            match (ModelUtils.makeChat(this.agent.model,
-                                       this.execution.messages,
-                                       stop: [Tag.OBSERVATION])) {
+            match (ModelUtils.agentMakeChat(this.agent,
+                                            this.execution.messages,
+                                            stop: [Tag.OBSERVATION])) {
                 case Some(msg) =>
                     return ReactStep.fromStr(msg.content)
                 case None =>
@@ -163,11 +163,15 @@ protected class ReactTask <: AgentTask {
      * Summarize an answer according to the react execution history.
      **/
     protected func summarize(): String {
-        let messages = ReactPromptUtils.buildReactSummarizePrompt(this)
-        let answer = ModelUtils.agentMakeChatGet(this.agent, messages) { msg: Message =>
-            Tag.extract(msg.content, Tag.ANSWER)
-        }
-        return answer.getOrThrow({ => AgentExecutionException("Fail to get chat model response") })
+        let messages = MessageList(
+            ReactPromptUtils.buildReactSummarizePrompt(this)
+        )
+        let msg = ModelUtils.agentMakeChat(this.agent, messages).getOrThrow({ =>
+            AgentExecutionException("Fail to get chat model response")
+        })
+        return Tag.extract(msg.content, Tag.ANSWER).getOrThrow({ =>
+            AgentExecutionException("Chat model response has no answer")
+        })
     }
 
     //-----------------------------------------------------------------------------------------

@@ -16,7 +16,7 @@ public abstract class AbsTool <: Tool {
         get() { _extra }
     }
 
-    public func toString(): String {
+    public func toJsonValue(): JsonValue {
         let properties = JsonObject()
         let required = ArrayList<String>()
         for (param in this.parameters) {
@@ -31,7 +31,7 @@ public abstract class AbsTool <: Tool {
         let toolSchema = JsonUtils.buildJsonObject([
             ("name", JsonString(name)),
             ("description", JsonString(description)),
-            ("inputSchema", JsonUtils.buildJsonObject([
+            ("parameters", JsonUtils.buildJsonObject([
                 ("type", JsonString("object")),
                 ("properties", properties),
                 ("required", JsonUtils.buildJsonArray(required.toArray()))]))
@@ -40,6 +40,6 @@ public abstract class AbsTool <: Tool {
         if (!examples.isEmpty()) {
             toolSchema.put("examples", JsonUtils.buildJsonArray(examples))
         }
-        return toolSchema.toJsonString()
+        return toolSchema
     }
 }

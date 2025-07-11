@@ -79,10 +79,10 @@ public class ToolSelectAgent <: BaseAgent {
             // ("messageList", this.buildDialogPrompt(request.messageList ?? MessageList())),
             ("tools", this.buildToolsPrompt())
         )
-        let messages = [
+        let messages = MessageList([
             Message.system(sysPrompt.trimAscii()),
             Message.user("Now, select the tool for the question: ${request.question}.")
-        ]
+        ])
 
         return AgentResponse(
             (ModelUtils.agentMakeChat(this, messages))?.content ?? "Failed to get chat model response"
@@ -90,11 +90,15 @@ public class ToolSelectAgent <: BaseAgent {
     }
 
     private func buildToolsPrompt(): String {
-        let toolStrArr = this.tools |> map { t: Tool => t.toString() } |> collectArray
         let strBuilder = StringBuilder()
         strBuilder.append("# Available Tools\n")
         strBuilder.append("[\n")
-        strBuilder.append(String.join(toolStrArr, delimiter: ",\n"))
+        strBuilder.append(
+            String.join(
+                this.tools |> map { t: Tool => t.toJsonValue().toJsonString() } |> collectArray,
+                delimiter: ",\n"
+            )
+        )
         strBuilder.append("\n]\n")
         strBuilder.append("---end of tools---")
         return strBuilder.toString()

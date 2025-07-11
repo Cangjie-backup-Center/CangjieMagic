@@ -4,6 +4,8 @@
 package magic.agent_executor.common
 
 import magic.core.agent.AgentExecutor
+import magic.core.tool.Tool
+import magic.core.rag.RetrieverMode
 import magic.core.message.{Message, Conversation}
 import magic.tokenizer.{TokenizerLoader, TokenizerType}
 import magic.parser.{Tag, WithTag}
@@ -67,17 +69,72 @@ protected class PromptBuilder {
         if (let Some(con) <- this._conversation) {
             for (i in (con.size - 1)..=0:-1) {
                 let chatRound = con[i]
-                res.add(Message.user(chatRound.question))
+                res.add(chatRound.question)
                 for (msg in chatRound.steps) {
                     res.add(msg)
                 }
                 if(executor.name == "react" || executor.name == "plan-react") {
-                    res.add(Message.assistant(chatRound.answer.withTag(Tag.ANSWER)))
+                    res.add(Message.assistant(chatRound.answer.content.withTag(Tag.ANSWER)))
                 } else {
-                    res.add(Message.assistant(chatRound.answer))
+                    res.add(Message.assistant(chatRound.answer.content))
                 }
             }
         }
         return res.toArray()
+    }
+
+    //-------------------------------------------------------------------
+    // Methods for building prompt parts
+    //-------------------------------------------------------------------
+
+    protected static func buildAgentToolsPrompt(task: AgentTask): String {
+        let tools = task.availableTools
+        if (tools.size == 0) {
+            return "# Available Tools\nNo tools"
+        }
+        let str = String.join(
+            tools |> map { t: Tool => t.toJsonValue().toJsonString() } |> collectArray,
+            delimiter: ",\n"
+        )
+        return "# Available Tools\n[\n ${str} \n]\n---end of tools---"
+    }
+
+    protected static func buildAgentRetrievalPrompt(task: AgentTask): String {
+        if (let Some(rt) <- task.agent.retriever) {
+            if (rt.mode == RetrieverMode.Dynamic) {
+                return ""
+            }
+            let query = task.request.question
+            let retrieval = rt.search(query)
+            task.execution.addRetrieval(query, retrieval)
+            return "# Retrieved Content\n${retrieval.toPrompt()}\n---end of Retrieved Content---"
+        } else {
+            return ""
+        }
+    }
+
+    protected static func buildAgentMemoryPrompt(task: AgentTask): String {
+        let agent = task.agent
+        let query = task.request.question
+        if (let Some(memory) <- agent.memory) {
+            let docs = memory.search(query)
+            if (docs.size == 0) {
+                LogUtils.info(agent.name, "Memory not found")
+                return ""
+            }
+            let strBuilder = StringBuilder()
+            strBuilder.append("# Memory\n")
+            strBuilder.append("The following is the QA history that contains the user question, the solution steps (including thoughts and actions), and the final answer.\n")
+            strBuilder.append("When solving new problems, you can refer to past execution history.\n")
+            for (idx in 0..docs.size) {
+                strBuilder.append("## Memory ${idx+1}: \n")
+                strBuilder.append(docs[idx])
+                strBuilder.append("\n---\n")
+            }
+            strBuilder.append("---end of memory---\n")
+            return strBuilder.toString()
+        } else {
+            return ""
+        }
     }
 }

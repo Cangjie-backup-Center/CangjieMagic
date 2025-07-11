@@ -16,7 +16,6 @@ import magic.agent_executor.common.*
 import std.collection.collectArray
 
 public class NaiveExecutor <: AgentExecutor {
-
     override public prop name: String {
         get() { "naive" }
     }
@@ -30,8 +29,8 @@ public class NaiveExecutor <: AgentExecutor {
         }
         PromptBuilder()
             .system(sysPrompt)
-            .retrieval(ReactPromptUtils.buildAgentRetrievalPrompt(task))
-            .memory(ReactPromptUtils.buildAgentMemoryPrompt(task))
+            .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
+            .memory(PromptBuilder.buildAgentMemoryPrompt(task))
             .conversation(task.request.conversation ?? Conversation())
             .buildFor(this)
     }
@@ -40,10 +39,10 @@ public class NaiveExecutor <: AgentExecutor {
         let task = AgentTask(agent, request)
         LogUtils.info("${agent.name} runs")
         task.execution.addMessages(this.buildNaivePrompt(task))
-        task.execution.addQuestion(request.question)
+        task.execution.addRequest(request)
         LogUtils.info(agent.name, task.execution.messages)
-        let assistantMsg = ModelUtils.makeChat(
-            agent.model, task.execution.messages, temperature: agent.temperature
+        let assistantMsg = ModelUtils.agentMakeChat(
+            agent, task.execution.messages
         ).getOrThrow()
         LogUtils.info(agent.name, assistantMsg)
         return AgentResponse(assistantMsg.content, execution: task.execution)
@@ -53,7 +52,7 @@ public class NaiveExecutor <: AgentExecutor {
         let task = AgentTask(agent, request)
         LogUtils.info("${agent.name} async runs")
         task.execution.addMessages(this.buildNaivePrompt(task))
-        task.execution.addQuestion(request.question)
+        task.execution.addRequest(request)
 
         LogUtils.info(agent.name, task.execution.messages)
         let asyncChatResp = agent.model.asyncCreate(

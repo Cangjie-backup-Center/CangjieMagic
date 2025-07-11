@@ -107,11 +107,11 @@ public macro ai(attrTokens: Tokens, input: Tokens): Tokens {
 private func transformAi(input: Tokens, attr: AiAttr): Tokens {
     let decl = parseDecl(input)
     if (!decl.isFuncDecl()) {
-        throw DslException("@ai should be used on function declarations")
+        throw DslException("@ai should be used with function declarations")
     }
     let funcDecl = decl.asFuncDecl()
     if (!isForeignFunc(funcDecl)) {
-        throw DslException("@ai can only be used on foreign functions")
+        throw DslException("@ai can only be used with foreign functions")
     }
     let modifier = filterModifiers(funcDecl)
     let funcName = newIdentifierToken(funcDecl.identifier.value)

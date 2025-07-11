@@ -4,7 +4,7 @@
 package magic.agent_executor.plan_react
 
 import magic.core.agent.*
-import magic.core.message.Message
+import magic.core.message.{Message, MessageList}
 import magic.agent_executor.react.ReactPromptUtils
 import magic.prompt.Template
 import magic.log.LogUtils
@@ -69,10 +69,10 @@ protected func problemDecompose(agent: Agent, request: AgentRequest): Array<Subt
     let userPrompt = PROBLEM_DECOMPOSE_USER_PROMPT.format(
         ("question", request.question)
     )
-    let messages = [
+    let messages = MessageList([
         Message.system(sysPrompt),
         Message.user(userPrompt)
-    ]
+    ])
     let msg = ModelUtils.agentMakeChat(agent, messages).getOrThrow({ =>  
         AgentExecutionException("Fail to get valid chat model response")
     })

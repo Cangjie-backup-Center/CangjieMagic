@@ -1143,7 +1143,7 @@ let result = humanAgent.chat("question")
 
 ### Jsonable 接口
 
-`Jsonable` 接口约束了类型能够和 JSON 数据进行互相转换。宏 `@jsonable` 能够为修饰的 `class` 类型自动实现该接口。
+`Jsonable` 接口约束了类型能够和 JSON 数据进行互相转换。宏 `@jsonable` 能够为修饰的 `class/struct/enum` 类型自动实现该接口。
 
 ```cangjie
 public interface Jsonable<T> {
@@ -1155,12 +1155,12 @@ public interface Jsonable<T> {
     /**
      * Deserialize from a Json string
      */
-    static func fromJson(json: JsonValue): T
+    static func fromJsonValue(json: JsonValue): T
 
     /**
      * Serialize to a Json string
      */
-    func toJson(): JsonValue
+    func toJsonValue(): JsonValue
 }
 ```
 

@@ -16,80 +16,51 @@ public struct FieldSchema {
     ) { }
 }
 
-public enum TypeSchema <: ToString {
+public enum TypeSchema <: ToJsonValue & ToString {
     | Str
     | Int
     | Float
     | Boolean
     | Arr(TypeSchema)
+    | Enum(Array<String>)
     | Obj(Array<FieldSchema>)
 
-    public func toJsonValue(): JsonValue {
+    override public func toJsonValue(): JsonValue {
         let jo = JsonObject()
         match (this) {
             case Str => jo.put("type", JsonString("string"))
             case Int => jo.put("type", JsonString("integer"))
-            case Float => jo.put("type", JsonString("integer"))
+            case Float => jo.put("type", JsonString("number"))
             case Boolean => jo.put("type", JsonString("boolean"))
             case Arr(ts) =>
                 jo.put("type", JsonString("array"))
                 jo.put("arrayItem", ts.toJsonValue())
+            case Enum(values) =>
+                jo.put("type", JsonString("string"))
+                jo.put("enum", JsonUtils.buildJsonArray(values))
             case Obj(fields) =>
                 jo.put("type", JsonString("object"))
                 let propertiesJo = JsonObject()
                 let required = ArrayList<JsonValue>()
                 for (field in fields) {
-                    if (field.description == "") {
-                        propertiesJo.put(field.name, field.typeSchema.toJsonValue())
-                    } else {
-                        let tsJo = field.typeSchema.toJsonValue().asObject()
-                        tsJo.put("description", JsonString(field.description))
-                        propertiesJo.put(field.name, tsJo)
+                    let fieldTsJo = field.typeSchema.toJsonValue().asObject()
+                    if (!field.description.isEmpty()) {
+                        fieldTsJo.put("description", JsonString(field.description))
                     }
+                    propertiesJo.put(field.name, fieldTsJo)
                     if (field.required) {
                         required.add(JsonString(field.name))
                     }
                 }
-                jo.put("properties", propertiesJo)
-                jo.put("required", JsonArray(required))
+                if (!fields.isEmpty()) {
+                    jo.put("properties", propertiesJo)
+                    jo.put("required", JsonArray(required))
+                }
         }
         return jo
     }
 
-    // Change it as `toJsonValue().toStirng()` later
-    public func toString(): String {
+    override public func toString(): String {
         return this.toJsonValue().toJsonString()
-
-        match (this) {
-            case Str => return "type: string"
-            case Int => return "type: integer"
-            case Float => return "type: integer"
-            case Boolean => return "type: boolean"
-            case Arr(ts) => return "type: array, arrayItem: { ${ts} }"
-            case Obj(fields) =>
-                let propertyStr = String.join(
-                    fields.iterator() |>
-                        map { field: FieldSchema =>
-                            if (field.description == "") {
-                                return "${field.name}: { ${field.typeSchema} }"
-                            } else {
-                                return "${field.name}: { description: ${field.description}, ${field.typeSchema} }"
-                            }
-                        } |>
-                        collectArray,
-                    delimiter: ",\n"
-                )
-                let required = ArrayList<String>()
-                for (field in fields) {
-                    if (field.required) {
-                        required.add(field.name)
-                    }
-                }
-                let requiredStr = String.join(
-                    required.toArray(),
-                    delimiter: ","
-                )
-                return "type: object,\nproperties: { ${propertyStr} }\nrequired: [${requiredStr}]"
-        }
     }
 }

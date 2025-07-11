@@ -325,7 +325,7 @@ func chatGet<T>(question: String): Option<T> where T <: Jsonable<T>
 Here, the `Jsonable` interface ([see section](#jsonable-interface)) ensures type compatibility with JSON objects. Basic types like `Int`, `Int64`, and `String` already implement this interface.
 
 The `@jsonable` macro customizes types to automatically implement the interface:
-- `@jsonable` decorates a `class` type, automatically implementing `Jsonable` via code transformation.
+- `@jsonable` decorates a `class/struct/enum` type, automatically implementing `Jsonable` via code transformation.
 - Inside the decorated type, `@field` adds descriptions for member variables. If unused, member variables will lack descriptions.
 
 **Example: Returning Structured Data**
