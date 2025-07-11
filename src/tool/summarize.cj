@@ -24,11 +24,11 @@ Now, make the summary:
 """
 
 func summarize(model: ChatModel, content: String): String {
-    let messages = [
+    let messages = MessageList([
         Message.system(AGENT_SUMMARY_PROMPT.format(
             ("instruction", content)
         ))
-    ]
+    ])
     if (let Some(msg) <- ModelUtils.makeChat(model, messages)) {
         return msg.content
     } else {

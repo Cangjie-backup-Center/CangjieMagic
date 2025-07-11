@@ -208,7 +208,7 @@ extend JsonObject <: Jsonable<JsonObject> {
     }
 
     public static func getTypeSchema(): TypeSchema {
-        throw JsonableException("Unsupported method")
+        return TypeSchema.Obj([])
     }
 
     public static func fromJsonValue(json: JsonValue): JsonObject {

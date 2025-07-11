@@ -38,14 +38,14 @@ public class ConversationAgent <: BaseAgent {
 
     override public func chat(request: AgentRequest): AgentResponse {
         let resp = this.agent.chat(this.buildFullRequest(request))
-        this.conversation.addChatRound(request.question, resp.content)
+        this.conversation.addChatRound(resp.execution.chatRound)
         return resp
     }
 
     override public func asyncChat(request: AgentRequest): AsyncAgentResponse {
         let asyncResp = this.agent.asyncChat(this.buildFullRequest(request))
         return AsyncAgentResponse( // Wrap the iterator as the AsyncAgentResponse
-            IteratorWrapper(this, request.question, asyncResp), // Wrap the original AsyncAgentResponse as an iterator
+            IteratorWrapper(this, request, asyncResp), // Wrap the original AsyncAgentResponse as an iterator
             execution: asyncResp.execution
         )
     }
@@ -58,7 +58,7 @@ public class ConversationAgent <: BaseAgent {
 private class IteratorWrapper <: Iterator<String> {
     protected IteratorWrapper(
         private let agent: ConversationAgent,
-        private let question: String,
+        private let request: AgentRequest,
         private let asyncAgentResp: AsyncAgentResponse
     ) { }
 
@@ -72,7 +72,10 @@ private class IteratorWrapper <: Iterator<String> {
         match (data) {
             case Some(v) => buffer.append(v)
             case None =>
-                this.agent.conversation.addChatRound(this.question, this.buffer.toString())
+                this.agent.conversation.addChatRound(
+                    Message.user(this.request.question, image: this.request.image),
+                    Message.assistant(this.buffer.toString())
+                )
         }
         return data
     }

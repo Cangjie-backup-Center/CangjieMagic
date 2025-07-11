@@ -50,7 +50,7 @@ public open class AgentTask {
         }
         if (initPrompt) {
             this.execution.addMessage(Message.system(agent.systemPrompt))
-            this.execution.addQuestion(request.question)
+            this.execution.addRequest(request)
             LogUtils.info(agent.name, this.execution.messages)
         }
     }

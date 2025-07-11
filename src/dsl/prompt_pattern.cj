@@ -104,7 +104,7 @@ func transformPromptPatternClass(classDecl: ClassDecl, promptPatternAttr: Prompt
     // TODO: check `toString` must be implemented
 }
 
-func buildCtorMethod(promptPatternAttr: PromptPatternAttr): Tokens {
+private func buildCtorMethod(promptPatternAttr: PromptPatternAttr): Tokens {
     let params: Tokens = joinTokens(
         promptPatternAttr.elementNames |>
             map { name: String => quote($(newIdentifierToken(name))!: String) } |>

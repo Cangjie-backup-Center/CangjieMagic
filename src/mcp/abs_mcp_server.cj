@@ -9,7 +9,31 @@ import magic.jsonable.*
 import magic.log.LogUtils
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
-import stdx.encoding.json.{JsonValue, JsonObject}
+import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
+
+private func convertTool2MCP(tool: Tool): MCPTool {
+    let properties = JsonObject()
+    let required = ArrayList<String>()
+    for (param in tool.parameters) {
+        let paramTypeSchema = param.typeSchema.toJsonValue().asObject()
+        // description should be added to the type schema
+        if (!param.description.isEmpty()) {
+            paramTypeSchema.put("description", JsonString(param.description))
+        }
+        properties.put(param.name, paramTypeSchema)
+        required.add(param.name)
+    }
+    let inputSchema= JsonUtils.buildJsonObject([
+        ("type", JsonString("object")),
+        ("properties", properties),
+        ("required", JsonUtils.buildJsonArray(required.toArray()))
+    ])
+    return MCPTool(
+        name: tool.name,
+        description: tool.description,
+        inputSchema: inputSchema
+    )
+}
 
 /**
  * MCP server via the stdio & sse transport
@@ -67,18 +91,13 @@ public abstract class AbsMCPServer {
             case "initialize" => this.buildInitResponse(req.id)
             case "notifications/initialized" => Option<ToJsonValue>.None
             case "notifications/cancelled" => Option<ToJsonValue>.None
-
             case "tools/list" =>
-                let mcpTools = this.tools |>
-                    map {
-                    tool: Tool => MCPTool.fromJsonValue(JsonValue.fromStr(tool.toString()).asObject())
-                } |> collectArray
+                let mcpTools = this.tools |> map { tool => convertTool2MCP(tool) } |> collectArray
                 ListToolsResponse(
                     id: req.id,
                     result: ListToolsResult(tools: mcpTools)
                 )
             case "tools/call" => this.handleCallTool(CallToolRequest.fromJsonValue(JsonValue.fromStr(msg)))
-
             case "ping" => PingResponse(
                 id: req.id,
                 result: PingResult()

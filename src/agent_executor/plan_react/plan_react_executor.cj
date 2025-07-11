@@ -26,7 +26,7 @@ protected class PlanReactExecutor <: AgentExecutor {
         // Decompose the problem
         let subtasks: Array<Subtask> = problemDecompose(agent, request)
         let planTask = PlanTask(agent, request, subtasks, knowledge)
-        planTask.execution.addQuestion(request.question)
+        planTask.execution.addRequest(request)
         // Solve each subtask
         for (subtask in subtasks) {
             let worker = ReactWorker(planTask)
@@ -41,7 +41,7 @@ protected class PlanReactExecutor <: AgentExecutor {
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
         let planTask = PlanTask(agent, request)
-        planTask.execution.addQuestion(request.question)
+        planTask.execution.addRequest(request)
         // Create the worker thread
         let fut: Future<Iterator<String>> = spawn {
             try {

@@ -11,8 +11,8 @@ import std.collection.{ArrayList}
  */
 public struct ChatRound <: ToString {
     public ChatRound(
-        public let question: String, // The question message from the user
-        public let answer: String, // The answer message from the assistant
+        public let question: Message, // The question message from the user
+        public let answer: Message, // The answer message from the assistant
         public let steps: MessageList) {// Optional execution step messages, if any
     }
 
@@ -37,7 +37,7 @@ public class Conversation <: Iterable<ChatRound> {
         this.chatRounds.add(round)
     }
 
-    public func addChatRound(question: String, answer: String, steps!: MessageList = MessageList()): Unit {
+    public func addChatRound(question: Message, answer: Message, steps!: MessageList = MessageList()): Unit {
         this.addChatRound(ChatRound(question, answer, steps))
     }
 

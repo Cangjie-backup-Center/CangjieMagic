@@ -7,8 +7,7 @@ import magic.core.agent.*
 import magic.core.tool.{Tool, ToolException}
 import magic.core.message.{Message, MessageList}
 import magic.core.model.{ChatRequest}
-import magic.agent_executor.react.{ReactPromptUtils, ToolCall}
-import magic.agent_executor.common.AgentTask
+import magic.agent_executor.common.{AgentTask, PromptBuilder}
 import magic.model.ModelUtils
 import magic.prompt.Template
 import magic.parser.{Tag, WithTag, ParserUtils}
@@ -76,7 +75,7 @@ public struct ExecutionOpSet {
         state.execution.addMessage(Message.system(operationPrompt))
         // Call the LLM
         try {
-            return ModelUtils.makeChat(agent.model, state.execution.messages, stop: stop).getOrThrow({ =>
+            return ModelUtils.agentMakeChat(agent, state.execution.messages, stop: stop).getOrThrow({ =>
                 AgentExecutionException("Fail to get chat model response")
             })
         } finally {
@@ -162,7 +161,7 @@ public struct ExecutionOpSet {
             isInjected = true
         }
         let prompt = ACTION_PROMPT.format([
-            ("tools", ReactPromptUtils.buildAgentToolsPrompt(state.task))
+            ("tools", PromptBuilder.buildAgentToolsPrompt(state.task))
         ])
         try {
             let msg = chatWithOperation(state, prompt, stop: [Tag.OBSERVATION])
@@ -229,7 +228,7 @@ public struct ExecutionOpSet {
             for (tool in tools) {
                 // Prepare input messages
                 let prompt = TOOL_PROMPT.format(
-                    ("tool", tool),
+                    ("tool", tool.toJsonValue().toJsonString()),
                     ("tool_name", tool.name),
                 )
                 let msg = chatWithOperation(currState, prompt, stop: [])
@@ -280,7 +279,7 @@ public struct ExecutionOpSet {
             subtaskState.subtask = subtask
             // Add prompts
             subtaskState.execution.addMessage(Message.system(sysPrompt))
-            subtaskState.execution.addQuestion(subtask.description)
+            subtaskState.execution.addRequest(AgentRequest(subtask.description))
             LogUtils.info(state.task.agent.name, subtaskState.execution.messages)
             return subtaskState
         } |> collectArray

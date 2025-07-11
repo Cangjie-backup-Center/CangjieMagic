@@ -5,12 +5,11 @@ package magic.agent_executor.react
 
 import magic.core.*
 import magic.agent_executor.common.AgentTask
-import magic.core.message.*
+import magic.core.message.{Message, Conversation}
 import magic.agent_executor.common.PromptBuilder
 import magic.log.LogUtils
 import magic.prompt.Template
 internal import magic.parser.{Tag, WithTag}
-import std.collection.{map, collectArray}
 
 // Modified from https://smith.langchain.com/hub/hwchase17/react
 protected let REACT_SYSTEM_PROMPT = """
@@ -88,10 +87,10 @@ protected struct ReactPromptUtils {
     static func buildReactPrompt(task: AgentTask): Array<Message> {
         PromptBuilder()
             .system(REACT_SYSTEM_PROMPT.trimAscii())
-            .tool(ReactPromptUtils.buildAgentToolsPrompt(task))
+            .tool(PromptBuilder.buildAgentToolsPrompt(task))
             .system(task.agent.systemPrompt)
-            .retrieval(ReactPromptUtils.buildAgentRetrievalPrompt(task))
-            .memory(ReactPromptUtils.buildAgentMemoryPrompt(task))
+            .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
+            .memory(PromptBuilder.buildAgentMemoryPrompt(task))
             .conversation(task.request.conversation ?? Conversation())
             .buildFor(task.agent.executor)
     }
@@ -107,62 +106,13 @@ protected struct ReactPromptUtils {
         let sys = REACT_SUMMARIZE_SYSTEM_PROMPT.format(
             ("question", task.request.question),
             ("procedure", strBuilder.toString()),
-            ("retrieval", ReactPromptUtils.buildAgentRetrievalPrompt(task)),
+            ("retrieval", PromptBuilder.buildAgentRetrievalPrompt(task)),
             ("systemPrompt", task.agent.systemPrompt),
-            ("memory", ReactPromptUtils.buildAgentMemoryPrompt(task))
+            ("memory", PromptBuilder.buildAgentMemoryPrompt(task))
         ).trimAscii()
         return [
             Message.system(sys),
             Message.user(REACT_SUMMARIZE_USER_PROMPT.trimAscii())
         ]
-    }
-
-    protected static func buildAgentToolsPrompt(task: AgentTask): String {
-        let tools = task.availableTools
-        if (tools.size == 0) {
-            return "# Available Tools\nNo tools"
-        }
-        let toolStringArr = tools |> map { t: Tool => t.toString() } |> collectArray
-        let str = String.join(toolStringArr, delimiter: ",\n")
-        return "# Available Tools\n[\n ${str} \n]\n---end of tools---"
-    }
-
-    protected static func buildAgentRetrievalPrompt(task: AgentTask): String {
-        if (let Some(rt) <- task.agent.retriever) {
-            if (rt.mode == RetrieverMode.Dynamic) {
-                return ""
-            }
-            let query = task.request.question
-            let retrieval = rt.search(query)
-            task.execution.addRetrieval(query, retrieval)
-            return "# Retrieved Content\n${retrieval.toPrompt()}\n---end of Retrieved Content---"
-        } else {
-            return ""
-        }
-    }
-
-    protected static func buildAgentMemoryPrompt(task: AgentTask): String {
-        let agent = task.agent
-        let query = task.request.question
-        if (let Some(memory) <- agent.memory) {
-            let docs = memory.search(query)
-            if (docs.size == 0) {
-                LogUtils.info(agent.name, "Memory not found")
-                return ""
-            }
-            let strBuilder = StringBuilder()
-            strBuilder.append("# Memory\n")
-            strBuilder.append("The following is the QA history that contains the user question, the solution steps (including thoughts and actions), and the final answer.\n")
-            strBuilder.append("When solving new problems, you can refer to past execution history.\n")
-            for (idx in 0..docs.size) {
-                strBuilder.append("## Memory ${idx+1}: \n")
-                strBuilder.append(docs[idx])
-                strBuilder.append("\n---\n")
-            }
-            strBuilder.append("---end of memory---\n")
-            return strBuilder.toString()
-        } else {
-            return ""
-        }
     }
 }

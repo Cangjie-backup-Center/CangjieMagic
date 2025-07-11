@@ -16,6 +16,11 @@ public class AgentRequest {
     public let question: String
 
     /**
+     * The user input question for using VLM
+     */
+    public let image: Option<String>
+
+    /**
      * Conversation between the user and agent
      */
     public let conversation: Option<Conversation>
@@ -37,10 +42,12 @@ public class AgentRequest {
     protected var execution: Option<AgentExecution> = None
 
     public init(question: String,
+                image!: Option<String> = None,
                 conversation!: Option<Conversation> = None,
                 verbose!: Bool = false,
                 maxTool!: Int64 = 10) {
         this.question = question
+        this.image = image
         this.conversation = conversation
         this.verbose = verbose
         this.maxTool = maxTool

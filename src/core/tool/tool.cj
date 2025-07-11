@@ -4,11 +4,12 @@
 package magic.core.tool
 
 import magic.jsonable.TypeSchema
-import std.collection.HashMap
+import magic.jsonable.ToJsonValue
 
+import std.collection.HashMap
 import stdx.encoding.json.JsonValue
 
-public interface Tool <: ToString {
+public interface Tool <: ToJsonValue {
     /**
      * Unique id of a tool
      */

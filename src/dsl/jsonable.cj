@@ -6,7 +6,7 @@ macro package magic.dsl
 import std.collection.{collectArrayList, ArrayList, HashMap, map}
 import std.ast.*
 
-class JsonableAttr <: Attr {
+private class JsonableAttr <: Attr {
     JsonableAttr(map: AttrMap) { super(map) }
 
     init() { super(AttrMap()) }
@@ -32,44 +32,56 @@ class JsonableAttr <: Attr {
 }
 
 public macro jsonable(input: Tokens): Tokens {
-    let jsonableAttr = JsonableAttr()
+    let attr = JsonableAttr()
     for (m in getChildMessages("field")) {
         if (m.hasItem("fieldDesc")) {
             let s = m.getString("fieldDesc")
             let items = s.split(":", 2) // Format: ${name}:${desc}
-            jsonableAttr.variableDescriptions.add(items[0], items[1])
+            attr.variableDescriptions.add(items[0], items[1])
         }
     }
-    return transformJsonable(input, jsonableAttr)
+    return transformJsonable(input, attr)
 }
 
-public macro jsonable(attr: Tokens, input: Tokens): Tokens {
-    let jsonableAttr = JsonableAttr.parse(attr)
+public macro jsonable(attrTokens: Tokens, input: Tokens): Tokens {
+    let attr = JsonableAttr.parse(attrTokens)
 
     for (m in getChildMessages("field")) {
         if (m.hasItem("fieldDesc")) {
             let s = m.getString("fieldDesc")
             let items = s.split(":", 2) // Format: ${name}:${desc}
-            jsonableAttr.variableDescriptions.add(items[0], items[1])
+            attr.variableDescriptions.add(items[0], items[1])
         }
     }
 
-    let content = transformJsonable(input, jsonableAttr)
-    if (jsonableAttr.dump) {
+    let content = transformJsonable(input, attr)
+    if (attr.dump) {
         printTokens(content)
     }
     return content
 }
 
-func transformJsonable(input: Tokens, jsonableAttr: JsonableAttr): Tokens {
+private func transformJsonable(input: Tokens, attr: JsonableAttr): Tokens {
     let decl = parseDecl(input)
     if (let Some(classDecl) <- (decl as ClassDecl)) {
-        return transformJsonableClass(classDecl, jsonableAttr)
+        return transformJsonableClass(classDecl, attr)
     } else if (let Some(structDecl) <- (decl as StructDecl)) {
-        return transformJsonableStruct(structDecl, jsonableAttr)
+        return transformJsonableStruct(structDecl, attr)
+    } else if (let Some(enumDecl) <- (decl as EnumDecl)) {
+        return transformJsonableEnum(enumDecl, attr)
     } else {
-        throw Exception("@jsonable should be used on class/struct declarations")
+        throw Exception("@jsonable should be used with class/struct declarations")
     }
+}
+
+private func transformJsonableClass(classDecl: ClassDecl, attr: JsonableAttr): Tokens {
+    attr.isClass = true
+    return transformJsonableType(classDecl, classDecl.superTypes, classDecl.body, attr)
+}
+
+private func transformJsonableStruct(structDecl: StructDecl, attr: JsonableAttr): Tokens {
+    attr.isClass = false
+    return transformJsonableType(structDecl, structDecl.superTypes, structDecl.body, attr)
 }
 
 /**
@@ -91,7 +103,7 @@ func transformJsonable(input: Tokens, jsonableAttr: JsonableAttr): Tokens {
  *   func toJsonValue(): JsonValue { ... }
  * }
  */
-func transformJsonableType(typeDecl: Decl, superTypes: ArrayList<TypeNode>, body: Body, jsonableAttr: JsonableAttr): Tokens {
+private func transformJsonableType(typeDecl: Decl, superTypes: ArrayList<TypeNode>, body: Body, attr: JsonableAttr): Tokens {
     let name = typeDecl.identifier
     let allSuperTypes = if (superTypes.isEmpty()) {
         quote(Jsonable<$name>)
@@ -99,17 +111,17 @@ func transformJsonableType(typeDecl: Decl, superTypes: ArrayList<TypeNode>, body
         quote(Jsonable<$name> & $(superTypes.toTokens()))
     }
 
-    jsonableAttr.typeName = name.value
-    jsonableAttr.variables = getMemberVariables(body)
+    attr.typeName = name.value
+    attr.variables = getMemberVariables(body)
 
-    let ctorMethod = buildCtorMethod(jsonableAttr)
-    let getTypeSchemaMethod = buildGetTypeSchemaMethod(jsonableAttr)
-    let fromJsonMethod = buildFromJsonMethod(jsonableAttr)
-    let toJsonMethod = buildToJsonMethod(jsonableAttr)
+    let ctorMethod = buildCtorMethod(attr)
+    let getTypeSchemaMethod = buildGetTypeSchemaMethod(attr)
+    let fromJsonMethod = buildFromJsonMethod(attr)
+    let toJsonMethod = buildToJsonMethod(attr)
 
     let genericTypeParamTokens = getGenericTypeParamsTokens(typeDecl)
     let genericConstraintTokens = getGenericConstraintsTokens(typeDecl)
-    let classOrStruct = if (jsonableAttr.isClass) {
+    let classOrStruct = if (attr.isClass) {
         Token(TokenKind.CLASS)
     } else {
         Token(TokenKind.STRUCT)
@@ -125,16 +137,6 @@ func transformJsonableType(typeDecl: Decl, superTypes: ArrayList<TypeNode>, body
             $toJsonMethod
         }
     )
-}
-
-func transformJsonableClass(classDecl: ClassDecl, jsonableAttr: JsonableAttr): Tokens {
-    jsonableAttr.isClass = true
-    return transformJsonableType(classDecl, classDecl.superTypes, classDecl.body, jsonableAttr)
-}
-
-func transformJsonableStruct(structDecl: StructDecl, jsonableAttr: JsonableAttr): Tokens {
-    jsonableAttr.isClass = false
-    return transformJsonableType(structDecl, structDecl.superTypes, structDecl.body, jsonableAttr)
 }
 
 func getMemberVariables(body: Body): ArrayList<VarDecl> {
@@ -154,11 +156,11 @@ func getMemberVariables(body: Body): ArrayList<VarDecl> {
  *    this.v = v
  * }
  **/
-func buildCtorMethod(jsonableAttr: JsonableAttr): Tokens {
+private func buildCtorMethod(attr: JsonableAttr): Tokens {
     let params = ArrayList<Tokens>()
     let paramsWithDefaultValue = ArrayList<Tokens>()
 
-    for (varDecl in jsonableAttr.variables) {
+    for (varDecl in attr.variables) {
         let v = newIdentifierToken(varDecl.identifier.value)
         let tyName = varDecl.declType.toTokens()
         try {
@@ -172,7 +174,7 @@ func buildCtorMethod(jsonableAttr: JsonableAttr): Tokens {
     let comma = Token(TokenKind.COMMA)
 
     let body: Tokens = joinTokens(
-        jsonableAttr.variables |>
+        attr.variables |>
             map { varDecl: VarDecl =>
                 let id =  newIdentifierToken(varDecl.identifier.value)
                 return quote(this.$id = $id)
@@ -187,21 +189,21 @@ func buildCtorMethod(jsonableAttr: JsonableAttr): Tokens {
     )
 }
 
-func isOption(typeNode: TypeNode): Bool {
+private func isOption(typeNode: TypeNode): Bool {
     if (let Some(varType) <- (typeNode as RefType)) {
         return varType.identifier.value == "Option"
     }
     return false
 }
 
-func buildGetTypeSchemaMethod(jsonableAttr: JsonableAttr): Tokens {
+private func buildGetTypeSchemaMethod(attr: JsonableAttr): Tokens {
     let body = Tokens()
-    for (varDecl in jsonableAttr.variables) {
+    for (varDecl in attr.variables) {
         let varName = varDecl.identifier.value
         let varNameToken = newLiteralToken(varName)
         let tyName = varDecl.declType.toTokens()
 
-        let desc = jsonableAttr.variableDescriptions.get(varName) ?? ""
+        let desc = attr.variableDescriptions.get(varName) ?? ""
         let descToken = if (desc.contains("\n")) {
             newMultilineStringLiteralToken(desc)
         } else {
@@ -222,7 +224,7 @@ func buildGetTypeSchemaMethod(jsonableAttr: JsonableAttr): Tokens {
     )
 }
 
-func getDefaultValueOfType(typeNode: TypeNode): Option<Tokens> {
+private func getDefaultValueOfType(typeNode: TypeNode): Option<Tokens> {
     if (let Some(varType) <- (typeNode as RefType)) {
         return match (varType.identifier.value) {
             case "Option" => Some(quote(JsonNull()))
@@ -247,8 +249,8 @@ func getDefaultValueOfType(typeNode: TypeNode): Option<Tokens> {
     return Option.None
 }
 
-func buildFromJsonMethod(jsonableAttr: JsonableAttr): Tokens {
-    let className = newIdentifierToken(jsonableAttr.typeName)
+private func buildFromJsonMethod(attr: JsonableAttr): Tokens {
+    let className = newIdentifierToken(attr.typeName)
 
     // Build the field initialization
     // return Cls(
@@ -257,7 +259,7 @@ func buildFromJsonMethod(jsonableAttr: JsonableAttr): Tokens {
     // )
     //
     let body: Tokens = joinTokens(
-        jsonableAttr.variables |>
+        attr.variables |>
             map { varDecl: VarDecl =>
                 let varName = varDecl.identifier.value
                 let fieldName = newIdentifierToken(varName)
@@ -295,9 +297,9 @@ func buildFromJsonMethod(jsonableAttr: JsonableAttr): Tokens {
     )
 }
 
-func buildToJsonMethod(jsonableAttr: JsonableAttr): Tokens {
+private func buildToJsonMethod(attr: JsonableAttr): Tokens {
     let body = Tokens()
-    for (varDecl in jsonableAttr.variables) {
+    for (varDecl in attr.variables) {
         let varName = varDecl.identifier.value
 
         let fieldName = if (varName.startsWith("`")) {
@@ -328,6 +330,90 @@ func buildToJsonMethod(jsonableAttr: JsonableAttr): Tokens {
             let map = HashMap<String, JsonValue>()
             $body
             return JsonObject(map)
+        }
+    )
+}
+
+private func transformJsonableEnum(enumDecl: EnumDecl, attr: JsonableAttr): Tokens {
+    if (enumDecl.ellipsis.kind != TokenKind.ILLEGAL) {
+        throw DslException("@jsonable should be used with exhaustive enum")
+    }
+    let ctorNames = ArrayList<String>()
+    for (ctor in enumDecl.constructors) {
+        if (!ctor.typeArguments.isEmpty()) {
+            throw DslException("@jsonable enum cannot have constructors with type arguments")
+        }
+        ctorNames.add(ctor.identifier.value)
+    }
+
+    let name = enumDecl.identifier
+    let allSuperTypes = if (enumDecl.superTypes.isEmpty()) {
+        quote(Jsonable<$name>)
+    } else {
+        quote(Jsonable<$name> & $(enumDecl.superTypes.toTokens()))
+    }
+    let getTypeSchemaMethod = buildEnumGetTypeSchemaMethod(ctorNames)
+    let fromJsonMethod = buildEnumFromJsonMethod(name, ctorNames)
+    let toJsonMethod = buildEnumToJsonMethod(name, ctorNames)
+
+    // Compose all `Tokens`
+    return quote(
+        $(enumDecl.modifiers) enum $name <: $allSuperTypes {
+            $(enumDecl.decls)
+            $(enumDecl.constructors)
+            $getTypeSchemaMethod
+            $fromJsonMethod
+            $toJsonMethod
+        }
+    )
+}
+
+private func buildEnumGetTypeSchemaMethod(ctorNames: ArrayList<String>): Tokens {
+    let values = joinTokens(
+        ctorNames |> map { ctorName => newLiteralToken(ctorName) } |> collectArrayList,
+        Token(TokenKind.COMMA)
+    )
+    return quote(
+        public static func getTypeSchema(): TypeSchema {
+            return TypeSchema.Enum([ $values ])
+        }
+    )
+}
+
+private func buildEnumFromJsonMethod(enumName: Token, ctorNames: ArrayList<String>): Tokens {
+    let matchBody = Tokens()
+    for (ctorName in ctorNames) {
+        matchBody.append(quote(
+            case $( newLiteralToken(ctorName) ) => $enumName.$( newIdentifierToken(ctorName) )
+        ))
+    }
+
+    return quote(
+        public static func fromJsonValue(json: JsonValue): $enumName {
+            let js: JsonString = match (json.kind()) {
+                case JsonKind.JsString => json.asString()
+                case _ => throw JsonableException("Get JSON string error.")
+            }
+            return match (js.getValue()) {
+                $matchBody
+                case _ => throw JsonableException("${js} is not listed in the enumerated strings.")
+            }
+        }
+    )
+}
+
+private func buildEnumToJsonMethod(enumName: Token, ctorNames: ArrayList<String>): Tokens {
+    let matchBody = Tokens()
+    for (ctorName in ctorNames) {
+        matchBody.append(quote(
+            case $enumName.$( newIdentifierToken(ctorName) ) => JsonString( $( newLiteralToken(ctorName) ) )
+        ))
+    }
+    return quote(
+        public func toJsonValue(): JsonValue {
+            return match (this) {
+                $matchBody
+            }
         }
     )
 }

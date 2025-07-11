@@ -55,7 +55,7 @@ class RoundRobinDiscussGroup <: DiscussGroup {
             Message.user("Select the next speaker now")
         )
 
-        let msg = match (ModelUtils.makeChat(this.model, messageList)) {
+        let msg = match (ModelUtils.makeChat(this.name, this.model, messageList)) {
             case Some(msg) => msg
             case None => return Selection.Failure("LLM model failed")
         }

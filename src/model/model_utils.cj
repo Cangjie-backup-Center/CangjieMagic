@@ -72,14 +72,6 @@ public struct ModelUtils {
         return ModelUtils.makeChatImpl(model, request)
     }
 
-    public static func makeChat(model: ChatModel,
-                                messages: Array<Message>,
-                                temperature!: Option<Float64> = None,
-                                stop!: Option<Array<String>> = None): Option<Message> {
-        let request = ChatRequest(MessageList(messages), temperature: temperature, stop: stop)
-        return ModelUtils.makeChatImpl(model, request)
-    }
-
     public static func makeChat(name: String,
                                 model: ChatModel,
                                 messageList: MessageList,
@@ -89,18 +81,9 @@ public struct ModelUtils {
         return ModelUtils.makeChatImpl(model, request, who: name)
     }
 
-    public static func makeChat(name: String,
-                                model: ChatModel,
-                                messages: Array<Message>,
-                                temperature!: Option<Float64> = None,
-                                stop!: Option<Array<String>> = None): Option<Message> {
-        let request = ChatRequest(MessageList(messages), temperature: temperature, stop: stop)
-        return ModelUtils.makeChatImpl(model, request, who: name)
-    }
-
     public static func makeChatGet<T>(name: String,
                                       model: ChatModel,
-                                      messages: Array<Message>,
+                                      messages: MessageList,
                                       getFn!: (Message) -> Option<T>): Option<T> {
         LogUtils.info(name, messages)
         if (let Some(msg) <- ModelUtils.makeChat(name, model, messages)) {
@@ -111,13 +94,8 @@ public struct ModelUtils {
         }
     }
 
-    public static func agentMakeChat(agent: Agent, messages: Array<Message>): Option<Message> {
+    public static func agentMakeChat(agent: Agent, messages: MessageList, stop!: Option<Array<String>> = None): Option<Message> {
         LogUtils.info(agent.name, messages)
-        return ModelUtils.makeChat(agent.name, agent.model, messages)
-    }
-
-    public static func agentMakeChatGet<T>(agent: Agent, messages: Array<Message>,
-                                           getFn!: (Message) -> Option<T>): Option<T> {
-        return ModelUtils.makeChatGet<T>(agent.name, agent.model, messages, getFn: getFn)
+        return ModelUtils.makeChat(agent.name, agent.model, messages, temperature: agent.temperature, stop: stop)
     }
 }

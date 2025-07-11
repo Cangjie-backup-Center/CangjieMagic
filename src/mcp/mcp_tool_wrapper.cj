@@ -7,10 +7,10 @@ import magic.core.tool.*
 import magic.jsonable.*
 
 import std.collection.HashMap
-import stdx.encoding.json.JsonValue
+import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
 
 /**
- * Wrap the MCP client as a tool
+ * Wrap the MCPTool as a tool
  */
 protected class MCPToolWrapper <: Tool {
     private let client: MCPClient
@@ -58,7 +58,13 @@ protected class MCPToolWrapper <: Tool {
         // throw ToolException("Fail to invoke the mcp function.")
     }
 
-    override public func toString(): String {
-        return this.mcpTool.toJsonValue().toJsonString()
+    override public func toJsonValue(): JsonValue {
+        // The difference between MCP tool schema and the magic.core.AbsTool is the parameters field
+        let toolJo = this.mcpTool.toJsonValue().asObject()
+        let jo = JsonObject()
+        jo.put("name", toolJo["name"])
+        jo.put("description", toolJo["description"])
+        jo.put("parameters", toolJo["inputSchema"])
+        return jo
     }
 }

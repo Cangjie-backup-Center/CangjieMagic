@@ -72,7 +72,7 @@ class AutoDiscussGroup <: DiscussGroup {
             Message.user("Now, select the next speaker or make the final answer")
         )
 
-        let msg = match (ModelUtils.makeChat(this.model, messageList)) {
+        let msg = match (ModelUtils.makeChat(this.name, this.model, messageList)) {
             case Some(msg) => msg
             case None => return Selection.Failure("LLM response error")
         }

@@ -3,7 +3,7 @@
  */
 package magic.agent
 
-import magic.core.agent.{Agent, AgentExecution, AgentExecutionException}
+import magic.core.agent.{Agent, AgentRequest, AgentExecution, AgentExecutionException}
 import magic.core.message.{MessageList, ChatRound, Message, BoundedMessageList}
 import magic.core.rag.{Retrieval, RetrievalInfo}
 import magic.parser.TagChannel
@@ -23,7 +23,7 @@ public class AgentExecutionInfo <: AgentExecution {
      */
     private let messageList: MessageList
 
-    private var question: Option<String> = None
+    private var request: Option<AgentRequest> = None
     private var answer: Option<String> = None
     protected let stepMessages = MessageList()
 
@@ -48,9 +48,9 @@ public class AgentExecutionInfo <: AgentExecution {
         get() { this.messageList }
     }
 
-    public func addQuestion(question: String): Unit {
-        this.question = question
-        this.messageList.addMessage(Message.user(question))
+    public func addRequest(request: AgentRequest): Unit {
+        this.request = request
+        this.messageList.addMessage(Message.user(request.question, image: request.image))
     }
 
     public func addMessage(msg: Message): Unit {
@@ -111,9 +111,11 @@ public class AgentExecutionInfo <: AgentExecution {
 
     override public prop chatRound: ChatRound {
         get() {
+            let req = this.request.getOrThrow({ => AgentExecutionException("User request is not set") })
+            let answer = this.answer.getOrThrow({ => AgentExecutionException("Answer is not set") })
             return ChatRound(
-                this.question.getOrThrow({ => AgentExecutionException("User question is not set") }),
-                this.answer.getOrThrow({ => AgentExecutionException("Answer is not set") }),
+                Message.user(req.question, image: req.image),
+                Message.assistant(answer),
                 this.stepMessages
             )
         }

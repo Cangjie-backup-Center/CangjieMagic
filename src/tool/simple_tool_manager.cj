@@ -6,7 +6,7 @@ package magic.tool
 import magic.dsl.jsonable
 import magic.core.tool.*
 import magic.core.model.ChatModel
-import magic.core.message.Message
+import magic.core.message.{Message, MessageList}
 import magic.config.Config
 import magic.log.LogUtils
 import magic.jsonable.*
@@ -253,7 +253,7 @@ public class SimpleToolManager <: ToolManager {
         for (tool in tools) {
             toolPrompts.add("${tool.name}: ${tool.description}")
         }
-        let messages = [
+        let messages = MessageList([
             Message.system(
                 FILTER_TOOL_PROMPT.format(
                     ("number", config.number),
@@ -261,15 +261,17 @@ public class SimpleToolManager <: ToolManager {
                     ("tools", String.join(toolPrompts.toArray(), delimiter: "\n-----\n"))
                 )
             )
-        ]
-        let model = config.chatModel.getOrThrow()
-        let response = ModelUtils.makeChatGet<Response>("Simple Tool Manager", model, messages) { msg: Message =>
+        ])
+        // Use LLM to filter out tools
+        let msg = ModelUtils.makeChat("Simple Tool Manager", config.chatModel.getOrThrow(), messages)
+        // Parse the LLM output
+        var response = Option<Response>.None
+        if (let Some(_msg) <- msg) {
             try {
-                return ParserUtils.extractLastValue<Response>(msg.content)
+                response = ParserUtils.extractLastValue<Response>(_msg.content)
             } catch (ex: ParserException) {
-                LogUtils.error("Failed to parse the chat model response `${msg.content}`; ${ex.reason}")
+                LogUtils.error("Failed to parse the chat model response `${_msg.content}`; ${ex.reason}")
             }
-            return None
         }
         let filteredTools = ArrayList<Tool>()
         for (tool in (response?.relevantTools) ?? []) {
