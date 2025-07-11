@@ -6,8 +6,7 @@ package magic.config
 import magic.core.model.{ChatModel, EmbeddingModel}
 import magic.core.tokenizer.Tokenizer
 import magic.utils.{exists, setEnv, getEnv}
-
-import stdx.log.LogLevel
+import std.unicode.UnicodeStringExtension
 
 /**
  * Wrapper for providing a convenient way to get and set environment variables.
@@ -23,7 +22,23 @@ public struct EnvWrapper {
 }
 
 public class Config {
-    public static var logLevel = LogLevel.ERROR
+    /**
+     * To avoid introducing a dependency on the stdx.log.LogLevel type, we use the String type.
+     * The optional values are "error", "info", and "debug"; case-insensitive.
+     */
+    private static var _logLevel = "error"
+    private static var VALID_LOG_LEVELS = ["error", "info", "debug"]
+
+    public static mut prop logLevel: String {
+        get() { _logLevel }
+        set(v) {
+            if (!VALID_LOG_LEVELS.contains(v.toAsciiLower())) {
+                eprintln("Invalid log level ${v}")
+            } else {
+                _logLevel = v.toAsciiLower()
+            }
+        }
+    }
 
     /**
      * File used to save logs.

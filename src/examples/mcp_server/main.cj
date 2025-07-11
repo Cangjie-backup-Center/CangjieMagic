@@ -8,8 +8,6 @@ import magic.prelude.*
 import magic.config.Config
 import magic.mcp.StdioMCPServer
 
-import stdx.log.LogLevel
-
 @tool[description: "Add two numbers"]
 func add(a: Int64, b: Int64): Int64 {
     return a + b
@@ -33,7 +31,7 @@ class Calculator {
 }
 
 main() {
-    Config.logLevel = LogLevel.INFO
+    Config.logLevel = "INFO"
     Config.logFile = "./logs/mcp-server.log"
 
     let agent = Calculator()

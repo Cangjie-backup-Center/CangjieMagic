@@ -3,8 +3,6 @@
  */
 package magic.examples.file_assistant
 
-import stdx.log.LogLevel
-
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config

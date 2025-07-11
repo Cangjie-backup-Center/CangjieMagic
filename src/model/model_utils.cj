@@ -49,19 +49,31 @@ public struct ModelUtils {
     }
 
     private static func makeChatImpl(model: ChatModel, request: ChatRequest, who!: Option<String> = None): Option<Message> {
-        if (let Some(response) <- Instrumentor.doInstrumentBeforeChatModel(model, request, who: who)) {
-            return ModelUtils.parseChatResponse(response)
-        }
-        // The LLM may return an empty reply?
-        for (_ in 0..Config.modelRetryNumber) {
-            let response = model.create(request)
-            if (let Some(msg) <- ModelUtils.parseChatResponse(response)) {
-                return msg
+        LogUtils.debug('--------------- Begin of chat model request ------------')
+        try {
+            if (let Some(name) <- who) {
+            LogUtils.debug('  --------------- [Request Messages] ------------')
+                LogUtils.debug(name, request.messageList)
+            } else {
+                LogUtils.debug(request.messageList)
             }
-            // Backoff
-            sleep2(500)
+            LogUtils.debug('  --------------- [End of Request Messages] ------------')
+            if (let Some(response) <- Instrumentor.doInstrumentBeforeChatModel(model, request, who: who)) {
+                return ModelUtils.parseChatResponse(response)
+            }
+            // The LLM may return an empty reply?
+            for (_ in 0..Config.modelRetryNumber) {
+                let response = model.create(request)
+                if (let Some(msg) <- ModelUtils.parseChatResponse(response)) {
+                    return msg
+                }
+                // Backoff
+                sleep2(500)
+            }
+            return None
+        } finally {
+            LogUtils.debug('--------------- End of chat model request ------------')
         }
-        return None
     }
 
     public static func makeChat(model: ChatModel,
@@ -85,9 +97,7 @@ public struct ModelUtils {
                                       model: ChatModel,
                                       messages: MessageList,
                                       getFn!: (Message) -> Option<T>): Option<T> {
-        LogUtils.info(name, messages)
         if (let Some(msg) <- ModelUtils.makeChat(name, model, messages)) {
-            LogUtils.info(name, msg)
             return getFn(msg)
         } else {
             return None
@@ -95,7 +105,6 @@ public struct ModelUtils {
     }
 
     public static func agentMakeChat(agent: Agent, messages: MessageList, stop!: Option<Array<String>> = None): Option<Message> {
-        LogUtils.info(agent.name, messages)
         return ModelUtils.makeChat(agent.name, agent.model, messages, temperature: agent.temperature, stop: stop)
     }
 }

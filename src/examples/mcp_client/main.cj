@@ -7,8 +7,6 @@ import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
 
-import stdx.log.LogLevel
-
 @agent[
     model: "deepseek:deepseek-chat",
     tools: [
@@ -40,7 +38,7 @@ class TravelAgent {
 }
 
 main() {
-    Config.logLevel = LogLevel.INFO
+    Config.logLevel = "INFO"
     Config.logFile = "./logs/mcp-client.log"
 
     let agent = HomeworkAssistant()

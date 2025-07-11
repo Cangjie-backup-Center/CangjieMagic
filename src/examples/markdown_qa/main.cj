@@ -8,8 +8,6 @@ import magic.prelude.*
 import magic.config.Config
 import magic.model.ModelManager
 
-import stdx.log.LogLevel
-
 @agent[
     model: "deepseek:deepseek-chat",
     executor: "naive",
@@ -27,7 +25,7 @@ class QABot {
 }
 
 main () {
-    Config.logLevel = LogLevel.INFO
+    Config.logLevel = "INFO"
     Config.defaultEmbeddingModel = ModelManager.createEmbeddingModel("ollama:nomic-embed-text")
 
     let bot = QABot()

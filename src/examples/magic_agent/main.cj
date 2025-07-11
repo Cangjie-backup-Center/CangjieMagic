@@ -8,7 +8,6 @@ import magic.prelude.*
 import magic.config.Config
 import magic.agent_executor.common.ConsolePrinter
 
-import stdx.log.LogLevel
 import std.console.Console
 
 // Modified from: https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9
@@ -85,7 +84,7 @@ class MagicAgent {
 }
 
 main() {
-    Config.logLevel = LogLevel.INFO
+    Config.logLevel = "INFO"
     Config.logFile = "./logs/abc.log"
     Config.enableAgentLog = true
     // Config.env["DEEPSEEK_API_KEY"] = "<your api key>"

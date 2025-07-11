@@ -59,28 +59,27 @@ protected class PromptBuilder {
     }
 
     public func buildFor(executor: AgentExecutor): Array<Message> {
-        let systemPrompt = this.mergeSystemPrompt()
         // Merge system prompt messageList message, and user messages
-        let res = ArrayList<Message>()
+        let allMessages = ArrayList<Message>()
+        let systemPrompt = this.mergeSystemPrompt()
         if (!systemPrompt.trimAscii().isEmpty()) {
-            res.add(Message.system(systemPrompt))
+            allMessages.add(Message.system(systemPrompt))
         }
-        // Add conversation messages in reverse order
+        // Add conversation messages in order
         if (let Some(con) <- this._conversation) {
-            for (i in (con.size - 1)..=0:-1) {
-                let chatRound = con[i]
-                res.add(chatRound.question)
+            for (chatRound in con) {
+                allMessages.add(chatRound.question)
                 for (msg in chatRound.steps) {
-                    res.add(msg)
+                    allMessages.add(msg)
                 }
                 if(executor.name == "react" || executor.name == "plan-react") {
-                    res.add(Message.assistant(chatRound.answer.content.withTag(Tag.ANSWER)))
+                    allMessages.add(Message.assistant(chatRound.answer.content.withTag(Tag.ANSWER)))
                 } else {
-                    res.add(Message.assistant(chatRound.answer.content))
+                    allMessages.add(Message.assistant(chatRound.answer.content))
                 }
             }
         }
-        return res.toArray()
+        return allMessages.toArray()
     }
 
     //-------------------------------------------------------------------

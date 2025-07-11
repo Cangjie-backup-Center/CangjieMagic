@@ -12,7 +12,7 @@ import magic.dsl.*
 import magic.prelude.*
 import magic.utils.readFile
 import magic.config.Config
-import stdx.log.LogLevel
+
 import std.fs.*
 
 @agent[
@@ -58,7 +58,7 @@ func buildGraph(): Unit {
 main(): Unit {
     Config.env["DEEPSEEK_API_KEY"] = "<your api key>"
     Config.env["OLLAMA_BASE_URL"] = "http://127.0.0.1:11434"
-    Config.logLevel = LogLevel.INFO
+    Config.logLevel = "INFO"
     // if graph is already built, turn it off
     var build = true
     if (build) {

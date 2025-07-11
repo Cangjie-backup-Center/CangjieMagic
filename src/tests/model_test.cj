@@ -3,8 +3,6 @@
  */
 package magic.tests
 
-import stdx.log.LogLevel
-
 import magic.core.message.*
 import magic.core.model.*
 import magic.model.{ModelUtils, ModelManager}
