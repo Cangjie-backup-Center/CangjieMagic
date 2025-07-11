@@ -152,7 +152,7 @@ func chat(agent: Agent, question: String) {
 
 // 注册自定义工具
 main() {
-    Config.logLevel = LogLevel.INFO
+    Config.logLevel = "INFO"
     Config.logFile = "./logs/fun_idea.log"
 
     let jester = JokeMaster()

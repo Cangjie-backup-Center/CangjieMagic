@@ -10,8 +10,6 @@ import magic.config.Config
 import std.unittest.testmacro.PowerAssert
 import std.unittest.testmacro.BeforeAll
 
-import stdx.log.LogLevel
-
 @agent[executor: "naive", model: "${CHAT_MODEL}"]
 class T1 {
     @prompt(

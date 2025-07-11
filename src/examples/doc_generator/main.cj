@@ -13,7 +13,6 @@ import std.fs.{File, OpenMode, Directory, Path}
 import std.io.{StringWriter}
 
 import stdx.encoding.json.JsonValue
-import stdx.log.LogLevel
 
 private let SRC_DIR = "./src"
 private let OUT_DIR = "./temp-docs"
@@ -237,7 +236,7 @@ func mergeFileDocs(outDir: Path, docs!: Option<ArrayList<Doc>>): Unit  {
 }
 
 main() {
-    Config.logLevel = LogLevel.INFO
+    Config.logLevel = "INFO"
     Config.logFile = "./logs/abc.log"
 
     if (!exists(OUT_DIR)) {
