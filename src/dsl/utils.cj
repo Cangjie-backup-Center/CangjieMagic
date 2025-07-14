@@ -45,7 +45,11 @@ protected func newLiteralToken(v: Int64): Token {
 }
 
 protected func newLiteralToken(v: String): Token {
-    return Token(TokenKind.STRING_LITERAL, v)
+    if (v.contains("\n")) {
+        return Token(TokenKind.MULTILINE_STRING, v)
+    } else {
+        return Token(TokenKind.STRING_LITERAL, v)
+    }
 }
 
 protected func newArrayOfLiteralToken(values: Array<String>): Array<Token> {
