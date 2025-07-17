@@ -3,6 +3,7 @@
  */
 package magic.agent
 
+import magic.agent.base.BaseAgent
 import magic.core.agent.{AgentGroup, AgentRequest, AgentResponse, AsyncAgentResponse}
 import magic.core.model.ChatModel
 

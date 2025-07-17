@@ -5,6 +5,7 @@ package magic.prelude
 
 public import magic.core.message.*
 public import magic.core.*
+public import magic.agent.base.*
 public import magic.agent.*
 public import magic.prompt.*
 public import magic.agent_group.*

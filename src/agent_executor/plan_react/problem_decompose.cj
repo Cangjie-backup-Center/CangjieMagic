@@ -8,7 +8,7 @@ import magic.core.message.{Message, MessageList}
 import magic.agent_executor.react.ReactPromptUtils
 import magic.prompt.Template
 import magic.log.LogUtils
-import magic.parser.ParserUtils
+import magic.parser.{Tag, ParserUtils}
 import magic.jsonable.Jsonable
 import magic.model.ModelUtils
 
@@ -62,18 +62,18 @@ private let PROBLEM_DECOMPOSE_USER_PROMPT = """
 Now, decompose the question into tasks:
 """
 
-protected func problemDecompose(agent: Agent, request: AgentRequest): Array<Subtask> {
+protected func problemDecompose(planTask: PlanTask): Array<Subtask> {
     let sysPrompt = PROBLEM_DECOMPOSE_SYSTEM_PROMPT.format(
-        ("systemPrompt", agent.systemPrompt)
+        ("systemPrompt", planTask.agent.systemPrompt)
     )
     let userPrompt = PROBLEM_DECOMPOSE_USER_PROMPT.format(
-        ("question", request.question)
+        ("question", planTask.request.question)
     )
     let messages = MessageList([
         Message.system(sysPrompt),
         Message.user(userPrompt)
     ])
-    let msg = ModelUtils.agentMakeChat(agent, messages).getOrThrow({ =>  
+    let msg = planTask.chatLLM(messages).getOrThrow({ =>
         AgentExecutionException("Fail to get valid chat model response")
     })
     return ParserUtils.extractLastValue<Array<Subtask>>(msg.content)

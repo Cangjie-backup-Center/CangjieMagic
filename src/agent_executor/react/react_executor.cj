@@ -14,34 +14,28 @@ public class ReactExecutor <: AgentExecutor {
     public ReactExecutor(private let loop!: Int64 = Config.maxReactNumber) {}
 
     override public prop name: String {
-        get() {"react"}
-    }
-
-    private func doRun(task: ReactTask): String {
-        try {
-            for (_ in 0..this.loop) {
-                if (let Some(answer) <- task.runOnce()) {
-                    return answer
-                }
-                if (let Some(stopInfo) <- task.stopInfo) {
-                    LogUtils.info("Task stopped: ${stopInfo.reason}")
-                    return stopInfo.result
-                }
-            }
-            return task.summarize()
-        } finally {
-            if (task.request.verbose) {
-                task.execution.verboseChannel.close()
-            }
-        }
-        throw UnsupportedException("Unreachable")
+        get() { "react" }
     }
 
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         LogUtils.info("React executor runs ${agent.name}")
         let task = ReactTask(agent, request)
-        let answer = this.doRun(task)
-        return AgentResponse(answer, execution: task.execution)
+        try {
+            for (_ in 0..this.loop) {
+                if (let Some(answer) <- task.runOnce()) {
+                    return AgentResponse(answer, execution: task.execution)
+                } else if (let Some(stopInfo) <- task.stopInfo) {
+                    LogUtils.info("Task stopped: ${stopInfo.reason}")
+                    return AgentResponse(stopInfo.result, execution: task.execution)
+                }
+            }
+            let answer = task.summarize()
+            return AgentResponse(answer, execution: task.execution)
+        } finally {
+            if (task.request.verbose) {
+                task.execution.events.close()
+            }
+        }
     }
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
@@ -49,8 +43,23 @@ public class ReactExecutor <: AgentExecutor {
         let task = ReactTask(agent, request)
         // Create a thread to execute the react task
         let fut: Future<Iterator<String>> = spawn {
-            let answer = this.doRun(task)
-            return [answer].iterator()
+            try {
+                for (_ in 0..this.loop) {
+                    if (let Some(asyncAnswer) <- task.asyncRunOnce()) {
+                        return asyncAnswer
+                    }
+                    if (let Some(stopInfo) <- task.stopInfo) {
+                        LogUtils.info("Task stopped: ${stopInfo.reason}")
+                        return AsyncAgentResponse([stopInfo.result].iterator(), execution: task.execution)
+                    }
+                }
+                LogUtils.info("Exceed the max react loop")
+                return task.asyncSummarize()
+            } finally {
+                if (request.verbose) {
+                    task.execution.events.close()
+                }
+            }
         }
         return AsyncAgentResponse(FutureIteratorWrapper(task, fut), execution: task.execution)
     }

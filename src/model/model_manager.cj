@@ -15,7 +15,6 @@ import magic.model.dashscope.DashscopeEmbeddingModel
 import magic.model.llamacpp.LlamacppEmbeddingModel
 import magic.model.siliconflow.SiliconflowImageModel
 import magic.model.zhipuai.ZhipuAIImageModel
-import magic.instrumentor.Instrumentor
 import std.convert.*
 import std.collection.HashMap
 import std.collection.{filter, collectArray}

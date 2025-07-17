@@ -3,6 +3,8 @@
  */
 package magic.agent
 
+import magic.agent.base.BaseAgent
+import magic.agent_executor.AgentExecutorManager
 import magic.core.agent.{AgentRequest, AgentResponse, AgentExecutor, AgentExecutionException}
 import magic.core.tool.{Tool, ToolException}
 import magic.config.Config
@@ -95,7 +97,7 @@ Where <func_error> is a json string.
  * A special fake tool
  * This tool is used to provide the final answer after all steps are completed
  * There is an internal **trick** that we can inject our answer tool with the same name
- */ 
+ */
 private let ANSWER_TOOL = NativeFuncTool(
     name: "_answer_",
     description: "This is a special tool to provide the the final answer.",
@@ -120,7 +122,6 @@ public class AiFuncAgent <: BaseAgent {
     public AiFuncAgent(
         model!: Option<String>,
         temperature!: Option<Float64>,
-        executor!: AgentExecutor,
         tools!: Option<Array<Tool>>,
         private let funcPrompt!: Option<String>,
         private let funcName!: String,
@@ -132,11 +133,13 @@ public class AiFuncAgent <: BaseAgent {
             model: if (let Some(m) <- model) { ModelManager.createChatModel(m) }
                    else { Config.defaultChatModel.getOrThrow() },
             temperature: temperature,
-            executor: executor
         )
-        if (executor.name == "tool-loop") {
-            this.toolManager.addTools(tools ?? [])
+        if (let Some(ts) <- tools && !ts.isEmpty()) {
+            this.toolManager.addTools(ts)
             this.toolManager.addTool(ANSWER_TOOL)
+            this.executor = AgentExecutorManager.create("tool-loop")
+        } else {
+            this.executor = AgentExecutorManager.create("naive")
         }
     }
 
@@ -205,5 +208,5 @@ public class AiFuncAgent <: BaseAgent {
             LogUtils.error(msg)
             throw AgentExecutionException(msg)
         }
-    }   
+    }
 }

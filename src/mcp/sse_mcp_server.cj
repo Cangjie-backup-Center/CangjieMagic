@@ -3,42 +3,19 @@ package magic.mcp
 import stdx.net.http.*
 import std.collection.ArrayList
 import std.collection.concurrent.ConcurrentHashMap
-import std.random.*
 import std.time.*
 import magic.core.agent.Agent
 import magic.tool.AgentAsTool
 import magic.log.LogUtils
 import magic.jsonable.*
 import magic.core.tool.Tool
-import magic.utils.HttpContextExi
+import magic.utils.{HttpContextExi, randomString}
 
 public class SseMCPServer <: AbsMCPServer {
     var client_map = ConcurrentHashMap<String, HttpResponseWriter>()
 
     public init(tools: Array<Tool>) {
         super(tools)
-    }
-
-    private func getRandomString(): String {
-        let chars: Array<Rune> = [
-            r'A', r'B', r'C', r'D', r'E', r'F', r'G', r'H', r'I',
-            r'J', r'K', r'L', r'M', r'N', r'O', r'P', r'Q', r'R',
-            r'S', r'T', r'U', r'V', r'W', r'X', r'Y', r'Z', r'a',
-            r'b', r'c', r'd', r'e', r'f', r'g', r'h', r'i', r'j', 
-            r'k', r'l', r'm', r'n', r'o', r'p', r'q', r's', r't',
-            r'u', r'v', r'w', r'x', r'y', r'z', r'0', r'1', r'2',
-            r'3', r'4', r'5', r'6', r'7', r'8', r'9'
-        ]
-
-        let random = Random()
-        let buffer = StringBuilder()
-
-        for (_ in 0..12) {
-            let index = random.nextInt64(chars.size)
-            buffer.append(chars[index])
-        }
-
-        return buffer.toString()
     }
 
     public func start(host: String, port: UInt16): Unit {
@@ -54,7 +31,7 @@ public class SseMCPServer <: AbsMCPServer {
                 httpContext.UpgroudeSSE()
 
                 let w = httpContext.sendEvent()
-                let uuid = this.getRandomString()
+                let uuid = randomString(size: 12)
 
                 w.write("event: endpoint\ndata: /messages/?session_id=${uuid}\n\n".toArray())
                 this.client_map.add(uuid, w)

@@ -67,16 +67,16 @@ class AutoDiscussGroup <: DiscussGroup {
         let messageList = MessageList([
             Message.system(sysPrompt)
         ])
-        LogUtils.info(name, sysPrompt)
+        LogUtils.info(this.host.name, sysPrompt)
         messageList.addMessage(
             Message.user("Now, select the next speaker or make the final answer")
         )
 
-        let msg = match (ModelUtils.makeChat(this.name, this.model, messageList)) {
+        let msg = match (ModelUtils.agentMakeChat(this.host, messageList)) {
             case Some(msg) => msg
             case None => return Selection.Failure("LLM response error")
         }
-        LogUtils.info(name, msg)
+        LogUtils.info(this.host.name, msg)
         if (let Some(answer) <- Tag.extract(msg.content, Tag.ANSWER)) {
             return Selection.Summary(answer)
         }

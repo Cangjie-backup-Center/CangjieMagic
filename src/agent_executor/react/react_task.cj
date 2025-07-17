@@ -13,7 +13,7 @@ import magic.parser.{TagStreamParser, ParserException}
 
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
-        super(agent, request)
+        super(agent, request, initPrompt: false)
         this.execution.addMessages(ReactPromptUtils.buildReactPrompt(this))
         this.execution.addRequest(request)
         LogUtils.info(agent.name, "----- Build Agent Task -----")
@@ -48,9 +48,7 @@ protected class ReactTask <: AgentTask {
                 this.addAndLogMessage(Message.assistant(tc.text.withTag(Tag.ACTION)))
                 let observation = this.invokeTool(tc.request)
                 this.addAndLogMessage(Message.assistant(observation.withTag(Tag.OBSERVATION)))
-                if (this.request.verbose) {
-                    this.execution.verboseChannel.put(observation, Tag.OBSERVATION)
-                }
+                this.notify(Tag.OBSERVATION, observation)
             case ReactStep.Answer(answer) =>
                 if (answer.thought != "") {
                     addAndLogMessage(Message.assistant(answer.thought.withTag(Tag.THOUGHT)))
@@ -79,21 +77,20 @@ protected class ReactTask <: AgentTask {
         return None
     }
 
-    private func sendVerbose(step: ReactStep): Unit {
+    private func notifyStep(step: ReactStep): Unit {
         match (step) {
             case Action(toolCall) =>
                 if (!toolCall.thought.isEmpty()) {
-                    this.execution.verboseChannel.put(toolCall.thought, Tag.THOUGHT)
+                    this.notify(Tag.THOUGHT, toolCall.thought)
                 }
-                this.execution.verboseChannel.put(toolCall.text, Tag.ACTION)
+                // tool call is notified in its own event handler
             case Thought(thought) =>
-                this.execution.verboseChannel.put(thought, Tag.THOUGHT)
+                this.notify(Tag.THOUGHT, thought)
             case Answer(answer) =>
                 if (!answer.thought.isEmpty()) {
-                    this.execution.verboseChannel.put(answer.thought, Tag.THOUGHT)
+                    this.notify(Tag.THOUGHT, answer.thought)
                 }
-                this.execution.verboseChannel.put(answer.content, Tag.ANSWER)
-                this.execution.verboseChannel.close()
+                this.notify(Tag.ANSWER, answer.content)
             case Failure(_) => ()
         }
     }
@@ -113,9 +110,7 @@ protected class ReactTask <: AgentTask {
             this.execution.removeLastMessage()
         }
 
-        if (this.request.verbose) {
-            this.sendVerbose(step)
-        }
+        this.notifyStep(step)
         if (let Some(answer) <- handleStep(step)) {
             return answer
         } else {
@@ -131,9 +126,7 @@ protected class ReactTask <: AgentTask {
         // [Observation] ... [Observation],
         // so we truncate it with `stop` words.
         try {
-            match (ModelUtils.agentMakeChat(this.agent,
-                                            this.execution.messages,
-                                            stop: [Tag.OBSERVATION])) {
+            match (this.chatLLM(this.execution.messages, stop: [Tag.OBSERVATION])) {
                 case Some(msg) =>
                     return ReactStep.fromStr(msg.content)
                 case None =>
@@ -166,7 +159,7 @@ protected class ReactTask <: AgentTask {
         let messages = MessageList(
             ReactPromptUtils.buildReactSummarizePrompt(this)
         )
-        let msg = ModelUtils.agentMakeChat(this.agent, messages).getOrThrow({ =>
+        let msg = this.chatLLM(messages).getOrThrow({ =>
             AgentExecutionException("Fail to get chat model response")
         })
         return Tag.extract(msg.content, Tag.ANSWER).getOrThrow({ =>
@@ -178,7 +171,7 @@ protected class ReactTask <: AgentTask {
     // The following methods are used to implement asynchronous execution,
     // but these are outdated implementations with bugs (they may directly pass incorrect LLM outputs to verbose info).
     // These methods are currently not in use and are temporarily retained for reference.
-    private func asyncRunOnce(): Option<AsyncReactAnswer> {
+    func asyncRunOnce(): Option<AsyncReactAnswer> {
         LogUtils.info(this.agent.name, "Step #${this.step}")
         this.step += 1
         // Add a hint message
@@ -191,19 +184,16 @@ protected class ReactTask <: AgentTask {
         try {
             let tag = asyncReactStep.peekTag()
             if (tag == Tag.THOUGHT) {
-                this.handleStep(asyncReactStep.getStepOf(Tag.THOUGHT))
+                let step = asyncReactStep.getStepOf(Tag.THOUGHT)
+                this.handleStep(step)
+                this.notifyStep(step)
                 return None
             } else if (tag == Tag.ACTION) {
-                this.handleStep(asyncReactStep.getStepOf(Tag.ACTION))
+                let step = asyncReactStep.getStepOf(Tag.ACTION)
+                this.handleStep(step)
+                this.notifyStep(step)
                 return None
             } else if (tag == Tag.ANSWER) {
-                if (this.request.verbose) {
-                    asyncReactStep.parser.onChunkFn = None
-                    // The Tag.ANSWER has been put into the channel by the AsyncStepParser
-                    // Put a close tag but does not put the answer
-                    this.execution.verboseChannel.put(Tag.ANSWER.getCloseTag())
-                    this.execution.verboseChannel.close()
-                }
                 let (thought, asyncAnswer) = asyncReactStep.getAsyncAnswer()
                 if (!thought.trimAscii().isEmpty()) {
                     this.addAndLogMessage(Message.assistant(thought))
@@ -231,29 +221,19 @@ protected class ReactTask <: AgentTask {
         let asyncChatResp = agent.model.asyncCreate(
             ChatRequest(this.execution.messages, stop: [Tag.OBSERVATION])
         )
-        let onChunkFn: Option<(String)->Unit> = if (this.request.verbose) {
-            { chunk: String => this.execution.verboseChannel.put(chunk) }
-        } else {
-            None
-        }
-        let parser = TagStreamParser(asyncChatResp.iter(withReason: false), onChunkFn: onChunkFn)
+        let parser = TagStreamParser(asyncChatResp.iter(withReason: false))
         return AsyncReactStep(parser)
     }
 
     /**
      * Summarize an answer according to the react execution history.
      **/
-    private func asyncSummarize(): AsyncReactAnswer {
+    func asyncSummarize(): AsyncReactAnswer {
         let asyncChatResp = agent.model.asyncCreate(
             ChatRequest(ReactPromptUtils.buildReactSummarizePrompt(this))
         )
         let parser = TagStreamParser(asyncChatResp.iter())
         let asyncReactStep = AsyncReactStep(parser)
-        if (this.request.verbose) {
-            // Put a pair of close tags but does not put the answer
-            this.execution.verboseChannel.put("", Tag.ANSWER)
-            this.execution.verboseChannel.close()
-        }
         let (_, asyncAnswer) = asyncReactStep.getAsyncAnswer()
         return asyncAnswer
     }

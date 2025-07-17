@@ -48,7 +48,7 @@ public struct ExecutionOpSet {
      * A special fake tool
      * This tool is used to provide the final answer after all steps are completed
      * There is an internal **trick** that we can inject our answer tool with the same name
-     */ 
+     */
     static let ANSWER_TOOL = NativeFuncTool(
         name: "_answer_",
         description: "This is a special tool that can only be used after you complete all the steps and resolve the task. You use this tool to provide the user with the final answer. If you interact with them using this tool without finishing the task, the user will get upset.",
@@ -75,7 +75,7 @@ public struct ExecutionOpSet {
         state.execution.addMessage(Message.system(operationPrompt))
         // Call the LLM
         try {
-            return ModelUtils.agentMakeChat(agent, state.execution.messages, stop: stop).getOrThrow({ =>
+            return state.task.chatLLM(state.execution.messages, stop: stop).getOrThrow({ =>
                 AgentExecutionException("Fail to get chat model response")
             })
         } finally {
@@ -93,9 +93,7 @@ public struct ExecutionOpSet {
         state.execution.addStepMessage(
             Message.assistant(msg.content.withTag(Tag.THOUGHT)), // Add plan as a thought
         )
-        if (state.task.request.verbose) {
-            state.execution.verboseChannel.put(msg.content.withTag(Tag.PLAN))
-        }
+        state.task.notify(Tag.PLAN, msg.content)
         return state
     }
 
@@ -109,18 +107,12 @@ public struct ExecutionOpSet {
         state.execution.addStepMessage(
             Message.assistant(msg.content.withTag(Tag.THOUGHT)),
         )
-        if (state.task.request.verbose) {
-            state.execution.verboseChannel.put(msg.content, Tag.THOUGHT)
-        }
+        state.task.notify(Tag.THOUGHT, msg.content)
         return state
     }
 
     private static func doInvokeTool(state: ExecutionState, message: Message): ExecutionState {
         LogUtils.info(state.task.agent.name, "Action: ${message.content}")
-        // Send verbose information if necessary
-        if (state.task.request.verbose) {
-            state.execution.verboseChannel.put(message.content, Tag.ACTION)
-        }
         // If the content does not contain ```json ... ```, treat the content as a json value
         let jsonStr = ParserUtils.extractFirstCode(message.content, "json") ?? message.content.trimAscii()
         let json = JsonValue.fromStr(jsonStr).asObject()
@@ -131,15 +123,11 @@ public struct ExecutionOpSet {
         // Special terminal tools may stop the execution
         if (let Some(stopInfo) <- state.task.stopInfo) {
             state.task.execution.addStepMessage(Message.assistant(stopInfo.result.withTag(Tag.ANSWER)))
-            if (state.task.request.verbose) {
-                state.execution.verboseChannel.put(stopInfo.result, Tag.ANSWER)
-            }
+            state.task.notify(Tag.ANSWER, stopInfo.result)
             return state
         }
         LogUtils.info(state.task.agent.name, "Observation: ${observation}")
-        if (state.task.request.verbose) {
-            state.execution.verboseChannel.put(observation, Tag.OBSERVATION)
-        }
+        state.task.notify(Tag.OBSERVATION, observation)
         // Add action and observation to the messageList
         state.execution.addStepMessage(
             Message.assistant("```json\n${jsonStr}\n```".withTag(Tag.ACTION)),
@@ -197,9 +185,9 @@ public struct ExecutionOpSet {
         if (state.task.request.verbose) {
             if (let Some(subtask) <- state.subtask) {
                 let answer = "Solve the subtask ${subtask.description}\nAnswer: ${msg.content.withoutTag(Tag.ANSWER)}"
-                state.execution.verboseChannel.put(answer, Tag.OBSERVATION)
+                state.task.notify(Tag.OBSERVATION, answer)
             } else {
-                state.execution.verboseChannel.put(msg.content, Tag.ANSWER)
+                state.task.notify(Tag.OBSERVATION, msg.content)
             }
         }
         state.answer = msg.content.withoutTag(Tag.ANSWER)
@@ -253,7 +241,7 @@ public struct ExecutionOpSet {
         return subtasks |> map { subtask: Subtask =>
             if (state.task.request.verbose) {
                 let info = "Generate subtask:\n${subtask.toJsonValue().toJsonString()}"
-                state.execution.verboseChannel.put(info, Tag.THOUGHT)
+                state.task.notify(Tag.THOUGHT, info)
             }
 
             // Build the system prompt to solve the subtask
@@ -268,11 +256,12 @@ public struct ExecutionOpSet {
             let subtaskState = ExecutionState(
                 AgentTask(
                     state.task.agent,
-                    AgentRequest(subtask.description, verbose: state.task.request.verbose)
+                    AgentRequest(subtask.description, verbose: state.task.request.verbose),
+                    initPrompt: false
                 )
             )
-            // Set the verbose channel
-            subtaskState.task.execution._verboseChannel = state.task.execution._verboseChannel
+            // Set the verbose event stream
+            subtaskState.task.execution._events = state.task.execution._events
             // Save the current state as its parent state
             subtaskState.parent = state
             // Bound with the subtask
@@ -291,7 +280,7 @@ public struct ExecutionOpSet {
                 if (let Some(subtask) <- state.subtask) {
                     if (state.task.request.verbose) {
                         let info = "To solve the subtask: ${subtask.description}"
-                        state.execution.verboseChannel.put(info, Tag.THOUGHT)
+                        state.task.notify(Tag.THOUGHT, info)
                     }
                 }
                 op(state)
@@ -321,9 +310,7 @@ public struct ExecutionOpSet {
         )
         let msg = chatWithOperation(state, prompt, stop: [])
         LogUtils.info(state.task.agent.name, "Subtask Summary: ${msg.content}")
-        if (state.task.request.verbose) {
-            state.execution.verboseChannel.put(msg.content, Tag.OBSERVATION)
-        }
+        state.task.notify(Tag.OBSERVATION, msg.content)
         state.execution.addStepMessage(
             Message.assistant(msg.content.withTag(Tag.OBSERVATION)),
         )

@@ -8,7 +8,7 @@ import magic.core.message.{Message, MessageList}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.utils.{StringExt, sleep2}
-import magic.parser.{Tag, TagStreamParser}
+import magic.parser.{Tag, TagStreamParser, ParserException}
 
 import std.collection.{ArrayList, map, collectArray}
 
@@ -52,7 +52,7 @@ class AsyncReactStep {
             } else if (tag == Tag.ACTION || tag == Tag.ANSWER) {
                 break
             } else {
-                throw AgentExecutionException("Invalid react tag `${tag}`")
+                throw ParserException("Invalid react tag `${tag}`")
             }
         }
     }

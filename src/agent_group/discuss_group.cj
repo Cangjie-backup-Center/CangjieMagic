@@ -5,6 +5,7 @@ package magic.agent_group
 
 internal import magic.core.model.*
 internal import magic.core.agent.*
+import magic.agent.base.BaseAgent
 internal import magic.prompt.Template
 internal import magic.log.LogUtils
 internal import magic.parser.ParserUtils
@@ -39,17 +40,19 @@ enum Selection {
 }
 
 abstract class DiscussGroup {
-    let name = "FreeGroup Host"
+    let host: Agent
     let topic: String
     let members: ArrayList<Agent>
-    let model: ChatModel
     let discussion = MessageList()
     var currSpeakerIndex = 0
 
     public init(topic: String, members: ArrayList<Agent>) {
+        this.host = BaseAgent(
+            name: "FreeGroup Host",
+            model: members[0].model // Set the chat model of the first member
+        )
         this.topic = topic
         this.members = members
-        model = members[0].model // Set the chat model of the first member
     }
 
     public func discuss(initiator: String, speech: String, maxRound!: Int64): AgentResponse {
@@ -63,12 +66,12 @@ abstract class DiscussGroup {
     }
 
     public func discuss(maxRound!: Int64): AgentResponse {
-        LogUtils.info(this.name, "FreeGroup Host run")
+        LogUtils.info(this.host.name, "FreeGroup Host run")
         for (round in 0..maxRound) {
-            LogUtils.info(this.name, "Round ${round}")
+            LogUtils.info(this.host.name, "Round ${round}")
             let speaker: Agent = match (selectSpeaker()) {
                 case Speaker(agent) =>
-                    LogUtils.info(this.name, "Select the next speaker: ${agent.name}")
+                    LogUtils.info(this.host.name, "Select the next speaker: ${agent.name}")
                     agent
                 case Summary(result) =>
                     return AgentResponse(result)
@@ -80,7 +83,7 @@ abstract class DiscussGroup {
                 case None =>
                     throw AgentExecutionException("The speaker agent failed to make speech")
             }
-            LogUtils.info(this.name, "The speaker says: ${speech}")
+            LogUtils.info(this.host.name, "The speaker says: ${speech}")
             discussion.addMessage(Message.assistant(speech, name: speaker.name))
             // LogUtils.info(this.name, assistantMsg)
         }

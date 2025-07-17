@@ -5,7 +5,7 @@ package magic.agent_executor.dsl
 
 import magic.core.agent.{Agent, AgentRequest, AgentExecutionException}
 import magic.core.message.MessageRole
-import magic.agent.AgentExecutionInfo
+import magic.agent.base.AgentExecutionInfo
 import magic.agent_executor.common.AgentTask
 import magic.dsl.jsonable
 import magic.jsonable.{Jsonable, JsonableException, FieldSchema, TypeSchema}

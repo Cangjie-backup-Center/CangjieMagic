@@ -6,7 +6,7 @@ package magic.examples.magic_agent
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
-import magic.agent_executor.common.ConsolePrinter
+import magic.interaction.ConsolePrinter
 
 import std.console.Console
 

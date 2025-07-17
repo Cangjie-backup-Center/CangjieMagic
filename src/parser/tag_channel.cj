@@ -51,7 +51,7 @@ protected class TagChannel <: Iterator<String> {
     }
 
     protected func close(): Unit {
-        this.queue.enqueue(EOF)
+        this.queue.add(EOF)
     }
 }
 

@@ -37,7 +37,7 @@ func resultSummarize(planTask: PlanTask): String {
     let messages = MessageList([
         Message.user(userPrompt)
     ])
-    return ModelUtils.agentMakeChat(planTask.agent, messages).getOrThrow({ =>
+    return planTask.chatLLM(messages).getOrThrow({ =>
         AgentExecutionException("Fail to get chat model response")
     }).content
 }

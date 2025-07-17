@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent
+package magic.agent.base
 
 import std.collection.HashMap
 import magic.core.agent.*

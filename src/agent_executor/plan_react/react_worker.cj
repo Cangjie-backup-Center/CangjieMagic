@@ -4,14 +4,17 @@
 package magic.agent_executor.plan_react
 
 import magic.core.agent.*
-import magic.agent.BaseAgent
+import magic.agent.base.BaseAgent
 import magic.core.message.{Message, MessageList}
 import magic.core.model.ChatRequest
 import magic.agent_executor.react.{ReactPromptUtils, ReactExecutor, REACT_SYSTEM_PROMPT}
+import magic.interaction.EventHandlerManager
 import magic.utils.*
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.prompt.Template
+
+import std.sync.AtomicBool
 
 private let REACT_WORKER_SYSTEM_PROMPT = """
 # Instruction
@@ -60,35 +63,32 @@ class ReactWorker <: BaseAgent {
         this.executor = ReactExecutor()
     }
 
-    func solve(subtask: Subtask): String {
-        // The progress will be updated, so we build the system prompt each time
-        this.systemPrompt = this.buildSystemPrompt()
-        // React worker starts to solve the subtask
-        let resp = this.chat(AgentRequest(
-            REACT_WORKER_USER_PROMPT.format(
-                ("task", subtask.complexDescription)
-            )
-        ))
-        return resp.content
-    }
-
-    func asyncSolve(subtask: Subtask, verbose!: Bool): AsyncAgentResponse {
-        // The progress will be updated, so we build the system prompt each time
-        this.systemPrompt = this.buildSystemPrompt()
-        // React worker starts to solve the subtask
-        return this.asyncChat(
-            AgentRequest(
-                REACT_WORKER_USER_PROMPT.format(("task", subtask.complexDescription)),
-                verbose: verbose
-            )
-        )
-    }
-
     private func buildSystemPrompt(): String {
         return REACT_WORKER_SYSTEM_PROMPT.format(
             ("original_question", this.planTask.request.question),
             ("knowledge", this.planTask.knowledge),
             ("progress", this.planTask.progress)
         ).trimAscii()
+    }
+
+    private func prepareBeforeSolve(subtask: Subtask): AgentRequest {
+        // The progress will be updated, so we build the system prompt each time
+        this.systemPrompt = this.buildSystemPrompt()
+        // React worker inherit the same verbose setting and event handler managers
+        let request = AgentRequest(
+            REACT_WORKER_USER_PROMPT.format(("task", subtask.complexDescription)),
+            verbose: this.planTask.request.verbose
+        )
+        if (let Some(object) <- this.planTask.request.extra.get(EventHandlerManager.CLASS_NAME)) {
+            request.extra[EventHandlerManager.CLASS_NAME] = object
+        }
+        // There is no need to install verbose event handlers for subtasks
+        request.extra["install-verbose-event-handler"] = AtomicBool(false)
+        return request
+    }
+
+    func solve(subtask: Subtask): String {
+        let request = this.prepareBeforeSolve(subtask)
+        return this.chat(request).content
     }
 }

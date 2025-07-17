@@ -36,31 +36,38 @@ public class NaiveExecutor <: AgentExecutor {
     }
 
     public override func run(agent: Agent, request: AgentRequest): AgentResponse {
-        let task = AgentTask(agent, request)
-        LogUtils.info("${agent.name} runs")
-        task.execution.addMessages(this.buildNaivePrompt(task))
-        task.execution.addRequest(request)
-        LogUtils.info(agent.name, task.execution.messages)
-        let assistantMsg = ModelUtils.agentMakeChat(
-            agent, task.execution.messages
-        ).getOrThrow()
-        LogUtils.info(agent.name, assistantMsg)
-        return AgentResponse(assistantMsg.content, execution: task.execution)
+        let task = AgentTask(agent, request, initPrompt: false)
+        try {
+            LogUtils.info("${agent.name} runs")
+            task.execution.addMessages(this.buildNaivePrompt(task))
+            task.execution.addRequest(request)
+            LogUtils.info(agent.name, task.execution.messages)
+            let msg = task.chatLLM(task.execution.messages).getOrThrow()
+            LogUtils.info(agent.name, msg)
+            return AgentResponse(msg.content, execution: task.execution)
+        } finally {
+            if (request.verbose) {
+                task.execution.events.close()
+            }
+        }
     }
 
     public override func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
-        let task = AgentTask(agent, request)
-        LogUtils.info("${agent.name} async runs")
-        task.execution.addMessages(this.buildNaivePrompt(task))
-        task.execution.addRequest(request)
+        let task = AgentTask(agent, request, initPrompt: false)
+        try {
+            LogUtils.info("${agent.name} async runs")
+            task.execution.addMessages(this.buildNaivePrompt(task))
+            task.execution.addRequest(request)
 
-        LogUtils.info(agent.name, task.execution.messages)
-        let asyncChatResp = agent.model.asyncCreate(
-            ChatRequest(task.execution.messages, temperature: agent.temperature)
-        )
-        if (request.verbose) {
-            task.execution.verboseChannel.close()
+            LogUtils.info(agent.name, task.execution.messages)
+            let asyncChatResp = agent.model.asyncCreate(
+                ChatRequest(task.execution.messages, temperature: agent.temperature)
+            )
+            return AsyncAgentResponse(asyncChatResp.iter(), execution: task.execution)
+        } finally {
+            if (request.verbose) {
+                task.execution.events.close()
+            }
         }
-        return AsyncAgentResponse(asyncChatResp.iter(), execution: task.execution)
     }
 }

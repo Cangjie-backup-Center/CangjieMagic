@@ -4,7 +4,7 @@
 package magic.agent_group
 
 import magic.core.agent.*
-import magic.agent.BaseAgent
+import magic.agent.base.BaseAgent
 
 class GroupAsAgent <: BaseAgent {
     private let group: AgentGroup

@@ -7,6 +7,7 @@ import magic.dsl.*
 import magic.core.*
 import magic.jsonable.*
 import magic.agent.*
+import magic.agent.base.*
 import magic.agent_executor.AgentExecutorManager
 import magic.prompt.*
 import magic.model.*

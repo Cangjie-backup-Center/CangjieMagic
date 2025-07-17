@@ -5,6 +5,8 @@ package magic.core.agent
 
 import magic.core.message.Conversation
 
+import std.collection.HashMap
+
 /**
  * The execution request to an agent executor
  * This type encodes the agent communication protocol
@@ -35,12 +37,6 @@ public class AgentRequest {
      */
     public let maxTool: Int64
 
-    /**
-     * An agent request may be handled by multiple agents,
-     * so this field stores previous execution info
-     */
-    protected var execution: Option<AgentExecution> = None
-
     public init(question: String,
                 image!: Option<String> = None,
                 conversation!: Option<Conversation> = None,
@@ -52,4 +48,18 @@ public class AgentRequest {
         this.verbose = verbose
         this.maxTool = maxTool
     }
+
+    /**
+     * Save extra internal data structures; currently support:
+     * - "previous-execution": AgentExecution
+     *    An agent request may be handled by multiple agents,
+     *    so this field stores previous execution info
+     *
+     * - "EventHandlerManager.CLASS_NAME": EventHandlerManager
+     *    Users can register event handlers for each request
+     * - "install-verbose-event-handler": AtomicBool
+     *    Subagents may inherit event handlers from its parent agent
+     *    Default: true
+     */
+    protected let extra = HashMap<String, Object>()
 }

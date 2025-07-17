@@ -6,7 +6,7 @@ package magic.examples.file_assistant
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
-import magic.agent_executor.common.ConsolePrinter
+import magic.interaction.ConsolePrinter
 
 const MARKDOWNIFY_DIR = "<path-to-markdownify-mcp>"
 const MOUNT_DIR = "<path-to-mount>"
@@ -49,8 +49,8 @@ main() {
     )
 
     // 打印中间信息
-    let dumper = ConsolePrinter(asyncResp.execution.verboseInfo)
-    dumper.dump()
+    let dumper = ConsolePrinter(asyncResp)
+    dumper.start()
 
     // 打印结果
     for (data in asyncResp) {
