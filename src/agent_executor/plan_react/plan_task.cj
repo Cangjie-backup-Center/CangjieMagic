@@ -11,15 +11,9 @@ protected class PlanTask <: AgentTask {
     private var _knowledge: Option<String>
 
     protected init(agent: Agent, request: AgentRequest) {
-        super(agent, request)
+        super(agent, request, initPrompt: false)
         this._subtasks = None
         this._knowledge = None
-    }
-
-    protected init(agent: Agent, request: AgentRequest, subtasks: Array<Subtask>, knowledge: String) {
-        super(agent, request)
-        this._subtasks = subtasks
-        this._knowledge = knowledge
     }
 
     protected mut prop subtasks: Array<Subtask> {

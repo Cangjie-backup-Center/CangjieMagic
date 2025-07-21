@@ -65,15 +65,15 @@ private class AiAttr <: Attr {
             if (let Some(tokens) <- getTokens("tools")) {
                 let result = ArrayList<AgentToolAttr>()
                 for (toolTokens in ArrayParser(tokens).parseArrayOfTokens()) {
-                    result.add(AgentToolAttr.parse(toolTokens)) 
+                    result.add(AgentToolAttr.parse(toolTokens))
                 }
                 _tools = result.toArray()
                 return _tools.getOrThrow()
             }
             return []
         }
-    }    
-} 
+    }
+}
 
 /**
  * @ai[...] has the same attributes as @agent[...]
@@ -151,13 +151,6 @@ private func transformAi(input: Tokens, attr: AiAttr): Tokens {
         newIdentifierToken("None")
     }
 
-    let executorTks = if (attr.tools.isEmpty()) {
-        quote(AgentExecutorManager.create("naive"))
-        // quote(AgentExecutorManager.create("tool-loop"))
-    } else {
-        quote(AgentExecutorManager.create("tool-loop"))
-    }
-
     let addTools = Tokens()
     for (i in 0..attr.tools.size) {
         match (attr.tools[i]) {
@@ -206,7 +199,6 @@ private func transformAi(input: Tokens, attr: AiAttr): Tokens {
             let agent = AiFuncAgent(
                 model: $modelTk,
                 temperature: $temperatureTk,
-                executor: $executorTks,
                 tools: tm.getTools(),
                 funcPrompt: $funcPromptTk,
                 funcName: $(newLiteralToken(funcName.value)),

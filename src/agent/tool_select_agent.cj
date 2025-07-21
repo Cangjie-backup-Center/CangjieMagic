@@ -3,6 +3,8 @@
  */
 package magic.agent
 
+import magic.agent.base.BaseAgent
+import magic.agent_executor.AgentExecutorManager
 import magic.core.agent.{AgentRequest, AgentResponse}
 import magic.core.model.ChatModel
 import magic.core.message.{Message, MessageList}
@@ -61,32 +63,22 @@ public class ToolSelectAgent <: BaseAgent {
             description: "This agent is capable of selecting a tool to use to solving the question. It just select the proper tool but not calling the tool."
         )
         this.tools = tools
+        this.systemPrompt = TOOL_SELECT_SYSTEM_PROMPT.format(
+            // ("messageList", this.buildDialogPrompt(request.messageList ?? MessageList())),
+            ("tools", this.buildToolsPrompt())
+        )
+        this.executor = AgentExecutorManager.create("naive")
     }
 
     public func select(question: String): Option<ToolRequest> {
-        let resp = this.chat(AgentRequest(question))
+        let result = this.chat("Now, select the tool for the question: ${question}.")
         try {
-            let toolRequest = ParserUtils.extractLastToolRequest(resp.content)
+            let toolRequest = ParserUtils.extractLastToolRequest(result)
             LogUtils.info(this.name, "Select Tool: ${toolRequest.toString()}")
             return toolRequest
         } catch (_: ParserException) {
             return None
         }
-    }
-
-    override public func chat(request: AgentRequest): AgentResponse {
-        let sysPrompt = TOOL_SELECT_SYSTEM_PROMPT.format(
-            // ("messageList", this.buildDialogPrompt(request.messageList ?? MessageList())),
-            ("tools", this.buildToolsPrompt())
-        )
-        let messages = MessageList([
-            Message.system(sysPrompt.trimAscii()),
-            Message.user("Now, select the tool for the question: ${request.question}.")
-        ])
-
-        return AgentResponse(
-            (ModelUtils.agentMakeChat(this, messages))?.content ?? "Failed to get chat model response"
-        )
     }
 
     private func buildToolsPrompt(): String {

@@ -5,6 +5,7 @@ package magic.core.agent
 
 import magic.core.message.{ChatRound, MessageList}
 import magic.core.rag.RetrievalInfo
+import magic.core.interaction.EventStream
 
 import std.collection.ArrayList
 
@@ -19,9 +20,9 @@ public interface AgentExecution {
     prop messages: MessageList
 
     /**
-     * Only access this field when setting verbose: true in AgentRequest
+     * Only access this field when setting `verbose: true` in AgentRequest
      */
-    prop verboseInfo: Iterator<String>
+    prop events: EventStream
 
     /**
      * RAG info when used

@@ -4,7 +4,7 @@
 
 package magic.rag.graph
 
-import magic.agent.*
+import magic.agent.base.*
 import magic.core.agent.*
 import magic.core.rag.*
 import magic.core.model.*
@@ -291,7 +291,7 @@ Given one or two entities, and a list of descriptions, all related to the same e
 Please concatenate all of these into a single, comprehensive description. Make sure to include information collected from all the descriptions.
 If the provided descriptions are contradictory, please resolve the contradictions and provide a single, coherent summary.
 Make sure it is written in third person, and include the entity names so we the have full context.
-Use English as output language 
+Use English as output language
 Ant the make sure the whole output less than {max_tokens} tokens.
 
 #######

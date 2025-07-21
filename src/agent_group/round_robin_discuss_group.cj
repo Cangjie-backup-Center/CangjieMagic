@@ -47,7 +47,7 @@ class RoundRobinDiscussGroup <: DiscussGroup {
         let messageList = MessageList([
             Message.system(sysPrompt)
         ])
-        LogUtils.info(this.name, sysPrompt)
+        LogUtils.info(this.host.name, sysPrompt)
         for (msg in discussion) {
             messageList.addMessage(Message.assistant("${msg.name} says: ${msg.content}"))
         }
@@ -55,11 +55,11 @@ class RoundRobinDiscussGroup <: DiscussGroup {
             Message.user("Select the next speaker now")
         )
 
-        let msg = match (ModelUtils.makeChat(this.name, this.model, messageList)) {
+        let msg = match (ModelUtils.agentMakeChat(this.host, messageList)) {
             case Some(msg) => msg
             case None => return Selection.Failure("LLM model failed")
         }
-        LogUtils.info(this.name, msg)
+        LogUtils.info(this.host.name, msg)
         let answer = Tag.extract(msg.content, Tag.ANSWER) ?? "NO-ANSWER"
         if (answer.contains("NO-ANSWER")) {
             let selection = Selection.Speaker(members[currSpeakerIndex % members.size])

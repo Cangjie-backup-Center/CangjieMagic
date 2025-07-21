@@ -43,16 +43,16 @@ If there is no useful knowledge, just output ```knowledge ```
 Now, extract knowledge:
 """
 
-func knowledgeExtract(agent: Agent, request: AgentRequest): String {
+func knowledgeExtract(planTask: PlanTask): String {
     let sysPrompt = KNOWLEDGE_EXTRACT_SYSTEM_PROMPT.format(
-        ("question", request.question),
-        ("systemPrompt", agent.systemPrompt),
+        ("question", planTask.request.question),
+        ("systemPrompt", planTask.agent.systemPrompt),
     )
     let messages = MessageList([
         Message.system(sysPrompt)
     ])
 
-    let msg = ModelUtils.agentMakeChat(agent, messages).getOrThrow({ =>
+    let msg = planTask.chatLLM(messages).getOrThrow({ =>
         AgentExecutionException("Fail to get chat model response")
     })
     return ParserUtils.extractLastCode(msg.content, "knowledge") ?? ""

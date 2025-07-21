@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent
+package magic.agent.base
 
 import magic.core.agent.*
 import magic.core.message.Message
@@ -10,7 +10,6 @@ import magic.model.ModelUtils
 import magic.config.Config
 import magic.jsonable.Jsonable
 import std.collection.{HashMap, map, collectArray}
-import magic.instrumentor.Instrumentor
 import magic.log.LogUtils
 import magic.parser.{ParserUtils, ParserException}
 import magic.prompt.Template
@@ -54,12 +53,7 @@ public abstract class AbsAgent <: Agent {
                 interceptor.doBypass(request)
             }
         }
-        var resp = if (let Some(r) <- Instrumentor.doInstrumentBeforeAgentRun(this, request)) {
-            r
-        } else {
-            this.executor.run(this, request)
-        }
-        resp = Instrumentor.doInstrumentAfterAgentRun(this, request, resp)
+        let resp = this.executor.run(this, request)
         if (let Some(memory) <- this.memory) {
             memory.update(resp.execution.chatRound.toString()) // Update the agent memory
         }

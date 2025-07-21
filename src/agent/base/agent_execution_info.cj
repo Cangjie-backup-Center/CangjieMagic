@@ -1,12 +1,13 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent
+package magic.agent.base
 
-import magic.core.agent.{Agent, AgentRequest, AgentExecution, AgentExecutionException}
-import magic.core.message.{MessageList, ChatRound, Message, BoundedMessageList}
+import magic.core.agent.*
+import magic.core.message.*
 import magic.core.rag.{Retrieval, RetrievalInfo}
 import magic.parser.TagChannel
+import magic.core.interaction.*
 import magic.tokenizer.TokenizerLoader
 
 import std.collection.ArrayList
@@ -72,10 +73,6 @@ public class AgentExecutionInfo <: AgentExecution {
         this.stepMessages.addMessage(msg)
     }
 
-    protected func addVerboseInfo(info: String): Unit {
-        this.verboseChannel.put(info)
-    }
-
     override public func setAnswer(answer: String): Unit {
         this.answer = answer
     }
@@ -85,27 +82,21 @@ public class AgentExecutionInfo <: AgentExecution {
     }
 
     /**
-     * A communication channel to transfer verbose information during the agent execution
+     * A communication channel to transfer verbose events during the agent execution
+     * Only access this field when setting `verbose: true` in AgentRequest
      */
-    protected var _verboseChannel: Option<TagChannel> = None
+    protected var _events: Option<EventStream> = None
     private let mutex = Mutex()
-    protected prop verboseChannel: TagChannel {
+    public prop events: EventStream {
         get() {
             synchronized(this.mutex) {
-                if (let Some(ch) <- _verboseChannel) { return ch }
-                let ch = TagChannel()
-                _verboseChannel = ch
-                return ch
+                if (let Some(value) <- _events) {
+                    return value
+                }
+                let value = EventStream()
+                _events = value
+                return value
             }
-        }
-    }
-
-    /**
-     * Only access this field when setting verbose: true in AgentRequest
-     */
-    override public prop verboseInfo: Iterator<String> {
-        get() {
-            this.verboseChannel
         }
     }
 
@@ -119,6 +110,6 @@ public class AgentExecutionInfo <: AgentExecution {
                 this.stepMessages
             )
         }
-    }   
+    }
 }
 

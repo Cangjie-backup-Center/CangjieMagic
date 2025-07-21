@@ -6,9 +6,27 @@ package magic.tool
 import magic.core.agent.*
 import magic.core.tool.*
 import magic.jsonable.TypeSchema
+import magic.model.ModelUtils
+import magic.core.message.{Message, MessageRole, MessageList}
+import magic.core.model.{ChatModel, ChatRequest}
+import magic.log.LogUtils
+import magic.prompt.Template
 
+import std.collection.ArrayList
 import std.collection.HashMap
 import stdx.encoding.json.JsonValue
+
+private let AGENT_SUMMARY_PROMPT = """
+# Task
+Given instructions for an agent, summarize a description of the agent's functionality.
+If the instructions include information about inputs and outputs, this should also be described in the functional description.
+The output should be complete but also brief.
+
+# Agent Instruction
+{instruction}
+
+Now, make the summary:
+"""
 
 protected class AgentAsTool <: AbsTool {
     protected let agent: Agent
@@ -24,7 +42,7 @@ protected class AgentAsTool <: AbsTool {
     public prop description: String {
         get() {
             return if (this.agent.description == "") {
-                summarize(this.agent.model, this.agent.systemPrompt)
+                this.summarize()
             } else {
                 this.agent.description
             }
@@ -51,6 +69,20 @@ protected class AgentAsTool <: AbsTool {
             return ToolResponse(resp.content)
         } else {
             throw ToolException("Agent as tool with invalid arguments")
+        }
+    }
+
+    private func summarize(): String {
+        let messages = MessageList([
+            Message.system(AGENT_SUMMARY_PROMPT.format(
+                ("instruction", this.agent.systemPrompt)
+            ))
+        ])
+        if (let Some(msg) <- ModelUtils.agentMakeChat(this.agent, messages)) {
+            return msg.content
+        } else {
+            LogUtils.debug("Summarize failed")
+            return "None"
         }
     }
 }

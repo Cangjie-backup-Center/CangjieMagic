@@ -9,7 +9,6 @@ import magic.core.model.*
 import magic.log.LogUtils
 import magic.config.Config
 import magic.utils.{getEnv, sleep2}
-import magic.instrumentor.Instrumentor
 
 import std.collection.{filter, collectArray}
 
@@ -58,9 +57,6 @@ public struct ModelUtils {
                 LogUtils.debug(request.messageList)
             }
             LogUtils.debug('  --------------- [End of Request Messages] ------------')
-            if (let Some(response) <- Instrumentor.doInstrumentBeforeChatModel(model, request, who: who)) {
-                return ModelUtils.parseChatResponse(response)
-            }
             // The LLM may return an empty reply?
             for (_ in 0..Config.modelRetryNumber) {
                 let response = model.create(request)
@@ -93,18 +89,8 @@ public struct ModelUtils {
         return ModelUtils.makeChatImpl(model, request, who: name)
     }
 
-    public static func makeChatGet<T>(name: String,
-                                      model: ChatModel,
-                                      messages: MessageList,
-                                      getFn!: (Message) -> Option<T>): Option<T> {
-        if (let Some(msg) <- ModelUtils.makeChat(name, model, messages)) {
-            return getFn(msg)
-        } else {
-            return None
-        }
-    }
-
     public static func agentMakeChat(agent: Agent, messages: MessageList, stop!: Option<Array<String>> = None): Option<Message> {
-        return ModelUtils.makeChat(agent.name, agent.model, messages, temperature: agent.temperature, stop: stop)
+        let request = ChatRequest(messages, temperature: agent.temperature, stop: stop)
+        return ModelUtils.makeChatImpl(agent.model, request, who: agent.name)
     }
 }

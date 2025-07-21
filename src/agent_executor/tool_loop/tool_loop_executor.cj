@@ -48,7 +48,7 @@ public class ToolLoopExecutor <: AgentExecutor {
             return state.answer
         } finally {
             if (task.request.verbose) {
-                task.execution.verboseChannel.close()
+                task.execution.events.close()
             }
         }
     }

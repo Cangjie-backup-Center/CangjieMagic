@@ -3,10 +3,12 @@
  */
 package magic.agent
 
+import magic.agent.base.{BaseAgent, AgentExecutionInfo}
 import magic.core.*
 import magic.model.ModelManager
 import magic.log.LogUtils
 import magic.tool.AgentAsTool
+import magic.interaction.NotifyEvent
 import magic.parser.{Tag, WithTag}
 
 /**
@@ -31,8 +33,8 @@ public class DispatchAgent <: BaseAgent {
         if (let Some(agent) <- this.doSelect(request)) {
             if (request.verbose) {
                 let execution = AgentExecutionInfo(agent)
-                execution.verboseChannel.put("Dispatch to the agent: ${agent.name}", Tag.INFO)
-                request.execution = execution
+                execution.events.put(NotifyEvent(this, Tag.INFO, "Dispatch to the agent: ${agent.name}"))
+                request.extra.add("previous-execution", execution)
             }
             return agent.asyncChat(request)
         } else {

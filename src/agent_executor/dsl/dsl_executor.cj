@@ -4,7 +4,7 @@
 package magic.agent_executor.dsl
 
 import magic.core.agent.*
-import magic.agent.UserDefinedAgent
+import magic.agent.base.UserDefinedAgent
 import magic.agent_executor.common.{AgentTask, FutureIteratorWrapper}
 import magic.log.LogUtils
 
@@ -28,7 +28,7 @@ public class DslExecutor <: AgentExecutor {
             return finalState.answer
         } finally {
             if (task.request.verbose) {
-                task.execution.verboseChannel.close()
+                task.execution.events.close()
             }
         }
     }

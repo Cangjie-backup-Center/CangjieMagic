@@ -4,7 +4,7 @@
 package magic.agent_group
 
 import magic.core.agent.Agent
-import magic.agent.AbsAgent
+import magic.agent.base.AbsAgent
 
 /**
  * This interface is used to extend agent-collaboration for agents
