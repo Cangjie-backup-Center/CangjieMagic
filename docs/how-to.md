@@ -89,13 +89,13 @@ Define new prompt patterns using `@promptPattern`:
 class STAR {
     @element[description: "Describe the situation"]
     let situation: String
-    
+
     @element[description: "Define the task"]
     let task: String
-    
+
     @element[description: "Specify the action"]
     let action: String
-    
+
     @element[description: "Explain the result"]
     let result: String
 
@@ -192,7 +192,7 @@ class LimitedIterationAgent {
         "You are an agent that performs multi-step calculations."
         "Show your reasoning process for each step."
     )
-    
+
     @tool[description: "Performs basic addition"]
     func add(a: Int64, b: Int64): Int64 {
         return a + b
@@ -301,7 +301,7 @@ Use `ConsolePrinter` to log agent execution details.
 Note: It must be used with agent asynchronous execution.
 
 ```cangjie
-import magic.agent_executor.common.ConsolePrinter
+import magic.interaction.ConsolePrinter
 
 let agent = FooAgent()
 
@@ -309,27 +309,23 @@ let asyncResp = agent.asyncChat("question", verbose: true)
 ConsolePrinter.print(asyncResp, verbose: true)
 ```
 
-You can also implement customized printers via `TagStream
+You can also implement customized printers via `EventStream`
 
 ```cangjie
 import magic.parser.*
 
-class MyPrinter <: TagStreamVisitor {
-    public init(chunks: Iterator<String>) {
-        super(chunks)
+class MyPrinter <: EventStreamVisitor {
+    public init(events: EventStream) {
+        super(events)
     }
-    override protected func onTag(tag: String): Unit {
-        println("Start of ${tag}")
+
+    override public func on(event: NotifyEvent): Unit {
+        println(event.content.trimAscii())
     }
-    override protected func onCloseTag(tag: String): Unit {
-        println("End of ${tag}")
-    }
-    protected func onChunk(chunk: String): Unit {
-        println("Data ${chunk}")
-    }
+    ...
 }
 
 let asyncResp = agent.asyncChat(AgentRequest("question", verbose: true))
-let printer = MyPrinter(asyncResp.execution.verboseInfo)
+let printer = MyPrinter(asyncResp.execution.events)
 printer.start()
 ```
