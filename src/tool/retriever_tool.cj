@@ -16,6 +16,11 @@ public class RetrieverTool <: AbsTool {
         this.retriever = retriever
     }
 
+    public prop group: String {
+        get() { "__retriever__tools___" }
+    }
+
+
     public prop name: String {
         get() { "__retriever__tool___" }
     }

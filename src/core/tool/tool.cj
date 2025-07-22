@@ -7,6 +7,7 @@ import magic.jsonable.{TypeSchema, ToJsonValue}
 import std.collection.HashMap
 
 public interface Tool <: ToString {
+    prop group: String
     /**
      * Unique id of a tool
      */

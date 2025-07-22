@@ -13,6 +13,9 @@ import magic.log.LogUtils
  * Currently, clients support listing/calling tools
  */
 public interface MCPClient {
+
+    prop group: String
+    
     func getTools(): Array<Tool>
 
     func callTool(name: String, args: Array<(String, ToJsonValue)>): ToolResponse

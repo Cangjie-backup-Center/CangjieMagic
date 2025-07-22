@@ -11,6 +11,7 @@ import magic.log.LogUtils
 import magic.prompt.Template
 internal import magic.parser.{Tag, WithTag}
 import std.collection.{map, collectArray}
+import magic.tool.ManagerTool
 
 // Modified from https://smith.langchain.com/hub/hwchase17/react
 protected let REACT_SYSTEM_PROMPT = """
@@ -121,6 +122,18 @@ protected struct ReactPromptUtils {
         let tools = task.availableTools
         if (tools.size == 0) {
             return "# Available Tools\nNo tools"
+        }
+        // TODO：临时这么写吧！！
+        if (tools.size == 1) {
+            if (let Some(managerTool) <- (tools[0] as ManagerTool)) {
+                return  """
+${managerTool.getAllToolSummarize()}
+
+# Available Tools
+
+${managerTool.toString()}
+"""
+            }
         }
         let toolStringArr = tools |> map { t: Tool => t.toString() } |> collectArray
         let str = String.join(toolStringArr, delimiter: ",\n")

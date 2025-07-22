@@ -35,6 +35,12 @@ public class SseMCPClient <: AbsMCPClient {
         this.doInit()
     }
 
+    public prop group: String {
+        get() {
+            userURL
+        }
+    }
+    
     private prop sseStream: SSEventStream {
         get() { this._sseStream.getOrThrow() }
     }

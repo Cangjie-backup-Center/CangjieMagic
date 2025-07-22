@@ -17,6 +17,10 @@ protected class ChatModelTool <: AbsTool {
         this.model = model
     }
 
+    public prop group: String {
+        get() { "chat_model" }
+    }
+
     public prop name: String {
         get() { "chat_model" }
     }

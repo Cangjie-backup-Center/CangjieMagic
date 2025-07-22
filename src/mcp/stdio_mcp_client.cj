@@ -23,16 +23,23 @@ public class StdioMCPClient <: AbsMCPClient {
     private let server: SubProcess
     private let writer: StringWriter<OutputStream>
     private let reader: StringReader<InputStream>
+    private let command:String 
 
     public init(command: String, args: Array<String>, env!: Array<(String, String)> = []) {
         // Start the MCP server process
-        LogUtils.info("Start MCP Server: `${command} ${String.join(args, delimiter: " ")}`")
+        this.command = "`${command} ${String.join(args, delimiter: " ")}`"
+        LogUtils.info("Start MCP Server: ${this.command}")
         server = newProcess(command, args, env: env, redirectErr: false)
         writer = StringWriter(server.stdIn)
         reader = StringReader(server.stdOut)
         this.initialize()
     }
 
+    public prop group: String {
+        get() {
+            command
+        }
+    }
     override protected func doSend(req: JsonObject): Bool {
         let msg = req.toJsonValue().toString()
         LogUtils.debug("Send: ${msg}")

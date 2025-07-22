@@ -43,6 +43,9 @@ open public class NativeFuncTool <: AbsTool {
         }
     }
 
+    public prop group: String {
+        get() { "__native__tools__" }
+    }
     public prop name: String {
         get() { _name }
     }

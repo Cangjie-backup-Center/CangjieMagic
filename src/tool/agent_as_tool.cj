@@ -16,6 +16,10 @@ protected class AgentAsTool <: AbsTool {
         this.agent = agent
     }
 
+    public prop group: String {
+        get() { this.agent.name }
+    }
+    
     public prop name: String {
         get() { this.agent.name }
     }

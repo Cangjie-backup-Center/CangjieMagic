@@ -21,6 +21,10 @@ protected class MCPToolWrapper <: Tool {
         this.mcpTool = mcpTool
     }
 
+    public prop group: String {
+        get() { this.client.group }
+    }
+
     public prop name: String {
         get() { this.mcpTool.name }
     }
