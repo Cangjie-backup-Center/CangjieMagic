@@ -305,7 +305,7 @@ import magic.interaction.ConsolePrinter
 
 let agent = FooAgent()
 
-let asyncResp = agent.asyncChat("question", verbose: true)
+let asyncResp = agent.asyncChat(AgentRequest("questions", verbose: true))
 ConsolePrinter.print(asyncResp, verbose: true)
 ```
 
