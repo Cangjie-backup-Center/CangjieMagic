@@ -898,6 +898,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 | SiliconFlow | `siliconflow:deepseek-ai/DeepSeek-V3` | `SILICONFLOW_API_KEY` | `SILICONFLOW_BASE_URL`，默认 `https://api.siliconflow.cn/v1` |
 | 智谱 AI | `zhipuai:glm-4` | `ZHIPUAI_API_KEY` | `ZHIPUAI_BASE_URL`，默认 `https://open.bigmodel.cn/api/paas/v4` |
 | Google | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` | `GOOGLE_BASE_URL`，默认 `https://generativelanguage.googleapis.com/v1beta/openai` |
+| 月之暗面 | `moonshot:kimi-k2-0711-preview` | `MOONSHOT_API_KEY` | `MOONSHOT_BASE_URL`，默认 `https://api.moonshot.cn/v1` |
 
 模型配置不仅可以在 `@agent` 的 `model` 属性中使用，还可以直接通过 `ModelManager` 的静态成员方法来直接构造模型实例：`static func createChatModel(modelName: String): ChatModel`。
 
@@ -914,6 +915,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 | SiliconFlow | ✔️ | ✔️ | ✔️ |
 | 智谱 AI | ✔️ | ❌ | ❌ |
 | Google | ✔️ | ❌ | ❌ |
+| 月之暗面 | ✔️ | ❌ | ❌ |
 
 如果需要接入新的模型，可参考直接使用 API 设置（见下文）。
 
