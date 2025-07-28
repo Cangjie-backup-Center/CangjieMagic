@@ -3,16 +3,16 @@
  */
 package magic.interaction
 
-import magic.core.agent.{Agent, AgentRequest, AgentResponse, AsyncAgentResponse}
+import magic.core.agent.*
 
 public func interaction(agent: Agent, request!: AgentRequest,
                                       manager!: EventHandlerManager): AgentResponse {
-    request.extra[EventHandlerManager.CLASS_NAME] = manager
+    request.extra[AgentRequestExtra.EVENT_HANDLER] = manager
     return agent.chat(request)
 }
 
 public func asyncInteraction(agent: Agent, request!: AgentRequest,
                                            manager!: EventHandlerManager): AsyncAgentResponse {
-    request.extra[EventHandlerManager.CLASS_NAME] = manager
+    request.extra[AgentRequestExtra.EVENT_HANDLER] = manager
     return agent.asyncChat(request)
 }

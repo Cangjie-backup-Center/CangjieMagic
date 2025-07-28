@@ -64,7 +64,7 @@ public open class AgentTask {
 
     private static func installVerboseEventHandlers(request: AgentRequest, execution: AgentExecutionInfo): Unit {
         let manager = EventHandlerManager()
-        let install = if (let Some(flag) <- request.extra.get("install-verbose-event-handler")) {
+        let install = if (let Some(flag) <- request.extra.get(AgentRequestExtra.INSTALL_VERBOSE_EVENT_HANDLER)) {
             (flag as AtomicBool).getOrThrow().load()
         } else {
             true
@@ -81,10 +81,10 @@ public open class AgentTask {
         }
         // If event handlers exist, add new handlers, and update the request
         // Note new handlers will be added before existed handlers
-        if (let Some(object) <- request.extra.get(EventHandlerManager.CLASS_NAME)) {
+        if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER)) {
             manager.merge((object as EventHandlerManager).getOrThrow())
         }
-        request.extra[EventHandlerManager.CLASS_NAME] = manager
+        request.extra[AgentRequestExtra.EVENT_HANDLER] = manager
     }
 
     /**
@@ -210,7 +210,7 @@ public open class AgentTask {
                 case None =>
                     let result = ArrayList<EventHandlerManager>()
                     // First, event handlers for the request
-                    if (let Some(object) <- this.request.extra.get(EventHandlerManager.CLASS_NAME)) {
+                    if (let Some(object) <- this.request.extra.get(AgentRequestExtra.EVENT_HANDLER)) {
                         result.add((object as EventHandlerManager).getOrThrow())
                     }
                     // Then, event handlers of the agent

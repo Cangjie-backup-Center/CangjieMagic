@@ -6,6 +6,7 @@ package magic.agent_executor.react
 import magic.parser.{ParserUtils, ParserException}
 import magic.core.tool.ToolRequest
 import magic.log.LogUtils
+import magic.parser.{WithTag, Tag}
 
 protected enum FailureLevel {
     | Repairable

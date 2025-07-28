@@ -55,11 +55,20 @@ public class AgentRequest {
      *    An agent request may be handled by multiple agents,
      *    so this field stores previous execution info
      *
-     * - "EventHandlerManager.CLASS_NAME": EventHandlerManager
+     * - AgentRequestExtra.EVENT_HANDLER: EventHandlerManager
      *    Users can register event handlers for each request
      * - "install-verbose-event-handler": AtomicBool
      *    Subagents may inherit event handlers from its parent agent
      *    Default: true
+     * - "output-schema": TypeSchema
      */
-    protected let extra = HashMap<String, Object>()
+    protected let extra = HashMap<String, Any>()
+}
+
+protected class AgentRequestExtra {
+    protected static let EVENT_HANDLER = "event-handler-manager"
+
+    protected static let INSTALL_VERBOSE_EVENT_HANDLER = "install-verbose-event-handler"
+
+    protected static let OUTPUT_SCHEMA = "output-schema"
 }

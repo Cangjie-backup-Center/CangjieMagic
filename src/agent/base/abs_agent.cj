@@ -5,30 +5,11 @@ package magic.agent.base
 
 import magic.core.agent.*
 import magic.core.message.Message
-import magic.core.model.ChatModel
-import magic.model.ModelUtils
 import magic.config.Config
+import magic.model.ModelUtils
 import magic.jsonable.Jsonable
-import std.collection.{HashMap, map, collectArray}
 import magic.log.LogUtils
 import magic.parser.{ParserUtils, ParserException}
-import magic.prompt.Template
-
-private let QUESTION_WITH_JSON_CONSTRAINT = """
-The output must be a valid JSON value wrapped by ```json and ```.
-For example,
-```json 1 ```
-```json "result" ```
-```json [1, 2, 3] ```
-```json ["abc", "opq", "xyz"] ```
-
-The json value must obey the type schema:
-"schema": {
-  { schema }
-}
-
-Question: { question }
-"""
 
 //------------------------------------------------
 // The agent type hierarchy:
@@ -77,13 +58,8 @@ public abstract class AbsAgent <: Agent {
      * and convert the response content to the required type
      */
     public func chatGet<T>(request: AgentRequest): Option<T> where T <: Jsonable<T> {
-        let schema = T.getTypeSchema()
-        let fullQuestion = QUESTION_WITH_JSON_CONSTRAINT.format(
-            ("schema", schema),
-            ("question", request.question)
-        )
-
-        let resp = this.chat(AgentRequest(fullQuestion, conversation: request.conversation))
+        request.extra.add(AgentRequestExtra.OUTPUT_SCHEMA, T.getTypeSchema())
+        let resp = this.chat(request)
         // Reuse the message list
         var (answer, messageList) = (resp.content, resp.execution.messages)
         for (_ in 0..Config.outputRepairRetryNumber) {
@@ -91,7 +67,8 @@ public abstract class AbsAgent <: Agent {
             try {
                 return ParserUtils.extractLastValue<T>(answer)
             } catch(_: ParserException) {
-                let userMsg = Message.user("Output does not obey the type schema.")
+                let schema = T.getTypeSchema()
+                let userMsg = Message.user("Output does not follow the type schema: ${schema}")
                 LogUtils.info(this.name, userMsg)
                 messageList.addMessage(userMsg)
                 // Continue to let the model repair the output
@@ -104,7 +81,7 @@ public abstract class AbsAgent <: Agent {
                 resp.execution.setAnswer(answer)
             }
         }
-        LogUtils.error("${this.name}: Fail to generate an output obeying the type schema")
+        LogUtils.error("${this.name}: Fail to generate an output following the type schema")
         return None
     }
 }

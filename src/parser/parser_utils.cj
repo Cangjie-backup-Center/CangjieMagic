@@ -28,7 +28,7 @@ public struct ParserUtils {
                 let posAfterEndMark = pos + langEndMark.size
                 // Case 1: ``` is found, which is a close mark
                 if (posAfterEndMark == str.size ||
-                    str[posAfterEndMark].isAsciiWhiteSpace()) {
+                    !str[posAfterEndMark].isAsciiLetter()) {
                     if (nested == 0) {
                         return str[contentStart..pos].trimAscii()
                     } else {
@@ -111,7 +111,7 @@ public struct ParserUtils {
     public static func parseToolRequest(str: String): ToolRequest {
         let json = JsonValue.fromStr(str)
         let name = JsonUtils.getString(json, "name").getOrThrow({
-            => ParserException("Failed to parse tool request: there is no name")
+            => ParserException("Failed to parse tool request: tool name is missing")
         })
         let args = (JsonUtils.getJsonObject(json, "arguments") ?? JsonObject()).getFields()
         return ToolRequest(name: name, args: args)
