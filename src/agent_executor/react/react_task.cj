@@ -9,7 +9,7 @@ import magic.core.message.{Message, MessageList}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.utils.sleep2
-import magic.parser.{TagStreamParser, ParserException}
+import magic.parser.{TagStreamParser, ParserException, WithTag, Tag}
 
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
@@ -102,7 +102,7 @@ protected class ReactTask <: AgentTask {
         let step = try {
             // Add a hint message
             this.execution.addMessage(
-                Message.system("Decide what to do next. Output a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}, or a single ${Tag.ANSWER}")
+                Message.system(REACT_STEP_PROMPT)
             )
             this.getNextReactStep()
         } finally {
@@ -176,7 +176,7 @@ protected class ReactTask <: AgentTask {
         this.step += 1
         // Add a hint message
         this.execution.addMessage(
-            Message.system("Decide what to do next. Output a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}, or a single ${Tag.ANSWER}")
+            Message.system(REACT_STEP_PROMPT)
         )
         let asyncReactStep = this.getAsyncReactStep()
         // remove the hint message

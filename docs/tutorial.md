@@ -15,6 +15,7 @@
   - [MCP 协议和工具](#mcp-协议和工具)
     - [工具函数编写](#工具函数编写)
     - [使用工具和 MCP 服务器](#使用工具和-mcp-服务器)
+    - [工具额外属性设置](#工具额外属性设置)
   - [规划](#规划)
     - [Agent 执行 DSL（实验）](#agent-执行-dsl实验)
   - [外部知识](#外部知识)
@@ -515,7 +516,6 @@ let resp2 = agent.chat(
 func foo(arg: String): String { ... }
 ```
 
-
 **示例：定义内部工具**
 
 ```cangjie
@@ -586,6 +586,21 @@ agent.toolManager.addTools(client.getTools())
     ]
 ]
 class Foo { ... }
+```
+
+### 工具额外属性设置
+
+所有工具都允许通过特殊成员变量 `extra: HashMap<String, String>` 来保存额外的属性值。当前有两个特殊属性值：
+
+- `filterable: "true" | "false"` 是否可以被 Agent 过滤，配合 `agent.toolManager.enableFilter` 设置使用
+- `terminal: "true" | "false"` 是否终止 Agent 执行，当设置为 `true` 时，Agent 执行这个工具后将直接结束，并且函数的返回值作为 Agent 执行结果
+
+**示例：设置工具额外属性**
+
+```cangjie
+let tool: Tool = getSomeTool()
+tool.extra["filterable"] = "false"
+tool.extra["terminal"] = "true"
 ```
 
 ## 规划
@@ -677,7 +692,7 @@ class Bar{ }
 | 操作符      | 作用             |
 |-------------|----------------|
 | `divide` | 由 LLM 拆分任务为子问题，子问题数由 LLM 自动决定 |
-| `each` | 处理子任务 | 
+| `each` | 处理子任务 |
 | `summary` | 汇总子任务结果 |
 
 **复杂操作：条件控制**

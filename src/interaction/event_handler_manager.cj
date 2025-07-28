@@ -24,8 +24,6 @@ public type UserInputEventEventHandler = (UserInputEvent) -> EventResponse<Strin
 public type NotifyEventEventHandler = (NotifyEvent) -> EventResponse<Unit>
 
 public class EventHandlerManager {
-    protected static let CLASS_NAME = "event-handler-manager"
-
     public EventHandlerManager(
         private let name!: String = randomString(size: 8)
     ) { }

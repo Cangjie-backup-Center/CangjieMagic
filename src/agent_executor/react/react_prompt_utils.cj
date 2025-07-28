@@ -4,15 +4,19 @@
 package magic.agent_executor.react
 
 import magic.core.*
+import magic.core.agent.AgentRequestExtra
 import magic.agent_executor.common.AgentTask
 import magic.core.message.{Message, Conversation}
 import magic.agent_executor.common.PromptBuilder
 import magic.log.LogUtils
 import magic.prompt.Template
-internal import magic.parser.{Tag, WithTag}
+import magic.parser.{Tag, WithTag}
+import magic.jsonable.TypeSchema
+
+import stdx.encoding.json.JsonObject
 
 // Modified from https://smith.langchain.com/hub/hwchase17/react
-protected let REACT_SYSTEM_PROMPT = """
+protected let REACT_SYSTEM_PROMPT_PREFIX = """
 # Guidelines
 Use the following format to accomplish user's request:
 ${Tag.THOUGHT} think about what to do next to solve the question ${Tag.THOUGHT.getCloseTag()}
@@ -40,13 +44,28 @@ ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.getCloseTag()}
 ${Tag.ANSWER} the final answer to the original input question ${Tag.ANSWER.getCloseTag()}
 
 NEVER generate ${Tag.OBSERVATION} yourself. This is an important requirement.
+If there are no available tools, generate final answer directly.
 
-You must generate either a pair of ${Tag.THOUGHT} and ${Tag.ACTION} or a pair of ${Tag.THOUGHT} and ${Tag.ANSWER}
+You must generate either a pair of ${Tag.THOUGHT} and ${Tag.ACTION} or a single ${Tag.ANSWER}.
+"""
+
+protected let REACT_SYSTEM_PROMPT = """
+${REACT_SYSTEM_PROMPT_PREFIX}
+
 Examples:
-Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.getCloseTag()} ${Tag.ACTION} ... ${Tag.ACTION.getCloseTag()}
-Output: ${Tag.THOUGHT} I know the final answer now ${Tag.THOUGHT.getCloseTag()} ${Tag.ANSWER} ... ${Tag.ANSWER.getCloseTag()}
+Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.getCloseTag()} ${Tag.ACTION} ```json <a JSON object representing the tool usage> ``` ${Tag.ACTION.getCloseTag()}
+Output: ${Tag.ANSWER} <output result here> ${Tag.ANSWER.getCloseTag()}
+"""
 
-- If there are no available tools, generate final answer directly.
+protected let REACT_SYSTEM_PROMPT_WITH_STRUCTURE_OUTPUT = """
+${REACT_SYSTEM_PROMPT_PREFIX}
+
+You MUST output a JSON value obey the schema as the answer. The schema to follow:
+{output_schema}
+
+Examples:
+Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.getCloseTag()} ${Tag.ACTION} ```json <a JSON object representing the tool usage> ``` ${Tag.ACTION.getCloseTag()}
+Output: ${Tag.ANSWER} ```json <output a JSON value here as the answer> ``` ${Tag.ANSWER.getCloseTag()}
 """
 
 private let REACT_SUMMARIZE_SYSTEM_PROMPT = """
@@ -83,10 +102,25 @@ private let REACT_SUMMARIZE_USER_PROMPT = """
 Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}
 """
 
+let REACT_STEP_PROMPT = """
+Decide what to do next.
+Output either a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, or a single ${Tag.ANSWER}.
+"""
+
 protected struct ReactPromptUtils {
+    private static func buildReactSystemPrompt(task: AgentTask): String {
+        return task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
+            .map { schema =>
+                REACT_SYSTEM_PROMPT_WITH_STRUCTURE_OUTPUT.format([
+                    ("output_schema", (schema as TypeSchema).getOrThrow())
+                ])
+            }
+            .getOrDefault({ => REACT_SYSTEM_PROMPT.trimAscii() })
+    }
+
     static func buildReactPrompt(task: AgentTask): Array<Message> {
         PromptBuilder()
-            .system(REACT_SYSTEM_PROMPT.trimAscii())
+            .system(ReactPromptUtils.buildReactSystemPrompt(task))
             .tool(PromptBuilder.buildAgentToolsPrompt(task))
             .system(task.agent.systemPrompt)
             .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))

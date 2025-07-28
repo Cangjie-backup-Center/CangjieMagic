@@ -4,17 +4,14 @@
 package magic.agent_executor.dsl
 
 import magic.core.agent.*
-import magic.core.tool.{Tool, ToolException}
+import magic.core.tool.Tool
 import magic.core.message.{Message, MessageList}
-import magic.core.model.{ChatRequest}
 import magic.agent_executor.common.{AgentTask, PromptBuilder}
 import magic.model.ModelUtils
 import magic.prompt.Template
 import magic.parser.{Tag, WithTag, ParserUtils}
-import magic.tool.NativeFuncTool
 import magic.log.LogUtils
-import magic.jsonable.Jsonable
-import magic.jsonable.TypeSchema
+import magic.jsonable.{Jsonable, TypeSchema}
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import stdx.encoding.json.*
@@ -44,28 +41,6 @@ public struct OnCase {
  * It includes operations like planning, thinking, invoking tools, and handling subtasks.
  */
 public struct ExecutionOpSet {
-    /**
-     * A special fake tool
-     * This tool is used to provide the final answer after all steps are completed
-     * There is an internal **trick** that we can inject our answer tool with the same name
-     */
-    static let ANSWER_TOOL = NativeFuncTool(
-        name: "_answer_",
-        description: "This is a special tool that can only be used after you complete all the steps and resolve the task. You use this tool to provide the user with the final answer. If you interact with them using this tool without finishing the task, the user will get upset.",
-        parameters: [
-            ("result", "The final result", TypeSchema.Str)
-        ],
-        terminal: true,
-        filterable: false,
-        execFn: { args: HashMap<String, JsonValue> =>
-            // The result is the final answer
-            return args.get("result")
-                .getOrThrow({ => ToolException("The result parameter is required for the answer tool") })
-                .asString()
-                .getValue()
-        }
-    )
-
     private static func chatWithOperation(state: ExecutionState,
                                           operationPrompt: String,
                                           stop!: Option<Array<String>>): Message {
@@ -144,8 +119,11 @@ public struct ExecutionOpSet {
         }
         // Inject a special tool
         var isInjected = false
-        if (let None <- state.task.agent.toolManager.findTool(ANSWER_TOOL.name)) {
-            state.task.agent.toolManager.addTool(ANSWER_TOOL)
+        let schema = state.task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
+            .flatMap { value: Any => (value as TypeSchema) }
+        let answerTool = buildAnswerTool(schema)
+        if (state.task.agent.toolManager.findTool(answerTool.name).isNone()) {
+            state.task.agent.toolManager.addTool(answerTool)
             isInjected = true
         }
         let prompt = ACTION_PROMPT.format([
@@ -161,7 +139,7 @@ public struct ExecutionOpSet {
         } finally {
             // Remove the injected tool
             if (isInjected) {
-                state.task.agent.toolManager.delTool(ANSWER_TOOL)
+                state.task.agent.toolManager.delTool(answerTool)
             }
         }
     }
@@ -178,7 +156,14 @@ public struct ExecutionOpSet {
         if (state.done) {
             return state
         }
-        let msg = chatWithOperation(state, ANSWER_PROMPT, stop: [])
+        let prompt = state.task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
+            .map { schema =>
+                ANSWER_WITH_STRUCTURE_OUTPUT_PROMPT.format([
+                    ("output_schema", (schema as TypeSchema).getOrThrow())
+                ])
+            }
+            .getOrDefault({ => ANSWER_PROMPT})
+        let msg = chatWithOperation(state, prompt, stop: [])
         // Parse the response
         LogUtils.info(state.task.agent.name, "ANSWER: ${msg.content}")
         state.task.execution.addStepMessage(Message.assistant(msg.content.withTag(Tag.ANSWER)))

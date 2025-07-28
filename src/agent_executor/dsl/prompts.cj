@@ -54,6 +54,22 @@ ${EXECUTION_DEFINITION}
 Wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}.
 """
 
+let ANSWER_WITH_STRUCTURE_OUTPUT_PROMPT = """
+Based on the execution, answer the user question now.
+${EXECUTION_DEFINITION}
+
+Wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}.
+
+You MUST output a JSON value obey the schema as the answer. The schema to follow:
+{output_schema}
+
+Examples:
+Output:
+${Tag.ANSWER} ```json 1 ``` ${Tag.ANSWER.getCloseTag()}
+${Tag.ANSWER} ```json "result" ``` ${Tag.ANSWER.getCloseTag()}
+${Tag.ANSWER} ```json ["abc", "xyz"] ``` ${Tag.ANSWER.getCloseTag()}
+"""
+
 let THINK_PROMPT = """
 Based on the execution, make a reflection on the previous execution and think about the next steps you should do.
 Just make high-level thoughts, NEVER use tools.

@@ -28,18 +28,23 @@ public interface Tool <: ToJsonValue {
 
     /**
      * Return type of the tool
-     * Not used currently.
+     * Not used currently
      */
     prop retType: TypeSchema
 
     /**
      * Examples of how to call the tool
-     * Optional.
+     * Optional
      */
     prop examples: Array<String>
 
     /**
      * Extra customized attributes
+     * available attributes:
+     * - "filterable":  "false" | "true",
+     *   whether this tool can be filtered out before agent executions
+     * - "terminal": "true" | "true",
+     *   whether this tool will terminate the agent execution
      */
     prop extra: HashMap<String, String>
 

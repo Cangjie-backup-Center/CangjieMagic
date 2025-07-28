@@ -15,6 +15,7 @@
   - [MCP Protocol and Tools](#mcp-protocol-and-tools)
     - [Writing Tool Functions](#writing-tool-functions)
     - [Using Tools and MCP Servers](#using-tools-and-mcp-servers)
+    - [Additional Tool Property Settings](#additional-tool-property-settings)
   - [Planning](#planning)
     - [Agent Execution DSL (Experimental)](#agent-execution-dsl-experimental)
   - [External Knowledge](#external-knowledge)
@@ -429,56 +430,71 @@ Limitations on tool functions:
 
 ### Using Tools and MCP Servers
 
-The `tools` attribute configures the MCP servers and custom tool functions used by the Agent. This attribute accepts multiple MCP servers or tool functions, each configured with the following syntax:  
+The `tools` attribute configures the MCP servers and custom tool functions used by the Agent. This attribute accepts multiple MCP servers or tool functions, each configured with the following syntax:
 
-- **MCP server using the `stdio` protocol:** `stdioMCP(<command>, <env-kv-pair>*)` specifies the command to start the MCP server along with optional environment variables.  
-  Example: `stdioMCP("command and arguments", ENV_1: "value1", ENV_2: "value2")`.  
+- **MCP server using the `stdio` protocol:** `stdioMCP(<command>, <env-kv-pair>*)` specifies the command to start the MCP server along with optional environment variables.
+  Example: `stdioMCP("command and arguments", ENV_1: "value1", ENV_2: "value2")`.
 
-- **MCP server using the `http/sse` protocol:** `mcpHttp(<url>)` specifies the URL of the MCP server.  
-  Example: `httpMCP("https://abc.com/mcp")`.  
+- **MCP server using the `http/sse` protocol:** `mcpHttp(<url>)` specifies the URL of the MCP server.
+  Example: `httpMCP("https://abc.com/mcp")`.
 
-- **Tool functions:** `<func-id>+`, such as `foo, bar`.  
-  ⚠️ Note: If a tool is defined within the `Agent` class, it can be used directly by that Agent without explicit declaration in the `tools` attribute.  
+- **Tool functions:** `<func-id>+`, such as `foo, bar`.
+  ⚠️ Note: If a tool is defined within the `Agent` class, it can be used directly by that Agent without explicit declaration in the `tools` attribute.
 
-```cangjie  
-@agent[  
-    tools: [  
-        stdioMCP("node index.js args"),  
-        stdioMCP("python main.py args", SOME_API_KEY: "xxx"),  
-        httpMCP("http://abc.mcp.server.com"),  
-        toolA,  
-        toolB  
-    ]  
-]  
-class Foo { ... }  
-```  
+```cangjie
+@agent[
+    tools: [
+        stdioMCP("node index.js args"),
+        stdioMCP("python main.py args", SOME_API_KEY: "xxx"),
+        httpMCP("http://abc.mcp.server.com"),
+        toolA,
+        toolB
+    ]
+]
+class Foo { ... }
+```
 
-Alternatively, MCP tools can be configured via API:  
+Alternatively, MCP tools can be configured via API:
 
-```cangjie  
-// Initialize MCP client  
-let client = MCPClient("node", ["args"])  
-let agent = SomeAgent()  
-// Add MCP tools  
-agent.toolManager.addTools(client.getTools())  
-```  
+```cangjie
+// Initialize MCP client
+let client = MCPClient("node", ["args"])
+let agent = SomeAgent()
+// Add MCP tools
+agent.toolManager.addTools(client.getTools())
+```
 
-⚠️ Note: Currently, MCP servers only support tool-related MCP protocols.  
+⚠️ Note: Currently, MCP servers only support tool-related MCP protocols.
 
-Additionally, **MCP servers can be configured in JSON syntax** within the `tools` attribute:  
+Additionally, **MCP servers can be configured in JSON syntax** within the `tools` attribute:
 
-- **`stdio` transport:** Configured with `command` (startup command), `args` (startup arguments), and optionally `env` (environment variables).  
-- **`HTTP/SSE` transport:** Configured with `url` (MCP server address).  
+- **`stdio` transport:** Configured with `command` (startup command), `args` (startup arguments), and optionally `env` (environment variables).
+- **`HTTP/SSE` transport:** Configured with `url` (MCP server address).
 
-```cangjie  
-@agent[  
-    tools: [  
-        { command: "node", args: ["index.js", "args"] },  
-        { command: "python", args: ["main.py", "args"], env: { SOME_API_KEY: "xxx" } },  
-        { url: "http://abc.mcp.server.com" }  
-    ]  
-]  
-class Foo { ... }  
+```cangjie
+@agent[
+    tools: [
+        { command: "node", args: ["index.js", "args"] },
+        { command: "python", args: ["main.py", "args"], env: { SOME_API_KEY: "xxx" } },
+        { url: "http://abc.mcp.server.com" }
+    ]
+]
+class Foo { ... }
+```
+
+### Additional Tool Property Settings
+
+All tools support storing extra property values through the special member variable `extra: HashMap<String, String>`. Currently, there are two special property values:
+
+- `filterable: "true" | "false"` – Determines whether the tool can be filtered by the Agent, used in conjunction with the `agent.toolManager.enableFilter` setting.
+- `terminal: "true" | "false"` – Determines whether it terminates Agent execution. When set to `true`, the Agent will immediately end after executing this tool, and the function's return value will be used as the Agent's execution result.
+
+**Example: Setting Tool Extra Properties**
+
+```cangjie
+let tool: Tool = getSomeTool()
+tool.extra["filterable"] = "false"
+tool.extra["terminal"] = "true"
 ```
 
 ## Planning
@@ -748,35 +764,35 @@ ag1 | subGroup(ag2 <= [ag3], description: "An subgroup attempts to ...") | ag4 /
 
 ## AI Function Shortcut
 
-`@ai` can be used to annotate functions, indicating that the function's execution will be performed by an LLM.  
+`@ai` can be used to annotate functions, indicating that the function's execution will be performed by an LLM.
 
-Functions decorated with `@ai` must be declared as `foreign`, meaning their implementation resides on the model side, making them foreign functions from the perspective of the current code.  
+Functions decorated with `@ai` must be declared as `foreign`, meaning their implementation resides on the model side, making them foreign functions from the perspective of the current code.
 **Requirements**: **The parameter types and return type of the function must satisfy the `Jsonable` interface.**
 
-Additionally, the `@ai` decorator supports the following attributes:  
+Additionally, the `@ai` decorator supports the following attributes:
 
-| Attribute    | Type      | Description |  
-|--------------|-----------|-------------|  
-| `prompt`     | `String`  | Additional instructions for the AI function. |  
-| `model`      | `String`  | Specifies the LLM model provider to use. |  
-| `tools`      | `Array`   | Configures the external tools available for use. |  
-| `temperature`| `Float`   | The `temperature` value used by the agent when invoking the LLM. |  
-| `dump`       | `Bool`    | Used for debugging—if `true`, prints the agent's transformed AST; defaults to `false`. |  
+| Attribute    | Type      | Description |
+|--------------|-----------|-------------|
+| `prompt`     | `String`  | Additional instructions for the AI function. |
+| `model`      | `String`  | Specifies the LLM model provider to use. |
+| `tools`      | `Array`   | Configures the external tools available for use. |
+| `temperature`| `Float`   | The `temperature` value used by the agent when invoking the LLM. |
+| `dump`       | `Bool`    | Used for debugging—if `true`, prints the agent's transformed AST; defaults to `false`. |
 
-**Example**:  
+**Example**:
 
-```cangjie  
-@tool[description: "Fetches the html content of a URL."]  
-func fetch(url: String): String { ... }  
+```cangjie
+@tool[description: "Fetches the html content of a URL."]
+func fetch(url: String): String { ... }
 
-@ai[  
-    prompt: "No more than 3 keywords",  
-    tools: [fetch]  
-]  
-foreign func keywordsOf(url: String): Array<String>  
+@ai[
+    prompt: "No more than 3 keywords",
+    tools: [fetch]
+]
+foreign func keywordsOf(url: String): Array<String>
 
-main() { keywordsOf("https://cangjie-lang.cn/") }  
-```  
+main() { keywordsOf("https://cangjie-lang.cn/") }
+```
 
 
 ## Model Configuration

@@ -79,11 +79,11 @@ class ReactWorker <: BaseAgent {
             REACT_WORKER_USER_PROMPT.format(("task", subtask.complexDescription)),
             verbose: this.planTask.request.verbose
         )
-        if (let Some(object) <- this.planTask.request.extra.get(EventHandlerManager.CLASS_NAME)) {
-            request.extra[EventHandlerManager.CLASS_NAME] = object
+        if (let Some(object) <- this.planTask.request.extra.get(AgentRequestExtra.EVENT_HANDLER)) {
+            request.extra[AgentRequestExtra.EVENT_HANDLER] = object
         }
         // There is no need to install verbose event handlers for subtasks
-        request.extra["install-verbose-event-handler"] = AtomicBool(false)
+        request.extra[AgentRequestExtra.INSTALL_VERBOSE_EVENT_HANDLER] = AtomicBool(false)
         return request
     }
 
