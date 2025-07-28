@@ -14,6 +14,7 @@ import magic.config.Config
 import std.io.{StringReader, StringWriter, OutputStream, InputStream}
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import std.time.DateTime
+import stdx.encoding.url.URL
 import stdx.encoding.json.{JsonValue, JsonObject}
 
 /**
@@ -69,7 +70,8 @@ public class SseMCPClient <: AbsMCPClient {
         let header = HashMap<String, String>([
             ("Content-Type", "application/json")
         ])
-        let resp = HttpUtils.post("${this.baseURL}${this.endpoint}", header, req, verify: false)
+        let url = URL.parse(this.baseURL).resolveURL(URL.parse(this.endpoint))
+        let resp = HttpUtils.post("${url}", header, req, verify: false)
         return !resp.isNone()
     }
 
