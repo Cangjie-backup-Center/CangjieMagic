@@ -67,9 +67,7 @@ func resultSummarize(planTask: PlanTask): String {
     let messages = MessageList([
         Message.user(buildSummarizePrompt(planTask))
     ])
-    return planTask.chatLLM(messages).getOrThrow({ =>
-        AgentExecutionException("Fail to get chat model response")
-    }).content
+    return planTask.chatLLM(messages).content
 }
 
 func asyncResultSummarize(planTask: PlanTask): Iterator<String> {

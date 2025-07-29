@@ -81,9 +81,10 @@ protected struct HttpUtilsImpl {
         let (resp, status) = HttpUtilsImpl.parseOutput(out)
         LogUtils.debug("Raw http response: ${out}")
         if (status != "200" && status != "202") {
+            let msg = "Http status: ${status}.\nHttp response: ${resp}"
             LogUtils.error("curl ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
-            LogUtils.error("Status: ${status}. Response: ${resp}")
-            return None
+            LogUtils.error(msg)
+            throw HttpException(msg)
         } else {
             return resp
         }

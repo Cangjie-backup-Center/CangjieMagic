@@ -10,7 +10,9 @@ import std.collection.HashMap
 import stdx.encoding.json.JsonObject
 
 protected class HttpException <: Exception {
-    protected init(msg: String) { super(msg) }
+    protected HttpException(
+        protected let error: String
+    ) { super(error) }
 }
 
 func logHttpInfo(method: String, url: String, header: HashMap<String, String>, body: Option<JsonObject>, async!: Bool = false) {

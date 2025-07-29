@@ -224,15 +224,18 @@ public class OpenAIChatModel <: ChatModel {
         let (header, req) = prepareHeaderAndRequest(chatReq, stream: false)
         let start = DateTime.now()
 
-        match (HttpUtils.post("${this.baseURL}/chat/completions", header, req)) {
-            case Some(body) =>
-                if (body == "") {
-                    throw ModelException("Http response body is empty")
-                } else {
-                    let duration = DateTime.now() - start
-                    return parseChatResponse(body, duration)
-                }
-            case None => throw ModelException("Fail to get chat http response")
+        try {
+            match (HttpUtils.post("${this.baseURL}/chat/completions", header, req)) {
+                case Some(body) =>
+                    if (body.isEmpty()) {
+                        throw ModelException("Http response body is empty")
+                    } else {
+                        return parseChatResponse(body, DateTime.now() - start)
+                    }
+                case None => throw ModelException("Fail to get chat http response")
+            }
+        } catch (ex: HttpException) {
+            throw ModelException("Fail to get chat http response.\n${ex.error}")
         }
     }
 
@@ -294,7 +297,6 @@ public class OpenAIChatModel <: ChatModel {
         request.put("messages", ja)
     }
 
-    // cjlint-ignore -start !G.FUNC.01 !G.ERR.03
     private func parseChatResponse(body: String, duration: Duration): ChatResponse {
         let resp = OpenAIChatResponse.fromJsonValue(JsonValue.fromStr(body))
         let messageList = MessageList()
@@ -314,7 +316,7 @@ public class OpenAIChatModel <: ChatModel {
             totalTokens: resp.usage.total_tokens,
             timeCost: duration
         )
-        return ChatResponse(messageList, resp.model, usage: usage)
+        return ChatResponse(resp.model, messageList, usage: usage)
     }
 
     override public func asyncCreate(chatReq: ChatRequest): AsyncChatResponse {

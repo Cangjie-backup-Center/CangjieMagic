@@ -6,7 +6,7 @@ package magic.agent_executor.common
 import magic.agent.base.AgentExecutionInfo
 import magic.core.agent.*
 import magic.core.message.{Message, MessageRole, MessageList}
-import magic.core.model.{ChatRequest, ChatResponse}
+import magic.core.model.{ChatRequest, ChatResponse, ModelException}
 import magic.core.tool.*
 import magic.core.interaction.*
 import magic.jsonable.ToJsonValue
@@ -108,7 +108,8 @@ public open class AgentTask {
     /**
      * Note that: ALWAYS call this method to use the LLM
      */
-    protected func chatLLM(messages: MessageList, stop!: Option<Array<String>> = None): Option<Message> {
+    protected func chatLLM(messages: MessageList, stop!: Option<Array<String>> = None): Message {
+        // Validate the system prompt if necessary
         if (!messages.isEmpty() && messages[0].role == MessageRole.System) {
             let sysPrompt = messages[0].content
             match (this.handle(PromptValidateEvent(this.agent, sysPrompt))) {
@@ -118,24 +119,25 @@ public open class AgentTask {
                     if (!status) {
                         let info = "Terminated because of invalid system prompt: ${sysPrompt}"
                         this.stop(info, result: info)
-                        return None
+                        return Message.assistant(info)
                     }
                 case EventResponse.Terminate(_) =>
                     let info = "Terminated because of invalid system prompt: ${sysPrompt}"
                     this.stop(info, result: info)
-                    return None
+                    return Message.assistant(info)
             }
         }
-
-        if (let Some(msg) <- ModelUtils.agentMakeChat(this.agent, messages, stop: stop)) {
-            return msg
-        } else {
+        try {
+            return ModelUtils.agentMakeChat(this.agent, messages, stop: stop).getOrThrow({ =>
+                throw ModelException("Fail to get chat model response")
+            })
+        } catch (ex: ModelException) {
             let request = ChatRequest(messages, temperature: agent.temperature, stop: stop)
-            return match (this.handle(ChatModelFailureEvent(this.agent, request))) {
-                case EventResponse.Continue => None
+            return match (this.handle(ChatModelFailureEvent(this.agent, request, ex.error))) {
+                case EventResponse.Continue => throw ex
                 case EventResponse.Continue(resp) => resp.messageList[0]
                 case EventResponse.Terminate(resp) =>
-                    this.stop("Terminated by tool call event handler", result: resp.toString())
+                    this.stop("Terminated by chat model failure event handler", result: resp.toString())
                     resp.messageList[0]
             }
         }

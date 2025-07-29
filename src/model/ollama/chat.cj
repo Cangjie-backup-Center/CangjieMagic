@@ -154,8 +154,8 @@ public class OllamaChatModel <: ChatModel {
                 let resp = OllamaChatResponse.fromJsonValue(JsonValue.fromStr(body))
                 let msg = resp.message
                 return ChatResponse(
-                    MessageList([Message(MessageRole.fromStr(msg.role), msg.content)]),
-                    model
+                    model,
+                    Message(MessageRole.fromStr(msg.role), msg.content)
                 )
             case None => throw ModelException("Fail to get http respnose")
         }

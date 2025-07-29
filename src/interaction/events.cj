@@ -53,7 +53,8 @@ public class AnswerValidateEvent <: InteractionEvent { // Return: Bool
 public class ChatModelFailureEvent <: InteractionEvent { // Return: ChatResponse
     public ChatModelFailureEvent(
         public let agent: Agent,
-        public let chatRequest: ChatRequest // The failing chat request
+        public let chatRequest: ChatRequest, // The failing chat request
+        public let error: String // Error message
     ) {
         super(EventKind.ChatModelFailure)
     }

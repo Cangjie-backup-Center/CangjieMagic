@@ -50,9 +50,7 @@ public struct ExecutionOpSet {
         state.execution.addMessage(Message.system(operationPrompt))
         // Call the LLM
         try {
-            return state.task.chatLLM(state.execution.messages, stop: stop).getOrThrow({ =>
-                AgentExecutionException("Fail to get chat model response")
-            })
+            return state.task.chatLLM(state.execution.messages, stop: stop)
         } finally {
             state.execution.removeLastMessage()
         }
