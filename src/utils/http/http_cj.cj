@@ -94,16 +94,19 @@ protected struct HttpUtilsImpl {
         // header.put("Accept", "application/json")
         logHttpInfo(method, url, header, body, async: false)
         let (client, resp) = sendHttp(method, url, header, body, verify)
-        if (resp.status != HttpStatusCode.STATUS_OK) {
-            let err = readHttpBody(resp)
-            LogUtils.error("Http ${method} ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
-            LogUtils.error("Error: ${err}")
+        try {
+            let respBody = readHttpBody(resp)
+            if (resp.status != HttpStatusCode.STATUS_OK &&
+                resp.status != HttpStatusCode.STATUS_ACCEPTED) {
+                let msg = "Http status: ${resp.status}.\nHttp response: ${respBody}"
+                LogUtils.error("Http ${method} ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
+                LogUtils.error(msg)
+                throw HttpException(msg)
+            }
+            return respBody
+        } finally {
             client.close()
-            return None
         }
-        let respBody = readHttpBody(resp)
-        client.close()
-        return respBody
     }
 
     static protected func asyncSend(method: String,
@@ -115,7 +118,8 @@ protected struct HttpUtilsImpl {
         logHttpInfo(method, url, header, body, async: true)
         let (client, resp) = sendHttp(method, url, header, body, verify)
         let httpStream = HttpStream()
-        if (resp.status != HttpStatusCode.STATUS_OK) {
+        if (resp.status != HttpStatusCode.STATUS_OK &&
+            resp.status != HttpStatusCode.STATUS_ACCEPTED) {
             let err = readHttpBody(resp)
             LogUtils.error("Http ${method} ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
             LogUtils.error("Error: ${err}; ${resp}")

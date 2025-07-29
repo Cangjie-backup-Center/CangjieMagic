@@ -3,15 +3,20 @@
  */
 package magic.core.model
 
-import magic.core.message.MessageList
-
+import magic.core.message.{Message, MessageList}
 public struct ChatResponse <: ToString {
     public let model: String
     public let messageList: MessageList
     public let usage: Option<ChatUsage>
 
-    public init(messageList: MessageList, model: String, usage!: Option<ChatUsage> = None) {
+    public init(model: String, messageList: MessageList, usage!: Option<ChatUsage> = None) {
         this.messageList = messageList
+        this.model = model
+        this.usage = usage
+    }
+
+    public init(model: String, message: Message, usage!: Option<ChatUsage> = None) {
+        this.messageList = MessageList([message])
         this.model = model
         this.usage = usage
     }

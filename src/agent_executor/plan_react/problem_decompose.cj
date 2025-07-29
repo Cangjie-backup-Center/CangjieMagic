@@ -73,8 +73,6 @@ protected func problemDecompose(planTask: PlanTask): Array<Subtask> {
         Message.system(sysPrompt),
         Message.user(userPrompt)
     ])
-    let msg = planTask.chatLLM(messages).getOrThrow({ =>
-        AgentExecutionException("Fail to get valid chat model response")
-    })
+    let msg = planTask.chatLLM(messages)
     return ParserUtils.extractLastValue<Array<Subtask>>(msg.content)
 }

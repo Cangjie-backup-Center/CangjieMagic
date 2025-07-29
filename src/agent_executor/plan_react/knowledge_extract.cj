@@ -52,8 +52,6 @@ func knowledgeExtract(planTask: PlanTask): String {
         Message.system(sysPrompt)
     ])
 
-    let msg = planTask.chatLLM(messages).getOrThrow({ =>
-        AgentExecutionException("Fail to get chat model response")
-    })
+    let msg = planTask.chatLLM(messages)
     return ParserUtils.extractLastCode(msg.content, "knowledge") ?? ""
 }

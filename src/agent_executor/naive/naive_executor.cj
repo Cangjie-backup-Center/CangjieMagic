@@ -70,7 +70,7 @@ public class NaiveExecutor <: AgentExecutor {
             task.execution.addMessages(this.buildNaiveSystemPrompts(task))
             task.execution.addRequest(request)
             LogUtils.info(agent.name, task.execution.messages)
-            let msg = task.chatLLM(task.execution.messages).getOrThrow()
+            let msg = task.chatLLM(task.execution.messages)
             LogUtils.info(agent.name, msg)
             return AgentResponse(msg.content, execution: task.execution)
         } finally {

@@ -126,19 +126,8 @@ protected class ReactTask <: AgentTask {
         // [Observation] ... [Observation],
         // so we truncate it with `stop` words.
         try {
-            match (this.chatLLM(this.execution.messages, stop: [Tag.OBSERVATION])) {
-                case Some(msg) =>
-                    return ReactStep.fromStr(msg.content)
-                case None =>
-                    return ReactStep.Failure(
-                        FailureInfo(
-                            FailureLevel.Repairable,
-                            message: "",
-                            reason: "Fail to get valid assistant response",
-                            suggestion: "Follow the guidelines. Generate the ${Tag.THOUGHT} first and then output ${Tag.ACTION} or ${Tag.ANSWER}"
-                        )
-                    )
-            }
+            let msg = this.chatLLM(this.execution.messages, stop: [Tag.OBSERVATION])
+            return ReactStep.fromStr(msg.content)
         } catch (ex: Exception) {
             LogUtils.error(this.agent.name, ex.toString())
             return ReactStep.Failure(
@@ -159,9 +148,7 @@ protected class ReactTask <: AgentTask {
         let messages = MessageList(
             ReactPromptUtils.buildReactSummarizePrompt(this)
         )
-        let msg = this.chatLLM(messages).getOrThrow({ =>
-            AgentExecutionException("Fail to get chat model response")
-        })
+        let msg = this.chatLLM(messages)
         return Tag.extract(msg.content, Tag.ANSWER).getOrThrow({ =>
             AgentExecutionException("Chat model response has no answer")
         })
