@@ -28,7 +28,7 @@ function Download-CangjieStdx {
     $VERSION = "1.0.0.1"
 
     # Construct download URL
-    $URL = "https://gitcode.com/Cangjie/cangjie-stdx/releases/download/v1.0.0.1/cangjie-stdx-${OS}-x64-${VERSION}.zip"
+    $URL = "https://gitcode.com/Cangjie/cangjie-stdx-bin/releases/download/v${VERSION}/cangjie-stdx-${OS}-x64-${VERSION}.zip"
 
     # Create target directories if they don't exist
     $INSTALL_DIR = "./CangjieMagic/libs"
