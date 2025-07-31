@@ -41,7 +41,7 @@ function download_cangjie_stdx() {
     VERSION="1.0.0.1"
 
     # Construct the download URL
-    URL="https://gitcode.com/Cangjie/cangjie-stdx/releases/download/v${VERSION}/cangjie-stdx-${OS}-${ARCH}-${VERSION}.zip"
+    URL="https://gitcode.com/Cangjie/cangjie-stdx-bin/releases/download/v${VERSION}/cangjie-stdx-${OS}-${ARCH}-${VERSION}.zip"
 
     # Create target directories if they don't exist
     INSTALL_DIR="./CangjieMagic/libs"
