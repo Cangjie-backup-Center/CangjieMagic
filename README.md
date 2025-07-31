@@ -15,7 +15,7 @@
   - [Tutorial 📚](#tutorial-)
   - [API Manual 📖](#api-manual-)
   - [Examples 🚀](#examples-)
-  - [Cangjie Magic 官方开发者讨论群组](#cangjie-magic-官方开发者讨论群组)
+  - [Cangjie Magic 开发者讨论群组](#cangjie-magic-开发者讨论群组)
   - [Other Tutorials](#other-tutorials)
   - [重要变更/Import Changes](#重要变更import-changes)
 
@@ -86,14 +86,14 @@ MCP Server 集合示例：https://gitcode.com/Cangjie-TPC/CangjieMagic-MCPServer
 
 MCP Server Collection Example: https://gitcode.com/Cangjie-TPC/CangjieMagic-MCPServer
 
-## Cangjie Magic 官方开发者讨论群组
+## Cangjie Magic 开发者讨论群组
 
-🤝 欢迎加入官方开发者讨论者群组，一起交流碰撞创意想法，构建最具创意的 Agent 应用！
+🤝 欢迎加入开发者讨论者群组，一起交流碰撞创意想法，构建最具创意的 Agent 应用！
 
 🤝 Welcome to join the official developer discussion group, where we can exchange and spark creative ideas together to build the most innovative Agent applications!
 
 <div align="center">
-  <img src="https://raw.gitcode.com/user-images/assets/4865175/123661cd-f701-4d5a-bffc-117e8f1fc5e0/2025-07-28.png" style="width:300px" />
+  <img src="https://raw.gitcode.com/user-images/assets/4865175/23d8d1ad-2721-446e-9578-13864faa08c3/2025-07-31.png" style="width:300px" />
 </div>
 
 ## Other Tutorials
