@@ -80,96 +80,108 @@ private class Delta {
 }
 
 private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
-    AsyncChatChunkStream(let httpStream: HttpStream) { }
-
-    let start = DateTime.now()
+    private let sseStream: SSEStream
+    private let start = DateTime.now()
     private var role: Option<MessageRole> = None
     private var usage: Option<ChatUsage> = None
     private var finished = false
+
+    init(httpStream: HttpStream) {
+        this.sseStream = SSEStream(httpStream)
+    }
 
     override public func next(): Option<AsyncChatChunk> {
         if (finished) {
             return None
         }
-        // A long response may be split as multiple parts, use a buffer to collect all of them.
-        let buffer = StringBuilder()
-        while (let Some(data) <- httpStream.next()) {
-            buffer.append(data)
-            let contentToParse = buffer.toString().trimAscii()
-            LogUtils.debug("To parse line: `${contentToParse}`")
-            if (contentToParse.isEmpty()) { continue }
-            // Try to parse the data
-            let (reason, content) = try {
-                let (rc, c) = parseData(contentToParse)
-                buffer.reset()
-                (rc, c)
-            } catch (_: ModelException) {
-                // If parsing fails, the content is incomplete, read more parts
-                LogUtils.debug("Parsing data failure: the content incomplete")
-                continue
-            } catch (_: IllegalArgumentException) {
-                // JsonValue.fromStr may throw an IllegalArgumentException
-                // This also means the content is incomplete, read more parts
-                LogUtils.debug("Parsing JSON failure: the content incomplete")
-                continue
-            } catch(e: Exception) {
-                LogUtils.debug("Parsing data failure ${e}")
-                for (ste in e.getStackTrace()) {
-                    LogUtils.debug("${ste.methodName} ${ste.fileName}:${ste.lineNumber}")
-                }
-                throw e
+        while (true) {
+            let sseItem = try {
+                this.sseStream.next()
+            } catch(ex: HttpException) {
+                throw ModelException("Fail to get chat model async chat response: ${ex.error}")
             }
-            LogUtils.debug("Parsed reasoning content: ${reason}")
-            LogUtils.debug("Parsed content: ${content}")
-            // Some special content
-            if (content == ": keep-alive") {
-                continue
-            } else if (content == "[DONE]") {
-                // Consume and close the http stream
-                while (let Some(_) <- httpStream.next()) { }
-                finished = true
+            if (let Some(sseItem) <- sseItem) {
+                if (let Some(chunk) <- this.parseSSEItem(sseItem)) {
+                    return chunk
+                } else {
+                    continue
+                }
+            } else {
+                // Some model provider may not return "[DONE]" and finish the http stream directly?
+                this.finished = true
                 return AsyncChatChunk(
                     message: Message(this.role.getOrThrow(), ""),
                     done: true,
                     usage: this.usage
                 )
-            } else {
-                return AsyncChatChunk(
-                    message: Message(
-                        this.role.getOrThrow(),
-                        content,
-                        reason: if (reason.isEmpty()) { None } else { reason}),
-                    done: false
-                )
             }
         }
-        // Some model services may not return "[DONE]" and finish the http stream directly?
-        finished = true
-        return AsyncChatChunk(
-            message: Message(this.role.getOrThrow(), ""),
-            done: true,
-            usage: this.usage
-        )
+        throw UnsupportedException("Unreachable")
     }
 
-    private func parseData(data: String): (String, String) {
-        let content = data.removePrefix("data:").trimAscii()
-        if (content == "[DONE]" || content == ": keep-alive") {
+    private func parseSSEItem(sseItem: SSEItem): Option<AsyncChatChunk> {
+        if (sseItem.tag != "data") {
+            let msg = "Async chat response read invalid sse data: `${sseItem}`"
+            LogUtils.debug(msg)
+            throw ModelException(msg)
+        }
+        LogUtils.debug("To parse SSE content: `${sseItem.content}`")
+        if (sseItem.content.isEmpty()) {
+            return None
+        }
+        // Try to parse the data
+        let (reason, content) = try {
+            parseContent(sseItem.content)
+        } catch(ex: Exception) {
+            LogUtils.debug("Parsing SSE content failure ${ex}")
+            throw ex
+        }
+        LogUtils.debug("  Get reasoning content: ${reason}")
+        LogUtils.debug("  Get content: ${content}")
+        if (content == "[DONE]") {
+            // Consume and close the http sse stream
+            while (let Some(_) <- this.sseStream.next()) { }
+            this.finished = true
+            return AsyncChatChunk(
+                message: Message(this.role.getOrThrow(), ""),
+                done: true,
+                usage: this.usage
+            )
+        } else {
+            return AsyncChatChunk(
+                message: Message(
+                    this.role.getOrThrow(),
+                    content,
+                    reason: if (reason.isEmpty()) { None } else { reason }
+                ),
+                done: false
+            )
+        }
+    }
+
+    /**
+     * Parse the content of a SSE data item, return the reasoning content and the content
+     * If the content is "[DONE]", return an empty reasoning content and the content itself.
+     */
+    private func parseContent(content: String): (String, String) {
+        if (content == "[DONE]") {
             return ("", content)
         }
         let chunkResp = try {
             ChunkResponse.fromJsonValue(JsonValue.fromStr(content))
-        } catch(ex: JsonException) {
-            LogUtils.error("Fail to parse http chunk data response `${data}`")
-            throw ModelException("Fail to parse http chunk data response `${data}`")
+        } catch(ex: JsonException | IllegalStateException) { // JsonValue.fromStr may throw an IllegalArgumentException
+            let msg = "Fail to parse http chunk data response as a JSON value `${content}`"
+            LogUtils.error(msg)
+            throw ModelException(msg)
         }
-        // Merge the reasoning_content and content of chunks
+        // A chunk response may have multiple choices? See the OpenAI API document
+        // So, merge the reasoning_content and content of choices of the chunk response
         let reasonContentBuilder = StringBuilder()
         let contentBuilder = StringBuilder()
         for (chunkChoice in chunkResp.choices) {
             let delta = chunkChoice.delta
             if (let Some(role) <- delta.role) {
-                this.role = MessageRole.fromStr(role)
+                this.role = MessageRole.fromStr(role) // Do we need to check the role?
             }
             reasonContentBuilder.append(delta.reasoning_content ?? "")
             contentBuilder.append(delta.content)

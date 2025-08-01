@@ -9,6 +9,57 @@ import magic.utils.StringExt
 import std.collection.ArrayList
 import stdx.encoding.json.{JsonValue, JsonException}
 
+/**
+ * SSEItem is a simple structure to represent an SSE item with a tag and content, like:
+ * data: xxx
+ * event: xxx
+ */
+protected struct SSEItem <: ToString {
+    SSEItem(protected let tag: String,
+            protected let content: String) { }
+
+    override public func toString(): String {
+        return "tag: ${content}"
+    }
+}
+
+protected class SSEStream <: Iterator<SSEItem> {
+    private static let TAGS = [ "data", "event" /* "retry" */ ]
+
+    protected SSEStream(private let httpStream: HttpStream) { }
+
+    private func read(): Option<SSEItem> {
+        while (let Some(line) <- this.httpStream.next()) {
+            if (line.trimAscii().isEmpty() ||
+                line.startsWith(": ping") ||
+                line.startsWith(": keep-alive")) {
+                continue
+            }
+
+            for (tag in SSEStream.TAGS) {
+                if (line.startsWith("${tag}:")) {
+                    let content = line.removePrefix("${tag}:").trimAscii()
+                    if (content.isEmpty()) {
+                        throw HttpException("Invalid sse ${tag} with empty content")
+                    }
+                    return Some(SSEItem(tag, content))
+                }
+            }
+            throw HttpException("Invalid sse line: `${line}`")
+        }
+        LogUtils.debug("SSE stream finished")
+        return None
+    }
+
+    override public func next(): Option<SSEItem> {
+        return this.read()
+    }
+
+    public func close(): Unit {
+        this.httpStream.close()
+    }
+}
+
 protected struct SSEvent <: ToString {
     SSEvent(protected let event: String,
             protected let data: String) { }
@@ -19,66 +70,43 @@ protected struct SSEvent <: ToString {
 }
 
 protected class SSEventStream <: Iterator<SSEvent> {
-    SSEventStream(private let httpStream: HttpStream) { }
+    private let sseStream: SSEStream
 
-    private func readEvent(): Option<String> {
-        while (true) {
-            // Receive the pair of event and data
-            if (let Some(line) <- this.httpStream.next()) {
-                if (line.trimAscii().isEmpty() || line.startsWith(": ping")) {
-                    continue
-                }
-                if (!line.startsWith("event:")) {
-                    throw HttpException("Invalid sse event: `${line}`")
-                }
-                return line.removePrefix("event:").trimAscii()
-            } else {
-                LogUtils.debug("SSE stream finished")
-                return None
-            }
-        }
-        throw UnsupportedException("Unreachable")
-    }
-
-    private func readData(): Option<String> {
-        while (true) {
-            if (let Some(line) <- this.httpStream.next()) {
-                if (line.trimAscii().isEmpty() || line.startsWith(": ping")) {
-                    continue
-                }
-                if (!line.startsWith("data:")) {
-                    throw HttpException("Invalid sse data: `${line}`")
-                }
-                return line.removePrefix("data:").trimAscii()
-            } else {
-                LogUtils.debug("SSE stream finished")
-                return None
-            }
-        }
-        throw UnsupportedException("Unreachable")
+    init(httpStream: HttpStream) {
+        this.sseStream = SSEStream(httpStream)
     }
 
     override public func next(): Option<SSEvent> {
         while (true) {
             // Receive the pair of event and data
-            let event = if (let Some(_event) <- this.readEvent()) {
-                _event
+            let event = if (let Some(sseItem) <- this.sseStream.next()) {
+                if (sseItem.tag != "event") {
+                    throw HttpException("Invalid SSE event: `${sseItem}`")
+                }
+                sseItem.content
             } else {
+                LogUtils.debug("SSE stream finished")
                 return None
             }
             LogUtils.debug("SSE stream read event: ${event}")
-            let data = if (let Some(_data) <- this.readData()) {
-                _data
+
+            let data = if (let Some(sseItem) <- this.sseStream.next()) {
+                if (sseItem.tag != "data") {
+                    throw HttpException("Invalid SSE data: `${sseItem}`")
+                }
+                sseItem.content
             } else {
+                LogUtils.debug("SSE stream finished")
                 return None
             }
             LogUtils.debug("SSE stream read data: ${data}")
+
             return SSEvent(event, data)
         }
         throw UnsupportedException("Unreachable")
     }
 
     public func close(): Unit {
-        this.httpStream.close()
+        this.sseStream.close()
     }
 }

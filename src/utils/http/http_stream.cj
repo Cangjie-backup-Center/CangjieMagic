@@ -5,14 +5,15 @@ package magic.utils.http
 
 import magic.log.LogUtils
 import magic.utils.StringExt
-
-import std.collection.concurrent.BlockingQueue
-import std.collection.{HashMap, ArrayList}
-import stdx.encoding.json.JsonObject
-import std.io.{InputStream, StringReader}
 import magic.dsl.prompt
 
-enum Item {
+import std.collection.concurrent.LinkedBlockingQueue
+import std.collection.{HashMap, ArrayList}
+import std.io.{InputStream, StringReader}
+
+import stdx.encoding.json.JsonObject
+
+private enum Item {
     | Bytes(Array<Byte>)
     | EOF
     | Error
@@ -23,50 +24,57 @@ enum Item {
  * Wrap of a blocking queue to support streaming.
  */
 protected class HttpStream <: Iterator<String> & InputStream {
-    let queue = BlockingQueue<Item>()
-    let byteBuffer = ArrayList<Byte>()
-
-    // Set when all data is consumed
-    var finished = false
-
+    private let queue = LinkedBlockingQueue<Item>()
+    private let byteBuffer = ArrayList<Byte>()
     private let closeFn: Option<() -> Unit>
+    // Set when all data is consumed
+    private var finished = false
 
-    init(closeFn!: Option<() -> Unit> = None) {
+    protected init(closeFn!: Option<() -> Unit> = None) {
         this.closeFn = closeFn
     }
 
-    private func readBytes(): Bool {
-        if (finished) {
-            return false
+    private func readBytes(): Option<Array<Byte>> {
+        if (this.finished) {
+            return None
         }
-        match (queue.dequeue()) {
+        match (this.queue.remove()) {
             case Error =>
                 throw HttpException("Http byte stream error")
             case EOF =>
                 finished = true
                 LogUtils.debug("Http byte stream finished")
-                return false
+                return None
             case Bytes(bytes) =>
-                this.byteBuffer.add(all: bytes)
-                return true
-        } 
+                return bytes
+        }
     }
 
     override public func read(buffer: Array<Byte>): Int64 {
-        if (this.byteBuffer.isEmpty() && !this.readBytes()) {
-            return 0
+        if (this.byteBuffer.isEmpty()) {
+            if (let Some(bytes) <- this.readBytes()) {
+                // If the bytes read are less than or equal to the buffer size,
+                // copy them directly to the buffer and return the size.
+                // Otherwise, add them to the byte buffer for later reading.
+                if (bytes.size <= buffer.size) {
+                    bytes.copyTo(buffer, 0, 0, bytes.size)
+                    return bytes.size
+                } else {
+                    this.byteBuffer.add(all: bytes)
+                }
+            } else {
+                // No more data to read
+                return 0
+            }
         }
-        let len = if (this.byteBuffer.size <= buffer.size) {
-            this.byteBuffer.size
-        } else {
-            buffer.size
-        }
-
+        // Copy the data from the byte buffer to the provided buffer
+        let len = min(this.byteBuffer.size, buffer.size)
         unsafe {
             let bytes = this.byteBuffer.getRawArray()
             bytes.copyTo(buffer, 0, 0, len)
         }
-
+        // If the full byte buffer is copied, clear it
+        // Otherwise, remove the copied bytes from the front
         if (this.byteBuffer.size == len) {
             this.byteBuffer.clear()
         } else {
@@ -96,15 +104,15 @@ protected class HttpStream <: Iterator<String> & InputStream {
 
     public func put(data: Array<Byte>): Unit {
         // LogUtils.debug("put data: `${data}`")
-        queue.enqueue(Item.Bytes(data))
+        queue.add(Item.Bytes(data))
     }
 
     public func markEOF(): Unit {
-        queue.enqueue(Item.EOF)
+        queue.add(Item.EOF)
     }
 
     public func markError(): Unit {
-        queue.enqueue(Item.Error)
+        queue.add(Item.Error)
     }
 
     public func close(): Unit {

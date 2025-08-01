@@ -62,13 +62,13 @@ protected open class Attr {
                                     validAttrNames: Array<String>): (Bool, String) {
         let names = HashSet(attrNames)
         if (names.size != attrNames.size) {
-            return (false, "duplicated attributes")
+            return (false, "Duplicated attributes")
         }
         names.remove(all: validAttrNames)
         if (!names.isEmpty()) {
-            return (false, "invalid attributes ${names}")
+            return (false, "Invalid attributes ${names}")
         }
-        return (true, "okay")
+        return (true, "Okay")
     }
 }
 
