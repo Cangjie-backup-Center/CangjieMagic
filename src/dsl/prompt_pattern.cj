@@ -113,7 +113,7 @@ func transformPromptPatternClass(classDecl: ClassDecl, promptPatternAttr: Prompt
             }
         }
         if (!hasToString) {
-            throw Exception("Class '${classNameToken.value}' with @promptPattern[autoToString=false] must implement the 'toString(): String' method.")
+            throw DslException("Class '${classNameToken.value}' with @promptPattern[autoToString=false] must implement the 'toString(): String' method.")
         }
     }
 
