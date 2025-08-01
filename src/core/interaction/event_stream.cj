@@ -33,11 +33,6 @@ public class EventStream <: Iterator<InteractionEvent> {
 
     protected func put(event: InteractionEvent): Unit {
         LogUtils.debug("EventStream", "Put: ${event}")
-        try {
-            throw UnsupportedException()
-        } catch (ex: UnsupportedException) {
-            LogUtils.debug(ex)
-        }
         this.queue.add(event)
     }
 
