@@ -12,13 +12,11 @@ import std.socket.{SocketAddress, TcpSocket}
 @When[cjc_version >= "1.0.0"]
 import std.net.{SocketAddress, TcpSocket}
 import std.io.StringReader
+
 import stdx.net.tls.{TlsClientConfig, CertificateVerifyMode}
 import stdx.net.http.*
 import stdx.encoding.json.*
 import stdx.encoding.url.URL
-
-@When[cjc_version < "1.0.0"]
-import std.time.Duration
 
 private func buildHttpClient(url: String, verify: Bool): Client {
     let cb = ClientBuilder()
@@ -114,30 +112,35 @@ protected struct HttpUtilsImpl {
                                     header: HashMap<String, String>,
                                     body: Option<JsonObject>,
                                     verify!: Bool): HttpStream {
-        // header.put("Accept", "text/event-stream")
         logHttpInfo(method, url, header, body, async: true)
-        let (client, resp) = sendHttp(method, url, header, body, verify)
         let httpStream = HttpStream()
-        if (resp.status != HttpStatusCode.STATUS_OK &&
-            resp.status != HttpStatusCode.STATUS_ACCEPTED) {
-            let err = readHttpBody(resp)
-            LogUtils.error("Http ${method} ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
-            LogUtils.error("Error: ${err}; ${resp}")
-            client.close()
-            httpStream.markError()
-        } else {
-            spawn {
-                let buffer = Array<Byte>(1024 * 10, { _ => 0})
-                while (true) {
-                    let length = resp.body.read(buffer)
-                    if (length == 0) {
-                        break
-                    } else {
-                        httpStream.put(buffer[..length])
-                    }
+        spawn {
+            // header.add("Accept", "text/event-stream")
+            let (client, resp) = sendHttp(method, url, header, body, verify)
+            let buffer = Array<Byte>(1024 * 10, { _ => 0})
+            var length = 0
+            while (true) {
+                length = resp.body.read(buffer)
+                if (length == 0) {
+                    break
+                } else {
+                    httpStream.put(buffer[..length].clone())
                 }
-                client.close()
             }
+            if (resp.status != HttpStatusCode.STATUS_OK &&
+                resp.status != HttpStatusCode.STATUS_ACCEPTED) {
+                LogUtils.error("Http ${method} ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
+                // The last read bytes consist of the error message
+                // let err = String(buffer[..length])
+                // LogUtils.error("Error: ${err}; ${resp}")
+                httpStream.put([b'\n']) // The error message may not end with a newline
+                httpStream.markError()
+            } else {
+                // Put the termination mark
+                LogUtils.debug("End http stream. Status: ${resp.status}")
+                httpStream.markEOF()
+            }
+            client.close()
         }
         return httpStream
     }

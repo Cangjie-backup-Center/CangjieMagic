@@ -9,8 +9,11 @@ let EXECUTION_DEFINITION = """
 The execution is a chronological event stream containing the following types of events:
     - A tool has been used, which is function call comprising the tool name and arguments
     - ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.getCloseTag()}
-    - ${Tag.THOUGHT} a wait moment that contains reflection on execution and thoughts on subsequent execution ${Tag.THOUGHT.getCloseTag()}
 """
+    //-----------------------------------------------------------------
+    // The thought message is not described in the execution definition
+    //-----------------------------------------------------------------
+    // - ${Tag.THOUGHT} a wait moment that contains reflection on execution and thoughts on subsequent execution ${Tag.THOUGHT.getCloseTag()}
 
 let PLAN_PROMPT = """
 Based on the execution, make a plan about how to solve the user question next.
@@ -21,6 +24,9 @@ let ACTION_PROMPT = """
 Decide which tool to use next based on the user question and the current state of the execution.
 ${EXECUTION_DEFINITION}
 You can select ONLY ONE tool!
+
+All available tools are listed:
+{tools}
 
 You MUST output a JSON object with the following schema:
 ```json
@@ -40,9 +46,6 @@ For example,
     }
 }
 ```
-
-All available tools are listed:
-{tools}
 
 Now, select a tool and output it with required format.
 """

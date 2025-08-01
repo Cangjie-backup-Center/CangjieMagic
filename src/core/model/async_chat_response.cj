@@ -10,8 +10,9 @@ import std.sync.AtomicBool
 public struct AsyncChatChunk <: ToString {
     protected AsyncChatChunk(
         public let message!: Message,
-        let done!: Bool = false,
-        let usage!: Option<ChatUsage> = None) { }
+        public let done!: Bool = false,
+        public let usage!: Option<ChatUsage> = None
+    ) { }
 
     override public func toString(): String {
         let strBuilder = StringBuilder()

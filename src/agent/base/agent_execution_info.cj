@@ -39,10 +39,12 @@ public class AgentExecutionInfo <: AgentExecution {
 
     public init(agent: Agent) {
         let tokenizer = TokenizerLoader.default()
-        this.messageList = BoundedMessageList(
-            agent.model.contextLength,
-            computeFn: { str => return tokenizer.countToken(str) }
-        )
+        this.messageList = MessageList()
+        // Use bounded message list?
+        // this.messageList = BoundedMessageList(
+        //     agent.model.contextLength,
+        //     computeFn: { str => return tokenizer.countToken(str) }
+        // )
     }
 
     override public prop messages: MessageList {

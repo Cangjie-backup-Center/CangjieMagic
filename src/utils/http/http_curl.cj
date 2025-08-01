@@ -122,8 +122,8 @@ protected struct HttpUtilsImpl {
                 httpStream.markError()
             } else {
                 // Put the termination mark
-                httpStream.markEOF()
                 LogUtils.debug("End http stream. Status: ${status}")
+                httpStream.markEOF()
             }
         }
         return httpStream
