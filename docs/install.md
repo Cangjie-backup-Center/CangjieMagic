@@ -77,7 +77,7 @@ Set the `cjpm.toml` of your project that uses Cangjie Magic
 
 ```toml
 [dependencies]
-magic = { path = "<local-path-to-Cangjie-Magic>" }  // 请注意路径字符串中的"\"是否存在转义,若是请全部转换为"\\"以避免路径解析错误
+magic = { path = "<local-path-to-Cangjie-Magic>" }  # 请注意路径字符串中的"\"是否存在转义,若是请全部转换为"\\"以避免路径解析错误
 ```
 
 注意：如果你开发了命令行程序，必须通过 `cjpm run --name <your-package-name>` 运行你所编写的程序
@@ -173,7 +173,7 @@ git clone https://gitcode.com/Cangjie-TPC/CangjieMagic.git -b harmony_os_edition
 
 ```toml
 [dependencies]
-    magic = { path = "<local-path-to-Cangjie-Magic>" }  // 请注意路径字符串中的"\"是否存在转义,若是请全部转换为"\\"以避免路径解析错误
+    magic = { path = "<local-path-to-Cangjie-Magic>" }  # 请注意路径字符串中的"\"是否存在转义,若是请全部转换为"\\"以避免路径解析错误
 ```
 
 ## Other build configuration
