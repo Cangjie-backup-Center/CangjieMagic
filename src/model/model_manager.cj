@@ -56,6 +56,9 @@ private let DEFAULT_PROVIDER_MAP = HashMap<String, ProviderConfig>([
     ("moonshot", ProviderConfig("MOONSHOT_BASE_URL", // openai-compatible
                              "https://api.moonshot.cn/v1",
                              "MOONSHOT_API_KEY")),
+    ("openrouter", ProviderConfig("OPENROUTER_BASE_URL", // openai-compatible
+                             "https://openrouter.ai/api/v1",
+                             "OPENROUTER_API_KEY")),
     ("ollama",    ProviderConfig("OLLAMA_BASE_URL",
                                  "http://localhost:11434",
                                  "")),
@@ -194,7 +197,7 @@ public struct ModelManager {
     public static func createChatModel(modelConfig: ModelConfig, temperature!: Option<Float64> = None): ChatModel {
         match (modelConfig.provider) {
             case "openai" | "dashscope" | "ark" | "deepseek" |
-                 "siliconflow" | "zhipuai" | "maas" | "google" | "moonshot" =>
+                 "siliconflow" | "zhipuai" | "maas" | "google" | "moonshot" | "openrouter" =>
                 return OpenAIChatModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL, temperature: temperature)
             case "ollama" =>
                 return OllamaChatModel(modelConfig.name, baseURL: modelConfig.baseURL, temperature: temperature)
