@@ -92,6 +92,31 @@ func transformPromptPatternClass(classDecl: ClassDecl, promptPatternAttr: Prompt
     let getElementNamesMethod = buildElementNamesMethod(promptPatternAttr)
     let toStringMethod = buildToStringMethod(promptPatternAttr)
 
+    // Check if toString(): String has been implemented when autoToString is false
+    if (!promptPatternAttr.autoToString) {
+        var hasToString = false
+        for (decl in classDeclBody) {
+            if (let Some(funcDecl) <- (decl as FuncDecl)) {
+                if (funcDecl.identifier.value == "toString" && funcDecl.funcParams.isEmpty()) {
+                    try {
+                        let returnType = funcDecl.declType
+                        if (let Some(refType) <- (returnType as RefType)) {
+                            if (refType.identifier.value == "String") {
+                                hasToString = true
+                                break   
+                            }
+                        }
+                    } catch (e: ASTException) {
+                        // Ignored as it is Unit
+                    }
+                }
+            }
+        }
+        if (!hasToString) {
+            throw DslException("Class '${classNameToken.value}' with @promptPattern[autoToString=false] must implement the 'toString(): String' method.")
+        }
+    }
+
     // Compose all `Tokens`
     return quote(
         $(classDecl.modifiers) class $classNameToken $genericTypeParamTokens $genericConstraintTokens {
@@ -101,7 +126,6 @@ func transformPromptPatternClass(classDecl: ClassDecl, promptPatternAttr: Prompt
             $toStringMethod
         }
     )
-    // TODO: check `toString` must be implemented
 }
 
 private func buildCtorMethod(promptPatternAttr: PromptPatternAttr): Tokens {
