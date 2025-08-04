@@ -9,7 +9,6 @@ import magic.core.message.*
 import magic.dsl.jsonable
 import magic.jsonable.*
 import magic.config.Config
-import magic.utils.StringExt
 import stdx.encoding.json.*
 import std.time.DateTime
 import std.collection.ArrayList

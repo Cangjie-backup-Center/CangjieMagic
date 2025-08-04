@@ -4,7 +4,6 @@
 package magic.utils.http
 
 import magic.log.LogUtils
-import magic.utils.StringExt
 
 import std.collection.ArrayList
 import stdx.encoding.json.{JsonValue, JsonException}

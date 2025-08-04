@@ -3,8 +3,6 @@
  */
 package magic.parser
 
-import magic.utils.StringExt
-
 private func getTagSymbol(tag: String): (String, String) {
     if (tag.startsWith("[")) {
         return ("[", "]")

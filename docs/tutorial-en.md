@@ -388,14 +388,18 @@ Tools are functions an Agent can execute during processing. Agent tools come fro
 
 ### Writing Tool Functions
 
-The `@tool` macro decorates **top-level functions** or **methods inside Agent classes** with the following attributes:
+The macro `@tool` is used for functions to convert them into **tool functions**. Functions that can be decorated include:
+
+- Global functions
+- Member methods of Agent classes defined by `@agent`
+- Member methods of `Toolset` types defined by `@toolset`
 
 - `description`: Describes the tool's functionality (**required**).
 - `parameters`: Describes function parameter meanings as `<parameter-name>: <parameter-description>` key-value pairs (**optional**).
 - `filterable`: Whether the tool can be filtered by the Agent (used with `@agent`'s `enableToolFilter`) (**optional**).
 - `terminal`: Whether to terminate Agent execution. When set to true, the Agent will immediately end after executing this tool, and the function's return value will be used as the Agent's execution result **optional**
 
-Global tool functions must be explicitly specified in the `tools` attribute for the Agent to use them.
+Global tool functions or toolset must be explicitly specified in the `tools` attribute for the Agent to use them.
 
 **Example: Defining and Configuring a Global Tool**
 
@@ -403,6 +407,29 @@ Global tool functions must be explicitly specified in the `tools` attribute for 
 @tool[description: "...",
       parameters: { arg: "..." }]
 func foo(arg: String): String { ... }
+
+@agent[
+    tools: [foo]
+]
+class A {...}
+```
+
+**Example: Defining and Configuring a toolset**
+
+```cangjie
+@toolset
+class FooToolset {
+    @tool[description: "..."]
+    func foo(arg: String): String { ... }
+
+    @tool[description: "..."]
+    func bar(): String { ... }
+}
+
+@agent[
+    tools: [FooToolset()]
+]
+class A {...}
 ```
 
 **Example: Defining an Internal Tool**
@@ -441,6 +468,9 @@ The `tools` attribute configures the MCP servers and custom tool functions used 
 - **Tool functions:** `<func-id>+`, such as `foo, bar`.
   ⚠️ Note: If a tool is defined within the `Agent` class, it can be used directly by that Agent without explicit declaration in the `tools` attribute.
 
+- **Toolset construction** `<expr>` – Typically an instantiation of a toolset type, e.g., `MyToolset()`.
+
+
 ```cangjie
 @agent[
     tools: [
@@ -448,7 +478,8 @@ The `tools` attribute configures the MCP servers and custom tool functions used 
         stdioMCP("python main.py args", SOME_API_KEY: "xxx"),
         httpMCP("http://abc.mcp.server.com"),
         toolA,
-        toolB
+        toolB,
+        MyToolset()
     ]
 ]
 class Foo { ... }

@@ -495,18 +495,24 @@ let resp2 = agent.chat(
 
 工具可以理解为 Agent 执行过程中能够执行的代码。当前 Agent 工具有两个来源：
 - 使用 DSL 直接编写的工具函数
-- 由 MCP 服务器提供的工具（MCP 服务器可视为*一组工具的集合*）。
+- 由 MCP 服务器提供的工具（MCP 服务器可视为*一组工具的集合*）
 
 ### 工具函数编写
 
-宏 `@tool` 用于修饰**顶层函数**或 **Agent 类的内部方法**，它有如下的属性：
+宏 `@tool` 用于函数，将函数转换为**工具函数**，可被修饰的函数有：
+
+- 全局函数
+- `@agent` 定义的 Agent 类成员方法
+- `@toolset` 定义的 `Toolset` 类型的成员方法
+
+所有工具函数都有如下的属性：
 
 - `description` 属性描述了工具的功能【必选】
 - `parameters` 属性描述了函数参数的含义，它接收 `<parameter-name>: <parameter-description>` 的键值对【可选】
 - `filterable` 是否可以被 Agent 过滤，配合 `@agent` 宏的 `enableToolFilter` 属性使用【可选】
 - `terminal` 是否终止 Agent 执行，当设置为 `true` 时，Agent 执行这个工具后将直接结束，并且函数的返回值作为 Agent 执行结果【可选】
 
-如果工具函数是全局函数，那么需要在 `tools` 属性中显式指定才能让 Agent 使用工具。
+如果工具函数是全局函数或是在 Toolset 中，那么需要在 `tools` 属性中显式指定才能让 Agent 使用工具。
 
 **示例：定义并配置全局工具**
 
@@ -514,6 +520,29 @@ let resp2 = agent.chat(
 @tool[description: "...",
       parameters: { arg: "..."}]
 func foo(arg: String): String { ... }
+
+@agent[
+    tools: [foo]
+]
+class A { ... }
+```
+
+**示例：定义工具集类型并配置**
+
+```cangjie
+@toolset
+class FooToolset {
+    @tool[description: "..."]
+    func foo(arg: String): String { ... }
+
+    @tool[description: "..."]
+    func bar(): String { ... }
+}
+
+@agent[
+    tools: [FooToolset()]
+]
+class A { ... }
 ```
 
 **示例：定义内部工具**
@@ -537,7 +566,8 @@ Agent 通过 `tools` 属性配置使用的 MCP 服务器以及自定义工具函
 
 - `stdio` 传输协议的 MCP 服务器，`stdioMCP(<command>, <env-kv-pair>*)`，编写启动 MCP 服务器的命令行以及可选的环境变量设置。例如，`stdioMCP("command and arguments", ENV_1: "value1", ENV_2, "value2")`。
 - `http/sse` 传输协议的 MCP 服务器，`mcpHttp(<url>)`，编写 MCP 服务器的地址。例如， `httpMCP("https://abc.com/mcp")`。
-- 工具函数 `<func-id>+`。例如，`foo, bar`。注意 ⚠️：如果工具被定义在 Agent 类的内部，那么它能被其所属的 Agent 直接使用，即**无需**在 `tools` 属性中显式指定。
+- 工具函数 `<func-id>+`，例如，`foo, bar`。注意 ⚠️：如果工具被定义在 Agent 类的内部，那么它能被其所属的 Agent 直接使用，即**无需**在 `tools` 属性中显式指定。
+- 工具集构造 `<expr>`，通常是工具集类型的实例化，例如 `MyToolset()`。
 
 ```cangjie
 @agent[
@@ -546,7 +576,8 @@ Agent 通过 `tools` 属性配置使用的 MCP 服务器以及自定义工具函
         stdioMCP("python main.py args", SOME_API_KEY: "xxx"),
         httpMCP("http://abc.mcp.server.com"),
         toolA,
-        toolB
+        toolB,
+        SomeToolset()
     ]
 ]
 class Foo { ... }

@@ -12,7 +12,8 @@ import std.collection.{ArrayList, HashMap, map, collectArrayList, collectArray}
 enum AgentToolAttr {
     | StdioMcp(String, HashMap<String, Token>)
     | HttpMcp(String)
-    | NativeFunc(String)
+    | NativeFuncTool(Token)
+    | NativeToolset(Expr)
 
     static func parse(rawAttr: Tokens): AgentToolAttr {
         // The deprecated syntax of specifying the MCP as a map
@@ -30,7 +31,7 @@ enum AgentToolAttr {
             } else if (name == "httpMCP") {
                 return AgentToolAttr.parseHttp(rawAttr)
             } else {
-                return AgentToolAttr.parseNativeFunc(rawAttr)
+                return AgentToolAttr.parseNative(rawAttr)
             }
         }
     }
@@ -77,11 +78,24 @@ enum AgentToolAttr {
     /**
      * An identifier
      */
-    static func parseNativeFunc(rawAttr: Tokens): AgentToolAttr {
-        if (rawAttr.size != 1 || rawAttr[0].kind != TokenKind.IDENTIFIER) { 
-            throw DslException("Invalid native func tool config `${rawAttr}`")
+    static func parseNative(rawAttr: Tokens): AgentToolAttr {
+        let expr = try {
+            parseExpr(rawAttr)
+        } catch (ex: ParseASTException) {
+            throw DslException("Invalid native tool config `${rawAttr}`")
         }
-        return AgentToolAttr.NativeFunc(rawAttr[0].value)
+        if (expr is RefExpr) {
+            let refExpr = (expr as RefExpr).getOrThrow()
+            return AgentToolAttr.NativeFuncTool(refExpr.identifier)
+        } else if (expr is CallExpr) {
+            let callExpr = (expr as CallExpr).getOrThrow()
+            if (!(callExpr.callFunc is RefExpr)) {
+                throw DslException("Invalid native tool set config `${rawAttr}`")
+            }
+            return AgentToolAttr.NativeToolset(callExpr)
+        } else {
+            throw DslException("Invalid native tool config `${rawAttr}`")
+        }
     }
 
     /**
@@ -224,7 +238,7 @@ class AgentAttr <: Attr {
             if (let Some(tokens) <- getTokens("tools")) {
                 let result = ArrayList<AgentToolAttr>()
                 for (toolTokens in ArrayParser(tokens).parseArrayOfTokens()) {
-                    result.add(AgentToolAttr.parse(toolTokens)) 
+                    result.add(AgentToolAttr.parse(toolTokens))
                 }
                 _tools = result.toArray()
                 return _tools.getOrThrow()
@@ -631,7 +645,7 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                 addTools.append(
                     quote(
                         let $client = StdioMCPClient($commandLine, env: [$env])
-                        tm.addTools($client.getTools())
+                        tm.addTools($client.tools)
                     )
                 )
             case AgentToolAttr.HttpMcp(_url) =>
@@ -640,14 +654,19 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                 addTools.append(
                     quote(
                         let $client = SseMCPClient($url)
-                        tm.addTools($client.getTools())
+                        tm.addTools($client.tools)
                     )
                 )
-            case AgentToolAttr.NativeFunc(_tool) =>
-                let tool = newIdentifierToken(_tool)
+            case AgentToolAttr.NativeFuncTool(tool) =>
                 addTools.append(
                     quote(
                         tm.addTool($tool)
+                    )
+                )
+            case AgentToolAttr.NativeToolset(toolset) =>
+                addTools.append(
+                    quote(
+                        tm.addTools( ($toolset).tools )
                     )
                 )
         }

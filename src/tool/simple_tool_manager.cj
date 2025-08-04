@@ -53,7 +53,7 @@ Justify your selections with a brief reasoning.
       "name": "[Selected Tool Name]",
       "reason": "[Brief justification]"
     },
-    ... 
+    ...
   ]
 }
 ```
@@ -137,7 +137,7 @@ User Question: {question}
 private type InMemSemanticMap = SemanticMap<InMemoryVectorDatabase, SimpleIndexMap, String>
 
 public class SimpleToolManager <: ToolManager {
-    private let tools = HashMap<String, Tool>()
+    private let _tools = HashMap<String, Tool>()
 
     private let _enableFilter: Bool
 
@@ -152,42 +152,44 @@ public class SimpleToolManager <: ToolManager {
         }
     }
 
+    override public prop tools: Array<Tool> {
+        get() {
+            this._tools.values().toArray()
+        }
+    }
+
     override public prop enableFilter: Bool {
         get() { return _enableFilter }
     }
 
     override public func addTool(tool: Tool): Unit {
-        tools.add(tool.name, tool)
+        this._tools.add(tool.name, tool)
     }
 
     override public func delTool(tool: Tool): Unit {
-        if (tools.contains(tool.name)) {
-            tools.remove(tool.name)
+        if (this._tools.contains(tool.name)) {
+            this._tools.remove(tool.name)
         }
     }
 
-    override public func addTools(tools: Array<Tool>): Unit {
+    override public func addTools(tools: Collection<Tool>): Unit {
         for (tool in tools) {
             this.addTool(tool)
         }
     }
 
     override public func clear(): Unit {
-        this.tools.clear()
+        this._tools.clear()
     }
 
     override public func findTool(name: String): Option<Tool> {
-        return tools.get(name)
-    }
-
-    override public func getTools(): Array<Tool> {
-        return tools.values().toArray()
+        return this._tools.get(name)
     }
 
     private func splitTools(pred: (Tool) -> Bool): (ArrayList<Tool>, ArrayList<Tool>) {
         let groupA = ArrayList<Tool>()
         let groupB = ArrayList<Tool>()
-        for (tool in this.getTools()) {
+        for (tool in this.tools) {
             if (pred(tool)) {
                 groupA.add(tool)
             } else {
@@ -199,7 +201,7 @@ public class SimpleToolManager <: ToolManager {
 
     override public func filterTool(question: String, config: ToolSearchConfig): Array<Tool> {
         if (!this.enableFilter) {
-            return this.getTools()
+            return this.tools
         }
         // Tools, whose filterable == false, are special tools
         let (specialTools, normalTools) = this.splitTools({ tool =>

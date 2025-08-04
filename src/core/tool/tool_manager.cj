@@ -32,7 +32,7 @@ public struct ToolSearchConfig {
 /**
  * Manage agent tools
  */
-public interface ToolManager {
+public interface ToolManager <: Toolset {
     /**
      * Add a new tool
      */
@@ -46,7 +46,7 @@ public interface ToolManager {
     /**
      * Add new tools
      */
-    func addTools(tools: Array<Tool>): Unit
+    func addTools(tools: Collection<Tool>): Unit
 
     /**
      * Delete all tools
@@ -57,11 +57,6 @@ public interface ToolManager {
      * Find a tool according to its name
      */
     func findTool(name: String): Option<Tool>
-
-    /**
-     * Get all tools
-     */
-    func getTools(): Array<Tool>
 
     /**
      * Filter related tools to the question

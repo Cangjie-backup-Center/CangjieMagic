@@ -4,7 +4,7 @@
 package magic.tokenizer
 
 internal import magic.core.tokenizer.Tokenizer
-internal import magic.utils.{readFile, StringExt, exists}
+internal import magic.utils.{readFile, exists}
 internal import magic.core.tokenizer.*
 internal import std.collection.*
 internal import std.regex.*

@@ -70,7 +70,7 @@ private func transformJsonable(input: Tokens, attr: JsonableAttr): Tokens {
     } else if (let Some(enumDecl) <- (decl as EnumDecl)) {
         return transformJsonableEnum(enumDecl, attr)
     } else {
-        throw Exception("@jsonable should be used with class/struct declarations")
+        throw DslException("@jsonable should be used with class/struct/enum.")
     }
 }
 
