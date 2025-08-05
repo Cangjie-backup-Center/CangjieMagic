@@ -56,13 +56,15 @@ public abstract class AbsMCPClient <: MCPClient {
         return resp.result
     }
 
-    override public func getTools(): Array<Tool> {
-        this.doBeforeRequest()
-        let result = ArrayList<Tool>()
-        for (t in this.listTools().tools) {
-            result.add(MCPToolWrapper(this, t))
+    override public prop tools: Array<Tool> {
+        get() {
+            this.doBeforeRequest()
+            let result = ArrayList<Tool>()
+            for (t in this.listTools().tools) {
+                result.add(MCPToolWrapper(this, t))
+            }
+            return result.toArray()
         }
-        return result.toArray()
     }
 
     override public func callTool(name: String, args: Array<(String, ToJsonValue)>): ToolResponse {

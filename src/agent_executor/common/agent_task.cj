@@ -177,7 +177,7 @@ public open class AgentTask {
                 observation = "Fail to invoke the tool `${toolRequest.name}`"
             }
         } else {
-            let names = this.agent.toolManager.getTools() |>
+            let names = this.agent.toolManager.tools |>
                 map { t: Tool => t.name } |>
                 collectArray
             observation = "Tool `${toolRequest.name}` not found in ${names}"

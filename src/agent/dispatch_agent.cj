@@ -44,7 +44,7 @@ public class DispatchAgent <: BaseAgent {
 
     private func doSelect(request: AgentRequest): Option<Agent> {
         // Tools are updated when building the leader group, so we build the prompt every time
-        let selectAgent = ToolSelectAgent(this.model, this.toolManager.getTools())
+        let selectAgent = ToolSelectAgent(this.model, this.toolManager.tools)
         if (let Some(toolRequest) <- selectAgent.select(request.question)) {
             if (let Some(tool) <- this.toolManager.findTool(toolRequest.name)) {
                 LogUtils.info(this.name, "Dispatch to ${toolRequest.name}")

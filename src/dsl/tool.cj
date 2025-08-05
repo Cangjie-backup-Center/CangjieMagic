@@ -4,24 +4,24 @@
 macro package magic.dsl
 
 public import std.convert.Parsable
-import std.collection.{map, collectArrayList, ArrayList, HashMap}
+import std.collection.{map, collectArrayList, any, ArrayList, HashMap}
 import std.ast.*
 
-/**
- * Since ToolAttr is special that will contain multiple attributes with the same key,
- * we cannot use a hashmap to store its attributes.
- */
 private class ToolAttr <: Attr {
 
     init(map: AttrMap) { super(map) }
 
     init() { super(AttrMap()) }
 
-    var insideAgent = false
-
     prop description: String {
         get() { getString("description") ?? "" }
     }
+
+    // Whether this tool is defined inside an @agent.
+    var insideAgent = false
+
+    // Whether this tool is defined inside a @toolset.
+    var insideToolset = false
 
     private var _parameters: Option<HashMap<String, String>> = None
 
@@ -87,6 +87,9 @@ public macro tool(attrTokens: Tokens, input: Tokens): Tokens {
     if (insideParentContext("agent")) {
         attr.insideAgent = true
     }
+    if (insideParentContext("toolset")) {
+        attr.insideToolset = true
+    }
     let content = transformTool(input, attr)
     if (attr.dump) {
         printTokens(content)
@@ -97,50 +100,58 @@ public macro tool(attrTokens: Tokens, input: Tokens): Tokens {
 private func transformTool(input: Tokens, attr: ToolAttr): Tokens {
     let funcDecl: FuncDecl = parseFuncDecl(input)
     let funcName = funcDecl.identifier.value
-    setItem("internalTool", funcName) // Notify @agent
+    setItem("internalTool", funcName) // Notify @agent or @toolset
 
-    let callNativeFuncTool = buildCallNativeFuncTool(attr, funcDecl)
+    let initNativeFuncTool = initNativeFuncTool(attr, funcDecl)
 
-    let toolImplFuncName = newIdentifierToken("${TOOL_IMPL_PREFIX}${funcName}")
-    let toolWrapperClassName = newIdentifierToken("__wrapper_class_of_${funcName}")
-
-    let content = if (funcDecl.block.nodes.isEmpty()) { // Only declaration without function body
-        callNativeFuncTool
-    } else {
-        // If `@tool` defines an internal tool, we transform it as a prop
-        if (attr.insideAgent) {
-            quote(
-                $(renameFunction(funcDecl, toolImplFuncName))
-                $(funcDecl.modifiers) prop $(funcDecl.identifier): Tool {
-                    get() { $callNativeFuncTool }
-                }
-            )
-        } else {
-            quote(
-                $(renameFunction(funcDecl, toolImplFuncName))
-                $(funcDecl.modifiers) class $toolWrapperClassName <: NativeFuncTool {
-                    init() {
-                        $callNativeFuncTool
-                    }
-                    $(renameFunctionAsOperator(funcDecl))
-                }
-                $(funcDecl.modifiers) let $(funcDecl.identifier) = $toolWrapperClassName()
-            )
-        }
+    if (funcDecl.block.nodes.isEmpty()) { // Only declaration without function body
+        return initNativeFuncTool
     }
-    return content
+    let toolImplFuncName = newIdentifierToken("${TOOL_IMPL_PREFIX}${funcName}")
+    // If `@tool` defines an internal tool, we transform it as a prop
+    if (attr.insideAgent || attr.insideToolset) {
+        // If the tool is defined inside an agent or toolset, its modifier is always `public`
+        let modifiers = if (attr.insideToolset) {
+             modifiersWithPublic(funcDecl)
+        } else {
+            funcDecl.modifiers
+        }
+        return quote(
+            $(renameFunction(funcDecl, toolImplFuncName))
+            $(modifiers) prop $(funcDecl.identifier): Tool {
+                get() {
+                    $initNativeFuncTool
+                }
+            }
+        )
+    } else {
+        // Global functions will be transformed as a class object
+        let toolWrapperClassName = newIdentifierToken("__wrapper_class_of_${funcName}")
+        return quote(
+            $(renameFunction(funcDecl, toolImplFuncName))
+            $(funcDecl.modifiers) class $toolWrapperClassName <: NativeFuncTool {
+                init() {
+                    $initNativeFuncTool
+                }
+                $(renameFunctionAsOperator(funcDecl))
+            }
+            $(funcDecl.modifiers) let $(funcDecl.identifier) = $toolWrapperClassName()
+        )
+    }
 }
 
 /**
  * Generate the following code:
  * ```
- * NativeFuncTool(name: ...,
-                  description: ...,
-                  parameters: [("paramName", "paramDesc", TypeSchema.XXX), ...],
-                  execFn: ...)
+ * <NativeFuncTool|super>(
+ *   name: ...,
+ *   description: ...,
+ *   parameters: [("paramName", "paramDesc", TypeSchema.XXX), ...],
+ *   execFn: ...
+ *  )
  * ```
  */
-private func buildCallNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
+private func initNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens {
     let modifier = funcDecl.modifiers
     let funcName = newLiteralToken(funcDecl.identifier.value)
     let funcParams: ArrayList<FuncParam> = funcDecl.funcParams
@@ -163,7 +174,7 @@ private func buildCallNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): To
         collectArrayList
 
     let execFunc = transformToolExecuteLambda(toolAttr, funcDecl)
-    if (toolAttr.insideAgent) {
+    if (toolAttr.insideAgent || toolAttr.insideToolset) {
         return quote(NativeFuncTool(
             name: $funcName,
             description: $(newMultilineStringLiteralToken(toolAttr.description)),
@@ -218,4 +229,16 @@ private func transformToolExecuteLambda(toolAttr: ToolAttr, funcDecl: FuncDecl):
         $argConversion
         return $toolImplFuncName($argsTokens).toString()
     })
+}
+
+private func modifiersWithPublic(decl: Decl): ArrayList<Modifier> {
+    let modifiers = decl.modifiers.clone()
+    let isPublic = modifiers |>
+        any { modifier: Modifier =>
+            return modifier.keyword.kind ==  TokenKind.PUBLIC
+        }
+    if (!isPublic) {
+        modifiers.add(Modifier(Token(TokenKind.PUBLIC)))
+    }
+    return modifiers
 }

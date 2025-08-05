@@ -5,7 +5,7 @@ package magic.utils.http
 
 import magic.log.LogUtils
 import magic.config.Config
-import magic.utils.{saveTempFile, newProcess, removeIfExists, StringExt}
+import magic.utils.{saveTempFile, newProcess, removeIfExists}
 
 import std.io.InputStream
 import std.io.StringReader

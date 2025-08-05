@@ -9,7 +9,20 @@ import magic.tool.AgentAsTool
 import magic.log.LogUtils
 import magic.jsonable.*
 import magic.core.tool.Tool
-import magic.utils.{HttpContextExi, randomString}
+import magic.utils.{randomString}
+
+import stdx.net.http.*
+
+extend HttpContext {
+    public func startSSE(): Unit {
+        this.responseBuilder.header("Content-Type", "text/event-stream")
+        this.responseBuilder.header("Cache-Control", "no-cache")
+        this.responseBuilder.header("Connection", "keep-alive")
+        this.responseBuilder.header("Transfer-Encoding", "chunked")
+        this.responseBuilder.header("Access-Control-Allow-Origin", "*")
+        this.responseBuilder.status(200)
+    }
+}
 
 public class SseMCPServer <: AbsMCPServer {
     var client_map = ConcurrentHashMap<String, HttpResponseWriter>()
@@ -21,63 +34,57 @@ public class SseMCPServer <: AbsMCPServer {
     public func start(host: String, port: UInt16): Unit {
         let http_server = ServerBuilder().addr(host).port(port).build()
 
-        var sse: HttpRequestHandler = FuncHandler(
-            {
-                httpContext =>
-                if (httpContext.request.method != "GET") {
-                    return
-                }
+        let sseHandler: HttpRequestHandler = FuncHandler({ httpContext =>
+            if (httpContext.request.method != "GET") {
+                return
+            }
 
-                httpContext.UpgroudeSSE()
+            httpContext.startSSE()
 
-                let w = httpContext.sendEvent()
-                let uuid = randomString(size: 12)
+            let writer = HttpResponseWriter(httpContext)
+            let uuid = randomString(size: 12)
 
-                w.write("event: endpoint\ndata: /messages/?session_id=${uuid}\n\n".toArray())
-                this.client_map.add(uuid, w)
+            writer.write("event: endpoint\ndata: /messages/?session_id=${uuid}\n\n".toArray())
+            this.client_map.add(uuid, writer)
 
-                while (true) {
-                    sleep(Duration.second * 8)
-                    try {
-                        w.write(": ping - ${DateTime.now()}\n\n".toArray())
-                    } catch (e: Exception) {
-                        LogUtils.error("Client: ${uuid} ${e.message}")
-                        this.client_map.remove(uuid)
-                        break
-                    }
+            while (true) {
+                sleep(Duration.second * 8)
+                try {
+                    writer.write(": ping - ${DateTime.now()}\n\n".toArray())
+                } catch (e: Exception) {
+                    LogUtils.error("Client: ${uuid} ${e.message}")
+                    this.client_map.remove(uuid)
+                    break
                 }
             }
-        )
+        })
 
-        var messages: HttpRequestHandler = FuncHandler(
-            {
-                httpContext =>
-                if (httpContext.request.method != "POST") {
-                    return
-                }
-
-                let qurey = httpContext.request.url.queryForm
-                let length = httpContext.request.bodySize
-
-                let stream = Array<UInt8>(length.getOrThrow(), repeat: 0)
-                httpContext.request.body.read(stream)
-
-                let msg = String.fromUtf8(stream)
-                let uuid = qurey.get("session_id").getOrThrow().toString()
-
-                LogUtils.info("Recv: ${uuid}: ${msg}")
-
-                httpContext.responseBuilder.status(202)
-                httpContext.responseBuilder.body("Accepted")
-
-                spawn {
-                    this.loop(msg, uuid)
-                }
+        var messagesHandler: HttpRequestHandler = FuncHandler({ httpContext =>
+            if (httpContext.request.method != "POST") {
+                return
             }
-        )
 
-        http_server.distributor.register("/sse", sse)
-        http_server.distributor.register("/messages/", messages)
+            let query = httpContext.request.url.queryForm
+            let length = httpContext.request.bodySize
+
+            let stream = Array<UInt8>(length.getOrThrow(), repeat: 0)
+            httpContext.request.body.read(stream)
+
+            let msg = String.fromUtf8(stream)
+            let uuid = query.get("session_id").getOrThrow().toString()
+
+            LogUtils.info("Recv: ${uuid}: ${msg}")
+
+            httpContext.responseBuilder.status(202)
+            httpContext.responseBuilder.body("Accepted")
+
+            spawn {
+                this.loop(msg, uuid)
+            }
+        })
+
+        http_server.distributor.register("/sse", sseHandler)
+        http_server.distributor.register("/messages/", messagesHandler)
 
         http_server.serve()
     }
@@ -108,7 +115,7 @@ public class SseMCPServer <: AbsMCPServer {
     public static func startWith(agents: Array<Agent>, host: String, port: UInt16): Unit {
         let allTools = ArrayList<Tool>()
         for (agent in agents) {
-            allTools.add(all: agent.toolManager.getTools())
+            allTools.add(all: agent.toolManager.tools)
             // The agent itself is also a tool
             allTools.add(AgentAsTool(agent))
         }

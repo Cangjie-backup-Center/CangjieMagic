@@ -59,7 +59,7 @@ class ReactWorker <: BaseAgent {
             name: "React Worker Agent"
         )
         this.planTask = planTask
-        this.toolManager.addTools(planTask.agent.toolManager.getTools())
+        this.toolManager.addTools(planTask.agent.toolManager.tools)
         this.executor = ReactExecutor()
     }
 

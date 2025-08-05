@@ -4,7 +4,6 @@
 package magic.parser
 
 import magic.log.LogUtils
-import magic.utils.{StringExt}
 
 import std.collection.ArrayList
 import std.regex.Regex

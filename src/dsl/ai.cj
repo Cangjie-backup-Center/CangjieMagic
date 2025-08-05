@@ -170,7 +170,7 @@ private func transformAi(input: Tokens, attr: AiAttr): Tokens {
                 addTools.append(
                     quote(
                         let $client = StdioMCPClient($commandLine, env: [$env])
-                        tm.addTools($client.getTools())
+                        tm.addTools($client.tools)
                     )
                 )
             case AgentToolAttr.HttpMcp(_url) =>
@@ -179,14 +179,19 @@ private func transformAi(input: Tokens, attr: AiAttr): Tokens {
                 addTools.append(
                     quote(
                         let $client = SseMCPClient($url)
-                        tm.addTools($client.getTools())
+                        tm.addTools($client.tools)
                     )
                 )
-            case AgentToolAttr.NativeFunc(_tool) =>
-                let tool = newIdentifierToken(_tool)
+            case AgentToolAttr.NativeFuncTool(tool) =>
                 addTools.append(
                     quote(
                         tm.addTool($tool)
+                    )
+                )
+            case AgentToolAttr.NativeToolset(toolset) =>
+                addTools.append(
+                    quote(
+                        tm.addTool( ($toolset).tools )
                     )
                 )
         }
@@ -199,7 +204,7 @@ private func transformAi(input: Tokens, attr: AiAttr): Tokens {
             let agent = AiFuncAgent(
                 model: $modelTk,
                 temperature: $temperatureTk,
-                tools: tm.getTools(),
+                tools: tm.tools,
                 funcPrompt: $funcPromptTk,
                 funcName: $(newLiteralToken(funcName.value)),
                 parameters: [$(joinTokens(parameters, Token(TokenKind.COMMA)))],

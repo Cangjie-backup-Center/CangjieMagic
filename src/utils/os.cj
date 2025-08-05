@@ -12,7 +12,9 @@ import std.sync.sleep
 import std.os.process.{Process, ProcessRedirect, SubProcess}
 //--------------------------------------------------------
 @When[cjc_version >= "1.0.0"]
-import std.process.{Process, ProcessRedirect, SubProcess}
+import std.process.{launch, ProcessRedirect, SubProcess}
+
+import std.env.{getVariable, setVariable, getVariables}
 //======================================================
 
 @When[cjc_version < "1.0.0"]
@@ -28,7 +30,7 @@ protected func getEnv(envVarName: String): Option<String> {
 }
 @When[cjc_version >= "1.0.0"]
 protected func getEnv(envVarName: String): Option<String> {
-    Process.current.getEnv(envVarName)
+    getVariable(envVarName)
 }
 
 @When[cjc_version < "1.0.0"]
@@ -37,14 +39,14 @@ protected func setEnv(envVarName: String, value: String): Unit {
 }
 @When[cjc_version >= "1.0.0"]
 protected func setEnv(envVarName: String, value: String): Unit {
-    Process.current.setEnv(envVarName, value)
+    setVariable(envVarName, value)
 }
 
 protected func newProcess(name: String, args: Array<String>, env!: Array<(String, String)> = [], redirectErr!: Bool = true): SubProcess {
-    let allEnv = HashMap(Process.current.environment)
+    let allEnv = HashMap(getVariables())
     allEnv.add(all: env)
     if (redirectErr) {
-        return Process.start(
+        return launch(
             name, args,
             environment: allEnv,
             stdIn: ProcessRedirect.Pipe,
@@ -52,7 +54,7 @@ protected func newProcess(name: String, args: Array<String>, env!: Array<(String
             stdErr: ProcessRedirect.Pipe
         )
     } else {
-        return Process.start(
+        return launch(
             name, args,
             environment: allEnv,
             stdIn: ProcessRedirect.Pipe,

@@ -3,8 +3,6 @@
  */
 package magic.prompt
 
-import magic.utils.StringExt
-
 import std.regex.{Regex, MatchData}
 import std.collection.{HashMap, map, collectArray}
 

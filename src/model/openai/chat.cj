@@ -5,7 +5,6 @@ package magic.model.openai
 
 import magic.core.model.*
 import magic.utils.http.*
-import magic.utils.StringExt
 import magic.core.message.*
 import magic.dsl.jsonable
 import magic.jsonable.*
