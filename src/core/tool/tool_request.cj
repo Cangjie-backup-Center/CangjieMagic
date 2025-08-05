@@ -4,8 +4,11 @@
 package magic.core.tool
 
 import std.collection.{HashMap, map, collectArray}
-import stdx.encoding.json.JsonValue
+import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
 
+/**
+ * Since it's hard to define its type schema, we do not let it implement Jsonable.
+ */
 public struct ToolRequest <: ToString {
     public ToolRequest(
         public let name!: String,                    // Tool name
@@ -20,5 +23,16 @@ public struct ToolRequest <: ToString {
             } |>
             collectArray
         return "${this.name}(${String.join(xs, delimiter: ", ")})"
+    }
+
+    public func toJsonValue(): JsonValue {
+        let jo = JsonObject()
+        jo.put("name", JsonString(this.name))
+        let argsJo = JsonObject()
+        for (kv in this.args) {
+            argsJo.put(kv[0], kv[1])
+        }
+        jo.put("arguments", argsJo)
+        return jo
     }
 }

@@ -80,7 +80,7 @@ There are some sample programs in the directory src/examples:
 
 可以通过 `cjpm run --name magic.examples.<name>` 运行。
 
-Run them with `cjpm run --name magic.examples.<name>`.  
+Run them with `cjpm run --name magic.examples.<name>`.
 
 MCP Server 集合示例：https://gitcode.com/Cangjie-TPC/CangjieMagic-MCPServer
 
@@ -103,6 +103,10 @@ https://www.bilibili.com/video/BV1hQQzYAEHL/?spm_id_from=333.337.search-card.all
 
 ## 重要变更/Import Changes
 
-**2025/7/8**: 
+**2025/8/4**:
+- 增加 `@toolset` 语法，能够定义工具集
+  Introduced the @toolset syntax, enabling the definition of toolset classes.
+
+**2025/7/8**:
 - `@agent` 的工具配置语法变更；修改 `@ai` 函数语法；新语法详见 [docs/tutorial.md](./docs/tutorial.md)
   The tool configuration syntax for `@agent` has been updated, and the `@ai` function syntax has been modified. Refer to [docs/tutorial-en.md](./docs/tutorial-en.md) for the new syntax details.

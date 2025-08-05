@@ -86,11 +86,8 @@ public struct ExecutionOpSet {
 
     private static func doInvokeTool(state: ExecutionState, message: Message): ExecutionState {
         LogUtils.info(state.task.agent.name, "Action: ${message.content}")
-        // If the content does not contain ```json ... ```, treat the content as a json value
-        let jsonStr = ParserUtils.extractFirstCode(message.content, "json") ?? message.content.trimAscii()
-        let json = JsonValue.fromStr(jsonStr).asObject()
         // Parse the content
-        let toolRequest = ParserUtils.parseToolRequest(jsonStr)
+        let toolRequest = ParserUtils.extractFirstToolRequest(message.content)
         // Execute the tool
         let observation = state.task.invokeTool(toolRequest)
         // Special terminal tools may stop the execution
@@ -103,7 +100,7 @@ public struct ExecutionOpSet {
         state.task.notify(Tag.OBSERVATION, observation)
         // Add action and observation to the messageList
         state.execution.addStepMessage(
-            Message.assistant("```json\n${jsonStr}\n```".withTag(Tag.ACTION)),
+            Message.assistant("```json\n${toolRequest.toJsonValue().toJsonString()}\n```".withTag(Tag.ACTION)),
         )
         state.execution.addStepMessage(
             Message.assistant(observation.withTag(Tag.OBSERVATION)),
