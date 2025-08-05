@@ -5,11 +5,12 @@ package magic.core.rag
 
 import magic.jsonable.*
 import magic.prompt.ToPrompt
+import magic.utils.calMd5
+
 import std.collection.HashMap
 import std.collection.ArrayList
 import stdx.encoding.json.*
 import stdx.serialization.serialization.*
-import magic.utils.calMd5
 
 public class Document <: Jsonable<Document> & ToString & ToPrompt & Serializable<Document> & Equatable<Document> {
     public let id: String
