@@ -811,6 +811,7 @@ Models are configured as `<provider>:<model>`. Current providers:
 | Zhipu AI | `zhipuai:glm-4` | `ZHIPUAI_API_KEY` | `ZHIPUAI_BASE_URL` (default: `https://open.bigmodel.cn/api/paas/v4`) |
 | Google | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` | `GOOGLE_BASE_URL`，(default: `https://generativelanguage.googleapis.com/v1beta/openai`) |
 | Moonshot | `moonshot:kimi-k2-0711-preview` | `MOONSHOT_API_KEY` | `MOONSHOT_BASE_URL` (default: `https://api.moonshot.cn/v1`) |
+| OpenRouter | `openrouter:qwen/qwen3-coder:free` | `OPENROUTER_API_KEY` | `OPENROUTER_BASE_URL` (default: `https://openrouter.ai/api/v1`) |
 
 **Model Support Matrix**
 
@@ -826,6 +827,7 @@ Models are configured as `<provider>:<model>`. Current providers:
 | Zhipu AI | ✔️ | ❌ | ❌ |
 | Google | ✔️ | ❌ | ❌ |
 | Moonshot | ✔️ | ❌ | ❌ |
+| OpenRouter | ✔️ | ❌ | ❌ |
 
 ## Core API Reference
 
