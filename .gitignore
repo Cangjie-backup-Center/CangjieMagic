@@ -12,3 +12,4 @@ bench/
 venv/
 .venv/
 .DS_Store
+build-script-cache/

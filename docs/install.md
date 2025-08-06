@@ -6,8 +6,7 @@
 
 - [Install Cangjie Magic](#install-cangjie-magic)
   - [Cangjie 通用版/General Edition](#cangjie-通用版general-edition)
-    - [推荐/Recommended](#推荐recommended)
-    - [手动/Manual](#手动manual)
+    - [下载/Download Cangjie Magic ](#下载download-cangjie-magic)
     - [引用/Import Cangjie Magic](#引用import-cangjie-magic)
     - [Quick Start](#quick-start)
   - [Cangjie 鸿蒙版/HarmonyOS Edition](#cangjie-鸿蒙版harmonyos-edition)
@@ -25,49 +24,15 @@ The code currently compiles and runs correctly only on [Cangjie LTS General Edit
 
 ## Cangjie 通用版/General Edition
 
-### 推荐/Recommended
+### 下载/Download Cangjie Magic 
 
-执行命令自动下载并配置 Cangjie Magic 项目
+下载仓颉 Magic 源代码。使用 Git 运行以下命令：
 
-Execute the command to download and configure the Cangjie Magic project
-
-**Linux or MacOS**
-
-```bash
-curl -LsSf https://raw.gitcode.com/Cangjie-TPC/CangjieMagic/raw/dev/scripts/install.sh | bash
-```
-
-**Windows**
-
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://raw.gitcode.com/Cangjie-TPC/CangjieMagic/raw/dev/scripts/install.ps1 | iex"
-```
-
-注意：如果执行上述命令失败，参照以下手动安装方式
-
-NOTE: If executing the above command fails, refer to the following manual installation method
-
-### 手动/Manual
-
-**步骤** 1️⃣: 下载仓颉 Magic 源代码。使用 Git 运行以下命令：
-
-**Step** 1️⃣: Download the source code of Cangjie Magic. Using git, run:
+Download the source code of Cangjie Magic. Using git, run:
 
 ```bash
 git clone https://gitcode.com/Cangjie-TPC/CangjieMagic.git -b dev
 ```
-
-**步骤** 2️⃣: 根据项目说明安装并配置 [Cangjie/cangjie-stdx](https://gitcode.com/Cangjie/cangjie-stdx)。具体步骤如下：
-
-**Step** 2️⃣: Install and configure [Cangjie/cangjie-stdx](https://gitcode.com/Cangjie/cangjie-stdx) stdx according to the its project. Concretely, you should follow these steps:
-
-- 下载 cangjie-stdx 二进制文件（如 `cangjie-stdx-linux-aarch64-x.x.x.x.zip`），解压到本地目录
-
-  Download cangjie-stdx binary file, i.e., cangjie-stdx-linux-aarch64-x.x.x.x.zip, and unzip it to a local directory
-
-- 配置 Cangjie Magic 项目的 `cjpm.toml` 文件（通过步骤 1️⃣ 下载的项目）
-
-  Set the `cjpm.toml` of the Cangjie Magic project (you downloaded in step 1️⃣)
 
 ### 引用/Import Cangjie Magic
 
