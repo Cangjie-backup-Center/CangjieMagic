@@ -31,6 +31,12 @@ private class ToolsetAttr <: Attr {
 
 public macro toolset(input: Tokens): Tokens {
     let attr = ToolsetAttr()
+    for (m in getChildMessages("tool")) {
+        if (m.hasItem("internalTool")) {
+            let name = m.getString("internalTool")
+            attr.internalTools.add(name)
+        }
+    }
     return transformToolset(input, attr)
 }
 
