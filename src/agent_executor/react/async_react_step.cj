@@ -59,7 +59,7 @@ class AsyncReactStep {
 
    func peekTag(): String {
         this.readThoughts()
-        // If there are no tags, this step is a single [Thought]
+        // If there are no tags, this step is a single [Thought]?
         if (let Some(tag) <- this.parser.currTag) {
             return tag
         } else {

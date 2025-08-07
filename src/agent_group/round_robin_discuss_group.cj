@@ -56,7 +56,7 @@ class RoundRobinDiscussGroup <: DiscussGroup {
         )
 
         let msg = match (ModelUtils.agentMakeChat(this.host, messageList)) {
-            case Some(msg) => msg
+            case Some(chatResp) => chatResp.message
             case None => return Selection.Failure("LLM model failed")
         }
         LogUtils.info(this.host.name, msg)

@@ -216,7 +216,8 @@ private func transformToolExecuteLambda(toolAttr: ToolAttr, funcDecl: FuncDecl):
     for (i in 0..funcParams.size) {
         let paramName = funcParams[i].identifier.value
         let paramTy = funcParams[i].paramType
-        let rawArg = quote(args[$(newLiteralToken(paramName))])
+        let errMsg = newLiteralToken("Fail to invoke the native function tool. Reason: argument `${paramName}` not found")
+        let rawArg = quote(args.get( $(newLiteralToken(paramName)) ).getOrThrow({=> ToolException($errMsg)}))
         let arg: Token = newIdentifierToken("arg_${i}")
          argConversion.append(quote(
             let $arg = $paramTy.fromJsonValue($rawArg)

@@ -105,7 +105,7 @@ protected struct HttpUtilsImpl {
             // The last line is the status code
             var prevLine: Option<String> = None
             while (let Some(line) <- outReader.readln()) {
-                LogUtils.debug("Receive http stream: `${line}`")
+                // LogUtils.debug("Receive http stream: `${line}`")
                 if (let Some(l) <- prevLine) {
                     httpStream.put("${l}\n".toArray())
                 }

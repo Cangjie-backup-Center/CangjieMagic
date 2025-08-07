@@ -21,6 +21,10 @@ ${EXECUTION_DEFINITION}
 """
 
 let ACTION_PROMPT = """
+Select a tool to accomplish the user question step by step.
+"""
+
+let ACTION_PROMPT_WITH_TOOLS = """
 Decide which tool to use next based on the user question and the current state of the execution.
 ${EXECUTION_DEFINITION}
 You can select ONLY ONE tool!
@@ -80,6 +84,10 @@ ${EXECUTION_DEFINITION}
 """
 
 let TOOL_PROMPT = """
+Given the description of a tool and past execution history, you are required to generate appropriate arguments for the next execution of the tool.
+"""
+
+let TOOL_PROMPT_WITH_TOOLS = """
 Given the description of a tool and past execution history, you are required to generate appropriate arguments for the next execution of the tool.
 ${EXECUTION_DEFINITION}
 

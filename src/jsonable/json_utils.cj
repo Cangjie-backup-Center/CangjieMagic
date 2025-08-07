@@ -35,6 +35,12 @@ protected struct JsonUtils {
         )
     }
 
+    public static func buildJsonArray<T>(items: Array<T>): JsonArray where T <: JsonValue {
+        return JsonArray(
+            items |> map { v => (v as JsonValue).getOrThrow() } |> collectArray
+        )
+    }
+
     public static func appendJsonObject(obj: JsonObject, items: Array<(String, String)>): JsonObject {
         for ((k, v) in items) {
             obj.put(k, JsonString(v))

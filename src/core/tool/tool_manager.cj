@@ -3,32 +3,6 @@
  */
 package magic.core.tool
 
-import magic.core.model.{ChatModel, EmbeddingModel}
-
-public struct ToolSearchConfig {
-    public ToolSearchConfig(
-        /**
-         * Filter tools via an embedding model or a chat model
-         */
-        public let viaEmbedding!: Bool = false,
-
-        /**
-         * The chat model to use
-         */
-        public let chatModel!: Option<ChatModel> = None,
-
-        /**
-         * The embedding model to use
-         */
-        public let embeddingModel!: Option<EmbeddingModel> = None,
-
-        /**
-         * The maximum number of tools to filter
-         */
-        public let number!: Int64 = 10
-    ) { }
-}
-
 /**
  * Manage agent tools
  */
@@ -61,7 +35,7 @@ public interface ToolManager <: Toolset {
     /**
      * Filter related tools to the question
      */
-    func filterTool(question: String, config: ToolSearchConfig): Array<Tool>
+    func filterTool(question: String, filter: ToolFilter): Array<Tool>
 
     /**
      * Whether filtering tools is enabled

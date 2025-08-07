@@ -67,7 +67,7 @@ func resultSummarize(planTask: PlanTask): String {
     let messages = MessageList([
         Message.user(buildSummarizePrompt(planTask))
     ])
-    return planTask.chatLLM(messages).content
+    return planTask.chatLLM(messages).message.content
 }
 
 func asyncResultSummarize(planTask: PlanTask): Iterator<String> {

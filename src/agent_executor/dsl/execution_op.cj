@@ -3,15 +3,17 @@
  */
 package magic.agent_executor.dsl
 
-import magic.core.agent.*
-import magic.core.tool.Tool
-import magic.core.message.{Message, MessageList}
 import magic.agent_executor.common.{AgentTask, PromptBuilder}
+import magic.core.agent.*
+import magic.core.tool.{Tool, ToolRequest}
+import magic.core.message.{Message, MessageList}
+import magic.core.model.ChatResponse
+import magic.config.Config
 import magic.model.ModelUtils
 import magic.prompt.Template
-import magic.parser.{Tag, WithTag, ParserUtils}
+import magic.parser.{Tag, WithTag, ParserUtils, ParserException}
 import magic.log.LogUtils
-import magic.jsonable.{Jsonable, TypeSchema}
+import magic.jsonable.{Jsonable, TypeSchema, JsonUtils}
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import stdx.encoding.json.*
@@ -43,18 +45,29 @@ public struct OnCase {
 public struct ExecutionOpSet {
     private static func chatWithOperation(state: ExecutionState,
                                           operationPrompt: String,
-                                          stop!: Option<Array<String>>): Message {
+                                          tools!: Array<Tool>,
+                                          stop!: Option<Array<String>>): ChatResponse {
         let agent = state.task.agent
         // Prepare input messages
         LogUtils.debug(agent.name, operationPrompt)
         state.execution.addMessage(Message.system(operationPrompt))
         // Call the LLM
         try {
-            return state.task.chatLLM(state.execution.messages, stop: stop)
+            return state.task.chatLLM(
+                state.execution.messages, stop: stop, tools: tools
+            )
         } finally {
             state.execution.removeLastMessage()
         }
     }
+
+    private static func chatWithOperation(state: ExecutionState,
+                                          operationPrompt: String,
+                                          stop!: Option<Array<String>>): Message {
+        return chatWithOperation(state, operationPrompt, tools: [], stop: stop).message
+    }
+
+    //-----------------------------------------------------------
 
     public static func plan(state: ExecutionState): ExecutionState {
         if (state.done) {
@@ -84,10 +97,69 @@ public struct ExecutionOpSet {
         return state
     }
 
-    private static func doInvokeTool(state: ExecutionState, message: Message): ExecutionState {
-        LogUtils.info(state.task.agent.name, "Action: ${message.content}")
-        // Parse the content
-        let toolRequest = ParserUtils.extractFirstToolRequest(message.content)
+    public static func action(state: ExecutionState): ExecutionState {
+        if (state.done) {
+            return state
+        }
+        // Inject the `answer` special tool
+        var isInjected = false
+        let schema = state.task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
+            .flatMap { value: Any => (value as TypeSchema) }
+        let answerTool = buildAnswerTool(schema)
+        if (state.task.agent.toolManager.findTool(answerTool.name).isNone()) {
+            state.task.agent.toolManager.addTool(answerTool)
+            isInjected = true
+        }
+        try {
+            let chatResp = if (Config.enableFunctionCall) {
+                chatWithOperation(
+                    state,
+                    ACTION_PROMPT,
+                    tools: state.task.availableTools,
+                    stop: [Tag.OBSERVATION]
+                )
+            } else {
+                let prompt = ACTION_PROMPT_WITH_TOOLS.format([
+                    ("tools", PromptBuilder.buildAgentToolsPrompt(state.task))
+                ])
+                chatWithOperation(
+                    state,
+                    prompt,
+                    tools: [],
+                    stop: [Tag.OBSERVATION]
+                )
+            }
+            return doInvokeTool(state, chatResp)
+        } finally {
+            // Remove the injected tool
+            if (isInjected) {
+                state.task.agent.toolManager.delTool(answerTool)
+            }
+        }
+    }
+
+    private static func doInvokeTool(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
+        LogUtils.info(state.task.agent.name, "Action: ${chatResp}")
+        // Parse the tool request from the chat response:
+        // If the chat response does not contain a tool request,
+        // extract the request from the message content
+        let toolRequest = try {
+            chatResp.toolRequest ?? ParserUtils.extractFirstToolRequest(chatResp.message.content)
+        } catch (ex: ParserException) {
+            // If function call is enabled and failing to extract the tool request,
+            // treat the content as the final answer
+            if (Config.enableFunctionCall) {
+                ToolRequest(
+                    name: ANSWER_TOOL_NAME,
+                    args: JsonUtils.buildJsonObject([
+                        ("result", chatResp.message.content)
+                    ])
+                )
+            } else {
+                throw ex
+            }
+        }
+
         // Execute the tool
         let observation = state.task.invokeTool(toolRequest)
         // Special terminal tools may stop the execution
@@ -106,37 +178,6 @@ public struct ExecutionOpSet {
             Message.assistant(observation.withTag(Tag.OBSERVATION)),
         )
         return state
-    }
-
-    public static func action(state: ExecutionState): ExecutionState {
-        if (state.done) {
-            return state
-        }
-        // Inject a special tool
-        var isInjected = false
-        let schema = state.task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
-            .flatMap { value: Any => (value as TypeSchema) }
-        let answerTool = buildAnswerTool(schema)
-        if (state.task.agent.toolManager.findTool(answerTool.name).isNone()) {
-            state.task.agent.toolManager.addTool(answerTool)
-            isInjected = true
-        }
-        let prompt = ACTION_PROMPT.format([
-            ("tools", PromptBuilder.buildAgentToolsPrompt(state.task))
-        ])
-        try {
-            let msg = chatWithOperation(state, prompt, stop: [Tag.OBSERVATION])
-            // Parse the response
-            if (let Some(_reason) <- msg.reason) {
-                LogUtils.info(state.task.agent.name, "Reason: ${_reason}")
-            }
-            return doInvokeTool(state, msg)
-        } finally {
-            // Remove the injected tool
-            if (isInjected) {
-                state.task.agent.toolManager.delTool(answerTool)
-            }
-        }
     }
 
     public static func done(state: ExecutionState): ExecutionState {
@@ -195,12 +236,16 @@ public struct ExecutionOpSet {
             var currState = state
             for (tool in tools) {
                 // Prepare input messages
-                let prompt = TOOL_PROMPT.format(
-                    ("tool", tool.toJsonValue().toJsonString()),
-                    ("tool_name", tool.name),
-                )
-                let msg = chatWithOperation(currState, prompt, stop: [])
-                currState = doInvokeTool(currState, msg)
+                let chatResp = if (Config.enableFunctionCall) {
+                    chatWithOperation(currState, TOOL_PROMPT, tools: tools, stop: [])
+                } else {
+                    let prompt = TOOL_PROMPT.format(
+                        ("tool", tool.toJsonValue().toJsonString()),
+                        ("tool_name", tool.name),
+                    )
+                    chatWithOperation(currState, prompt, tools: [], stop: [])
+                }
+                currState = doInvokeTool(currState, chatResp)
             }
             return currState
         }

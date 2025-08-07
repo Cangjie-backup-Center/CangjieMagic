@@ -6,12 +6,13 @@ package magic.model.openai
 import magic.core.model.*
 import magic.utils.http.*
 import magic.core.message.*
+import magic.core.tool.{Tool, ToolRequest}
 import magic.dsl.jsonable
 import magic.jsonable.*
 import magic.config.Config
 import magic.log.LogUtils
 
-import std.collection.ArrayList
+import std.collection.{ArrayList, map, collectArray}
 import std.collection.HashMap
 import std.time.DateTime
 import stdx.encoding.json.*
@@ -31,17 +32,30 @@ private class OpenAIChatResponse {
 
 @jsonable
 private class Choice {
-    let finish_reason: String
     let index: Int64
     let message: OpenAIChatMessage
+    let finish_reason: String
 }
 
 @jsonable
 private class OpenAIChatMessage {
-    let content: String
     let role: String
+    let content: String
     let reasoning_content: Option<String>
-    // let tool_calls: Array<ToolCall>
+    let tool_calls: Array<OpenAIChatToolCall>
+}
+
+@jsonable
+private class OpenAIChatToolCall {
+    let id: String
+    // let `type`: String
+    let function: OpenAIChatFunctionCall
+}
+
+@jsonable
+private class OpenAIChatFunctionCall {
+    let name: String
+    let arguments: String // Arguments of the function call
 }
 
 @jsonable
@@ -191,7 +205,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
             this.usage = ChatUsage(
                 promptTokens: respUsage.prompt_tokens,
                 completionTokens: respUsage.completion_tokens,
-                totalTokens: respUsage.total_tokens,
+                // totalTokens: respUsage.total_tokens,
                 timeCost: duration
             )
         }
@@ -203,7 +217,6 @@ public class OpenAIChatModel <: ChatModel {
     private let model: String
     private let baseURL: String
     public let apiKey: String
-    private let temperature: Option<Float64>
     private var _contextLength: Int64
 
     public init(
@@ -215,7 +228,6 @@ public class OpenAIChatModel <: ChatModel {
         this.model = model
         this.baseURL = baseURL
         this.apiKey = apiKey
-        this.temperature = temperature
         this._contextLength = contextLength
     }
 
@@ -241,7 +253,7 @@ public class OpenAIChatModel <: ChatModel {
                     if (body.isEmpty()) {
                         throw ModelException("Http response body is empty")
                     } else {
-                        return parseChatResponse(body, DateTime.now() - start)
+                        return this.parseResponse(body, DateTime.now() - start)
                     }
                 case None => throw ModelException("Fail to get chat http response")
             }
@@ -255,11 +267,15 @@ public class OpenAIChatModel <: ChatModel {
             ("Content-Type", "application/json"),
             ("Authorization", "Bearer ${this.apiKey}")
         ])
+        let req = this.request2Json(chatReq, stream: stream)
+        return (header, req)
+    }
 
-        let req = JsonObject()
-        requestAddChatHistory(req, chatReq.messageList)
-        req.put("model", JsonString(model))
-        req.put("stream", JsonBool(stream))
+    private func request2Json(chatReq: ChatRequest, stream!: Bool): JsonObject {
+        let jo = JsonObject()
+        jo.put("model", JsonString(model))
+        jo.put("messages", this.messageList2Json(chatReq.messageList))
+        jo.put("stream", JsonBool(stream))
         if (let Some(items) <- chatReq.stop) {
             if (!items.isEmpty()) {
                 let ja = JsonArray(
@@ -267,29 +283,35 @@ public class OpenAIChatModel <: ChatModel {
                         JsonString(items[i])
                     })
                 )
-                req.put("stop", ja)
+                jo.put("stop", ja)
             }
         }
         if (let Some(temp) <- chatReq.temperature) {
-            req.put("temperature", JsonFloat(temp))
-        } else if (let Some(temp) <- this.temperature) {
-            req.put("temperature", JsonFloat(temp))
+            jo.put("temperature", JsonFloat(temp))
         }
-
-        return (header, req)
+        if (!chatReq.tools.isEmpty()) {
+            jo.put("tools", this.tools2Json(chatReq.tools))
+        }
+        return jo
     }
 
-    private func requestAddChatHistory(request: JsonObject, messageList: MessageList): Unit {
+    private func messageList2Json(messageList: MessageList): JsonArray {
         let ja = JsonArray()
         for (msg in messageList) {
             let msgJson = if (let Some(image) <- msg.image) {
                 // Schema: { role: string,
-                //           content: [ {type: string, text: string},
-                //                      {type: string, image_url: {url: string} }] }
+                //           content: [
+                //             { type: "text", text: string },
+                //             { type: "image_url", image_url: {url: string} }
+                //           ]
+                // }
                 JsonUtils.buildJsonObject(
                     ("role", JsonString(msg.role.toString())),
                     ("content", JsonArray([
-                        JsonUtils.buildJsonObject([("type", "text"), ("text", msg.content)]),
+                        JsonUtils.buildJsonObject([
+                            ("type", "text"),
+                            ("text", msg.content)
+                        ]),
                         JsonUtils.buildJsonObject(
                             ("type", JsonString("image_url")),
                             ("image_url", JsonUtils.buildJsonObject("url", image))
@@ -305,29 +327,57 @@ public class OpenAIChatModel <: ChatModel {
             }
             ja.add(msgJson)
         }
-        request.put("messages", ja)
+        return ja
     }
 
-    private func parseChatResponse(body: String, duration: Duration): ChatResponse {
+    private func tools2Json(tools: Array<Tool>): JsonArray {
+        tools |>
+            map { tool =>
+                JsonUtils.buildJsonObject([
+                    ("type", JsonString("function")),
+                    ("function", tool.toJsonValue())
+                ])
+            } |>
+            collectArray |>
+            JsonUtils.buildJsonArray
+    }
+
+    private func parseResponse(body: String, duration: Duration): ChatResponse {
         let resp = OpenAIChatResponse.fromJsonValue(JsonValue.fromStr(body))
         let messageList = MessageList()
-        for (choice in resp.choices) {
-            let msg = choice.message
-            messageList.addMessage(
-                Message(
-                    MessageRole.fromStr(msg.role),
-                    msg.content,
-                    reason: msg.reasoning_content
-                )
+        if (resp.choices.size > 1) {
+            LogUtils.error("The chat model replied multiple messages")
+        } else if (resp.choices.isEmpty()) {
+            let msg = "The chat model did not reply a message"
+            LogUtils.error(msg)
+            throw ModelException(msg)
+        }
+        let choice = resp.choices[0]
+        let openAIMsg = choice.message
+        let message = Message(
+            MessageRole.fromStr(openAIMsg.role),
+            openAIMsg.content,
+            reason: openAIMsg.reasoning_content
+        )
+        let toolRequest: Option<ToolRequest> = if (!choice.message.tool_calls.isEmpty()) {
+            if (choice.message.tool_calls.size > 1) {
+                LogUtils.error("The chat model replied multiple tool calls")
+            }
+            let toolCall = choice.message.tool_calls[0]
+            ToolRequest(
+                name: toolCall.function.name,
+                args: JsonValue.fromStr(toolCall.function.arguments).asObject()
             )
+        } else {
+            None
         }
         let usage = ChatUsage(
             promptTokens: resp.usage.prompt_tokens,
             completionTokens: resp.usage.completion_tokens,
-            totalTokens: resp.usage.total_tokens,
+            // totalTokens: resp.usage.total_tokens,
             timeCost: duration
         )
-        return ChatResponse(resp.model, messageList, usage: usage)
+        return ChatResponse(resp.model, message, toolRequest: toolRequest, usage: usage)
     }
 
     override public func asyncCreate(chatReq: ChatRequest): AsyncChatResponse {

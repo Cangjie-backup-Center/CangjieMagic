@@ -113,7 +113,7 @@ public struct ParserUtils {
         let name = JsonUtils.getString(json, "name").getOrThrow({
             => ParserException("Failed to parse tool request: tool name is missing")
         })
-        let args = (JsonUtils.getJsonObject(json, "arguments") ?? JsonObject()).getFields()
+        let args = JsonUtils.getJsonObject(json, "arguments") ?? JsonObject()
         return ToolRequest(name: name, args: args)
     }
 
@@ -129,13 +129,20 @@ public struct ParserUtils {
                 LogUtils.debug("Extracted JSON string: `${jsonStr}`")
                 return parseToolRequest(jsonStr)
             } catch (ex: JsonException) {
-                // If the JSON string is not a valid ToolRequest, try to extract it using heuristic
-                LogUtils.debug("Failed to extract JSON as ToolRequest: `${str}`; trying heuristic extraction")
+                // If the JSON string is not a valid ToolRequest, try to extract it using heuristic;
+                // so, this exception is not thrown
+                LogUtils.debug("Failed to parse the JSON string as ToolRequest: `${str}`; trying heuristic extraction")
             }
         }
         if (let Some(jsonStr) <- extractFirstJsonWithHeuristic(str)) {
-            LogUtils.debug("Extracted JSON string: `${jsonStr}`")
-            return parseToolRequest(jsonStr)
+            LogUtils.debug("Extracted JSON string with heuristic: `${jsonStr}`")
+            try {
+                return parseToolRequest(jsonStr)
+            } catch (ex: JsonException) {
+                let msg = "Failed to parse the JSON string as ToolRequest: `${jsonStr}`"
+                LogUtils.debug(msg)
+                throw ParserException(msg)
+            }
         } else {
             throw ParserException("There is no JSON output in the string: ${str}")
         }

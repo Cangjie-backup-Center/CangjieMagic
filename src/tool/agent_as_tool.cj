@@ -78,8 +78,8 @@ protected class AgentAsTool <: AbsTool {
                 ("instruction", this.agent.systemPrompt)
             ))
         ])
-        if (let Some(msg) <- ModelUtils.agentMakeChat(this.agent, messages)) {
-            return msg.content
+        if (let Some(chatResp) <- ModelUtils.agentMakeChat(this.agent, messages)) {
+            return chatResp.message.content
         } else {
             LogUtils.debug("Summarize failed")
             return "None"

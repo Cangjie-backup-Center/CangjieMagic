@@ -186,21 +186,21 @@ public struct ModelManager {
         CHAT_MODEL_BUILD_FN_MAP.add(modelName, buildFn)
     }
 
-    public static func createChatModel(modelName: String, temperature!: Option<Float64> = None): ChatModel {
+    public static func createChatModel(modelName: String): ChatModel {
         if (let Some(fn) <- CHAT_MODEL_BUILD_FN_MAP.get(modelName)) {
             return fn()
         }
         let modelConfig = parseModel(modelName, kind: "chat")
-        return ModelManager.createChatModel(modelConfig, temperature: temperature)
+        return ModelManager.createChatModel(modelConfig)
     }
 
-    public static func createChatModel(modelConfig: ModelConfig, temperature!: Option<Float64> = None): ChatModel {
+    public static func createChatModel(modelConfig: ModelConfig): ChatModel {
         match (modelConfig.provider) {
             case "openai" | "dashscope" | "ark" | "deepseek" |
                  "siliconflow" | "zhipuai" | "maas" | "google" | "moonshot" | "openrouter" =>
-                return OpenAIChatModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL, temperature: temperature)
+                return OpenAIChatModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
             case "ollama" =>
-                return OllamaChatModel(modelConfig.name, baseURL: modelConfig.baseURL, temperature: temperature)
+                return OllamaChatModel(modelConfig.name, baseURL: modelConfig.baseURL)
             case _ =>
                 throw UnsupportedException("Unreachable")
         }

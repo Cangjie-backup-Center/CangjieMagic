@@ -126,7 +126,7 @@ protected class ReactTask <: AgentTask {
         // [Observation] ... [Observation],
         // so we truncate it with `stop` words.
         try {
-            let msg = this.chatLLM(this.execution.messages, stop: [Tag.OBSERVATION])
+            let msg = this.chatLLM(this.execution.messages, stop: [Tag.OBSERVATION]).message
             return ReactStep.fromStr(msg.content)
         } catch (ex: Exception) {
             LogUtils.error(this.agent.name, ex.toString())
@@ -148,7 +148,7 @@ protected class ReactTask <: AgentTask {
         let messages = MessageList(
             ReactPromptUtils.buildReactSummarizePrompt(this)
         )
-        let msg = this.chatLLM(messages)
+        let msg = this.chatLLM(messages).message
         return Tag.extract(msg.content, Tag.ANSWER).getOrThrow({ =>
             AgentExecutionException("Chat model response has no answer")
         })
@@ -170,13 +170,8 @@ protected class ReactTask <: AgentTask {
         this.execution.removeLastMessage()
         try {
             let tag = asyncReactStep.peekTag()
-            if (tag == Tag.THOUGHT) {
-                let step = asyncReactStep.getStepOf(Tag.THOUGHT)
-                this.handleStep(step)
-                this.notifyStep(step)
-                return None
-            } else if (tag == Tag.ACTION) {
-                let step = asyncReactStep.getStepOf(Tag.ACTION)
+            if (tag == Tag.THOUGHT || tag == Tag.ACTION) {
+                let step = asyncReactStep.getStepOf(tag)
                 this.handleStep(step)
                 this.notifyStep(step)
                 return None
