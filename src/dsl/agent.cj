@@ -399,7 +399,7 @@ func buildAgentModelProp(agentAttr: AgentAttr): Tokens {
         public override mut prop model: ChatModel {
             get() {
                 if (!__IS_MODEL_INIT__) {
-                    __MODEL__ = ModelManager.createChatModel($tokens, temperature: this.temperature)
+                    __MODEL__ = ModelManager.createChatModel($tokens)
                     __IS_MODEL_INIT__ = true
                 }
                 return __MODEL__.getOrThrow()

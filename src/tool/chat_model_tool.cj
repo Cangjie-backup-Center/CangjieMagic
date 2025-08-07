@@ -54,10 +54,7 @@ protected class ChatModelTool <: AbsTool {
         ]
         try {
             let resp = model.create(ChatRequest(messages))
-            if (resp.messageList.isEmpty()) {
-                throw ToolException("Fail to get chat model response")
-            }
-            return ToolResponse(resp.messageList[0].content)
+            return ToolResponse(resp.message.content)
         } catch (ex: ModelException) {
             throw ToolException("Fail to get chat model response")
         }

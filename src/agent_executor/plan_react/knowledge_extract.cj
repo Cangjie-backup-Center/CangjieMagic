@@ -52,6 +52,6 @@ func knowledgeExtract(planTask: PlanTask): String {
         Message.system(sysPrompt)
     ])
 
-    let msg = planTask.chatLLM(messages)
+    let msg = planTask.chatLLM(messages).message
     return ParserUtils.extractLastCode(msg.content, "knowledge") ?? ""
 }

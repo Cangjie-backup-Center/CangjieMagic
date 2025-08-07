@@ -4,31 +4,33 @@
 package magic.core.model
 
 import magic.core.message.{Message, MessageList}
-public struct ChatResponse <: ToString {
-    public let model: String
-    public let messageList: MessageList
-    public let usage: Option<ChatUsage>
+import magic.core.tool.ToolRequest
+import magic.jsonable.ToJsonValue
 
-    public init(model: String, messageList: MessageList, usage!: Option<ChatUsage> = None) {
-        this.messageList = messageList
-        this.model = model
-        this.usage = usage
-    }
+import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
 
-    public init(model: String, message: Message, usage!: Option<ChatUsage> = None) {
-        this.messageList = MessageList([message])
-        this.model = model
-        this.usage = usage
-    }
+public struct ChatResponse <: ToString & ToJsonValue {
+    public ChatResponse(
+        public let model: String,
+        public let message: Message,
+        public let toolRequest!: Option<ToolRequest> = None,
+        public let usage!: Option<ChatUsage> = None
+    ) { }
 
-    public func toString(): String {
-        let strBuilder = StringBuilder()
-        strBuilder.append("ChatResponse:\n  model[${model}]\n  usage[${usage.toString()}]\n")
-        for (msg in messageList) {
-            strBuilder.append("  ")
-            strBuilder.append(msg.toString())
-            strBuilder.append("\n")
+    override public func toJsonValue(): JsonValue {
+        let jo = JsonObject()
+        jo.put("model", JsonString(model))
+        jo.put("message", message.toJsonValue())
+        if (let Some(toolReq) <- toolRequest) {
+            jo.put("toolRequest", toolReq.toJsonValue())
         }
-        strBuilder.toString()
+        if (let Some(usage) <- usage) {
+            jo.put("usage", usage.toJsonValue())
+        }
+        return jo
+    }
+
+    override public func toString(): String {
+        this.toJsonValue().toJsonString()
     }
 }

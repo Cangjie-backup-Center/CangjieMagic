@@ -3,13 +3,19 @@
  */
 package magic.core.message
 
-public class Message <: ToString {
+import magic.jsonable.ToJsonValue
+
+import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
+
+public class Message <: ToString & ToJsonValue {
     public let name: String      // name of the sender
     public let role: MessageRole // role of the sender
     public let content: String
     public let image: Option<String> // url or base64
-    // The reasoning content
-    // A reason model, like deepseek-r1, may generate reasoning content or regular content
+    /**
+     * The reasoning content
+     * A reason model, like deepseek-r1, may generate reasoning content
+     */
     public let reason: Option<String>
 
     public init(
@@ -25,24 +31,30 @@ public class Message <: ToString {
         this.reason = reason
     }
 
-    public func toString(): String {
-        let reason = if (let Some(r) <- this.reason) {
-            ">${r}<; "
-        } else {
-            ""
-        }
+    override public func toString(): String {
+        let reason = this.reason.map({ s => ">${s}<" }) ?? ""
         return "${role}: ${reason}${content}"
     }
 
-    public func toLogString(): String {
-        let reason = if (let Some(r) <- this.reason) {
-            ". Reasoning content: ${r}"
-        } else {
-            ""
+    override public func toJsonValue(): JsonValue {
+        let jo = JsonObject()
+        jo.put("role", JsonString(role.toString()))
+        jo.put("content", JsonString(content))
+        if (this.name != "") {
+            jo.put("name", JsonString(name))
         }
-        "Message<${role}>: ${content}${reason}"
+        if (let Some(img) <- this.image) {
+            jo.put("image", JsonString(img))
+        }
+        if (let Some(r) <- this.reason) {
+            jo.put("reason", JsonString(r))
+        }
+        return jo
     }
 
+    //---------------------------------------------------------------------
+    // Builder methods
+    //---------------------------------------------------------------------
     public static func system(content: String): Message {
         Message(MessageRole.System, content, name: "System")
     }

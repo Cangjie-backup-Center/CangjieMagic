@@ -21,8 +21,10 @@ The argument is a JSON value representing the final answer.
 You MUST obey the the argument schema.
 """
 
+let ANSWER_TOOL_NAME = "_answer_"
+
 private let ANSWER_TOOL = NativeFuncTool(
-    name: "_answer_",
+    name: ANSWER_TOOL_NAME,
     description: ANSWER_TOOL_DESC,
     parameters: [
         ("result", "The final result", TypeSchema.Str)
@@ -46,7 +48,7 @@ private let ANSWER_TOOL = NativeFuncTool(
 func buildAnswerTool(schema: Option<TypeSchema>): NativeFuncTool {
     if (let Some(schema) <- schema) {
         return NativeFuncTool(
-            name: "_answer_",
+            name: ANSWER_TOOL_NAME,
             description: ANSWER_TOOL_DESC,
             parameters: [
                 ("result", ANSWER_TOOL_PARAM_DESC, schema)

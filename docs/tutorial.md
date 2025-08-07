@@ -980,7 +980,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 | `externalScriptDir` | `String` | 保存外部脚本的目录 | `./external_scripts` |
 | `defaultContextLen` | `Int` | LLM上下文长度 | `32000` |
 | `defaultTokenizer` | `Option<Tokenizer>` | 设置默认的 tokenizer，用于计算提示词中的 token 数 | `UnicodeTokenizer()` |
-| `filterThink` | `Bool` | 过滤推理模型输出中的 `<think>` 内容，仅对同步接口生效 | `false` |
+| `enableFunctionCall` | `Bool` | 是否在 Agent 执行器中使用 LLM function call 能力（当前仅 `tool-loop/dsl` 两个执行q器 | `false` |
 | `maxReactNumber` | `Int` | React 模式的最大迭代次数 | `10` |
 | `modelRetryNumber` | `Int` | 模型请求失败时的最大重试次数 | `3` |
 | `env` | `HashMap<String,String>` | 设置环境变量 | - |

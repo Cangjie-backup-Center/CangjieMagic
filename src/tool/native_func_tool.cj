@@ -73,8 +73,10 @@ open public class NativeFuncTool <: AbsTool {
            try {
                 let result = fn(args)
                 return ToolResponse(result)
+            } catch (ex: ToolException) {
+                throw ex
             } catch (ex: Exception) {
-                throw ToolException("Fail to invoke the native function. Reason: ${ex.toString()}")
+                throw ToolException("Fail to invoke the native function tool. Reason: ${ex.toString()}")
             }
         } else {
             throw ToolException("The tool `${_name}` has not a native function")
