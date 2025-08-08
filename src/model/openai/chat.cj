@@ -138,7 +138,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
             LogUtils.debug(msg)
             throw ModelException(msg)
         }
-        LogUtils.debug("To parse SSE content: `${sseItem.content}`")
+        LogUtils.trace("To parse SSE content: `${sseItem.content}`")
         if (sseItem.content.isEmpty()) {
             return None
         }
@@ -149,8 +149,13 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
             LogUtils.debug("Parsing SSE content failure ${ex}")
             throw ex
         }
-        LogUtils.debug("  Get reasoning content: ${reason}")
-        LogUtils.debug("  Get content: ${content}")
+        LogUtils.trace("[AsyncChatChunkStream]", String.join([
+            "Parsed",
+            "===================================",
+            "Reasoning: ${reason}",
+            "-----------------------------------",
+            "Content: ${content}"], delimiter: "\n")
+        )
         if (content == "[DONE]") {
             // Consume and close the http sse stream
             while (let Some(_) <- this.sseStream.next()) { }

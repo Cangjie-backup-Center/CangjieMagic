@@ -24,8 +24,7 @@ open public class NativeFuncTool <: AbsTool {
                 parameters!: Array<(String, String, TypeSchema)> = [],
                 retType!: TypeSchema = TypeSchema.Str,
                 examples!: Array<String> = [],
-                filterable!: Bool = true,
-                terminal!: Bool = false,
+                extra!: HashMap<String, String> = HashMap<String, String>(),
                 execFn!: Option<ExecFn> = None) {
         _name = name
         _description = description
@@ -37,12 +36,7 @@ open public class NativeFuncTool <: AbsTool {
         _examples = ArrayList<String>()
         _examples.add(all: examples)
         _fnOpt = execFn
-        if (!filterable) {
-            this._extra.add("filterable", "false")
-        }
-        if (terminal) {
-            this._extra.add("terminal", "true")
-        }
+        _extra = extra
     }
 
     public prop name: String {
@@ -81,9 +75,5 @@ open public class NativeFuncTool <: AbsTool {
         } else {
             throw ToolException("The tool `${_name}` has not a native function")
         }
-    }
-
-    public func addExamples(examples: Array<String>): Unit {
-        _examples.add(all: examples)
     }
 }

@@ -24,8 +24,20 @@ public class AgentExecutionInfo <: AgentExecution {
      */
     private let messageList: MessageList
 
+    /**
+     * The agent request, which is the user question
+     */
     private var request: Option<AgentRequest> = None
+
+    /**
+     * The final answer of the agent, which is set by the agent executor
+     */
     private var answer: Option<String> = None
+
+    /**
+     * Messages about solving the request, which are used to build the chat round
+     * Not all messages (like error-fixing messages) are used to build the chat round
+     */
     protected let stepMessages = MessageList()
 
     /**

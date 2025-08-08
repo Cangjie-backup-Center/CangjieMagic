@@ -27,8 +27,12 @@ public class Config {
      * The optional values are "error", "info", and "debug"; case-insensitive.
      */
     private static var _logLevel = "error"
-    private static var VALID_LOG_LEVELS = ["error", "info", "debug"]
+    private static var VALID_LOG_LEVELS = ["error", "info", "debug", "trace"]
 
+    /**
+     * Available log levels:
+     * "error", "info", "debug", "trace"
+     */
     public static mut prop logLevel: String {
         get() { _logLevel }
         set(v) {
@@ -122,6 +126,12 @@ public class Config {
      * This option is used in "tool-loop", "dsl" and "react" executor.
      */
     public static var enableFunctionCall = false
+
+    /**
+     * The threshold to decide whether to summarize the tool result when the tool enables summarization.
+     * The threshold is in byte size.
+     */
+    public static var resultSummarizeThreshold = 1500
 
     /**
      * Provide a way to easily get/set environment variables

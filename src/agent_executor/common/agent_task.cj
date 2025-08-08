@@ -9,13 +9,16 @@ import magic.core.message.{Message, MessageRole, MessageList}
 import magic.core.model.{ChatRequest, ChatResponse, ModelException}
 import magic.core.tool.*
 import magic.core.interaction.*
+import magic.core.rag.RetrieverMode
+import magic.config.Config
 import magic.jsonable.ToJsonValue
 import magic.log.LogUtils
 import magic.interaction.*
 import magic.model.ModelUtils
 import magic.tool.SimpleToolFilter
+import magic.prompt.Template
 
-import std.collection.{ArrayList, HashMap, map, collectArray}
+import std.collection.{ArrayList, HashMap, any, map, collectArray}
 import std.sync.AtomicBool
 
 /**
@@ -34,12 +37,57 @@ protected struct EarlyStopInfo {
  */
 public open class AgentTask {
     public let agent: Agent
+
     public let request: AgentRequest
-    // Information during the execution
-    public var step = 0
+
+    /**
+     * Information during the execution
+     */
     public let execution: AgentExecutionInfo
-    // Whether the task is stopped
+
+    /**
+     * A cache for tool results for compressing tool invocation results
+     */
+    private let toolResultCache = ToolResultCache()
+
+    /**
+     * Whether the task is stopped
+     */
     protected var stopInfo: Option<EarlyStopInfo> = None
+
+    /**
+     * The builtin tool to view the detailed results stored in the cache
+     */
+    private var _resultViewerTool: Option<Tool> = None
+
+    private prop resultViewerTool: Tool {
+        get() {
+            if (let Some(tool) <- this._resultViewerTool) {
+                return tool
+            } else {
+                let tool = BuiltinToolUtils.buildToolResultViewerTool(this.toolResultCache)
+                this._resultViewerTool = tool
+                return tool
+            }
+        }
+    }
+
+    /**
+     * The builtin tool of dynamic RAG
+     */
+    private var _retrieverTool: Option<Tool> = None
+
+    private prop retrieverTool: Tool {
+        get() {
+            if (let Some(tool) <- this._retrieverTool) {
+                return tool
+            } else {
+                let tool = BuiltinToolUtils.buildRetrieverTool(this)
+                this._retrieverTool = tool
+                return tool
+            }
+        }
+    }
 
     /**
      * Create a new AgentTask with the given agent and request.
@@ -97,12 +145,26 @@ public open class AgentTask {
             if (let Some(tools) <- this._availableTools) {
                 return tools
             }
-            let tools = agent.toolManager.filterTool(
-                request.question,
-                SimpleToolFilter(agent.model, number: request.maxTool)
+            // Filter tools based on the request
+            let tools = ArrayList<Tool>(
+                agent.toolManager.filterTool(
+                    request.question,
+                    SimpleToolFilter(agent.model, number: request.maxTool)
+                )
             )
-            this._availableTools = tools
-            return tools
+            // If any tool is compressible, we add the result viewer tool
+            // to the available tools, so that the tool results can be viewed
+            if (tools |> any { tool => (tool.extra.get("compressible") ?? "false") == "true" }) {
+                // Add the result viewer tool to the tools
+                tools.add(this.resultViewerTool)
+            }
+            if (let Some(rt) <- this.agent.retriever) {
+                if (rt.mode == RetrieverMode.Dynamic) {
+                    tools.add(this.retrieverTool)
+                }
+            }
+            this._availableTools = tools.toArray()
+            return this._availableTools.getOrThrow()
         }
     }
 
@@ -145,46 +207,94 @@ public open class AgentTask {
         }
     }
 
+    private func findTool(name: String): Option<Tool> {
+        if (name == RetrieverTool.NAME) {
+            return this.retrieverTool
+        } else if (name == ToolResultViewerTool.NAME) {
+            return this.resultViewerTool
+        } else {
+            return this.agent.toolManager.findTool(name)
+        }
+    }
+
     /**
      * Run the tool and return observation messages
      */
     protected func invokeTool(toolRequest: ToolRequest): String {
-        var observation: String = ""
-        // Special treatment for the retriever tool
-        if (toolRequest.name == "__retriever__tool___") {
-            // See RetrieverTool
-            let query = toolRequest.args["query"].asString().getValue()
-            let retrieval = this.agent.retriever.getOrThrow().search(query)
-            this.execution.addRetrieval(query, retrieval)
-            observation = retrieval.toPrompt()
-        } else if (let Some(tool) <- this.agent.toolManager.findTool(toolRequest.name)) {
-            try {
-                match (this.handle(ToolCallEvent(this.agent, toolRequest))) {
-                    case EventResponse.Continue =>
-                        let resp = tool.invoke(toolRequest.args)
-                        observation = resp.content
-                        // Check whether the tool terminates the task
-                        if ((tool.extra.get("terminal") ?? "false") == "true") {
-                            this.stop("Tool `${tool.name}` terminates the task", result: observation)
-                        }
-                    case EventResponse.Continue(resp) =>
-                        observation = resp.content
-                    case EventResponse.Terminate(resp) =>
-                        observation = resp.content
-                        this.stop("Terminated by tool call event handler", result: observation)
-                }
-            } catch (ex: ToolException) {
-                observation = "Fail to invoke the tool `${toolRequest.name}`. Reason: ${ex.reason}"
-            } catch (_: Exception) {
-                observation = "Fail to invoke the tool `${toolRequest.name}`"
-            }
-        } else {
-            let names = this.agent.toolManager.tools |>
-                map { t: Tool => t.name } |>
-                collectArray
-            observation = "Tool `${toolRequest.name}` not found in ${names}"
+        // Find the tool
+        let toolOpt = this.findTool(toolRequest.name)
+        if (toolOpt.isNone()) {
+            // LLM generate invalid tool calling?
+            let names = this.agent.toolManager.tools |> map { t => t.name } |> collectArray
+            return "Tool `${toolRequest.name}` not found in ${names}"
         }
-        return observation
+        var toolResult: String = ""
+        let tool = toolOpt.getOrThrow()
+        match (this.handle(ToolCallEvent(this.agent, toolRequest))) {
+            case EventResponse.Continue =>
+                // Invoke the tool
+                let toolResponse = try {
+                    tool.invoke(toolRequest.args)
+                } catch (ex: ToolException) {
+                    return "Fail to invoke the tool `${toolRequest.name}`. Reason: ${ex.reason}"
+                } catch (_: Exception) {
+                    return "Fail to invoke the tool `${toolRequest.name}`"
+                }
+                // Save the tool result
+                toolResult = toolResponse.content
+                // Check whether the tool has special attributes
+                if ((tool.extra.get("compressible") ?? "false") == "true" &&
+                            toolResult.size > Config.resultSummarizeThreshold) {
+                    // If the tool is compressible, we can compress its result
+                    let summary = this.summarizeToolResult(toolRequest, result: toolResult)
+                    // Put the compressed results to the cache
+                    toolResult = this.toolResultCache.put(
+                        toolRequest: toolRequest,
+                        toolResponse: toolResponse,
+                        compressedResult: summary
+                    )
+                }
+                if ((tool.extra.get("terminal") ?? "false") == "true") {
+                    // If the tool is terminal, we stop the execution
+                    this.stop("Tool `${tool.name}` terminates the task", result: toolResult)
+                }
+            case EventResponse.Continue(resp) =>
+                toolResult = resp.content
+            case EventResponse.Terminate(resp) =>
+                toolResult = resp.content
+                this.stop("Terminated by tool call event handler", result: toolResult)
+        }
+        return toolResult
+    }
+
+    /**
+    * This agent attempts to summarize the tool execution results into concise and structured summaries.
+    **/
+    protected func summarizeToolResult(toolRequest: ToolRequest,
+                                       result!: String): String {
+        LogUtils.info(this.agent.name, "Start to summarize tool result")
+        let question = SUMMARIZE_USER_PROMPT.format([
+            ("tool_call", toolRequest.toJsonValue().toJsonString()),
+            ("tool_result", result)
+        ])
+        let summary = this.chatLLM(
+            MessageList([
+                Message.system(SUMMARIZE_SYSTEM_PROMPT),
+                Message.user(question)
+            ])
+        ).message.content
+        LogUtils.debug(
+            this.agent.name,
+            String.join(
+                [
+                    "#Bytes of tool result: ${result.size} => ${summary.size}",
+                    "--------------------------------------",
+                    "Summary:", summary
+                ],
+                delimiter: "\n"
+            )
+        )
+        return summary
     }
 
     /**

@@ -97,7 +97,7 @@ protected class HttpStream <: Iterator<String> & InputStream {
 
     override public func next(): Option<String> {
         let line = this.reader.readln()
-        LogUtils.debug("[Http stream]", "Read line: `${line}`")
+        LogUtils.trace("[Http Stream]", "Read line: `${line}`")
         return line
     }
 
