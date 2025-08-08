@@ -1,5 +1,11 @@
 <div align="center">
   <img src="https://raw.gitcode.com/user-images/assets/4883625/129822f9-5211-43ec-a8b3-3946eb515c17/cj_magic_logo.png" style="width:300px" />
+  <br/>
+  <img alt="Cangjie Magic" src="https://img.shields.io/badge/Cangjie_Magic-1.0.0-purple">
+
+  <img alt="Cangjie Lang" src="https://img.shields.io/badge/Cangjie_Lang.-1.0.0-blue">
+
+  <img alt="LLM Agent" src="https://img.shields.io/badge/LLM_Agent-green">
 </div>
 
 # Cangjie Magic: Make Apps Grow Intelligence and Creativity
@@ -71,8 +77,8 @@ There are some sample programs in the directory src/examples:
 | \<name\>  | 说明   |
 |---|---|
 | `doc_generator`  | 为本项目生成 API 手册 <br> Generates API documentation for this project |
+| `doc_translator` | 翻译项目中的中文文档<br> Translate Chinese documents for this project |
 | `markdown_qa` | 根据本项目的文档实现问答助手 <br> Implements a Q&A assistant using this project's documentation |
-| `health_monitor` | 一个 Mock 的健康监测助手 <br> A mock health monitoring assistant |
 | `quick_start` | 快速开始程序 <br> The quick start program |
 | `file_assistant` | 文件管理助手，接入开源 MCP 工具 <br> File management assistant integrated with MCP tools |
 | `mcp_server` | 展示如何编写 Agent 并作为 MCP Server <br> Demonstrates how to write an Agent as an MCP Server |
@@ -102,10 +108,13 @@ MCP Server Collection Example: https://gitcode.com/Cangjie-TPC/CangjieMagic-MCPS
 https://www.bilibili.com/video/BV1hQQzYAEHL/?spm_id_from=333.337.search-card.all.click&vd_source=ac4d1bb6a8e4a3751bba687720bd6fd9
 
 ## 重要变更/Import Changes
+**2025/8/8**:
+- 增加 `@tool` 中 `compressible` 配置
+  Introduced the `compressible` config of `@tool`
 
 **2025/8/4**:
 - 增加 `@toolset` 语法，能够定义工具集
-  Introduced the @toolset syntax, enabling the definition of toolset classes.
+  Introduced the `@toolset` syntax, enabling the definition of toolset classes.
 
 **2025/7/8**:
 - `@agent` 的工具配置语法变更；修改 `@ai` 函数语法；新语法详见 [docs/tutorial.md](./docs/tutorial.md)
