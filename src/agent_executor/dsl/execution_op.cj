@@ -3,7 +3,7 @@
  */
 package magic.agent_executor.dsl
 
-import magic.agent_executor.common.{AgentTask, PromptBuilder}
+import magic.agent_executor.common.{AgentTask, PromptBuilder, AnswerTool, BuiltinToolUtils}
 import magic.core.agent.*
 import magic.core.tool.{Tool, ToolRequest}
 import magic.core.message.{Message, MessageList}
@@ -105,7 +105,7 @@ public struct ExecutionOpSet {
         var isInjected = false
         let schema = state.task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
             .flatMap { value: Any => (value as TypeSchema) }
-        let answerTool = buildAnswerTool(schema)
+        let answerTool = BuiltinToolUtils.buildAnswerTool(schema)
         if (state.task.agent.toolManager.findTool(answerTool.name).isNone()) {
             state.task.agent.toolManager.addTool(answerTool)
             isInjected = true
@@ -150,7 +150,7 @@ public struct ExecutionOpSet {
             // treat the content as the final answer
             if (Config.enableFunctionCall) {
                 ToolRequest(
-                    name: ANSWER_TOOL_NAME,
+                    name: AnswerTool.NAME,
                     args: JsonUtils.buildJsonObject([
                         ("result", chatResp.message.content)
                     ])

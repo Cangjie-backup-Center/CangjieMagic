@@ -8,7 +8,6 @@ import std.collection.{map, collectArrayList, any, ArrayList, HashMap}
 import std.ast.*
 
 private class ToolAttr <: Attr {
-
     init(map: AttrMap) { super(map) }
 
     init() { super(AttrMap()) }
@@ -66,10 +65,20 @@ private class ToolAttr <: Attr {
         }
     }
 
+    prop compressible: Bool {
+        get() {
+            getBool("compressible", default: false)
+        }
+    }
+
     static func parse(attrTokens: Tokens): ToolAttr {
         let map = AttrParser(attrTokens).parseAttr(
             macroName: "tool",
-            validKeys: ["description", "parameters", "examples", "filterable", "terminal", "dump"]
+            validKeys: [
+                "description", "parameters", "examples",
+                "filterable", "terminal", "compressible",
+                "dump"
+            ]
         )
         return ToolAttr(map)
     }
@@ -174,29 +183,26 @@ private func initNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens 
         collectArrayList
 
     let execFunc = transformToolExecuteLambda(toolAttr, funcDecl)
-    if (toolAttr.insideAgent || toolAttr.insideToolset) {
-        return quote(NativeFuncTool(
-            name: $funcName,
-            description: $(newMultilineStringLiteralToken(toolAttr.description)),
-            parameters: [$(joinTokens(parameters, Token(TokenKind.COMMA)))],
-            // retType: $retType.getTypeSchema(),
-            examples: [$(joinTokens(examples, Token(TokenKind.COMMA)))],
-            filterable: $(newLiteralToken(toolAttr.filterable)),
-            terminal: $(newLiteralToken(toolAttr.terminal)),
-            execFn: $execFunc
-        ))
+    // Global tools will generate a wrapper class, so we use `super` to call the parent constructor.
+    // Internal tools will use `NativeFuncTool` directly.
+    let ctor = if (toolAttr.insideAgent || toolAttr.insideToolset) {
+        quote(NativeFuncTool)
     } else {
-        return quote(super(
-            name: $funcName,
-            description: $(newMultilineStringLiteralToken(toolAttr.description)),
-            parameters: [$(joinTokens(parameters, Token(TokenKind.COMMA)))],
-            // retType: $retType.getTypeSchema(),
-            examples: [$(joinTokens(examples, Token(TokenKind.COMMA)))],
-            filterable: $(newLiteralToken(toolAttr.filterable)),
-            terminal: $(newLiteralToken(toolAttr.terminal)),
-            execFn: $execFunc
-        ))
+        quote(super)
     }
+    return quote($ctor(
+        name: $funcName,
+        description: $(newMultilineStringLiteralToken(toolAttr.description)),
+        parameters: [$(joinTokens(parameters, Token(TokenKind.COMMA)))],
+        // retType: $retType.getTypeSchema(),
+        examples: [$(joinTokens(examples, Token(TokenKind.COMMA)))],
+        extra: HashMap([
+            ("filterable", $(newLiteralToken(toolAttr.filterable.toString()))),
+            ("terminal", $(newLiteralToken(toolAttr.terminal.toString()))),
+            ("compressible", $(newLiteralToken(toolAttr.compressible.toString())))
+        ]),
+        execFn: $execFunc
+    ))
 }
 
 /**

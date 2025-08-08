@@ -26,13 +26,13 @@ public class EventStream <: Iterator<InteractionEvent> {
             finished.store(true)
             return None
         } else {
-            LogUtils.debug("EventStream", "Get: ${event}")
+            LogUtils.trace("[Event Stream]", "Get: ${event}")
             return event
         }
     }
 
     protected func put(event: InteractionEvent): Unit {
-        LogUtils.debug("EventStream", "Put: ${event}")
+        LogUtils.trace("[Event Stream]", "Put: ${event}")
         this.queue.add(event)
     }
 

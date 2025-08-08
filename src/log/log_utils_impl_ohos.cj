@@ -32,17 +32,6 @@ struct LogUtilsImpl {
         return result.toArray()
     }
 
-    public static func debug(msg: String): Unit {
-        for (line in splitMessages(msg)) {
-            info(line)  // AppLog.debug has no effects?
-        }
-    }
-
-    public static func agentDebug(name: String, msg: String): Unit {
-    }
-
-    //------------------------------------------------------------
-
     public static func info(msg: String): Unit {
         for (line in splitMessages(msg)) {
             AppLog.info(line)
@@ -50,6 +39,24 @@ struct LogUtilsImpl {
     }
 
     public static func agentInfo(name: String, msg: String): Unit {
+    }
+
+    //------------------------------------------------------------
+
+    public static func trace(msg: String): Unit {
+        info(line)  // AppLog.debug has no effects?
+    }
+
+    public static func agentTrace(name: String, msg: String): Unit {
+    }
+
+    //------------------------------------------------------------
+
+    public static func debug(msg: String): Unit {
+        info(line)  // AppLog.debug has no effects?
+    }
+
+    public static func agentDebug(name: String, msg: String): Unit {
     }
 
     //------------------------------------------------------------

@@ -123,19 +123,25 @@ public struct ParserUtils {
      * - or, there is no ```json marks.
      * So, we use a heuristic method to extract the JSON string if failed.
      */
-    public static func extractFirstToolRequest(str: String): ToolRequest {
-        if (let Some(jsonStr) <- extractFirstCode(str, "json")) {
+    private static func extractToolRequest(str: String, last!: Bool): ToolRequest {
+        let (codeExtractor, jsonExecutorHeuristic) = if (last) {
+            (extractLastCode, extractLastJsonWithHeuristic)
+        } else {
+            (extractFirstCode, extractFirstJsonWithHeuristic)
+        }
+
+        if (let Some(jsonStr) <- codeExtractor(str, "json")) {
             try {
-                LogUtils.debug("Extracted JSON string: `${jsonStr}`")
+                LogUtils.trace("Extracted JSON string: `${jsonStr}`")
                 return parseToolRequest(jsonStr)
             } catch (ex: JsonException) {
                 // If the JSON string is not a valid ToolRequest, try to extract it using heuristic;
                 // so, this exception is not thrown
-                LogUtils.debug("Failed to parse the JSON string as ToolRequest: `${str}`; trying heuristic extraction")
+                LogUtils.trace("Failed to parse the JSON string as ToolRequest: `${str}`; trying heuristic extraction")
             }
         }
-        if (let Some(jsonStr) <- extractFirstJsonWithHeuristic(str)) {
-            LogUtils.debug("Extracted JSON string with heuristic: `${jsonStr}`")
+        if (let Some(jsonStr) <- jsonExecutorHeuristic(str)) {
+            LogUtils.trace("Extracted JSON string with heuristic: `${jsonStr}`")
             try {
                 return parseToolRequest(jsonStr)
             } catch (ex: JsonException) {
@@ -148,32 +154,22 @@ public struct ParserUtils {
         }
     }
 
+    public static func extractFirstToolRequest(str: String): ToolRequest {
+        return extractToolRequest(str, last: false)
+    }
+
     /**
      * Similar to `extractFirstToolRequest`, but extracts the last ToolRequest from the string.
      */
     public static func extractLastToolRequest(str: String): ToolRequest {
-        if (let Some(jsonStr) <- extractLastCode(str, "json")) {
-            try {
-                LogUtils.debug("Extracted JSON string: `${jsonStr}`")
-                return parseToolRequest(jsonStr)
-            } catch (ex: JsonException) {
-                // If the JSON string is not a valid ToolRequest, try to extract it using heuristic
-                LogUtils.debug("Failed to extract JSON as ToolRequest: `${str}`; trying heuristic extraction")
-            }
-        }
-        if (let Some(jsonStr) <- extractLastJsonWithHeuristic(str)) {
-            LogUtils.debug("Extracted JSON string: `${jsonStr}`")
-            return parseToolRequest(jsonStr)
-        } else {
-            throw ParserException("There is no JSON output in the string: ${str}")
-        }
+        return extractToolRequest(str, last: true)
     }
 
     public static func extractLastJsonValue(str: String): JsonValue {
         let jsonStr = extractLastCode(str, "json") ?? extractLastJsonWithHeuristic(str).getOrThrow({ =>
             ParserException("There is no JSON output in the string: ${str}")
         })
-        LogUtils.debug("Extracted JSON string: `${jsonStr}`")
+        LogUtils.trace("Extracted JSON string: `${jsonStr}`")
         // Parse the JSON string to the expected type
         try {
             return JsonValue.fromStr(jsonStr)

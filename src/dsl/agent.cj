@@ -546,27 +546,10 @@ func buildAgentRetrieverProp(agentAttr: AgentAttr): Tokens {
                 if (!__IS_RETRIEVER_INIT__) {
                     __RETRIEVER__ = $retrieverInitTokens
                     __IS_RETRIEVER_INIT__ = true
-                    if (let Some(rt) <- __RETRIEVER__) {
-                        if (rt.mode == RetrieverMode.Dynamic) {
-                            this.toolManager.addTool(RetrieverTool(rt))
-                        }
-                    }
                 }
                 return __RETRIEVER__
             }
             set(v) {
-                // If the last retriever is of dynamic mode, del it
-                if (let Some(rt) <- __RETRIEVER__) {
-                    if (rt.mode == RetrieverMode.Dynamic) {
-                        this.toolManager.delTool(RetrieverTool(rt))
-                    }
-                }
-                // If the assigned retriever is of dynamic mode, add it
-                if (let Some(rt) <- v) {
-                    if (rt.mode == RetrieverMode.Dynamic) {
-                        this.toolManager.addTool(RetrieverTool(rt))
-                    }
-                }
                 __RETRIEVER__ = v
                 __IS_RETRIEVER_INIT__ = true
             }
@@ -614,18 +597,6 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
             )
         )
     }
-
-    // The retriever may be a tool
-    addTools.append(
-        quote(
-            if (let Some(rt) <- this.retriever) {
-                // If retriever is of dynamic mode, add it as a tool
-                if (rt.mode == RetrieverMode.Dynamic) {
-                    tm.addTool(RetrieverTool(rt))
-                }
-            }
-        )
-    )
     // Native func tools and MCP tools
     for (i in 0..agentAttr.tools.size) {
         match (agentAttr.tools[i]) {

@@ -14,7 +14,7 @@ public import magic.model.ModelManager
 public import magic.agent_executor.AgentExecutorManager
 public import magic.memory.ShortMemory
 public import magic.rag.RetrieverUtils
-public import magic.tool.{SimpleToolManager, NativeFuncTool, RetrieverTool}
+public import magic.tool.{SimpleToolManager, NativeFuncTool}
 public import magic.mcp.*
 public import magic.agent_executor.dsl.{ExecutionOpSet, ExecutionState}
 

@@ -97,8 +97,7 @@ protected class ReactTask <: AgentTask {
 
     //------------------------------------------------------
     protected func runOnce(): Option<String> {
-        LogUtils.info(this.agent.name, "Step #${this.step}")
-        this.step += 1
+        LogUtils.info(this.agent.name, "Run Step")
         let step = try {
             // Add a hint message
             this.execution.addMessage(
@@ -159,8 +158,7 @@ protected class ReactTask <: AgentTask {
     // but these are outdated implementations with bugs (they may directly pass incorrect LLM outputs to verbose info).
     // These methods are currently not in use and are temporarily retained for reference.
     func asyncRunOnce(): Option<AsyncReactAnswer> {
-        LogUtils.info(this.agent.name, "Step #${this.step}")
-        this.step += 1
+        LogUtils.info(this.agent.name, "Run Step")
         // Add a hint message
         this.execution.addMessage(
             Message.system(REACT_STEP_PROMPT)

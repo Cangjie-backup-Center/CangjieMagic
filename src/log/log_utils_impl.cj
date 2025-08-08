@@ -25,9 +25,10 @@ import stdx.logger.SimpleLogger
 private func buildSimpleLogger(output: OutputStream): SimpleLogger {
     let logger = SimpleLogger(output)
     logger.level = match (Config.logLevel) {
-        case "error" => LogLevel.ERROR
-        case "info" => LogLevel.INFO
+        case "trace" => LogLevel.TRACE
         case "debug" => LogLevel.DEBUG
+        case "info" => LogLevel.INFO
+        case "error" => LogLevel.ERROR
         case _ => LogLevel.ERROR
     }
     return logger
@@ -76,6 +77,19 @@ struct LogUtilsImpl {
         NAMED_LOGGERS[name] = logger
         return logger
     }
+
+    //------------------------------------------------------------
+
+    public static func trace(msg: String): Unit {
+        LOGGER.trace(msg)
+    }
+
+    public static func agentTrace(name: String, msg: String): Unit {
+        let logger = getNamedLogger(name)
+        logger.trace("${name}: ${msg}")
+    }
+
+    //------------------------------------------------------------
 
     public static func debug(msg: String): Unit {
         LOGGER.debug(msg)

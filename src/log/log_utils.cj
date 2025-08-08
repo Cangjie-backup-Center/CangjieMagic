@@ -9,6 +9,19 @@ import magic.config.Config
 import magic.utils.exists
 
 public struct LogUtils {
+    public static func trace(msg: String): Unit {
+        LogUtilsImpl.trace(msg)
+    }
+
+    public static func trace(name: String, msg: String): Unit {
+        trace("${name}: ${msg}")
+        if (Config.enableAgentLog) {
+            LogUtilsImpl.agentTrace(name, msg)
+        }
+    }
+
+    //------------------------------------------------------------
+
     public static func debug(msg: String): Unit {
         LogUtilsImpl.debug(msg)
     }

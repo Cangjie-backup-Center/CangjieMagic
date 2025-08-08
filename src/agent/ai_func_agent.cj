@@ -104,8 +104,11 @@ private let ANSWER_TOOL = NativeFuncTool(
     parameters: [
         ("result", "The final JSON Value according to expected type schema.", TypeSchema.Obj([]))
     ],
-    terminal: true,
-    filterable: false,
+    extra: HashMap([
+        ("filterable", "false"),
+        ("terminal", "true"),
+        ("compressible", "false")
+    ]),
     execFn: { args: HashMap<String, JsonValue> =>
         if (args.contains("func_result") || args.contains("func_error")) {
             return JsonObject(args).toJsonString()

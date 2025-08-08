@@ -511,6 +511,7 @@ let resp2 = agent.chat(
 - `parameters` 属性描述了函数参数的含义，它接收 `<parameter-name>: <parameter-description>` 的键值对【可选】
 - `filterable` 是否可以被 Agent 过滤，配合 `@agent` 宏的 `enableToolFilter` 属性使用【可选】
 - `terminal` 是否终止 Agent 执行，当设置为 `true` 时，Agent 执行这个工具后将直接结束，并且函数的返回值作为 Agent 执行结果【可选】
+- `compressible`: 是否（使用 LLM）将工具的执行结果做总结压缩，仅当该属性设置为 `true` 且结果长度超过 `Config.resultSummarizeThreshold` 进行压缩【可选】
 
 如果工具函数是全局函数或是在 Toolset 中，那么需要在 `tools` 属性中显式指定才能让 Agent 使用工具。
 
@@ -758,7 +759,7 @@ class Bar{ }
 
 ```cangjie
 @agent[
-  rag: { source: "path/to/some.db" }
+  rag: { source: "path/to/some.md", mode: "dynamic" }
 ]
 class Foo { }
 ```
@@ -980,7 +981,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 | `externalScriptDir` | `String` | 保存外部脚本的目录 | `./external_scripts` |
 | `defaultContextLen` | `Int` | LLM上下文长度 | `32000` |
 | `defaultTokenizer` | `Option<Tokenizer>` | 设置默认的 tokenizer，用于计算提示词中的 token 数 | `UnicodeTokenizer()` |
-| `enableFunctionCall` | `Bool` | 是否在 Agent 执行器中使用 LLM function call 能力（当前仅 `tool-loop/dsl` 两个执行q器 | `false` |
+| `enableFunctionCall` | `Bool` | 是否在 Agent 执行器中使用 LLM function call 能力（当前仅 `tool-loop/dsl` 两个执行器 | `false` |
 | `maxReactNumber` | `Int` | React 模式的最大迭代次数 | `10` |
 | `modelRetryNumber` | `Int` | 模型请求失败时的最大重试次数 | `3` |
 | `env` | `HashMap<String,String>` | 设置环境变量 | - |
