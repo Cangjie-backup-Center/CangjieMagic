@@ -1,5 +1,6 @@
-# User Tutorial
+NOTE: This file is translated from `tutorial.md` by the `doc_translator` agent.
 
+# User Tutorial
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
@@ -7,11 +8,12 @@
 
 - [User Tutorial](#user-tutorial)
   - [Agent Definition](#agent-definition)
-  - [Writing System Prompts](#writing-system-prompts)
+  - [Writing Prompts](#writing-prompts)
     - [Using Prompt Patterns](#using-prompt-patterns)
-    - [Custom Prompt Patterns](#custom-prompt-patterns)
+    - [Custom Prompt Pattern](#custom-prompt-pattern)
   - [Agent Interaction Methods](#agent-interaction-methods)
-    - [Input Templates](#input-templates)
+    - [Input Template](#input-template)
+    - [Conversation History](#conversation-history)
   - [MCP Protocol and Tools](#mcp-protocol-and-tools)
     - [Writing Tool Functions](#writing-tool-functions)
     - [Using Tools and MCP Servers](#using-tools-and-mcp-servers)
@@ -20,67 +22,79 @@
     - [Agent Execution DSL (Experimental)](#agent-execution-dsl-experimental)
   - [External Knowledge](#external-knowledge)
   - [Examples](#examples)
-    - [Example 1: CLI Assistant Agent](#example-1-cli-assistant-agent)
+    - [Example 1: Command Line Assistant Agent](#example-1-command-line-assistant-agent)
   - [Multi-Agent Collaboration](#multi-agent-collaboration)
-    - [Linear Coordination](#linear-coordination)
-    - [Master-Slave Coordination](#master-slave-coordination)
-    - [Free Coordination](#free-coordination)
-    - [Agent Subgroup Construction](#agent-subgroup-construction)
-  - [AI Function Shortcut](#ai-function-shortcut)
+    - [Linear Collaboration](#linear-collaboration)
+    - [Master-Slave Collaboration](#master-slave-collaboration)
+    - [Free Collaboration](#free-collaboration)
+    - [Agent Collaboration Subgroup Construction](#agent-collaboration-subgroup-construction)
+  - [Quick AI Functions](#quick-ai-functions)
   - [Model Configuration](#model-configuration)
-  - [Core API Reference](#core-api-reference)
-    - [Semantic Retrieval](#semantic-retrieval)
-      - [Vector Models](#vector-models)
-      - [Vector Databases](#vector-databases)
-      - [Index Maps](#index-maps)
-      - [Semantic Structures](#semantic-structures)
-  - [Knowledge Graph](#knowledge-graph)
-    - [MiniRAG](#minirag)
-      - [Instantiation](#instantiation)
-      - [Knowledge Graph Construction](#knowledge-graph-construction)
-      - [Knowledge Graph Querying](#knowledge-graph-querying)
+  - [Common APIs](#common-apis)
+    - [Global Configuration](#global-configuration)
+    - [Agent Types](#agent-types)
+    - [Agent Interception Mechanism](#agent-interception-mechanism)
+    - [Built-in Agents](#built-in-agents)
+      - [`BaseAgent`](#baseagent)
+      - [`DispatchAgent`](#dispatchagent)
+      - [`ToolAgent`](#toolagent)
+      - [`HumanAgent`](#humanagent)
+    - [Jsonable Interface](#jsonable-interface)
+    - [Integrating New Models](#integrating-new-models)
+    - [Custom Planning Methods](#custom-planning-methods)
+    - [Semantic Retrieval Functionality](#semantic-retrieval-functionality)
+      - [Vector Model](#vector-model)
+      - [Vector Database](#vector-database)
+      - [Index Mapping Table](#index-mapping-table)
+      - [Semantic Data Structures](#semantic-data-structures)
+      - [Usage Example](#usage-example)
+    - [Knowledge Graph](#knowledge-graph)
+      - [MiniRag](#minirag)
+      - [`Instantiation`](#instantiation)
+      - [`Knowledge Graph Construction`](#knowledge-graph-construction)
+      - [`Knowledge Graph Retrieval`](#knowledge-graph-retrieval)
+      - [Usage Example](#usage-example-1)
 
 <!-- /code_chunk_output -->
 
 
 
-The Cangjie Agent DSL is a domain-specific language designed for defining and cooperating Agents. It enables developers to enhance Agent capabilities through structured system prompts, tools, and collaborative strategies. This manual introduces how to use the various features of the Cangjie Agent DSL with examples to help users get started quickly.
+The Cangjie Agent DSL is a specialized language for defining and managing Agents. It allows developers to enhance Agent capabilities through structured system prompts, tools, and various collaboration strategies. This manual introduces how to use the various features of Cangjie Agent DSL and provides examples to help users get started quickly.
 
-The Cangjie Agent DSL is implemented as an embedded DSL (eDSL) within the Cangjie language, leveraging metaprogramming mechanisms. This means that code written in the Agent DSL is ultimately transformed into standard Cangjie code and compiled by the Cangjie compiler.
+Cangjie Agent DSL is designed as an eDSL (embedded Domain-Specific Language) within the Cangjie language, implemented through metaprogramming mechanisms in Cangjie, with Cangjie serving as its host language. This means that code written in Agent DSL is ultimately transformed into standard Cangjie code and compiled by the Cangjie compiler.
 
 ## Agent Definition
 
-Currently, we use the `@agent` macro to decorate a `class` type to define an Agent.
+Currently, we use the `@agent` macro to decorate a `class` type to define an Agent type.
 
 ```cangjie
 @agent class Foo { }
 ```
 
-The `@agent` macro supports the following attributes. Refer to the corresponding sections for details.
+The `@agent` macro supports the following attributes. For specific attributes, refer to the corresponding sections.
 
-| Attribute | Value Type | Description |
-|-----------|------------|-------------|
-| `description` | `String` | A functional description of the Agent. If not set, the LLM will automatically summarize it from the system prompt. |
-| `model` | `String` | Configures the LLM model provider to use. |
-| `tools` | `Array` | Configures external tools available to the Agent. |
-| `mcp` | `Array` | Configures the MCP servers to connect to. |
-| `rag` | `Map` | Configures external knowledge sources. |
-| `memory` | `Bool` | Whether to enable memory (saving Agent conversation history). Currently, memory is non-persistent (in-memory only). Defaults to `false`. |
-| `executor` | `String` | The planning mode. Defaults to `react`. |
-| `temperature` | `Float` | The temperature value used by the Agent's LLM. Defaults to `0.5`. |
-| `enableToolFilter` | `Bool` | Enables tool filtering, allowing the Agent to automatically select suitable tools based on the input question. Defaults to `false`. |
-| `dump` | `Bool` | Debugging flag to print the transformed AST of the Agent. Defaults to `false`. |
+| Attribute Name | Value Type | Description |
+|-------|-------|-------|
+| `description` | `String` | Functional description of the Agent; if not set by default, it will be automatically summarized by the LLM from the prompt |
+| `model` | `String` | Configures the LLM model service to be used; defaults to gpt-4o |
+| `tools` | `Array` | Configures external tools that can be used |
+| `rag` |   `Map` | Configures external knowledge sources |
+| `memory` |  `Bool` | Whether to use memory, i.e., save multiple Q&A records of the Agent (currently, memory only supports in-memory non-persistent data); defaults to `false` |
+| `executor` | `String` | Planning mode; defaults to `react` |
+| `temperature` | `Float` | The temperature value when the Agent uses the LLM; defaults to `0.5` |
+| `enableToolFilter` | `Bool` | Enables tool filtering functionality; the Agent will automatically select appropriate tools based on the input question before execution; defaults to `false` |
+| `dump` | `Bool` | For debugging purposes, whether to print the transformed AST of the Agent; defaults to `false` |
 
-## Writing System Prompts
+## Writing Prompts
 
-The core of every Agent is its system prompt, which defines its role and execution steps, enabling the LLM to answer questions more accurately and efficiently. The `@prompt` macro is used to define the system prompt for an Agent.
+The core of each Agent is its system prompt, which defines the Agent's role information and execution steps, enabling the large language model (LLM) to answer questions more accurately and quickly. In Agent definitions, `@prompt` is used to write the Agent's system prompt.
 
-- Within the `@prompt` macro's scope, all string literals (including interpolated strings) are concatenated into a complete system prompt.
-- Functions and member variables in Cangjie can be accessed within `@prompt`.
+- Within the scope of the `@prompt` macro, all string literals (including interpolated strings) will be concatenated sequentially to form the complete system prompt.
+- Functions and member variables of the Cangjie language can be accessed within `@prompt`.
 - Each Agent can have at most one `@prompt` definition.
 
 **Example: String Concatenation**
-In the following code, three strings are concatenated as the Agent's system prompt. The third interpolated string calls the function `bar()`.
+The following code concatenates three strings as the complete Agent system prompt, with the third interpolated string calling the function `bar`.
 
 ```cangjie
 @agent
@@ -103,7 +117,7 @@ class Calculator {
         You are a calculator capable of performing calculations.
         Your name is ${name}-${version}.
         """
-        "For example, you can perform addition: 1 + 2 = 3 ..."
+        "For example, you can perform addition, 1 + 2 = 3 ..."
     )
     private let name: String
     private let version: Int64
@@ -113,11 +127,11 @@ class Calculator {
 let calculator = Calculator(name: "aha", version: 1)
 ```
 
-The `@prompt` macro supports the `include` attribute, which takes a file path string. The file's content will be used as the Agent's system prompt.
-- When `include` is set, string literals inside `@prompt` are ignored.
-- If the file does not exist, an exception is thrown.
+The `@prompt` macro supports setting the `include` attribute, whose value is a string representing a file path. The file content will be used as the Agent's system prompt.
+- When the `include` attribute is configured, the literals written in `@prompt` will be ignored and not used as the system prompt.
+- If the file pointed to by `include` does not exist, an exception will be thrown.
 
-**Example: Using an External File for the System Prompt**
+**Example: Using External Files to Write System Prompts**
 
 ```cangjie
 @agent
@@ -128,158 +142,241 @@ class Foo {
 
 ### Using Prompt Patterns
 
-Well-structured prompts significantly improve LLM performance. Defining a unified prompt syntax helps developers write more structured prompts.
+Well-structured prompts can significantly improve LLM performance. By defining a unified prompt syntax, developers can write more structured prompts.
 
 **Using Prompt Patterns**
 
-The `@prompt` macro supports the `pattern` attribute, which takes a prompt pattern type. When using a pattern, the `@prompt` scope must contain *prompt elements* conforming to the pattern rather than string literals.
+The `@prompt` macro supports setting the `pattern` attribute, whose value should be a prompt pattern type. When using prompt patterns, *prompt elements* that satisfy the pattern must be written within the `@prompt` scope instead of string literals.
 
-⚠️Note: The `include` and `pattern` attributes are mutually exclusive; setting both will raise an exception.
+Note: The `include` attribute and `pattern` attribute cannot be used simultaneously; if both are present, an exception will be thrown.
 
-**Example: Using a Prompt Pattern**
+**Example: Using Prompt Patterns**
 
 ```cangjie
 @agent
 class Foo {
     @prompt[pattern: APE] (
         action: "Help users plan travel routes",
-        purpose: "Allow users to visit as many attractions as possible within their planned time while ensuring adequate rest",
-        expectation: "Generate a reasonable travel itinerary, including time, attractions, and transportation"
+        purpose: "Allow users to visit as many attractions as possible within the planned time while getting adequate rest",
+        expectation: "Generate a reasonable travel route, including time, attractions, commuting information, etc."
     )
 }
 ```
 
-The following prompt patterns are currently available:
+The following are the currently available prompt patterns.
 
 <table>
     <tr>
         <th>Prompt Pattern</th>
         <th>Description</th>
     </tr>
-    <tr>
-        <td><code>APE</code></td>
-        <td>
-            <code>action</code>: Defines the task or activity.<br>
-            <code>purpose</code>: Defines the reason for the action.<br>
-            <code>expectation</code>: Describes the expected outcome.
-        </td>
-    </tr>
-    <tr>
-        <td><code>BROKE</code></td>
-        <td>
-            <code>background</code>: Provides context.<br>
-            <code>role</code>: Specifies the Agent's role.<br>
-            <code>objectives</code>: Defines the task objectives.<br>
-            <code>keyResult</code>: Defines measurable outcomes to evaluate success.<br>
-            <code>evolve</code>: Optimizes through experimentation.
-        </td>
-    </tr>
-    <tr>
-        <td><code>COAST</code></td>
-        <td>
-            <code>context</code>: Sets conversation context.<br>
-            <code>objective</code>: Describes the goal.<br>
-            <code>action</code>: Explains required actions.<br>
-            <code>scenario</code>: Describes the scenario.<br>
-            <code>task</code>: Describes the task.
-        </td>
-    </tr>
-    <tr>
-        <td><code>TAG</code></td>
-        <td>
-            <code>task</code>: Defines a specific task.<br>
-            <code>action</code>: Describes what to do.<br>
-            <code>goal</code>: Explains the end goal.
-        </td>
-    </tr>
-    <tr>
-        <td><code>RISE</code></td>
-        <td>
-            <code>role</code>: Specifies the Agent's role.<br>
-            <code>input</code>: Describes information/resources.<br>
-            <code>steps</code>: Requires detailed steps.<br>
-            <code>expectation</code>: Describes the expected result.
-        </td>
-    </tr>
-    <tr>
-        <td><code>TRACE</code></td>
-        <td>
-            <code>task</code>: Defines a specific task.<br>
-            <code>request</code>: Describes the request.<br>
-            <code>action</code>: Explains the action needed.<br>
-            <code>context</code>: Provides context.<br>
-            <code>example</code>: Gives an example.
-        </td>
-    </tr>
-    <tr>
-        <td><code>ERA</code></td>
-        <td>
-            <code>expectation</code>: Describes the expected result.<br>
-            <code>role</code>: Specifies the Agent's role.<br>
-            <code>action</code>: Specifies the action.
-        </td>
-    </tr>
-    <tr>
-        <td><code>CARE</code></td>
-        <td>
-            <code>context</code>: Sets conversation context.<br>
-            <code>action</code>: Describes what to do.<br>
-            <code>result</code>: Describes the expected result.<br>
-            <code>example</code>: Provides an example.
-        </td>
-    </tr>
-    <tr>
-        <td><code>ROSES</code></td>
-        <td>
-            <code>role</code>: Specifies the Agent's role.<br>
-            <code>objective</code>: States the goal.<br>
-            <code>scenario</code>: Describes the scenario.<br>
-            <code>expectation</code>: Defines the expected result.<br>
-            <code>steps</code>: Lists steps to achieve the solution.
-        </td>
-    </tr>
-    <tr>
-        <td><code>ICIO</code></td>
-        <td>
-            <code>instruction</code>: Gives task instructions to the AI.<br>
-            <code>context</code>: Provides background.<br>
-            <code>input</code>: Specifies data to process.<br>
-            <code>output</code>: Specifies the expected output format.
-        </td>
-    </tr>
-    <tr>
-        <td><code>CRISPE</code></td>
-        <td>
-            <code>capacityAndRole</code>: The Agent's role.<br>
-            <code>insight</code>: Provides insights and context.<br>
-            <code>statement</code>: Specifies the task.<br>
-            <code>personality</code>: Defines response style.<br>
-            <code>experiment</code>: Requests multiple response examples.
-        </td>
-    </tr>
-    <tr>
-        <td><code>RACE</code></td>
-        <td>
-            <code>role</code>: Specifies the Agent's role.<br>
-            <code>action</code>: Details the action.<br>
-            <code>context</code>: Provides context.<br>
-            <code>expectation</code>: Describes the expected result.
-        </td>
-    </tr>
-    <tr>
-        <td><code>SAGE</code></td>
-        <td>
-            <code>situation</code>: Describes execution context.<br>
-            <code>action</code>: Specifies operations or steps.<br>
-            <code>goal</code>: Explains the desired outcome.<br>
-            <code>expectation</code>: Defines output requirements.
-        </td>
-    </tr>
+
+<tr>
+<td>
+
+`APE`
+
+</td>
+<td>
+
+`action`: Defines the work or activity to be completed
+`purpose`: Defines why this action is initiated
+`expectation`: States the expected outcome
+
+</td>
+</tr>
+<tr>
+<td>
+
+`BROKE`
+
+</td>
+<td>
+
+`background`: Describes the background and provides sufficient information
+`role`: Specifies the role of the agent
+`objectives`: Defines the task objectives to be achieved
+`keyResult`: Defines key measurable results to guide how the agent evaluates the achievement of objectives
+`evolve`: Tests results through experimentation and adjustment, optimizing as needed
+
+</td>
+</tr>
+<tr>
+<td>
+
+`COAST`
+
+</td>
+<td>
+
+`context`: Sets the background for the conversation
+`objective`: Describes the goal
+`action`: Explains the required action
+`scenario`: Describes the scenario
+`task`: Describes the task
+
+</td>
+</tr>
+<tr>
+<td>
+
+`TAG`
+
+</td>
+<td>
+
+`task`: Defines the specific task
+`action`: Describes what needs to be done
+`goal`: Explains the ultimate goal
+
+</td>
+</tr>
+<tr>
+<td>
+
+`RISE`
+
+</td>
+<td>
+
+`role`: Specifies the role of the agent
+`input`: Describes the information or resources
+`steps`: Requests detailed steps
+`expectation`: Describes the expected result
+
+</td>
+</tr>
+<tr>
+<td>
+
+`TRACE`
+
+</td>
+<td>
+
+`task`: Defines the specific task
+`request`: Describes your request
+`action`: Explains the action you need
+`context`: Provides background or context
+`example`: Gives an example to illustrate your point
+
+</td>
+</tr>
+<tr>
+<td>
+
+`ERA`
+
+</td>
+<td>
+
+`expectation`: Describes the expected result
+`role`: Specifies the role of the agent
+`action`: Specifies the action to be taken
+
+</td>
+</tr>
+<tr>
+<td>
+
+`CARE`
+
+</td>
+<td>
+
+`context`: Sets the background or context for the discussion
+`action`: Describes what you want to do
+`result`: Describes the expected result
+`example`: Gives an example to illustrate your point
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`ROSES`
+
+</td>
+<td>
+
+`role`: Specifies the role of the agent
+`objective`: States the goal or purpose
+`scenario`: Describes the scenario
+`expectation`: Define the expected outcome
+`steps`: The steps required to achieve the solution
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`ICIO`
+
+</td>
+<td>
+
+`instruction`: Specific task instructions for the AI
+`context`: Provide additional background information to the AI
+`input`: Specify the data the model needs to process
+`output`: Specify the expected output type or format
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`CRISPE`
+
+</td>
+<td>
+
+`capacityAndRole`: The role the agent should assume
+`insight`: Provide insights, background, and context
+`statement`: What you are asking the agent to do
+`personality`: The style, personality, or manner in which you want the agent to respond
+`experiment`: Request the agent to provide multiple response examples
+
+</td>
+</tr>
+<tr>
+<td>
+
+`RACE`
+
+</td>
+<td>
+
+`role`: Specify the agent's role
+`action`: Detail the actions to be taken
+`context`: Provide detailed information about the relevant context
+`expectation`: Describe the expected outcome
+
+</td>
+</tr>
+<tr>
+<td>
+
+`SAGE`
+
+</td>
+<td>
+
+`situation`: Describe the background or environment for task execution
+`action`: Specify the required operations or steps
+`goal`: State the purpose or effect to be achieved upon task completion
+`expectation`: Specify the requirements for the output result
+
+</td>
+</tr>
+
 </table>
 
-### Custom Prompt Patterns
+### Custom Prompt Pattern
 
-The `@promptPattern` macro decorates a `class` to define a new prompt pattern. Inside the decorated class, the `@element` macro defines prompt elements.
+The macro `@promptPattern` applies to `class` types and can define new prompt patterns. Within the modified class definition, the macro `@element` is used to modify member variables, defining prompt elements.
 - Each element must be of type `String`.
 - The `description` attribute explains the element and does not affect the final prompt.
 
@@ -290,13 +387,13 @@ The prompt pattern type must implement the `toString` method, which constructs t
 ```cangjie
 @promptPattern
 class APE {
-    @element[description: "Defines the task"]
+    @element[description: "Define the task"]
     let action: String
 
-    @element[description: "Defines the task's purpose"]
+    @element[description: "Define the task's purpose"]
     let purpose: String
 
-    @element[description: "Clearly defines the expected result"]
+    @element[description: "Clearly define the expected outcome"]
     let expectation: String
 
     public func toString(): String {
@@ -307,7 +404,7 @@ class APE {
 
 ## Agent Interaction Methods
 
-Agents defined with `@agent` have a default method `func chat(question: ToString): String` as the interaction entry.
+An Agent defined with `@agent` has a default method `func chat(question: ToString): String` as the interaction entry point.
 
 ```cangjie
 @agent class Foo { ... }
@@ -317,19 +414,19 @@ let result = agent.chat("What's the weather today?")
 println(result)
 ```
 
-Additionally, `chatGet` allows an Agent to return a typed value instead of just a string. If the Agent fails to produce valid data, it returns `None`:
+Additionally, `chatGet` allows the Agent to return a data type directly instead of just a string. If the Agent fails to generate the required data type, it returns `None`. The method is defined as follows:
 
 ```cangjie
 func chatGet<T>(question: String): Option<T> where T <: Jsonable<T>
 ```
 
-Here, the `Jsonable` interface ([see section](#jsonable-interface)) ensures type compatibility with JSON objects. Basic types like `Int`, `Int64`, and `String` already implement this interface.
+Here, the `Jsonable` interface ([see section](#jsonable-interface)) constrains the data type to be convertible to/from a JSON object. Basic types `Int/Int64/String` already implement this interface.
 
-The `@jsonable` macro customizes types to automatically implement the interface:
-- `@jsonable` decorates a `class/struct/enum` type, automatically implementing `Jsonable` via code transformation.
-- Inside the decorated type, `@field` adds descriptions for member variables. If unused, member variables will lack descriptions.
+The macro `@jsonable` is used for custom types to automatically implement this interface:
+- `@jsonable` modifies `class` types and automatically implements the `Jsonable` interface through code transformation.
+- Within the modified type, `@field` can be used to add descriptions for member variables. If not used, member variables will not carry descriptions.
 
-**Example: Returning Structured Data**
+**Example: Returning a Data Structure**
 
 ```cangjie
 @jsonable
@@ -343,22 +440,21 @@ class MyDate {
 class Foo { }
 
 let agent = Foo()
-let date = agent.chatGet<MyDate>("When was Huawei founded?")
+let date = agent.chatGet<MyDate>("Huawei's founding date")
 println(date.year)
 println(date.month)
 ```
 
-### Input Templates
+### Input Template
 
-When defining an Agent with `@agent`, you can specify an *input template*—a question templated with *placeholder variables*. The interaction interface only requires values for these placeholders.
+When defining an Agent type with `@agent`, an *input template* can be provided, which templates the input question with *placeholder variables*. When calling the interaction interface, only the values of the placeholder variables need to be provided.
+The macro `@user` defines the input template:
+- Similar to `@prompt`, `@user` concatenates all string literals as the complete input template.
+- In the input template, `{variable}` represents a placeholder variable, where the variable name consists of letters, numbers, and underscores.
+- Like `@prompt`, `@user` supports the `include` attribute, where the attribute value is a file path. If set, the file content serves as the input template.
 
-The `@user` macro defines input templates:
-- Like `@prompt`, it concatenates all string literals inside as the full input template.
-- Placeholder variables are written as `{variable}` in the template, where the variable name consists of letters, digits, and underscores.
-- Like `@prompt`, `@user` supports the `include` attribute (a file path). If set, the file's content becomes the input template.
-
-When calling `func chat(variables: Array<(String, ToString)>): String`, placeholder variables and their values must be provided.
-- If an Agent lacks an input template, calling this method throws an `UnsupportedException`.
+When calling `func chat(variables: Array<(String, ToString)>): String`, placeholder variables and their corresponding values must be provided.
+- If the Agent does not provide an input template, calling this method will throw an `UnsupportedException`.
 
 **Example: Using an Input Template**
 
@@ -369,8 +465,8 @@ class Foo {
         "System: ..."
     )
     @user(
-        "The rectangle has a length of {length} cm and a width of {width} cm."
-        "Calculate the rectangle's area."
+        "The rectangle's length is: {length} cm, and its width is {width} cm"
+        "Calculate the rectangle's area"
     )
 }
 let agent = Foo()
@@ -380,41 +476,63 @@ let area = agent.chat(
 )
 ```
 
+### Conversation History
+
+A single `chat` call with an Agent constitutes a `ChatRound`, and `Conversation` maintains multiple dialogue processes to form a continuous conversation history.
+
+When calling an Agent, `Conversation` can be passed as a parameter of `AgentRequest` to enable the Agent to respond based on the conversation history. Meanwhile, the `execution.chatRound` property of `AgentResponse` updates the conversation history.
+
+**Example: Conversation History Example**
+
+```cangjie
+let agent = FooAgent()
+let conversation = Conversation()
+let resp = agent.chat(
+    AgentRequest("Hello", conversation: conversation)
+)
+// Update the conversation
+conversation.addChatRound(resp.execution.chatRound)
+let resp2 = agent.chat(
+    AgentRequest("How are you", conversation: conversation)
+)
+```
+
 ## MCP Protocol and Tools
 
-Tools are functions an Agent can execute during processing. Agent tools come from two sources:
-- Tool functions written directly in DSL.
-- Tools provided by MCP servers (MCP servers act as *collections of tools*).
+Tools can be understood as code that an Agent can execute during its operation. Currently, Agent tools come from two sources:
+- Tool functions written directly in DSL
+- Tools provided by an MCP server (an MCP server can be considered a *collection of tools*)
 
 ### Writing Tool Functions
 
-The macro `@tool` is used for functions to convert them into **tool functions**. Functions that can be decorated include:
-
+The macro `@tool` modifies functions to convert them into **tool functions**. The following functions can be modified:
 - Global functions
-- Member methods of Agent classes defined by `@agent`
-- Member methods of `Toolset` types defined by `@toolset`
+- Member methods of Agent classes defined with `@agent`
+- Member methods of `Toolset` types defined with `@toolset`
 
-- `description`: Describes the tool's functionality (**required**).
-- `parameters`: Describes function parameter meanings as `<parameter-name>: <parameter-description>` key-value pairs (**optional**).
-- `filterable`: Whether the tool can be filtered by the Agent (used with `@agent`'s `enableToolFilter`) (**optional**).
-- `terminal`: Whether to terminate Agent execution. When set to true, the Agent will immediately end after executing this tool, and the function's return value will be used as the Agent's execution result **optional**
+All tool functions have the following attributes:
+- The `description` attribute describes the tool's functionality (required).
+- The `parameters` attribute describes the meaning of function parameters, accepting key-value pairs in the format `<parameter-name>: <parameter-description>` (optional).
+- `filterable`: Whether the tool can be filtered by the Agent, used with the `enableToolFilter` attribute of `@agent` (optional).
+- `terminal`: Whether to terminate Agent execution. When set to `true`, the Agent will end immediately after executing this tool, and the function's return value becomes the Agent's execution result (optional).
+- `compressible`: Whether to (use LLM) summarize and compress the tool's execution result. Compression occurs only when this attribute is `true` and the result length exceeds `Config.resultSummarizeThreshold` (optional).
 
-Global tool functions or toolset must be explicitly specified in the `tools` attribute for the Agent to use them.
+If the tool function is a global function or part of a Toolset, it must be explicitly specified in the `tools` attribute for the Agent to use it.
 
-**Example: Defining and Configuring a Global Tool**
+**Example: Defining and Configuring Global Tools**
 
 ```cangjie
 @tool[description: "...",
-      parameters: { arg: "..." }]
+      parameters: { arg: "..."}]
 func foo(arg: String): String { ... }
 
 @agent[
     tools: [foo]
 ]
-class A {...}
+class A { ... }
 ```
 
-**Example: Defining and Configuring a toolset**
+**Example: Defining a Toolset Type and Configuring It**
 
 ```cangjie
 @toolset
@@ -429,10 +547,10 @@ class FooToolset {
 @agent[
     tools: [FooToolset()]
 ]
-class A {...}
+class A { ... }
 ```
 
-**Example: Defining an Internal Tool**
+**Example: Defining Internal Tools**
 
 ```cangjie
 @agent
@@ -443,49 +561,33 @@ class A {
 }
 ```
 
-Limitations on tool functions:
-- Tool functions cannot be called directly like regular functions.
-
-    ```cangjie
-    @tool[...]
-    func foo() { ... }
-
-    foo() // Error: Cannot call tool functions directly
-    ```
-- Tool parameters must be basic types.
-- Tool return values must satisfy the `ToString` interface (the method's return value is used as the tool's output).
+Restrictions for tool functions:
+- Currently, the parameter types of tool functions must satisfy the `Jsonable` interface.
+- The return value of a tool function must satisfy the `ToString` interface, and the return value of this method will serve as the tool's execution result.
 
 ### Using Tools and MCP Servers
 
-The `tools` attribute configures the MCP servers and custom tool functions used by the Agent. This attribute accepts multiple MCP servers or tool functions, each configured with the following syntax:
-
-- **MCP server using the `stdio` protocol:** `stdioMCP(<command>, <env-kv-pair>*)` specifies the command to start the MCP server along with optional environment variables.
-  Example: `stdioMCP("command and arguments", ENV_1: "value1", ENV_2: "value2")`.
-
-- **MCP server using the `http/sse` protocol:** `mcpHttp(<url>)` specifies the URL of the MCP server.
-  Example: `httpMCP("https://abc.com/mcp")`.
-
-- **Tool functions:** `<func-id>+`, such as `foo, bar`.
-  ⚠️ Note: If a tool is defined within the `Agent` class, it can be used directly by that Agent without explicit declaration in the `tools` attribute.
-
-- **Toolset construction** `<expr>` – Typically an instantiation of a toolset type, e.g., `MyToolset()`.
-
+Agents configure MCP servers and custom tool functions via the `tools` attribute. This attribute accepts multiple MCP servers/tool functions, each configured using the following syntax:
+- MCP server with `stdio` protocol: `stdioMCP(<command>, <env-kv-pair>*)`, specifying the command line to start the MCP server and optional environment variables. For example, `stdioMCP("command and arguments", ENV_1: "value1", ENV_2, "value2")`.
+- MCP server with `http/sse` protocol: `mcpHttp(<url>)`, specifying the MCP server's address. For example, `httpMCP("https://abc.com/mcp")`.
+- Tool function `<func-id>+`, e.g., `foo, bar`. Note ⚠️: If the tool is defined inside the Agent class, it can be used directly by the owning Agent without explicit specification in the `tools` attribute.
+- Toolset construction `<expr>`, typically an instantiation of a Toolset type, e.g., `MyToolset()`.
 
 ```cangjie
 @agent[
     tools: [
-        stdioMCP("node index.js args"),
+        stdioMCP("node index.js args" ),
         stdioMCP("python main.py args", SOME_API_KEY: "xxx"),
         httpMCP("http://abc.mcp.server.com"),
         toolA,
         toolB,
-        MyToolset()
+        SomeToolset()
     ]
 ]
 class Foo { ... }
 ```
 
-Alternatively, MCP tools can be configured via API:
+MCP tools can also be configured for Agents via API.
 
 ```cangjie
 // Initialize MCP client
@@ -495,18 +597,18 @@ let agent = SomeAgent()
 agent.toolManager.addTools(client.getTools())
 ```
 
-⚠️ Note: Currently, MCP servers only support tool-related MCP protocols.
+⚠️ Note: Currently, MCP servers only support MCP protocols related to tools.
 
-Additionally, **MCP servers can be configured in JSON syntax** within the `tools` attribute:
+Additionally, the `tools` configuration **also supports JSON syntax for setting up MCP servers**.
 
-- **`stdio` transport:** Configured with `command` (startup command), `args` (startup arguments), and optionally `env` (environment variables).
-- **`HTTP/SSE` transport:** Configured with `url` (MCP server address).
+- `stdio` transmission, configured by: consisting of `command` (startup command) and `args` (startup arguments), with optional environment variables `env`.
+- `HTTP SSE` transmission, configured by: specifying the MCP server address via `url`.
 
 ```cangjie
 @agent[
     tools: [
-        { command: "node", args: ["index.js", "args"] },
-        { command: "python", args: ["main.py", "args"], env: { SOME_API_KEY: "xxx" } },
+        { command: "node", args: [ "index.js", "args" ] },
+        { command: "python", args: [ "main.py", "args" ], env: { SOME_API_KEY: "xxx" } },
         { url: "http://abc.mcp.server.com" }
     ]
 ]
@@ -515,12 +617,12 @@ class Foo { ... }
 
 ### Additional Tool Property Settings
 
-All tools support storing extra property values through the special member variable `extra: HashMap<String, String>`. Currently, there are two special property values:
+All tools allow saving additional property values via the special member variable `extra: HashMap<String, String>`. Currently, there are two special property values:
 
-- `filterable: "true" | "false"` – Determines whether the tool can be filtered by the Agent, used in conjunction with the `agent.toolManager.enableFilter` setting.
-- `terminal: "true" | "false"` – Determines whether it terminates Agent execution. When set to `true`, the Agent will immediately end after executing this tool, and the function's return value will be used as the Agent's execution result.
+- `filterable: "true" | "false"` Whether the tool can be filtered by the Agent, used in conjunction with `agent.toolManager.enableFilter`.
+- `terminal: "true" | "false"` Whether to terminate Agent execution. When set to `true`, the Agent will end directly after executing this tool, and the function's return value will serve as the Agent's execution result.
 
-**Example: Setting Tool Extra Properties**
+**Example: Setting Additional Tool Properties**
 
 ```cangjie
 let tool: Tool = getSomeTool()
@@ -530,18 +632,18 @@ tool.extra["terminal"] = "true"
 
 ## Planning
 
-Each Agent has an `executor` property specifying which executor to use (different executors employ different planning strategies). Currently supported executors:
+Each Agent has an `executor` property to specify which executor to use (different executors employ different planning strategies). Currently, the following executors are supported:
 
-| Executor Name | Description |
+| Planning Name | Description |
 |---|---|
-| `naive`  | Direct Q&A  |
-| `react` | The Agent selects one tool per solving step, evaluates the execution result to determine completion, and iterates until the task is solved |
-| `plan-react` | Performs initial task planning, then uses React mode to solve each subtask |
-| `tool-loop` | Functionally similar to react, but without an explicit reasoning process |
+| `naive`  | Direct Q&A |
+| `react` | The Agent selects a tool to complete a solving step each time, then evaluates the tool's execution result to determine if the task is completed, iterating this process until the task is solved. |
+| `plan-react` | First, complete a task plan, then use React mode to solve each subtask derived from the plan. |
+| `tool-loop` | Functionally similar to `react` but without an explicit thinking process. |
 
-The `react` and `tool-loop` executor can specify maximum iterations using `react:<number>` format, e.g., `react:5`.
+Among these, the `react` and `tool-loop` executors can specify the maximum number of iterations in the form `react:<number>`, such as `react:5`.
 
-**Example: Configuring Planning Method**
+**Example: Configuring Planning Methods**
 
 ```cangjie
 @agent[executor: "naive"]
@@ -553,21 +655,21 @@ class Bar{ }
 
 ### Agent Execution DSL (Experimental)
 
-In addition to directly using the pre-defined planning methods provided by Magic, you can use the **Execution DSL** (Domain-Specific Language) to control the execution process of an Agent at a finer granularity.
+In addition to using the pre-provided planning methods in Magic, you can also use the planning DSL to control the Agent's execution process more granularly.
 
-**Definition of Agent Execution DSL**: A "programming language" designed to define the execution flow of an LLM Agent, enabling complex strategies by combining operations.
+**Agent Execution DSL Definition**: A "programming language" for defining LLM Agent execution flows, achieving complex strategies through combined operations.
 
-- **Avoid Repetitive Code**: Eliminates the need for manually writing redundant template code.
-- **Flexible Customization**: Allows easy implementation of sophisticated planning strategies.
+- **Avoid Repetitive Code**: Prevent writing redundant template code manually.
+- **Flexible Customization**: Easily write complex planning strategies.
 
 **Basic Rules**
 
-- The Planning DSL is used inside `@execution` within an `@agent` block. Once the DSL is applied, the `executor` property configuration is ignored.
-- The pipe operator `|>` chains multiple planning operations.
-- The Agent’s execution state is represented as a *sequence of Prompts*:
-  - After each operation performed by the LLM, the result is appended to this Prompt sequence.
+- The planning DSL is used within `@agent` inside `@execution`; when using the planning DSL, the `executor` property configuration is ignored.
+- The pipe operator `|>` connects multiple planning operations.
+- The Agent execution state is *a sequence of Prompts*.
+  - After each LLM operation is completed, the operation result is added to this Prompt sequence.
 
-**Example Usage**
+**Usage Example**
 
 ```swift
 @agent class Foo {
@@ -577,7 +679,7 @@ In addition to directly using the pre-defined planning methods provided by Magic
 }
 ```
 
-**Execution Flow Diagram**
+Flow Diagram
 
 ```
              plan         -> think         -> action ->       think -> ... -> answer
@@ -588,23 +690,23 @@ In addition to directly using the pre-defined planning methods provided by Magic
                                                        | Result: ... |
 ```
 
-Planning operations are derived from existing planning methods, abstracting common logic into composable actions. They are categorized into three types: *Basic Operations*, *Task Decomposition Operations*, and *Conditional Control Operations*.
+Planning operations are extracted from existing planning methods, abstracting commonly used logic into composable operations, including three categories: *Basic Operations*, *Task Decomposition Operations*, and *Condition Control Operations*.
 
 **Basic Operations Overview**
 
-| Operator   | Purpose          |
-|------------|----------------|
-| `think`    | Generate reasoning steps |
-| `action`   | Select and execute a tool |
-| `answer`   | Return the final answer |
-| `plan`     | Formulate a plan |
-| `loop`     | Loop through a sequence of internal operations |
-| `tool`     | Execute a sequence of tool functions in order; tool parameters are auto-generated by the LLM |
-| `done`     | Check whether execution should terminate |
+| Operator      | Function             |
+|-------------|----------------|
+| `think`     | Generate reasoning steps |
+| `action`    | Select and execute a tool |
+| `answer`    | Return the final answer |
+| `plan`      | Create a plan |
+| `loop`      | Loop internal operation sequences |
+| `tool`      | Execute tool function sequences in order, with tool parameters automatically generated by the LLM |
+| `done`      | Check for termination |
 
-**Advanced Operations: Task Decomposition & Merging**
+**Complex Operations: Task Decomposition & Merging**
 
-```swift
+```cangjie
 @agent class ResearchAssistant {
   @execution(
     divide |> each(tool(web_search)) |> summary |> answer
@@ -614,13 +716,13 @@ Planning operations are derived from existing planning methods, abstracting comm
 }
 ```
 
-| Operator   | Purpose          |
-|------------|----------------|
-| `divide`   | Task is split into sub-problems by the LLM; the number of sub-tasks is auto-determined |
-| `each`     | Process sub-tasks |
-| `summary`  | Aggregate results from sub-tasks |
+| Operator      | Function             |
+|-------------|----------------|
+| `divide` | Split the task into subproblems via LLM, with the number of subproblems determined automatically. |
+| `each` | Handle subtasks. |
+| `summary` | Summarize subtask results. |
 
-**Advanced Operations: Conditional Control**
+**Complex Operations: Conditional Control**
 
 ```swift
 @agent class Assistant {
@@ -635,40 +737,40 @@ Planning operations are derived from existing planning methods, abstracting comm
 ```
 
 - `switch` accepts multiple `onCase` clauses.
-- Each `onCase` consists of a condition (expressed in natural language) and an operation sequence:
-  - If the condition holds true (based on the current execution state), the corresponding operation sequence is executed.
-  - `onCase` clauses are evaluated top-down.
-- If no `onCase` condition is met, the `otherwise` clause is executed.
+- Each `onCase` clause consists of a condition (expressed in natural language) and an operation sequence.
+    - When the condition in `onCase` is met (based on the current execution state), the corresponding operation sequence continues.
+    - `onCase` clauses are executed top-down.
+- If no `onCase` is met, the `otherwise` clause is executed.
 
 ## External Knowledge
 
-Beyond system prompts, external knowledge can enhance an Agent's problem-solving capabilities. Agents can extract essential information from various knowledge sources.
+In addition to system prompts, external knowledge can also enhance the Agent's problem-solving capabilities. Agents can extract necessary and useful information from various knowledge sources.
 
-The `rag` property specifies the data source for external knowledge, accepting multiple configurations with these key-value pairs:
+Currently, the Agent's `rag` property indicates the data source of external knowledge. It accepts multiple data source configurations, each containing the following key-value pairs:
 
 | Property  | Value | Description |
 |---|---|---|
 | `source`  | `String \| Expr`  | Data source |
-| `mode`  | `String`  | Usage mode: `"static"` or `"dynamic"` (default: `"static"`) |
-| `description`  | `String`  | Additional source description to help Agents retrieve data more precisely |
+| `mode`  | `String`  | Usage mode, supporting `"static"` and `"dynamic"`; defaults to `"static"`. |
+| `description`  | `String`  | Further describes the data source to help the Agent retrieve data more accurately. |
 
-The `source` property supports:
-- Valid paths to *predefined file types*
-    - Currently supported: markdown, SQLite databases
-- Expressions of type `Retriever`
+The `source` property indicates the actual data source, supporting two types:
+- A valid path pointing to *predefined file types*
+    - Currently supported file types include markdown and SQLite databases.
+- An expression of type `Retriever`.
 
 ```cangjie
 @agent[
-  rag: { source: "path/to/some.db" }
+  rag: { source: "path/to/some.md", mode: "dynamic" }
 ]
 class Foo { }
 ```
 
-⚠️Note: SQLite functionality requires `sqlite = "enable"` in `cfg.toml` and third-party dependencies. See [third_party_libs.md](./third_party_libs.md)
+⚠️ Note: Using SQLite database functionality requires configuring `sqlite = "enable"` in `cfg.toml`. Since the database uses SQLite, third-party dependencies must be installed. For details, see [third_party_libs.md](./third_party_libs.md).
 
 ## Examples
 
-### Example 1: CLI Assistant Agent
+### Example 1: Command Line Assistant Agent
 
 ```cangjie
 @agent[executor: "react"]
@@ -676,11 +778,11 @@ class CJCAgent {
     @prompt(
         """
         You are a CJC command line assistant.
-        You help users generate commands based on their queries.
+        You help users generate command lines based on their questions.
         """
     )
 
-    @tool[description: "Get CJC manual"]
+    @tool[description: "Retrieve the CJC manual"]
     private func getManual(): String {
         let subProcess: SubProcess = Process.start(
             "cjc", ["--help"], stdOut: ProcessRedirect.Pipe
@@ -692,44 +794,44 @@ class CJCAgent {
 }
 
 let agent = CJCAgent()
-let result = agent.chat("Compile a file for ARM platform")
+let result = agent.chat("Compile a file for the ARM platform")
 ```
 
 ## Multi-Agent Collaboration
 
-Agents can be organized into groups for efficient collaboration through three modes:
+Multiple Agents can be organized into groups for efficient collaboration. These collaborations generally fall into three categories:
 
-1. **Linear Coordination**: Sequential operation where each Agent receives the previous Agent's message (including results/tasks), processes it, and passes results to the next Agent.
-2. **Master-Slave Coordination**: One Agent leads while others report to it.
-3. **Free Coordination**: Equal collaboration where all Agents participate in group discussions with full message visibility.
+1. **Linear Collaboration**: Agents operate sequentially, with each Agent receiving the previous Agent's message (including results and tasks), processing it, and passing the result to the next Agent.
+2. **Master-Slave Collaboration**: One Agent acts as the leader, supervising other Agents' activities, while other Agents report to the leader.
+3. **Free Collaboration**: All Agents act as equal collaborative units, engaging in group discussions where each Agent can see all messages.
 
-The `AgentGroup` interface abstracts these coordination modes (see API Reference).
+The `AgentGroup` interface abstracts all these collaboration methods (see API manual for details).
 
-### Linear Coordination
+### Linear Collaboration
 
-The pipeline operator `|>` creates `LinearGroup`.
+The pipe expression `|>` is used to form multiple Agents into a `LinearGroup`.
 
 ```cangjie
 let linearGroup: LinearGroup = ag1 |> ag2 |> ag3
 ```
 
-### Master-Slave Coordination
+### Master-Slave Collaboration
 
-The `<=` operator creates `LeaderGroup`, with the left operand as leader and right as follower array.
+Use the `<=` operator to form multiple Agents into a `LeaderGroup`, with the Agent before the operator as the leader and the following value as an array of subordinate Agents.
 
 ```cangjie
 let leaderGroup: LeaderGroup = ag1 <= [ag2, ag3]
 ```
 
-### Free Coordination
+### Free Collaboration
 
-The `|` operator creates `FreeGroup`.
+Use the `|` operator to form multiple Agents into a `FreeGroup`.
 
 ```cangjie
 let freeGroup: FreeGroup = ag1 | ag2 | ag3
 ```
 
-`FreeGroup` also provides a flexible `discuss` method:
+`FreeGroup` also provides a more flexible `discuss` method.
 
 ```cangjie
 public enum FreeGroupMode {
@@ -743,13 +845,14 @@ class FreeGroup {
 }
 ```
 
-The `discuss` method specifies:
-- `topic`: Discussion subject (the problem to solve)
-- `initiator`: First speaker
-- `speech`: Initial content
-- `mode`: Discussion mode (auto-selected or round-robin)
+The `discuss` method can specify:
 
-Example implementation of number-guessing game between two Agents (reference [AutoGen](https://github.com/microsoft/autogen/blob/main/website/docs/tutorial/human-in-the-loop.ipynb)):
+- `topic` The discussion topic (i.e., the problem to solve).
+- `initiator` The first Agent to speak.
+- `speech` The content of the first Agent's speech.
+- `mode` The discussion mode, either automatically selecting Agents to speak or using a round-robin approach.
+
+The following code implements a number-guessing game between two Agents, referencing [AutoGen](https://github.com/microsoft/autogen/blob/main/website/docs/tutorial/human-in-the-loop.ipynb).
 
 ```cangjie
 @agent class AgentWithNumber {
@@ -777,38 +880,34 @@ func game() {
 }
 ```
 
-### Agent Subgroup Construction
+### Agent Collaboration Subgroup Construction
 
-When building linear coordination, both Agents and AgentGroups can participate directly. For example:
+When building linear collaboration, not only can Agents participate, but AgentGroups can also directly participate in construction. For example,
 
 ```cangjie
 ag1 |> (ag2 <= [ag3]) |> ag4
 ```
 
-This creates a linear group where the second unit is a master-slave subgroup.
+The above code constructs a linear collaboration group, but the second unit is a master-slave collaboration group. Here, the master-slave collaboration group is a **subgroup** of the linear collaboration.
 
-However, master-slave and free coordination don't directly accept `AgentGroup`. Use `subGroup()` to convert:
+However, when building master-slave and free collaborations, `AgentGroup` cannot be directly included in the construction. In this case, the function `func subGroup(g: AgentGroup, description!: String): Agent` must be used to convert an Agent collaboration group into a subgroup object that can participate in building Agent collaboration groups.
 
 ```cangjie
-ag1 | subGroup(ag2 <= [ag3], description: "An subgroup attempts to ...") | ag4 // Okay
+ag1 | (ag2 <= [ag3]) | ag4 // Compilation error
+ag1 | subGroup(ag2 <= [ag3], description: "A subgroup attempts to ...") | ag4 // Okay
 ```
 
-## AI Function Shortcut
+## Quick AI Functions
 
-`@ai` can be used to annotate functions, indicating that the function's execution will be performed by an LLM.
+`@ai` can be used to decorate functions, indicating that the function's execution will be completed by the LLM. Functions decorated with `@ai` must be `foreign` functions, meaning the function's implementation resides on the model side and is an external function to the current code. Requirement: **The function's parameter types and return type must satisfy the `Jsonable` interface**. Additionally, `@ai` allows properties:
 
-Functions decorated with `@ai` must be declared as `foreign`, meaning their implementation resides on the model side, making them foreign functions from the perspective of the current code.
-**Requirements**: **The parameter types and return type of the function must satisfy the `Jsonable` interface.**
-
-Additionally, the `@ai` decorator supports the following attributes:
-
-| Attribute    | Type      | Description |
-|--------------|-----------|-------------|
-| `prompt`     | `String`  | Additional instructions for the AI function. |
-| `model`      | `String`  | Specifies the LLM model provider to use. |
-| `tools`      | `Array`   | Configures the external tools available for use. |
-| `temperature`| `Float`   | The `temperature` value used by the agent when invoking the LLM. |
-| `dump`       | `Bool`    | Used for debugging—if `true`, prints the agent's transformed AST; defaults to `false`. |
+| Property Name | Value Type | Description |
+|-------|-------|-------|
+| `prompt` | `String` | Additional knowledge for the AI function |
+| `model` | `String` | Configure the LLM model service to be used; defaults to gpt-4o |
+| `tools` | `Array` | Configure external tools that can be utilized |
+| `temperature` | `Float` | Temperature value when the Agent uses the LLM; defaults to `0.5` |
+| `dump` | `Bool` | For debugging purposes, whether to print the transformed AST of the Agent; defaults to `false` |
 
 **Example**:
 
@@ -825,33 +924,34 @@ foreign func keywordsOf(url: String): Array<String>
 main() { keywordsOf("https://cangjie-lang.cn/") }
 ```
 
-
 ## Model Configuration
 
-Models are configured as `<provider>:<model>`. Current providers:
+Model configuration follows the format `<provider>:<model>`. Currently supported model providers are listed below.
 
-| Provider | Example | Config | URL Config |
+| Provider Name | Example | Configuration Notes | Service URL Configuration |
 |---|---|---|---|
-| Aliyun | `dashscope:qwen-plus` | `DASHSCOPE_API_KEY` | `DASHSCOPE_BASE_URL` (default: `https://dashscope.aliyuncs.com/compatible-mode/v1`) |
-| DeepSeek | `deepseek:deepseek-chat` | `DEEPSEEK_API_KEY` | `DEEPSEEK_BASE_URL` (default: `https://api.deepseek.com`) |
-| Volcano Ark | `ark:doubao-lite-4k` | `ARK_API_KEY` | `ARK_BASE_URL` (default: `https://ark.cn-beijing.volces.com/api/v3`) |
-| Llama.cpp | `llamacpp` | No API key needed | `LLAMACPP_BASE_URl` (default: `http://localhost:8080`) |
-| Ollama | `ollama:phi-3` | No API key | `OLLAMA_BASE_URl` (default: `http://localhost:11434`) |
-| OpenAI  | `openai:gpt-4o` | `OPENAI_API_KEY` | `OPENAI_BASE_URL` (default: `https://api.openai.com/v1`) |
-| SiliconFlow | `siliconflow:deepseek-ai/DeepSeek-V3` | `SILICONFLOW_API_KEY` | `SILICONFLOW_BASE_URL` (default: `https://api.siliconflow.cn/v1`) |
-| Zhipu AI | `zhipuai:glm-4` | `ZHIPUAI_API_KEY` | `ZHIPUAI_BASE_URL` (default: `https://open.bigmodel.cn/api/paas/v4`) |
-| Google | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` | `GOOGLE_BASE_URL`，(default: `https://generativelanguage.googleapis.com/v1beta/openai`) |
-| Moonshot | `moonshot:kimi-k2-0711-preview` | `MOONSHOT_API_KEY` | `MOONSHOT_BASE_URL` (default: `https://api.moonshot.cn/v1`) |
-| OpenRouter | `openrouter:qwen/qwen3-coder:free` | `OPENROUTER_API_KEY` | `OPENROUTER_BASE_URL` (default: `https://openrouter.ai/api/v1`) |
+| Alibaba Cloud | `dashscope:qwen-plus` | `DASHSCOPE_API_KEY` | `DASHSCOPE_BASE_URL`, default `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| DeepSeek | `deepseek:deepseek-chat` | `DEEPSEEK_API_KEY` | `DEEPSEEK_BASE_URL`, default `https://api.deepseek.com` |
+| Volcano Ark | `ark:doubao-lite-4k` | `ARK_API_KEY` | `ARK_BASE_URL`, default `https://ark.cn-beijing.volces.com/api/v3` |
+| Llama.cpp | `llamacpp` | No model name or API Key required | `LLAMACPP_BASE_URl`, default `http://localhost:8080` |
+| Ollama | `ollama:phi-3` | No API Key required | `OLLAMA_BASE_URl`, default `http://localhost:11434` |
+| OpenAI | `openai:gpt-4o` | `OPENAI_API_KEY` | `OPENAI_BASE_URL`, default `https://api.openai.com/v1` |
+| SiliconFlow | `siliconflow:deepseek-ai/DeepSeek-V3` | `SILICONFLOW_API_KEY` | `SILICONFLOW_BASE_URL`, default `https://api.siliconflow.cn/v1` |
+| Zhipu AI | `zhipuai:glm-4` | `ZHIPUAI_API_KEY` | `ZHIPUAI_BASE_URL`, default `https://open.bigmodel.cn/api/paas/v4` |
+| Google | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` | `GOOGLE_BASE_URL`, default `https://generativelanguage.googleapis.com/v1beta/openai` |
+| Moonshot | `moonshot:kimi-k2-0711-preview` | `MOONSHOT_API_KEY` | `MOONSHOT_BASE_URL`, default `https://api.moonshot.cn/v1` |
+| OpenRouter | `openrouter:qwen/qwen3-coder:free` | `OPENROUTER_API_KEY` | `OPENROUTER_BASE_URL`, default `https://openrouter.ai/api/v1` |
+
+Model configuration can be used not only in the `model` property of `@agent`, but also directly constructed via static methods of `ModelManager`: `static func createChatModel(modelName: String): ChatModel`.
 
 **Model Support Matrix**
 
-|   | Chat | Embedding | Image |
+|  | Chat | Embedding | Image |
 |---|---|---|---|
-| Aliyun | ✔️ | ✔️ | ❌ |
+| Alibaba Cloud | ✔️ | ✔️ | ❌ |
 | DeepSeek | ✔️ | ❌️ | ❌ |
 | Volcano Ark | ✔️ | ✔️ | ❌ |
-| Llama.cpp | ✔️ | ✔️ | ❌ |
+| Llama.cpp | ✔️ | ❌ | ❌ |
 | Ollama | ✔️ | ✔️ | ❌ |
 | OpenAI | ✔️ | ✔️ | ✔️ |
 | SiliconFlow | ✔️ | ✔️ | ✔️ |
@@ -860,81 +960,596 @@ Models are configured as `<provider>:<model>`. Current providers:
 | Moonshot | ✔️ | ❌ | ❌ |
 | OpenRouter | ✔️ | ❌ | ❌ |
 
-## Core API Reference
+To integrate new models, refer to direct API configuration (see below).
 
-(Continuing with similarly detailed translations of API sections...)
+## Common APIs
 
-### Semantic Retrieval
+This section introduces commonly used APIs. For a complete reference, see [API Reference](./api_reference.md).
 
-The semantic retrieval system comprises:
-- **Vector Models**: Generate semantic vectors (`Vector`) from text
-- **Vector Databases**: Maintain `vector -> index` mapping and search
-- **Index Maps**: Maintain `index -> data` relationships
-- **Semantic Structures**: Higher-level abstractions combining these components
+### Global Configuration
 
-#### Vector Models
+The class `magic.config.Config` provides the following global configurations, all of which are readable and writable.
+
+| Configuration Name | Type | Description | Default Value |
+|---|---|---|---|
+| `logLevel` | `LogLevel` | Logging level | `LogLevel.ERROR` |
+| `logFile` | `String` | Log file path | `stdout` |
+| `enableAgentLog` | `Bool` | Whether to save individual Agent logs | `false` |
+| `agentLogDir` | `String` | Directory for individual Agent logs | `./logs/agent-logs` |
+| `saveModelRequest` | `Bool` | Whether to save each model request | `false` |
+| `modelRequestDir` | `String` | Directory for model requests | `./logs/model-requests` |
+| `defaultChatModel` | `Option<ChatModel>` | Default LLM model | `None` |
+| `defaultEmbeddingModel` | `Option<EmbeddingModel>` | Default embedding model | `None` |
+| `externalScriptDir` | `String` | Directory for external scripts | `./external_scripts` |
+| `defaultContextLen` | `Int` | LLM context length | `32000` |
+| `defaultTokenizer` | `Option<Tokenizer>` | Default tokenizer for calculating prompt tokens | `UnicodeTokenizer()` |
+| `enableFunctionCall` | `Bool` | Whether to use LLM function call capability in Agent executors (currently only `tool-loop/dsl` executors) | `false` |
+| `maxReactNumber` | `Int` | Maximum iterations for React mode | `10` |
+| `modelRetryNumber` | `Int` | Maximum retries for failed model requests | `3` |
+| `env` | `HashMap<String,String>` | Environment variables | - |
+
+### Agent Types
+
+All types defined with `@agent` automatically implement the `interface Agent`, which provides the following APIs for accessing Agent properties.
+
+```cangjie
+public interface Agent {
+    /**
+     * Name of the agent
+     */
+    prop name: String
+
+    /**
+     * Functionality description of the agent
+     */
+    prop description: String
+
+    /**
+     * Temerature the agent will pass to the LLM
+     */
+    mut prop temperature: Option<Float64>
+
+    /**
+     * System prompt of the agent
+     */
+    mut prop systemPrompt: String
+
+    /**
+     * Tools the agent can use
+     */
+    prop toolManager: ToolManager
+
+    /**
+     * Chat model the agent will use
+     */
+    mut prop model: Option<ChatModel>
+
+    /**
+     * The underlying agent executor
+     */
+    mut prop executor: AgentExecutor
+
+    /**
+     * Retreiver the agent can use
+     */
+    mut prop retriever: Option<Retriever>
+
+    /**
+     * Memory the agent will use
+     */
+    prop memory: Option<Memory>
+
+    /**
+     * Personal data the agent will use
+     */
+    prop personal: Option<Personal>
+
+    /**
+     * Set the agent interceptor
+     */
+    mut prop interceptor: Option<Interceptor>
+
+    /**
+     * Query the agent and get the answer
+     */
+    func chat(request: AgentRequest): String
+}
+```
+
+The method `func chat(request: AgentRequest): String` is the message processing interface. Note that the interaction method `func chat(question: String): String` introduced in [this section](#agent-interaction-methods) is a wrapper around this interface method.
+
+```cangjie
+class AgentRequest {
+    // The current user question
+    public let question: String
+    ...
+}
+```
+
+### Agent Interception Mechanism
+
+The `Agent` has a mutable property `mut prop interceptor: Interceptor` for setting message interception.
+
+```cangjie
+enum InterceptorMode {
+    | Always
+    | Periodic(Int64)
+    | Conditional((Request) -> Bool)
+}
+
+class Interceptor {
+    public init(interceptorAgent: Agent, mode!: InterceptorMode = InterceptorMode.Always)
+}
+```
+
+When an interceptor Agent is set, whenever the Agent receives a message (represented as `Request`), if the interception condition is met, the message will be handled by the interceptor Agent instead of the original Agent. There are three interception modes:
+
+- `Always`: Always intercept
+- `Periodic`: Periodically intercept (e.g., intercept every Nth message)
+- `Conditional`: Use a predicate function to determine whether to intercept
+
+```cangjie
+let ag1 = Foo()
+let ag2 = Bar()
+ag1.interceptor = Interceptor(ag2, mode: InterceoptorMode.Periodic(2))
+
+ag1.chat("msg 1")
+ag1.chat("msg 2")
+ag1.chat("msg 3") // ag2 will handle this request message
+```
+
+### Built-in Agents
+
+In addition to defining Agents via `@agent`, the framework provides the following built-in Agents.
+
+#### `BaseAgent`
+
+`BaseAgent` is used to construct Agents via API calls.
+
+```cangjie
+class BaseAgent <: Agent {
+    public init(
+        name!:         String                = "Base Agent",
+        description!:  String                = "",
+        temperature!:  Option<Float64>       = None,
+        systemPrompt!: String                = "",
+        toolManager!:  ToolManager           = SimpleToolManager(),
+        model!:        Option<ChatModel>     = None,
+        executor!:     Option<AgentExecutor> = None,
+        retriever!:    Option<Retriever>     = None,
+        memory!:       Option<Memory>        = None,
+        interceptor!:  Option<Interceptor>   = None
+    )
+}
+```
+
+**Example: Constructing an Agent via `BaseAgent`**
+
+```cangjie
+let agent= BaseAgent()
+agent.systemPrompt = "New system prompt ..."
+agent.model = ModelManager.createChatModel("ollama:phi3")
+agent.toolManager.addTool(fooTool)
+```
+
+#### `DispatchAgent`
+
+`DispatchAgent` is specialized for task dispatching in master-slave collaboration mode.
+
+```cangjie
+class DispatchAgent {
+    public init(model!: String)
+}
+```
+
+**Example**
+
+```cangjie
+let group = DiapatchAgent(model: "deepseek:deepseek-chat") <=[
+    FooAgent(),
+    BarAgent(),
+    ...
+]
+```
+
+#### `ToolAgent`
+
+`ToolAgent` does not use an LLM to respond to queries but directly executes provided functions to generate responses.
+
+```cangjie
+class ToolAgent<T> where T <: Jsonable<T> {
+    public init(fn!: (String) -> T)
+}
+```
+
+Using this Agent with linear collaboration can achieve functionality similar to Langchain's orchestration.
+
+```cangjie
+let group = FooAgent() |> ToolAgent(fn: { q: String => ...; }) |> BarAgent()
+```
+
+#### `HumanAgent`
+
+`HumanAgent` allows users to participate in Agent collaboration as an Agent. It can be viewed as a specialized `ToolAgent`.
+
+```cangjie
+class HumanAgent {
+    public init(qaFunc!: Option<(String) -> String> = None)
+}
+```
+
+The parameter `qaFunc` can be customized. The default implementation prints the user question to the terminal and accepts user input as the response.
+
+```cangjie
+let humanAgent = HumanAgent(qaFunc: { q: String => println(q); return "answer" })
+let result = humanAgent.chat("question")
+```
+
+### Jsonable Interface
+
+The `Jsonable` interface ensures that types can be converted to and from JSON data. The macro `@jsonable` automatically implements this interface for decorated `class/struct/enum` types.
+
+```cangjie
+public interface Jsonable<T> {
+    /**
+     * Get the type schema of T
+     */
+    static func getTypeSchema(): TypeSchema
+
+    /**
+     * Deserialize from a Json string
+     */
+```
+```markdown
+    static func fromJsonValue(json: JsonValue): T
+
+    /**
+     * Serialize to a Json string
+     */
+    func toJsonValue(): JsonValue
+}
+```
+
+### Integrating New Models
+
+New models can implement the `interface ChatModel` and then be configured via the `agent.model` property.
+
+Model-related types are located in the `magic.core.model` package.
+
+```cangjie
+interface ChatModel <: Model {
+    func create(req: ChatRequest): ChatResponse
+    func asyncCreate(req: ChatRequest): AsyncChatResponse
+}
+```
+
+Message types used are defined in `magic.core.message`.
+
+```cangjie
+public class ChatMessage <: ToString {
+    public let name: String          // name of the sender
+    public let role: ChatMessageRole // role of the sender
+    public let content: String       // Content of the message
+}
+```
+
+**Example: Custom Chat Model**
+
+```cangjie
+@agent
+class Foo { }
+
+class NewModel <: ChatModel {
+    public func create(req: ChatRequest): ChatResponse { ... }
+    public func asyncCreate(req: ChatRequest): AsyncChatResponse { ... }
+}
+
+let foo = Foo()
+foo.model = NewModel()
+```
+
+After customizing the model, you can register a name for it, allowing direct configuration via the `@agent` attribute. The registration function is the member method `func registerChatModel(name: String, buildFn: () -> ChatModel)` of `ModelManager`.
+⚠️Note: Ensure model registration occurs before invoking Agent instance methods.
+
+**Example: Registering a Custom Model**
+
+```cangjie
+@agent[model: "newModel"]
+class Foo { }
+
+main() {
+    ModelManager.register("newModel", { => NewModel() })
+    let agent = Foo()
+}
+```
+
+### Custom Planning Methods
+
+When the built-in `naive` and `react` planning methods are insufficient, you can develop new executors by implementing the `interface AgentExecutor` and configure them via the `agent.executor` property.
+
+Related types for this interface are in the `magic.core.agent` package.
+
+```cangjie
+interface AgentExecutor {
+    func run(agent: Agent, request: AgentRequest): AgentResponse
+
+    func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
+}
+```
+
+**Example: Custom Agent Executor**
+
+```cangjie
+@agent
+class Foo { }
+
+class NewExecutor <: AgentExecutor {
+    func run(agent: Agent, request: AgentRequest): AgentResponse { ... }
+
+    func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse { ... }
+}
+
+let foo = Foo()
+foo.executor = NewExecutor()
+```
+
+After customizing the executor, you can register a name for it, enabling direct configuration via the `@agent` attribute. The registration function is the member method `func registerAgentExecutor(name: String, buildFn: () -> AgentExecutor)` of `AgentExecutorManager`.
+⚠️Note: Ensure executor registration occurs before invoking Agent instance methods.
+
+**Example: Registering a Custom Executor**
+
+```cangjie
+@agent[executor: "newExecutor"]
+class Foo { }
+
+main() {
+    AgentExecutorManager.register("newExecutor", { => NewExecutor() })
+    let agent = Foo()
+}
+```
+
+### Semantic Retrieval Functionality
+
+Semantic retrieval functionality is divided into the following modules:
+
+- Vector Model: Constructs semantic vectors `vector` for data structures' semantic information (`String` type)
+- Vector Database: Builds vector indexes, maintaining `vector -> index` mappings; provides vector search
+- Index Mapping Table: Maintains index-to-data mappings, i.e., `index -> data`
+- Semantic Data Structures: Encapsulates the above modules with convenient interfaces
+
+Except for vector models, all types in this section are defined in the `vdb` subpackage.
+
+#### Vector Model
+
+Vectors are defined as follows.
 
 ```cangjie
 class Vector {
     public init(data: Array<Float32>)
 }
+```
 
+Use `VectorBuilder` to construct vectors.
+
+```cangjie
 public class VectorBuilder {
     public VectorBuilder(model!: EmbeddingModel)
+
     public func createEmbeddingVector(content: String): Vector
 }
 ```
 
-#### Vector Databases
+Currently, the following two embedding model services are supported, located in the `model.openai/ollama` subpackage.
+
+```cangjie
+class OpenAIEmbeddingModel <: EmbeddingModel {
+    ...
+}
+
+class OllamaEmbeddingModel <: EmbeddingModel {
+    ...
+}
+```
+
+Use `ModelManager.createEmbeddingModel` to conveniently construct model instances.
+
+**Example: Building a Vector**
+
+```cangjie
+let model = ModelManager.createEmbeddingModel("openai:text-embedding-ada-002")
+let vecBuilder = VectorBuilder(model: model)
+let vector= vecBuilder.createEmbeddingVector("First vector")
+```
+
+#### Vector Database
+
+The vector database is abstracted as the following interface.
 
 ```cangjie
 public interface VectorDatabase<Self> {
+    /**
+     * Add the vector to the database
+     * ATTENTION: index must start from 0
+     */
     func addVector(vector: Vector): Unit
+
+    /**
+     * Query the database and find indexes of similar data
+     */
     func search(queryVec: Vector, number!: Int64): Array<Int64>
+
+    /**
+     * Save to the file
+     */
     func save(filePath: String): Unit
+
+    /**
+     * Load from the file
+     */
     static func load(filePath: String): Self
 }
 ```
 
-#### Index Maps
+Currently, `InMemoryVectorDatabase` and `FaissVectorDatabase` are supported.
+
+```cangjie
+class FaissVectorBase {
+    public init(dimension: Int64)
+}
+
+class InMemoryVectorDatabase {
+    public init()
+}
+```
+
+Note: If using the faiss vector database, configure `faiss = "enable"` in `cfg.toml` and install third-party dependencies. See [third_party_libs.md](./third_party_libs.md) for details.
+
+#### Index Mapping Table
+
+The index mapping table maintains `index -> data` relationships and is abstracted as follows.
 
 ```cangjie
 public interface IndexMap<Self, T> where T <: ToString {
+    /**
+     * The index is determined by the order in which it was added.
+     */
     func add(content: T): Unit
+
     func get(index: Int64): T
+
     func save(filePath: String): Unit
+
     static func load(filePath: String): Self
 }
 ```
 
-#### Semantic Structures
+Currently, two types of index mapping tables are provided:
+
+`SimpleIndexMap` supports saving data of type `String`, maintaining `index -> String` mappings. When persisting, it directly saves mappings as JSON files.
+```cangjie
+class SimpleIndexMap <: IndexMap<SimpleIndexMap, String> { ... }
+```
+
+`JsonlIndexMap` supports saving any data type satisfying `Jsonable`. When persisting, it saves data as JSONL files, with indexes corresponding to line numbers.
+
+```cangjie
+class JsonlIndexMap<T> <: IndexMap<JsonlIndexMap<T>, T> where T <: Jsonable<T> & ToString
+```
+
+#### Semantic Data Structures
+
+Vector datasets are generally not used directly but are encapsulated in two data structures: `SemanticMap` and `SemanticSet`.
 
 ```cangjie
 public class SemanticMap<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
-                                           IMAP <: IndexMap<IMAP, T>,
-                                           T <: ToString {
-    // Constructor and methods...
-}
+                                             IMAP <: IndexMap<IMAP, T>,
+                                             T <: ToString {
+    /**
+     * Instantiate the object
+     * @param vectorDB Vector database for similarity search
+     * @param embeddingModel Embedding model for vectorization; defaults to OpenAI's text-embedding-ada-002
+     */
+    public init(vectorDB!: VDB,
+                indexMap: IMAP,
+                embeddingModel!: Option<EmbeddingModel> = None)
 
-public class SemanticSet<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
-                                            IMAP <: IndexMap<IMAP, T>,
-                                            T <: ToString {
-    // Constructor and methods...
+    /**
+     * Primarily used to set the embedding model
+     */
+    public mut prop embeddingModel: EmbeddingModel
+
+    /**
+     * Insert new key-value pairs
+     */
+    public func put(key: String, value: T): Unit
+
+    /**
+     * Perform semantic search on the map based on key to find similar values;
+     * number is the maximum number of results
+     * minDistance is the minimum similarity distance
+     */
+    public func search(query: String,
+                       number!: Int64 = 5,
+                       minDistance!: Float64 = 0.3): Array<T>
+
+    /**
+     * Construct a Retriever object
+     */
+    public func asRetriever(): Retriever
+
+    /**
+     * Save to the specified directory
+     */
+    public func save(dirPath: String): Unit
+
+    /**
+     * Load data from the directory path
+     */
+    public static func load(dirPath: String): SemanticMap<VDB, IMAP, T>
 }
 ```
 
-## Knowledge Graph
-### MiniRAG
-MiniRAG enables knowledge graph creation using vectors, key-value stores, and graph storage (local storage supported).
+The other data structure, `SemanticSet`, has similar APIs, with the difference being that the content it searches and retrieves is the value itself.
+
+```cangjie
+public class SemanticSet<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
+                                             IMAP <: IndexMap<IMAP, T>,
+                                             T <: ToString {
+    public init(vectorDB!: VDB,
+                indexMap: IMAP,
+                embeddingModel!: Option<EmbeddingModel> = None)
+    public mut prop embeddingModel: EmbeddingModel
+    public func put(value: T): Unit
+    public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T>
+```
+```markdown
+    public func save(dirPath: String): Unit
+    public static func load(dirPath: String): SemanticSet<VDB, IMAP, T>
+}
+```
+
+#### Usage Example
+
+```cangjie
+import magic.vdb.*
+
+main() {
+    let smap = SemanticMap(vectorDB: InMemoryVectorDatabase())
+    smap.put("Go to Shanghai", "Plan A")
+    smap.put("Have a meal", "Plan B")
+    smap.put("Go to Beijing", "Plan C")
+    smap.put("Sleep", "Plan D")
+    let c = smap.search("Go to Shanghai", number: 2)
+    println(c)
+}
+```
+
+Add the vector database as a retriever to the agent for use. Currently, the vector database can only be used in `Static` mode.
+
+```cangjie
+let agent = FooAgent()
+agent.retriever = smap.asRetriever()
+```
+
+### Knowledge Graph
+#### MiniRag
+Creation and usage of knowledge graphs based on MiniRag, which utilizes vector, key-value, and graph storage. The current implementation supports local storage.
 https://github.com/HKUDS/MiniRAG
 
-#### Instantiation
+#### `Instantiation`
+Use `MiniRagBuilder` to instantiate a MiniRag object for subsequent knowledge graph construction and graph-based retrieval.
+Instantiating MiniRag requires specifying the ChatModel, Tokenizer, and EmbeddingModel.
+Based on the currently available tokenizers (see api_reference.md for details), the corresponding tokenizer configuration files need to be downloaded.
+For example:
+- [OpenAI CL100K](https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken) requires downloading the cl100k_base.tiktoken file.
+- [DeepSeek-V3](https://huggingface.co/deepseek-ai/DeepSeek-V3/tree/main) and other open-source models require downloading the corresponding tokenizer.json and tokenizer_config.json files.
+For other configurations, refer to the `MiniRagBuilder` interface documentation.
+
 ```cangjie
 import magic.config.Config
 import magic.rag.graph.{MiniRagBuilder, MiniRagConfig, MiniRag}
 import magic.model.ollama.OllamaEmbeddingModel
 import magic.tokenizer.Cl100kTokenizer
-
 func instantiateMiniRag(): MiniRag {
     Config.env["DEEPSEEK_API_KEY"] = "<your api key>"
     let model = ModelManager.createChatModel("<Chat Model Name>")
@@ -945,7 +1560,7 @@ func instantiateMiniRag(): MiniRag {
 }
 ```
 
-#### Knowledge Graph Construction
+#### `Knowledge Graph Construction`
 ```cangjie
 func buildGraph(): Unit {
     let miniRag:MiniRag = instantiateMiniRag()
@@ -955,7 +1570,7 @@ func buildGraph(): Unit {
 }
 ```
 
-#### Knowledge Graph Querying
+#### `Knowledge Graph Retrieval`
 ```cangjie
 func search(query:String): String {
     let miniRag = instantiateMiniRag()
@@ -965,4 +1580,5 @@ func search(query:String): String {
 }
 ```
 
-[Example Usage](../src/examples/mini_rag/main.cj)
+#### Usage Example
+[Usage Example](../src/examples/mini_rag/main.cj)

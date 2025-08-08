@@ -37,7 +37,7 @@
   target-dir = ""
   version = "1.0.0"
 
-[package.package-configuration."magic.examples.health_monitor"]
+[package.package-configuration."magic.examples.doc_translator"]
   output-type = "executable"
 [package.package-configuration."magic.examples.markdown_qa"]
   output-type = "executable"
@@ -51,23 +51,21 @@
   output-type = "executable"
 [package.package-configuration."magic.examples.mcp_client"]
   output-type = "executable"
-[package.package-configuration."magic.examples.fun_idea"]
-  output-type = "executable"
 [package.package-configuration."magic.examples.mini_rag"]
   output-type = "executable"
 [package.package-configuration."magic.examples.magic_agent"]
   output-type = "executable"
 
+#----------------------------------------
+#  Setting FFI libs
+#----------------------------------------
 [ffi.c]
 # sqlite = {path="./libs/"}
 # faiss_c = {path="./libs/"}
 
 #----------------------------------------
-#     Example of setting cangjie-stdx
+#  Setting cangjie-stdx
 #----------------------------------------
-# [target.x86_64-w64-mingw32.bin-dependencies]
-#   path-option = ["./libs/cangjie-stdx-windows-x64-1.0.0.1/windows_x86_64_llvm/dynamic/stdx"]
-
 [target.x86_64-unknown-linux-gnu.bin-dependencies]
   path-option = ["./libs/cangjie-stdx-linux-x64-1.0.0.1/linux_x86_64_llvm/dynamic/stdx"]
 
