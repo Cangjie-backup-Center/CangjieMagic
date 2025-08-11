@@ -58,7 +58,7 @@ protected class PromptBuilder {
         )
     }
 
-    public func buildFor(executor: AgentExecutor): Array<Message> {
+    public func buildFor(executor: AgentExecutor, keepStepMessage!: Bool): Array<Message> {
         // Merge system prompt messageList message, and user messages
         let allMessages = ArrayList<Message>()
         let systemPrompt = this.mergeSystemPrompt()
@@ -69,8 +69,10 @@ protected class PromptBuilder {
         if (let Some(con) <- this._conversation) {
             for (chatRound in con) {
                 allMessages.add(chatRound.question)
-                for (msg in chatRound.steps) {
-                    allMessages.add(msg)
+                if (keepStepMessage) {
+                    for (msg in chatRound.steps) {
+                        allMessages.add(msg)
+                    }
                 }
                 if(executor.name == "react" || executor.name == "plan-react") {
                     allMessages.add(Message.assistant(chatRound.answer.content.withTag(Tag.ANSWER)))
