@@ -126,7 +126,7 @@ protected struct ReactPromptUtils {
             .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
             .memory(PromptBuilder.buildAgentMemoryPrompt(task))
             .conversation(task.request.conversation ?? Conversation())
-            .buildFor(task.agent.executor)
+            .buildFor(task.agent.executor, keepStepMessage: true)
     }
 
     static func buildReactSummarizePrompt(task: AgentTask): Array<Message> {

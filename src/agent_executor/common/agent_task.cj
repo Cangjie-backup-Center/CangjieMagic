@@ -5,7 +5,7 @@ package magic.agent_executor.common
 
 import magic.agent.base.AgentExecutionInfo
 import magic.core.agent.*
-import magic.core.message.{Message, MessageRole, MessageList}
+import magic.core.message.{Message, MessageRole, MessageList, Conversation}
 import magic.core.model.{ChatRequest, ChatResponse, ModelException}
 import magic.core.tool.*
 import magic.core.interaction.*
@@ -102,7 +102,12 @@ public open class AgentTask {
             this.execution = AgentExecutionInfo(agent)
         }
         if (initPrompt) {
-            this.execution.addMessage(Message.system(agent.systemPrompt))
+            this.execution.addMessages(
+                PromptBuilder()
+                    .system(agent.systemPrompt)
+                    .conversation(request.conversation ?? Conversation())
+                    .buildFor(agent.executor, keepStepMessage: false)
+            )
             this.execution.addRequest(request)
             LogUtils.info(agent.name, this.execution.messages)
         }

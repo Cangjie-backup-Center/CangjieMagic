@@ -60,7 +60,7 @@ public class NaiveExecutor <: AgentExecutor {
             .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
             .memory(PromptBuilder.buildAgentMemoryPrompt(task))
             .conversation(task.request.conversation ?? Conversation())
-            .buildFor(this)
+            .buildFor(this, keepStepMessage: false)
     }
 
     public override func run(agent: Agent, request: AgentRequest): AgentResponse {
