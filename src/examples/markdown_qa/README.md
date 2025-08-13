@@ -6,7 +6,7 @@
 
 ## 🚀 功能简介
 
-此示例演示了如何利用框架的 RAG (Retrieval-Augmented Generation) 功能，构建一个能够基于本地 Markdown 文档内容回答问题的问答机器人。Agent 会首先从指定的文档中检索相关信息，然后结合这些信息生成答案。
+此示例演示了如何利用 Magic 提供的 RAG (Retrieval-Augmented Generation) 功能，构建一个能够基于本地 Markdown 文档内容回答问题的问答机器人。Agent 会首先从指定的文档中检索相关信息，然后结合这些信息生成答案。
 
 ## ✨ 核心特性
 

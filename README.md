@@ -109,8 +109,8 @@ https://www.bilibili.com/video/BV1hQQzYAEHL/?spm_id_from=333.337.search-card.all
 
 ## 重要变更/Import Changes
 **2025/8/8**:
-- 增加 `@tool` 中 `compressible` 配置
-  Introduced the `compressible` config of `@tool`
+- 增加 `@tool` 中 `compactable` 配置
+  Introduced the `compactable` config of `@tool`
 
 **2025/8/4**:
 - 增加 `@toolset` 语法，能够定义工具集

@@ -8,10 +8,26 @@ import magic.jsonable.ToJsonValue
 import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
 
 public class Message <: ToString & ToJsonValue {
-    public let name: String      // name of the sender
-    public let role: MessageRole // role of the sender
+    /**
+     * Name of the message sender
+     */
+    public let name: String
+
+    /**
+     * Role of the message sender
+     */
+    public let role: MessageRole
+
+    /**
+     * Content of the message
+     */
     public let content: String
+
+    /**
+     * Optional image of the message
+     */
     public let image: Option<String> // url or base64
+
     /**
      * The reasoning content
      * A reason model, like deepseek-r1, may generate reasoning content

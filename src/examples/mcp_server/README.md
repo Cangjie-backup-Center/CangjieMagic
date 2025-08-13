@@ -6,7 +6,7 @@
 
 ## 🚀 功能简介
 
-这是一对核心示例，完整地演示了 Cangjie Magic 的模型上下文协议 (MCP)。`mcp_server` 将一个 `Calculator` Agent 的能力通过标准输入输出（stdio）暴露出来。`mcp_client` 则连接到这个服务，将远程 Agent 的工具当作自己的工具来使用，从而解决问题。这展示了框架的分布式和可扩展能力。
+这是一对核心示例，完整地演示了 Cangjie Magic 的模型上下文协议 (MCP)。`mcp_server` 将一个 `Calculator` Agent 的能力通过标准输入输出（stdio）暴露出来。`mcp_client` 则连接到这个服务，将远程 Agent 的工具当作自己的工具来使用，从而解决问题。
 
 ## ✨ 核心特性
 

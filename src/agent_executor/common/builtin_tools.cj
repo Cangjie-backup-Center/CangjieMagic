@@ -35,7 +35,7 @@ protected class AnswerTool <: NativeFuncTool {
             extra: HashMap([
                 ("filterable", "false"),
                 ("terminal", "true"),
-                ("compressible", "false")
+                ("compactable", "false")
             ]),
             execFn: { args: HashMap<String, JsonValue> =>
                 // The result is the final answer
@@ -64,7 +64,7 @@ protected class AnswerToolWithOutput <: NativeFuncTool {
             extra: HashMap([
                 ("filterable", "false"),
                 ("terminal", "true"),
-                ("compressible", "false")
+                ("compactable", "false")
             ]),
             execFn: { args: HashMap<String, JsonValue> =>
                 // The result is the final answer
@@ -97,7 +97,7 @@ protected class ToolResultViewerTool <: NativeFuncTool  {
             extra: HashMap([
                 ("filterable", "false"),
                 ("terminal", "false"),
-                ("compressible", "false")
+                ("compactable", "false")
             ]),
             execFn: { args: HashMap<String, JsonValue> =>
                 // The result is the final answer
@@ -133,7 +133,7 @@ protected class RetrieverTool <: NativeFuncTool {
             extra: HashMap([
                 ("filterable", "true"),
                 ("terminal", "false"),
-                ("compressible", "true")
+                ("compactable", "true")
             ]),
             execFn: { args: HashMap<String, JsonValue> =>
                 let query = args["query"].asString().getValue()

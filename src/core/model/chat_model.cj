@@ -7,7 +7,6 @@ import magic.core.message.Message
 import magic.core.tokenizer.Tokenizer
 
 public interface ChatModel <: Model {
-
     /**
      * The context length of the chat model
      */

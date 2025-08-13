@@ -45,8 +45,8 @@ public interface Tool <: ToJsonValue {
      *   whether this tool can be filtered out before agent executions
      * - "terminal": "true" | "true",
      *   whether this tool will terminate the agent execution
-     * - "compressible": "true" | "false",
-     *   whether the tool response can be compressed
+     * - "compactable": "true" | "false",
+     *   whether the tool response can be compacted
      */
     prop extra: HashMap<String, String>
 

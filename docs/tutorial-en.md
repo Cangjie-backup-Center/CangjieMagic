@@ -515,7 +515,7 @@ All tool functions have the following attributes:
 - The `parameters` attribute describes the meaning of function parameters, accepting key-value pairs in the format `<parameter-name>: <parameter-description>` (optional).
 - `filterable`: Whether the tool can be filtered by the Agent, used with the `enableToolFilter` attribute of `@agent` (optional).
 - `terminal`: Whether to terminate Agent execution. When set to `true`, the Agent will end immediately after executing this tool, and the function's return value becomes the Agent's execution result (optional).
-- `compressible`: Whether to (use LLM) summarize and compress the tool's execution result. Compression occurs only when this attribute is `true` and the result length exceeds `Config.resultSummarizeThreshold` (optional).
+- `compactable`: Whether to (use LLM) summarize and compact the tool's execution result. compaction occurs only when this attribute is `true` and the result length exceeds `Config.resultSummarizeThreshold` (optional).
 
 If the tool function is a global function or part of a Toolset, it must be explicitly specified in the `tools` attribute for the Agent to use it.
 

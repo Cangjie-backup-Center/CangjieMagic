@@ -10,6 +10,13 @@ package magic.core.model
  * There are different models, e.g., chat model, image model, audio model, etc.
  */
 public interface Model {
+    /**
+     * Provider of the model
+     */
     prop provider: String
+
+    /**
+     * Name of the model
+     */
     prop name: String
 }
