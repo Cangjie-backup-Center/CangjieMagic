@@ -65,9 +65,9 @@ private class ToolAttr <: Attr {
         }
     }
 
-    prop compressible: Bool {
+    prop compactable: Bool {
         get() {
-            getBool("compressible", default: false)
+            getBool("compactable", default: false)
         }
     }
 
@@ -76,7 +76,7 @@ private class ToolAttr <: Attr {
             macroName: "tool",
             validKeys: [
                 "description", "parameters", "examples",
-                "filterable", "terminal", "compressible",
+                "filterable", "terminal", "compactable",
                 "dump"
             ]
         )
@@ -199,7 +199,7 @@ private func initNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens 
         extra: HashMap([
             ("filterable", $(newLiteralToken(toolAttr.filterable.toString()))),
             ("terminal", $(newLiteralToken(toolAttr.terminal.toString()))),
-            ("compressible", $(newLiteralToken(toolAttr.compressible.toString())))
+            ("compactable", $(newLiteralToken(toolAttr.compactable.toString())))
         ]),
         execFn: $execFunc
     ))

@@ -1,9 +1,9 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent_executor.common
+package magic.compactor
 
-let SUMMARIZE_SYSTEM_PROMPT = """
+let TOOL_SUMMARIZE_SYSTEM_PROMPT = """
 You are an intelligent result summarizer. Your task is to condense tool execution outputs into concise, structured, and informationally complete summaries. Your primary goal is to enable a downstream agent to make accurate decisions using minimal but fully sufficient context.
 
 Follow these principles strictly:
@@ -51,7 +51,7 @@ Example Output Format:
 - Suggestion: Verify API key permissions
 """
 
-let SUMMARIZE_USER_PROMPT = """
+let TOOL_SUMMARIZE_USER_PROMPT = """
 Summarize the tool execution result.
 ## Tool Call:
 {tool_call}

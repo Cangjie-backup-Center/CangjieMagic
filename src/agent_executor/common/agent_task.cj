@@ -5,12 +5,13 @@ package magic.agent_executor.common
 
 import magic.agent.base.AgentExecutionInfo
 import magic.core.agent.*
-import magic.core.message.{Message, MessageRole, MessageList, Conversation}
-import magic.core.model.{ChatRequest, ChatResponse, ModelException}
+import magic.core.message.*
+import magic.core.model.*
 import magic.core.tool.*
 import magic.core.interaction.*
 import magic.core.rag.RetrieverMode
 import magic.config.Config
+import magic.compactor.SimpleToolCompactor
 import magic.jsonable.ToJsonValue
 import magic.log.LogUtils
 import magic.interaction.*
@@ -46,7 +47,7 @@ public open class AgentTask {
     public let execution: AgentExecutionInfo
 
     /**
-     * A cache for tool results for compressing tool invocation results
+     * A cache for tool results for compacting tool invocation results
      */
     private let toolResultCache = ToolResultCache()
 
@@ -157,9 +158,9 @@ public open class AgentTask {
                     SimpleToolFilter(agent.model, number: request.maxTool)
                 )
             )
-            // If any tool is compressible, we add the result viewer tool
+            // If any tool is compactable, we add the result viewer tool
             // to the available tools, so that the tool results can be viewed
-            if (tools |> any { tool => (tool.extra.get("compressible") ?? "false") == "true" }) {
+            if (tools |> any { tool => (tool.extra.get("compactable") ?? "false") == "true" }) {
                 // Add the result viewer tool to the tools
                 tools.add(this.resultViewerTool)
             }
@@ -248,15 +249,16 @@ public open class AgentTask {
                 // Save the tool result
                 toolResult = toolResponse.content
                 // Check whether the tool has special attributes
-                if ((tool.extra.get("compressible") ?? "false") == "true" &&
+                if ((tool.extra.get("compactable") ?? "false") == "true" &&
                             toolResult.size > Config.resultSummarizeThreshold) {
-                    // If the tool is compressible, we can compress its result
-                    let summary = this.summarizeToolResult(toolRequest, result: toolResult)
-                    // Put the compressed results to the cache
+                    // If the tool is compactable, we can compact its result
+                    let compactor = SimpleToolCompactor(ChatModelWrapper(this))
+                    let summary = compactor.compact(toolRequest, toolResponse)
+                    // Put the compacted results to the cache
                     toolResult = this.toolResultCache.put(
                         toolRequest: toolRequest,
                         toolResponse: toolResponse,
-                        compressedResult: summary
+                        compactedResult: summary
                     )
                 }
                 if ((tool.extra.get("terminal") ?? "false") == "true") {
@@ -270,36 +272,6 @@ public open class AgentTask {
                 this.stop("Terminated by tool call event handler", result: toolResult)
         }
         return toolResult
-    }
-
-    /**
-    * This agent attempts to summarize the tool execution results into concise and structured summaries.
-    **/
-    protected func summarizeToolResult(toolRequest: ToolRequest,
-                                       result!: String): String {
-        LogUtils.info(this.agent.name, "Start to summarize tool result")
-        let question = SUMMARIZE_USER_PROMPT.format([
-            ("tool_call", toolRequest.toJsonValue().toJsonString()),
-            ("tool_result", result)
-        ])
-        let summary = this.chatLLM(
-            MessageList([
-                Message.system(SUMMARIZE_SYSTEM_PROMPT),
-                Message.user(question)
-            ])
-        ).message.content
-        LogUtils.debug(
-            this.agent.name,
-            String.join(
-                [
-                    "#Bytes of tool result: ${result.size} => ${summary.size}",
-                    "--------------------------------------",
-                    "Summary:", summary
-                ],
-                delimiter: "\n"
-            )
-        )
-        return summary
     }
 
     /**
