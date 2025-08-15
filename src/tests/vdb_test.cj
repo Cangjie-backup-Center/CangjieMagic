@@ -10,12 +10,13 @@ import magic.utils.removeIfExists
 import std.fs.Directory
 import std.unittest.testmacro.Assert
 
+@When[faiss == "enable"]
 @Test
 class TestVDB {
-    let tempDir = Directory.createTemp(".").info.path
+    let tempDir = Directory.createTemp(".")
     let vdbPath = tempDir.join("test_vdb.db")
     let indexPath = tempDir.join("test_vdb.index")
-    let model = ModelManager.createEmbeddingModel(EMBEDDING_MODEL)
+    let model = ModelManager.createEmbeddingModel(OLLAMA_EMBEDDING_MODEL)
                 // ModelManager.createEmbeddingModel("openai:text-embedding-ada-002")
 
     @TestCase

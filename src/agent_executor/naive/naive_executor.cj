@@ -59,7 +59,7 @@ public class NaiveExecutor <: AgentExecutor {
             .system(this.buildNaiveSystemPrompt(task))
             .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
             .memory(PromptBuilder.buildAgentMemoryPrompt(task))
-            .conversation(task.request.conversation ?? Conversation())
+            .conversation(task.request.conversation)
             .buildFor(this, keepStepMessage: false)
     }
 

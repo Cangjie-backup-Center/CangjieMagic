@@ -21,11 +21,33 @@ public struct ChatRound <: ToString {
     }
 }
 
+public class CompactedConversation {
+    public CompactedConversation(
+        /**
+         * Chat rounds of the conversation
+         */
+        public let chatRounds: Option<Array<ChatRound>>,
+
+        /**
+         * Summary of the conversation
+         */
+        public let summary: String
+    ) { }
+}
+
 /**
  * A conversation is a collection of QA chat rounds.
  */
 public class Conversation <: Iterable<ChatRound> {
+    /**
+     * Chat round of the current conversation
+     */
     private let chatRounds = ArrayList<ChatRound>()
+
+    /**
+     * Previous compacted conversations and their summary
+     */
+    private let compactedConversations = ArrayList<CompactedConversation>()
 
     public init() { }
 
@@ -45,6 +67,12 @@ public class Conversation <: Iterable<ChatRound> {
         return this.chatRounds.iterator()
     }
 
+    public prop compacts: Array<CompactedConversation> {
+        get() {
+            return this.compactedConversations.toArray()
+        }
+    }
+
     public operator func [](index: Int64): ChatRound {
         return this.chatRounds[index]
     }
@@ -59,5 +87,22 @@ public class Conversation <: Iterable<ChatRound> {
 
     public func clear(): Unit {
         this.chatRounds.clear()
+    }
+
+    /**
+     * Compact the current conversation and save the summary
+     * `keepOrigin` means whether save the original conversation messages
+     */
+    public func compactBy(compactor: ConversationCompactor, keepOrigin!: Bool = true): String {
+        let summary = compactor.compact(this)
+        this.compactedConversations.add(
+            CompactedConversation(
+                if (keepOrigin) { this.chatRounds.toArray() } else { None },
+                summary
+            )
+        )
+        // Remove the current conversation
+        this.chatRounds.clear()
+        return summary
     }
 }

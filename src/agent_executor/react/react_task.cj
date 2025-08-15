@@ -149,7 +149,7 @@ protected class ReactTask <: AgentTask {
         )
         let msg = this.chatLLM(messages).message
         return Tag.extract(msg.content, Tag.ANSWER).getOrThrow({ =>
-            AgentExecutionException("Chat model response has no answer")
+            AgentExecutionException("Chat model response has no answers")
         })
     }
 

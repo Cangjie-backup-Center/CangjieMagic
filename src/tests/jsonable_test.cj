@@ -4,7 +4,6 @@
 package magic.tests
 
 import magic.dsl.*
-import magic.dsl.*
 import magic.prelude.*
 import std.collection.{ArrayList, HashMap}
 import std.unittest.testmacro.PowerAssert
@@ -28,7 +27,7 @@ private class Data {
 @Test
 class TestJsonable {
     @TestCase
-    func test1() {
+    func test() {
         let nest = NestedData(f1: "f1", f2: 2, f3: 0.0)
         let data = Data(
             f4: "f4",

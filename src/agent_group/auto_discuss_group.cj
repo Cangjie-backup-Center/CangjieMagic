@@ -7,7 +7,7 @@ import magic.prompt.Template
 import magic.log.LogUtils
 import magic.core.agent.*
 import magic.core.message.{Message, MessageRole, MessageList}
-import magic.model.ModelUtils
+import magic.agent.base.AgentOp
 import magic.parser.{Tag, WithTag}
 
 import std.collection.ArrayList
@@ -72,7 +72,7 @@ class AutoDiscussGroup <: DiscussGroup {
             Message.user("Now, select the next speaker or make the final answer")
         )
 
-        let msg = match (ModelUtils.agentMakeChat(this.host, messageList)) {
+        let msg = match (AgentOp.chatLLM(this.host, messageList)) {
             case Some(chatResp) => chatResp.message
             case None => return Selection.Failure("LLM response error")
         }

@@ -17,113 +17,85 @@ class TestModel {
 
     @BeforeAll
     func setup() {
-        Config.logLevel = LogLevel.INFO
+        Config.logLevel = "INFO"
     }
 
     @TestCase
     func testOpenAIChat() {
-        let client = ModelManager.createChatModel("deepseek:deepseek-chat")
+        let client = ModelManager.createChatModel(OPENAI_CHAT_MODEL)
         let msgList = MessageList([
             Message.user("hello")
         ])
         let resp = client.create(ChatRequest(msgList))
-        @Assert(resp.messageList.size > 0)
-        @Assert(resp.messageList[0].content.size > 0)
-        println(resp.messageList[0].content)
+        @Assert(resp.message.content.size > 0)
+        println(resp.message.content)
     }
 
     @TestCase
     func testOpenAIAsyncChat() {
-        let model = ModelManager.createChatModel("deepseek:deepseek-chat")
+        let model = ModelManager.createChatModel(OPENAI_CHAT_MODEL)
         let msgList = MessageList([
             Message.user("hello")
         ])
         let asyncResp = model.asyncCreate(ChatRequest(msgList))
-        let content: Array<String> = asyncResp |> collectArray
+        let content: Array<String> = asyncResp.iter() |> collectArray
         @Assert(content.size > 0)
-        @Assert(asyncResp.messageList.size > 0)
-        @Assert(asyncResp.messageList[0].content.size > 0)
+        @Assert(asyncResp.message.content.size > 0)
     }
 
     @TestCase
     func testOpenAIChatWithImage() {
-        let model = ModelManager.createChatModel("openai:gpt-4o")
+        let model = ModelManager.createChatModel(OPENAI_CHAT_MODEL)
         let msgList = MessageList([
             Message.user("what's in this image", image: this.imageBase64)
         ])
         let resp = model.create(ChatRequest(msgList))
-        @Assert(resp.messageList.size > 0)
-        @Assert(resp.messageList[0].content.size > 0)
-        println(resp.messageList[0].content)
+        @Assert(resp.message.content.size > 0)
     }
 
     @TestCase
     func testOpenAIEmbedding() {
-        let model = ModelManager.createEmbeddingModel("openai:text-embedding-ada-002")
+        let model = ModelManager.createEmbeddingModel(OPENAI_EMBEDDING_MODEL)
         let resp = model.create(EmbeddingRequest("hello"))
         @Assert(resp.data.size > 0)
     }
 
     @TestCase
     func testOllamaChat() {
-        let model = ModelManager.createChatModel("ollama:qwen2.5:7b")
+        let model = ModelManager.createChatModel(OLLAMA_CHAT_MODEL)
         let msgList = MessageList([
             Message.user("hello")
         ])
         let resp = model.create(ChatRequest(msgList))
-        @Assert(resp.messageList.size > 0)
-        @Assert(resp.messageList[0].content.size > 0)
-        println(resp.messageList[0].content)
+        @Assert(resp.message.content.size > 0)
     }
 
     // @TestCase
     func testOllamaChatModelWithImage() {
-        let model = ModelManager.createChatModel("ollama:llava:34b")
+        let model = ModelManager.createChatModel(OLLAMA_VLM)
         let msgList = MessageList([
             Message.user("what's in this image", image: this.imageBase64)
         ])
         let resp = model.create(ChatRequest(msgList))
-        @Assert(resp.messageList.size > 0)
-        @Assert(resp.messageList[0].content.size > 0)
-        println(resp.messageList[0].content)
+        @Assert(resp.message.content.size > 0)
     }
 
     // @TestCase
     func testOllamaEmbedding() {
-        let model = ModelManager.createEmbeddingModel("ollama:nomic-embed-text")
-        let resp = model.create(EmbeddingRequest("hello"))
-        @Assert(resp.data.size > 0)
-    }
-
-    @TestCase
-    func testDashscopeChat() {
-        let client = ModelManager.createChatModel("dashscope:qwen-plus")
-        let msgList = MessageList([
-            Message.user("hello")
-        ])
-        let resp = client.create(ChatRequest(msgList))
-        @Assert(resp.messageList.size > 0)
-        @Assert(resp.messageList[0].content.size > 0)
-        println(resp.messageList[0].content)
-    }
-
-    @TestCase
-    func testDashscopeEmbedding() {
-        let model = ModelManager.createEmbeddingModel("dashscope:text-embedding-v2")
+        let model = ModelManager.createEmbeddingModel(OLLAMA_EMBEDDING_MODEL)
         let resp = model.create(EmbeddingRequest("hello"))
         @Assert(resp.data.size > 0)
     }
 
     @TestCase
     func testOllamaAsyncChat() {
-        let model = ModelManager.createChatModel("ollama:qwen2.5:7b")
+        let model = ModelManager.createChatModel(OLLAMA_CHAT_MODEL)
         let msgList = MessageList([
             Message.user("hello")
         ])
         let asyncResp = model.asyncCreate(ChatRequest(msgList))
-        let content: Array<String> = asyncResp |> collectArray
+        let content: Array<String> = asyncResp.iter() |> collectArray
         @Assert(content.size > 0)
-        @Assert(asyncResp.messageList.size > 0)
-        @Assert(asyncResp.messageList[0].content.size > 0)
+        @Assert(asyncResp.message.content.size > 0)
     }
 }

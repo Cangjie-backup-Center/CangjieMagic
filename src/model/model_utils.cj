@@ -10,6 +10,8 @@ import magic.core.tool.Tool
 import magic.log.LogUtils
 import magic.config.Config
 import magic.utils.{getEnv, sleep2}
+import magic.core.interaction.*
+import magic.interaction.*
 
 import std.collection.{filter, collectArray}
 

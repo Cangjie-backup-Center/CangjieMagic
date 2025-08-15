@@ -4,7 +4,7 @@
 package magic.agent_group
 
 import magic.core.message.MessageList
-import magic.model.ModelUtils
+import magic.agent.base.AgentOp
 import magic.log.LogUtils
 import magic.parser.{Tag, WithTag}
 
@@ -55,7 +55,7 @@ class RoundRobinDiscussGroup <: DiscussGroup {
             Message.user("Select the next speaker now")
         )
 
-        let msg = match (ModelUtils.agentMakeChat(this.host, messageList)) {
+        let msg = match (AgentOp.chatLLM(this.host, messageList)) {
             case Some(chatResp) => chatResp.message
             case None => return Selection.Failure("LLM model failed")
         }

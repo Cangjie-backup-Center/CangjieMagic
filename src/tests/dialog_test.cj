@@ -7,9 +7,11 @@ import magic.dsl.*
 import magic.dsl.*
 import magic.prelude.*
 import std.unittest.testmacro.PowerAssert
-import std.unittest.testmacro.PowerAssert
 
-@agent[executor:"naive", model: "${CHAT_MODEL}"]
+@agent[
+    executor:"naive",
+    model: "${OLLAMA_CHAT_MODEL}"
+]
 class Bar {
 }
 
@@ -29,8 +31,8 @@ class A <: ToString {
 @Test
 class TestDialog {
     @TestCase
-    func test1() {
-        @messageList[agent: Bar()](
+    func test() {
+        @conversation[agent: Bar()](
             "微软创建时间" -> time1: A
             @Assert(time1.year, 1975)
 
@@ -38,7 +40,8 @@ class TestDialog {
             @Assert(time2.year, 1987)
 
             "两个公司哪一个创建的更早，回答微软或者华为" -> result
-            @Assert(result.contains("微软"))
+            println(result)
+            @Assert(result.contains("微软") || result.toAsciiLower().contains("microsoft"))
         )
     }
 }

@@ -11,7 +11,7 @@ import magic.tokenizer.{TokenizerLoader, TokenizerType}
 import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
 
-import std.collection.{ArrayList, forEach, map, filter, collectArray}
+import std.collection.{ArrayList, forEach, map, filter, collectArray, enumerate}
 
 /**
  * A builder for constructing agent system prompts.
@@ -46,7 +46,7 @@ protected class PromptBuilder {
         this.system(prompt)
     }
 
-    public func conversation(con: Conversation): PromptBuilder {
+    public func conversation(con: Option<Conversation>): PromptBuilder {
         this._conversation = con
         this
     }
@@ -58,12 +58,32 @@ protected class PromptBuilder {
         )
     }
 
+    private func mergeConversationSummary(): Option<String> {
+        if (let Some(con) <- this._conversation) {
+            let compacts = con.compacts
+            if (compacts.isEmpty()) {
+                return None
+            }
+            let strBuilder = StringBuilder("Following are summary of previous conversations between you and the user:\n")
+            for ((idx, compact) in enumerate(compacts)) {
+                strBuilder.append("[Summary ${idx+1}]\n${compact.summary}\n")
+            }
+            return strBuilder.toString()
+        } else {
+            return None
+        }
+    }
+
     public func buildFor(executor: AgentExecutor, keepStepMessage!: Bool): Array<Message> {
         // Merge system prompt messageList message, and user messages
         let allMessages = ArrayList<Message>()
         let systemPrompt = this.mergeSystemPrompt()
         if (!systemPrompt.trimAscii().isEmpty()) {
             allMessages.add(Message.system(systemPrompt))
+        }
+        // Add conversation summary
+        if (let Some(summary) <- this.mergeConversationSummary()) {
+            allMessages.add(Message.system(summary))
         }
         // Add conversation messages in order
         if (let Some(con) <- this._conversation) {

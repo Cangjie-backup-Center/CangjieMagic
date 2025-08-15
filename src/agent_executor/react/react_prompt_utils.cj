@@ -125,7 +125,7 @@ protected struct ReactPromptUtils {
             .system(task.agent.systemPrompt)
             .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
             .memory(PromptBuilder.buildAgentMemoryPrompt(task))
-            .conversation(task.request.conversation ?? Conversation())
+            .conversation(task.request.conversation)
             .buildFor(task.agent.executor, keepStepMessage: true)
     }
 

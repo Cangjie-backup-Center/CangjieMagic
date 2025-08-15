@@ -3,8 +3,8 @@
  */
 package magic.interaction
 
+import magic.core.interaction.*
 import magic.core.agent.Agent
-import magic.core.interaction.{InteractionEvent, EventKind}
 import magic.core.tool.ToolRequest
 import magic.core.model.ChatRequest
 import magic.core.agent.AgentExecution

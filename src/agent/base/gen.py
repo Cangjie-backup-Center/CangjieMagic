@@ -7,6 +7,29 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from interaction.gen import extract_events
 
+code_template = '''
+    static public func handle(agent: Agent, event!: {struct_name}, forRequest!: Option<AgentRequest> = None): EventResponse<{return_type}> {{
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(request) <- forRequest) {{
+            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
+                managers.add((object as EventHandlerManager).getOrThrow())
+            }}
+        }}
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {{
+            match (manager.handle(event)) {{
+                case Continue => ()
+                case Continue(v) => return Continue(v)
+                case Terminate(v) => return Terminate(v)
+            }}
+        }}
+        return Continue
+    }}
+'''
+
 def generate_code(events):
     """Generate the EventHandlerManager code for the given struct names.
 
@@ -21,19 +44,13 @@ def generate_code(events):
     # Generate private fields and methods for each struct
     for struct_name, return_type in events:
         # Add handle method
-        code.append(f"    protected func handle(evt: {struct_name}): EventResponse<{return_type}> {{")
-        code.append(f"        for (manager in this.eventHandlerManagers) {{")
-        code.append("            match (manager.handle(evt)) {")
-        code.append("                case Continue => ()")
-        code.append("                case Continue(v) => return Continue(v)")
-        code.append("                case Terminate(v) => return Terminate(v)")
-        code.append("            }")
-        code.append("        }")
-        code.append("        return Continue")
-        code.append("    }")
-        code.append("")
+        args = {
+            "struct_name": struct_name,
+            "return_type": return_type
+        }
+        code.append(code_template.format(**args))
 
-    return '\n'.join(code)
+    return ''.join(code)
 
 def replace_content_between_markers(file_path, start_marker, end_marker, new_content):
     """
@@ -87,7 +104,7 @@ def replace_content_between_markers(file_path, start_marker, end_marker, new_con
 def main():
     # Input and output file paths
     input_file = "../../interaction/events.cj"
-    output_file = "./agent_task.cj"
+    output_file = "./agent_op.cj"
 
     # Extract struct names
     events = extract_events(input_file)
