@@ -6,7 +6,6 @@ package magic.tool
 import magic.core.agent.*
 import magic.core.tool.*
 import magic.jsonable.TypeSchema
-import magic.model.ModelUtils
 import magic.core.message.{Message, MessageRole, MessageList}
 import magic.core.model.{ChatModel, ChatRequest}
 import magic.log.LogUtils
@@ -42,7 +41,7 @@ protected class AgentAsTool <: AbsTool {
     public prop description: String {
         get() {
             return if (this.agent.description == "") {
-                this.summarize()
+                this.agent.name
             } else {
                 this.agent.description
             }
@@ -72,17 +71,17 @@ protected class AgentAsTool <: AbsTool {
         }
     }
 
-    private func summarize(): String {
-        let messages = MessageList([
-            Message.system(AGENT_SUMMARY_PROMPT.format(
-                ("instruction", this.agent.systemPrompt)
-            ))
-        ])
-        if (let Some(chatResp) <- ModelUtils.agentMakeChat(this.agent, messages)) {
-            return chatResp.message.content
-        } else {
-            LogUtils.debug("Summarize failed")
-            return "None"
-        }
-    }
+    // private func summarize(): String {
+    //     let messages = MessageList([
+    //         Message.system(AGENT_SUMMARY_PROMPT.format(
+    //             ("instruction", this.agent.systemPrompt)
+    //         ))
+    //     ])
+    //     if (let Some(chatResp) <- AgentOp.chatLLM(this.agent, messages)) {
+    //         return chatResp.message.content
+    //     } else {
+    //         LogUtils.debug("Summarize failed")
+    //         return "None"
+    //     }
+    // }
 }

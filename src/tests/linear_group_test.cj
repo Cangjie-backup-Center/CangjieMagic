@@ -10,21 +10,21 @@ import magic.config.Config
 import std.unittest.testmacro.PowerAssert
 import std.unittest.testmacro.BeforeAll
 
-@agent[executor: "naive", model: "${CHAT_MODEL}"]
+@agent[executor: "naive", model: "${OLLAMA_CHAT_MODEL}"]
 class T1 {
     @prompt(
         "Translate the input into English"
     )
 }
 
-@agent[executor: "naive", model: "${CHAT_MODEL}"]
+@agent[executor: "naive", model: "${OLLAMA_CHAT_MODEL}"]
 class T2 {
     @prompt(
         "Translate the input into French"
     )
 }
 
-@agent[executor: "naive", model: "${CHAT_MODEL}"]
+@agent[executor: "naive", model: "${OLLAMA_CHAT_MODEL}"]
 class T3 {
     @prompt(
         "Translate the input into Chinese"
@@ -35,10 +35,10 @@ class T3 {
 class TestLinearGroup {
     @BeforeAll
     func setup() {
-        Config.logLevel = LogLevel.INFO
+        Config.logLevel = "INFO"
     }
     @TestCase
-    func test1() {
+    func test() {
         let group = T1() |> T2() |> T3()
         @Assert(group.chat(AgentRequest("苹果")).content.contains("苹果"))
     }

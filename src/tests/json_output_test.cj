@@ -5,7 +5,6 @@ package magic.tests
 
 import magic.prelude.*
 import magic.dsl.*
-import magic.dsl.*
 
 @jsonable
 class MyDateTime <: ToString {
@@ -27,8 +26,8 @@ class MyDateTime <: ToString {
     }
 }
 
-@agent[executor:"naive", model: "${CHAT_MODEL}"]
-class Foo { }
+@agent[executor:"naive", model: "${OLLAMA_CHAT_MODEL}"]
+private class Foo { }
 
 @Test
 public func testJsonOutput(): Unit {

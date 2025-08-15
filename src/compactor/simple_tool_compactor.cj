@@ -3,8 +3,7 @@
  */
 package magic.compactor
 
-import magic.core.compactor.ToolCompactor
-import magic.core.tool.{ToolRequest, ToolResponse}
+import magic.core.tool.{ToolRequest, ToolResponse, ToolCompactor}
 import magic.core.model.{ChatModel, ChatRequest}
 import magic.core.message.{Message, MessageList}
 import magic.prompt.Template

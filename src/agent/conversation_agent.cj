@@ -3,7 +3,7 @@
  */
 package magic.agent
 
-import magic.agent.base.BaseAgent
+import magic.agent.base.{AgentOp, BaseAgent}
 import magic.core.agent.{Agent, AgentRequest, AgentResponse, AsyncAgentResponse}
 import magic.core.model.ChatModel
 import magic.core.message.{MessageList, Message, Conversation}
@@ -14,13 +14,21 @@ import magic.log.LogUtils
  */
 public class ConversationAgent <: BaseAgent {
     private let agent: Agent
-    let conversation: Conversation
+
+    public let conversation: Conversation
 
     public init(agent: Agent) {
         super (
-            model: unsafe { zeroValue<ChatModel>() }, // This agent has no models
+            model: agent.model,
             name: "Conversation Agent",
-            description: "An proxy agent that saves chat messages."
+            description: "An proxy agent that saves chat messages.",
+            temperature: agent.temperature,
+            systemPrompt: agent.systemPrompt,
+            toolManager: agent.toolManager,
+            executor: agent.executor,
+            retriever: agent.retriever,
+            memory: agent.memory,
+            interceptor: agent.interceptor
         )
         this.agent = agent
         this.conversation = Conversation()
@@ -30,11 +38,15 @@ public class ConversationAgent <: BaseAgent {
         if (request.conversation.isSome()) {
             LogUtils.error("The request of ConversationAgent should have no conversation, which will be omitted.")
         }
-        return AgentRequest(
+        let req = AgentRequest(
             request.question,
             conversation: this.conversation,
+            image: request.image,
+            maxTool: request.maxTool,
             verbose: request.verbose
         )
+        req.extra.add(all: request.extra.toArray())
+        return req
     }
 
     override public func chat(request: AgentRequest): AgentResponse {

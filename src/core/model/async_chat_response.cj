@@ -47,13 +47,13 @@ private class ContentIterator <: Iterator<String> {
 public class AsyncChatResponse <: ToString {
     public let model: String
     public let chunks: Iterator<AsyncChatChunk>
-    // The following fields will be set when the response stream is finished
-    private var _usage: Option<ChatUsage> = None
-    private let _messageList = MessageList()
-    private let finished = AtomicBool(false)
-
+    // The following fields will be update during receiving chunks
     private var role = MessageRole.Assistant
     private let content = StringBuilder()
+    // The following fields will be set when the response stream is finished
+    private var _usage: Option<ChatUsage> = None
+    private var _message = Message.assistant("")
+    private let finished = AtomicBool(false)
 
     protected init(model: String, chunks: Iterator<AsyncChatChunk>) {
         this.model = model
@@ -70,9 +70,7 @@ public class AsyncChatResponse <: ToString {
             }
             content.append(chunk.message.content)
             if (chunk.done) {
-                this._messageList.addMessage(
-                    Message(this.role, content.toString())
-                )
+                this._message = Message(this.role, content.toString())
                 this._usage = chunk.usage
                 finished.store(true)
                 return None
@@ -100,13 +98,13 @@ public class AsyncChatResponse <: ToString {
     /**
      * This method is synchronous, it will wait until the chat response completes.
      */
-    public prop messageList: MessageList {
+    public prop message: Message {
         get() {
             if (!finished.load()) {
                 // Consume all chunks
                 while (let Some(_) <- this.next()) { }
             }
-            this._messageList
+            this._message
         }
     }
 
@@ -116,11 +114,9 @@ public class AsyncChatResponse <: ToString {
         }
         let strBuilder = StringBuilder()
         strBuilder.append("ChatResult: model[${model}] usage[${usage.toString()}]")
-        for (msg in this.messageList) {
-            strBuilder.append("  ")
-            strBuilder.append(msg.toString())
-            strBuilder.append("\n")
-        }
+        strBuilder.append("  ")
+        strBuilder.append(this.message.toString())
+        strBuilder.append("\n")
         strBuilder.toString()
     }
 }

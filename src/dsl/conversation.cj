@@ -99,16 +99,27 @@ class ChatExprParser <: Parser {
                     let $tempToken = __CURR_AGENT__.chatGet<$ty>(AgentRequest($chatMessage, conversation: __CURR_CONVERSATION__))
                     match ($tempToken) {
                         case Some(v) =>
-                            __CURR_CONVERSATION__.addChatRound($chatMessage, v.toJsonValue().toJsonString())
+                            __CURR_CONVERSATION__.addChatRound(
+                                Message.user($chatMessage),
+                                Message.assistant(v.toJsonValue().toJsonString())
+                            )
                         case None =>
-                            __CURR_CONVERSATION__.addChatRound($chatMessage, "Generate JSON object failed")
+                            __CURR_CONVERSATION__.addChatRound(
+                                Message.user($chatMessage),
+                                Message.assistant("Generate JSON object failed")
+                            )
                     }
                     let $varToken = $tempToken.getOrThrow()
                 )
             case None =>
                 quote(
-                    let $varToken = __CURR_AGENT__.chat(AgentRequest($chatMessage, conversation: __CURR_CONVERSATION__)).content
-                    __CURR_CONVERSATION__.addChatRound($chatMessage, $varToken)
+                    let $varToken = __CURR_AGENT__.chat(
+                        AgentRequest($chatMessage, conversation: __CURR_CONVERSATION__)
+                    ).content
+                    __CURR_CONVERSATION__.addChatRound(
+                        Message.user($chatMessage),
+                        Message.assistant($varToken)
+                    )
                 )
         }
         return (content, currPos)

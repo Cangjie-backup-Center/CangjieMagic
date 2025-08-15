@@ -6,17 +6,17 @@ package magic.tests
 import magic.prelude.*
 import magic.dsl.*
 
-@agent[model: "gpt-4o",
+@agent[model: "${OLLAMA_CHAT_MODEL}",
        executor:"naive",
        description: "Product manager"]
 class PM { }
 
-@agent[model: "gpt-4o",
+@agent[model: "${OLLAMA_CHAT_MODEL}",
        executor:"naive",
        description: "Program engineer"]
 class Coder { }
 
-@agent[model: "gpt-4o",
+@agent[model: "${OLLAMA_CHAT_MODEL}",
        executor:"naive",
        description: "Program tester"]
 class Tester { }

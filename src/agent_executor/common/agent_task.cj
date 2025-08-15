@@ -3,7 +3,7 @@
  */
 package magic.agent_executor.common
 
-import magic.agent.base.AgentExecutionInfo
+import magic.agent.base.{AgentExecutionInfo, AgentOp}
 import magic.core.agent.*
 import magic.core.message.*
 import magic.core.model.*
@@ -106,25 +106,27 @@ public open class AgentTask {
             this.execution.addMessages(
                 PromptBuilder()
                     .system(agent.systemPrompt)
-                    .conversation(request.conversation ?? Conversation())
+                    .conversation(request.conversation)
                     .buildFor(agent.executor, keepStepMessage: false)
             )
             this.execution.addRequest(request)
             LogUtils.info(agent.name, this.execution.messages)
         }
         if (request.verbose) {
-            installVerboseEventHandlers(this.request, this.execution)
+            setVerboseEventHandlers(this.request, this.execution)
         }
     }
 
-    private static func installVerboseEventHandlers(request: AgentRequest, execution: AgentExecutionInfo): Unit {
+    private static func setVerboseEventHandlers(request: AgentRequest, execution: AgentExecutionInfo): Unit {
         let manager = EventHandlerManager()
-        let install = if (let Some(flag) <- request.extra.get(AgentRequestExtra.INSTALL_VERBOSE_EVENT_HANDLER)) {
+        // Check whether to set the verbose event handlers,
+        // react workers of the plan-react executor will not set verbose event handlers
+        let need2set = if (let Some(flag) <- request.extra.get(AgentRequestExtra.SET_VERBOSE_EVENT_HANDLER)) {
             (flag as AtomicBool).getOrThrow().load()
         } else {
             true
         }
-        if (install) {
+        if (need2set) {
             manager.addHandler { evt: ToolCallEvent =>
                 execution.events.put(evt)
                 Continue
@@ -136,10 +138,10 @@ public open class AgentTask {
         }
         // If event handlers exist, add new handlers, and update the request
         // Note new handlers will be added before existed handlers
-        if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER)) {
+        if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
             manager.merge((object as EventHandlerManager).getOrThrow())
         }
-        request.extra[AgentRequestExtra.EVENT_HANDLER] = manager
+        request.extra[AgentRequestExtra.EVENT_HANDLER_MANAGER] = manager
     }
 
     /**
@@ -183,7 +185,12 @@ public open class AgentTask {
         // Validate the system prompt if necessary
         if (!messages.isEmpty() && messages[0].role == MessageRole.System) {
             let sysPrompt = messages[0].content
-            match (this.handle(PromptValidateEvent(this.agent, sysPrompt))) {
+            let eventResponse = AgentOp.handle(
+                this.agent,
+                event: PromptValidateEvent(this.agent, sysPrompt),
+                forRequest: this.request
+            )
+            match (eventResponse) {
                 case EventResponse.Continue => ()
                 case EventResponse.Continue(status) =>
                     // Whether the system prompt is valid
@@ -199,11 +206,12 @@ public open class AgentTask {
             }
         }
         try {
-            return ModelUtils.agentMakeChat(this.agent, messages, stop: stop, tools: tools)
+            return AgentOp.chatLLM(this.agent, messages, stop: stop, tools: tools)
                 .getOrThrow({ => throw ModelException("Fail to get chat model response") })
         } catch (ex: ModelException) {
             let request = ChatRequest(messages, temperature: agent.temperature, stop: stop)
-            return match (this.handle(ChatModelFailureEvent(this.agent, request, ex.error))) {
+            let eventResponse = AgentOp.handle(this.agent, event: ChatModelFailureEvent(this.agent, request, ex.error), forRequest: this.request)
+            return match (eventResponse) {
                 case EventResponse.Continue => throw ex
                 case EventResponse.Continue(resp) => resp
                 case EventResponse.Terminate(resp) =>
@@ -236,7 +244,7 @@ public open class AgentTask {
         }
         var toolResult: String = ""
         let tool = toolOpt.getOrThrow()
-        match (this.handle(ToolCallEvent(this.agent, toolRequest))) {
+        match (AgentOp.handle(this.agent, event: ToolCallEvent(this.agent, toolRequest), forRequest: this.request)) {
             case EventResponse.Continue =>
                 // Invoke the tool
                 let toolResponse = try {
@@ -285,113 +293,7 @@ public open class AgentTask {
 
     protected func notify(tag: String, content: String): Unit {
         if (this.request.verbose) {
-            this.handle(NotifyEvent(this.agent, tag, content))
+            AgentOp.handle(agent, event: NotifyEvent(this.agent, tag, content), forRequest: this.request)
         }
     }
-
-    //-----------------------------------------------------------
-    private var _manager: Option<Array<EventHandlerManager>> = None
-    /*
-     * Merge all available event handlers
-     */
-    private prop eventHandlerManagers: Array<EventHandlerManager> {
-        get() {
-            match (_manager) {
-                case Some(v) => return v
-                case None =>
-                    let result = ArrayList<EventHandlerManager>()
-                    // First, event handlers for the request
-                    if (let Some(object) <- this.request.extra.get(AgentRequestExtra.EVENT_HANDLER)) {
-                        result.add((object as EventHandlerManager).getOrThrow())
-                    }
-                    // Then, event handlers of the agent
-                    // Last, global event handlers
-                    result.add(EventHandlerManager.global)
-                    _manager = result.toArray()
-                    return _manager.getOrThrow()
-            }
-        }
-    }
-    //--------------------------------------------------
-    // The following methods are generated by gen.py;
-    // never modify them directly
-    //--------------------------------------------------
-    // The following are event handlers: NEVER DELETE/MODIFY THIS LINE
-    protected func handle(evt: ToolCallEvent): EventResponse<ToolResponse> {
-        for (manager in this.eventHandlerManagers) {
-            match (manager.handle(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
-    }
-
-    protected func handle(evt: PromptValidateEvent): EventResponse<Bool> {
-        for (manager in this.eventHandlerManagers) {
-            match (manager.handle(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
-    }
-
-    protected func handle(evt: AnswerValidateEvent): EventResponse<Bool> {
-        for (manager in this.eventHandlerManagers) {
-            match (manager.handle(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
-    }
-
-    protected func handle(evt: ChatModelFailureEvent): EventResponse<ChatResponse> {
-        for (manager in this.eventHandlerManagers) {
-            match (manager.handle(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
-    }
-
-    protected func handle(evt: TimeoutEvent): EventResponse<Unit> {
-        for (manager in this.eventHandlerManagers) {
-            match (manager.handle(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
-    }
-
-    protected func handle(evt: UserInputEvent): EventResponse<String> {
-        for (manager in this.eventHandlerManagers) {
-            match (manager.handle(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
-    }
-
-    protected func handle(evt: NotifyEvent): EventResponse<Unit> {
-        for (manager in this.eventHandlerManagers) {
-            match (manager.handle(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
-    }
-    // end of event handlers
 }

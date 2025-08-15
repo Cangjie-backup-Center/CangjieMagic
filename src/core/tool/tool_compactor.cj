@@ -1,9 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.core.compactor
-
-import magic.core.tool.{ToolRequest, ToolResponse}
+package magic.core.tool
 
 /**
  * Compact the tool invocation
