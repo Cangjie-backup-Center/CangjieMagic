@@ -72,10 +72,10 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
 
     public func toString(): String {
         return match (this) {
-            case ReactStep.Action(tc) => "${Tag.THOUGHT} ${tc.thought} ${Tag.THOUGHT.getCloseTag()}; ${Tag.ACTION} ${tc.text} ${Tag.ACTION.getCloseTag()}"
-            case ReactStep.Thought(t) => "${Tag.THOUGHT} ${t} ${Tag.THOUGHT.getCloseTag()}"
-            case ReactStep.Answer(a) => "${Tag.THOUGHT} ${a.thought} ${Tag.THOUGHT.getCloseTag()}; ${Tag.ANSWER} ${a.content} ${Tag.ANSWER.getCloseTag()}"
-            case ReactStep.Failure(f) => "[Failure] Original message: ${f.message}; \n Reason: ${f.reason} [/Failure]"
+            case ReactStep.Action(tc) => "${Tag.THOUGHT} ${tc.thought} ${Tag.THOUGHT.close}; ${Tag.ACTION} ${tc.text} ${Tag.ACTION.close}"
+            case ReactStep.Thought(t) => "${Tag.THOUGHT} ${t} ${Tag.THOUGHT.close}"
+            case ReactStep.Answer(a) => "${Tag.THOUGHT} ${a.thought} ${Tag.THOUGHT.close}; ${Tag.ANSWER} ${a.content} ${Tag.ANSWER.close}"
+            case ReactStep.Failure(f) => "${Tag.FAIL} Original message: ${f.message}; \n Reason: ${f.reason} ${Tag.FAIL.close}"
         }
     }
 
@@ -90,7 +90,7 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
         match ((thought, Tag.extract(content, Tag.ACTION))) {
             case (_, Some(action)) =>
                 try {
-                    let request = ParserUtils.extractLastToolRequest(action)
+                    let request = ParserUtils.extractFirstToolRequest(action)
                     return ReactStep.Action(
                         ToolCall(
                             text: action,

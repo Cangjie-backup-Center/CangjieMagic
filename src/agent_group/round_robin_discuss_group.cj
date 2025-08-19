@@ -26,7 +26,7 @@ The following is the discussion content.
 {discussion}
 
 ## Output Format
-1. If the problem is solved, the output should be formatted as ${Tag.ANSWER} ... ${Tag.ANSWER.getCloseTag()}
+1. If the problem is solved, the output should be formatted as ${Tag.ANSWER} ... ${Tag.ANSWER.close}
 2. Otherwise, output NO-ANSWER
 """
 

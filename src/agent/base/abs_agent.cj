@@ -65,7 +65,7 @@ public abstract class AbsAgent <: Agent {
         for (_ in 0..Config.outputRepairRetryNumber) {
             // Convert the answer to a value of type T
             try {
-                return ParserUtils.extractLastValue<T>(answer)
+                return ParserUtils.extractFirstValue<T>(answer)
             } catch(_: ParserException) {
                 let schema = T.getTypeSchema()
                 let userMsg = Message.user("Output does not follow the type schema: ${schema}")

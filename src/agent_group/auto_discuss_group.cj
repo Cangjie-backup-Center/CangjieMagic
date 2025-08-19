@@ -32,7 +32,7 @@ The following are agent involved in the discussion.
 
 ## Output Format
 1. If the problem is solved, there is no need to select the agent and return the final answer.
-   The output should be formatted as ${Tag.ANSWER} ... ${Tag.ANSWER.getCloseTag()}
+   The output should be formatted as ${Tag.ANSWER} ... ${Tag.ANSWER.close}
 1. If an agent select, The output should be formatted as [Selection] <agent-name> [/Selection]
 
 ## Discussion

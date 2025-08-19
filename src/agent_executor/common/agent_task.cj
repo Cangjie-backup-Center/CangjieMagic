@@ -107,7 +107,7 @@ public open class AgentTask {
                 PromptBuilder()
                     .system(agent.systemPrompt)
                     .conversation(request.conversation)
-                    .buildFor(agent.executor, keepStepMessage: false)
+                    .buildFor(agent.executor, keepStepMessage: true)
             )
             this.execution.addRequest(request)
             LogUtils.info(agent.name, this.execution.messages)

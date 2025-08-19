@@ -87,7 +87,7 @@ public struct ExecutionOpSet {
         if (state.done) {
             return state
         }
-        let msg = chatWithOperation(state, THINK_PROMPT, stop: [Tag.ACTION, Tag.THOUGHT.getCloseTag()])
+        let msg = chatWithOperation(state, THINK_PROMPT, stop: [Tag.ACTION, Tag.THOUGHT.close])
         // Parse the response and add the message to the state
         LogUtils.info(state.task.agent.name, "Thought: ${msg.content}")
         state.execution.addStepMessage(
@@ -146,6 +146,7 @@ public struct ExecutionOpSet {
         let toolRequest = try {
             chatResp.toolRequest ?? ParserUtils.extractFirstToolRequest(chatResp.message.content)
         } catch (ex: ParserException) {
+            LogUtils.info("Failed to extract tool request")
             // If function call is enabled and failing to extract the tool request,
             // treat the content as the final answer
             if (Config.enableFunctionCall) {
@@ -159,8 +160,11 @@ public struct ExecutionOpSet {
                 throw ex
             }
         }
-
-        // Execute the tool
+        // We also add reasoning content to the step messages
+        if (let Some(reason) <- chatResp.message.reason) {
+            Message.assistant(reason) // Without tag?
+        }
+        // Execute the tool and Tag.ACTION is notified during invoking the tool
         let observation = state.task.invokeTool(toolRequest)
         // Special terminal tools may stop the execution
         if (let Some(stopInfo) <- state.task.stopInfo) {
@@ -168,15 +172,25 @@ public struct ExecutionOpSet {
             state.task.notify(Tag.ANSWER, stopInfo.result)
             return state
         }
+
+        // Add action and observation to the messageList
+        if (Config.enableFunctionCall) {
+            state.execution.addStepMessage(
+                Message.assistant("${toolRequest.toJsonValue().toJsonString()}\n")
+            )
+            state.execution.addStepMessage(
+                Message.user(observation),
+            )
+        } else {
+            state.execution.addStepMessage(
+                Message.assistant("```json\n${toolRequest.toJsonValue().toJsonString()}\n```".withTag(Tag.ACTION)),
+            )
+            state.execution.addStepMessage(
+                Message.user(observation.withTag(Tag.OBSERVATION)),
+            )
+        }
         LogUtils.info(state.task.agent.name, "Observation: ${observation}")
         state.task.notify(Tag.OBSERVATION, observation)
-        // Add action and observation to the messageList
-        state.execution.addStepMessage(
-            Message.assistant("```json\n${toolRequest.toJsonValue().toJsonString()}\n```".withTag(Tag.ACTION)),
-        )
-        state.execution.addStepMessage(
-            Message.assistant(observation.withTag(Tag.OBSERVATION)),
-        )
         return state
     }
 

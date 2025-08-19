@@ -145,27 +145,25 @@ protected class TagStreamParser {
         let tagName = tag[1..tag.size-1]
         let content = this.currContent
         // The current content contains the full close tag
-        let regex = Regex("\\[\\s*/\\s*${tagName}\\s*\\]")
-        let matcher = regex.matcher(content)
-        if (let Some(md) <- matcher.find()) {
+        let regex = Regex("\\${OPEN_TAG_SYMBOL}\\s*/\\s*${tagName}\\s*\\${CLOSE_TAG_SYMBOL}")
+        if (let Some(md) <- regex.find(content)) {
             let pos = md.matchPosition()
             let left = content[..pos.start]
             let right = content[pos.end..]
-            return (left, tag.getCloseTag(), right)
+            return (left, tag.close, right)
         }
 
         // Check whether the content ends with a prefix of the close tag
         let regexToCheck = ArrayList<Regex>()
         for (index in tagName.size..=1 : -1) {
             let prefix = tagName[0..index]
-            regexToCheck.add(Regex("\\[\\s*/\\s*${prefix}\\s*$"))
+            regexToCheck.add(Regex("\\${OPEN_TAG_SYMBOL}\\s*/\\s*${prefix}\\s*$"))
         }
         // Add the regex to check the prefix symbols of closed tags
-        regexToCheck.add(Regex("\\[\\s*/?\\s*$"))
+        regexToCheck.add(Regex("\\${OPEN_TAG_SYMBOL}\\s*/?\\s*$"))
 
         for (regex in regexToCheck) {
-            let matcher = regex.matcher(content)
-            if (let Some(md) <- matcher.find()) {
+            if (let Some(md) <- regex.find(content)) {
                 let pos = md.matchPosition()
                 let pivot = pos.start
                 return (content[0..pivot], None, content[pivot..])

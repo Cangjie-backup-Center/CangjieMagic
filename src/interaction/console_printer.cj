@@ -38,7 +38,7 @@ public class ConsolePrinter <: EventStreamVisitor {
             // getStdOut().writeln("...")
             getStdOut().writeln(event.content.trimAscii())
         }
-        getStdOut().writeln(tag.getCloseTag().withColor(tagColor))
+        getStdOut().writeln(tag.close.withColor(tagColor))
     }
 
     override public func on(event: ToolCallEvent): Unit {
@@ -46,7 +46,7 @@ public class ConsolePrinter <: EventStreamVisitor {
         let tagColor = getTagColor(tag)
             getStdOut().writeln(tag.withColor(tagColor))
             getStdOut().writeln(event.toolRequest)
-            getStdOut().writeln(tag.getCloseTag().withColor(tagColor))
+            getStdOut().writeln(tag.close.withColor(tagColor))
     }
 
     public static func print(asyncResponse: AsyncAgentResponse, verbose!: Bool = false): Unit {
