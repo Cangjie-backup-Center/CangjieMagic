@@ -74,5 +74,5 @@ protected func problemDecompose(planTask: PlanTask): Array<Subtask> {
         Message.user(userPrompt)
     ])
     let msg = planTask.chatLLM(messages).message
-    return ParserUtils.extractLastValue<Array<Subtask>>(msg.content)
+    return ParserUtils.extractFirstValue<Array<Subtask>>(msg.content)
 }

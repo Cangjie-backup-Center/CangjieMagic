@@ -19,7 +19,7 @@ import stdx.encoding.json.JsonObject
 protected let REACT_SYSTEM_PROMPT_PREFIX = """
 # Guidelines
 Use the following format to accomplish user's request:
-${Tag.THOUGHT} think about what to do next to solve the question ${Tag.THOUGHT.getCloseTag()}
+${Tag.THOUGHT} think about what to do next to solve the question ${Tag.THOUGHT.close}
 ${Tag.ACTION} use a tool, the action must be a json object wrapped by ```json and ```
     ```json
     {
@@ -38,10 +38,10 @@ ${Tag.ACTION} use a tool, the action must be a json object wrapped by ```json an
         }
     }
     ```
-${Tag.ACTION.getCloseTag()}
-${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.getCloseTag()}
+${Tag.ACTION.close}
+${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.close}
 ... (Thought/Action/Observation may repeat N times to accomplish user's request)
-${Tag.ANSWER} the final answer to the original input question ${Tag.ANSWER.getCloseTag()}
+${Tag.ANSWER} the final answer to the original input question ${Tag.ANSWER.close}
 
 NEVER generate ${Tag.OBSERVATION} yourself. This is an important requirement.
 If there are no available tools, generate final answer directly.
@@ -53,8 +53,8 @@ protected let REACT_SYSTEM_PROMPT = """
 ${REACT_SYSTEM_PROMPT_PREFIX}
 
 Examples:
-Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.getCloseTag()} ${Tag.ACTION} ```json <a JSON object representing the tool usage> ``` ${Tag.ACTION.getCloseTag()}
-Output: ${Tag.ANSWER} <output result here> ${Tag.ANSWER.getCloseTag()}
+Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.close} ${Tag.ACTION} ```json <a JSON object representing the tool usage> ``` ${Tag.ACTION.close}
+Output: ${Tag.ANSWER} <output result here> ${Tag.ANSWER.close}
 """
 
 protected let REACT_SYSTEM_PROMPT_WITH_STRUCTURE_OUTPUT = """
@@ -64,23 +64,23 @@ You MUST output a JSON value obey the schema as the answer. The schema to follow
 {output_schema}
 
 Examples:
-Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.getCloseTag()} ${Tag.ACTION} ```json <a JSON object representing the tool usage> ``` ${Tag.ACTION.getCloseTag()}
-Output: ${Tag.ANSWER} ```json <output a JSON value here as the answer> ``` ${Tag.ANSWER.getCloseTag()}
+Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.close} ${Tag.ACTION} ```json <a JSON object representing the tool usage> ``` ${Tag.ACTION.close}
+Output: ${Tag.ANSWER} ```json <output a JSON value here as the answer> ``` ${Tag.ANSWER.close}
 """
 
 private let REACT_SUMMARIZE_SYSTEM_PROMPT = """
 # Instruction
 Given a question and a solving procedure for it, you should summarize an answer from them.
 The solving procedure consists of:
-  - ${Tag.THOUGHT} think about what to do next to solve the task ${Tag.THOUGHT.getCloseTag()}
-  - ${Tag.ACTION} use a tool, which is a function call ${Tag.ACTION.getCloseTag()}
-  - ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.getCloseTag()}
+  - ${Tag.THOUGHT} think about what to do next to solve the task ${Tag.THOUGHT.close}
+  - ${Tag.ACTION} use a tool, which is a function call ${Tag.ACTION.close}
+  - ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.close}
   - ... (Thought/Action/Observation may repeat N times)
 
-The answer should be wrapped by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()} like
+The answer should be wrapped by ${Tag.ANSWER} and ${Tag.ANSWER.close} like
 ${Tag.ANSWER}
 Cat is the answer, and ...
-${Tag.ANSWER.getCloseTag()}
+${Tag.ANSWER.close}
 
 # Question
 {question}
@@ -99,7 +99,7 @@ ${Tag.ANSWER.getCloseTag()}
 """
 
 private let REACT_SUMMARIZE_USER_PROMPT = """
-Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}
+Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.close}
 """
 
 let REACT_STEP_PROMPT = """

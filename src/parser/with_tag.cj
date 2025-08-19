@@ -3,17 +3,9 @@
  */
 package magic.parser
 
-private func getTagSymbol(tag: String): (String, String) {
-    if (tag.startsWith("[")) {
-        return ("[", "]")
-    } else if (tag.startsWith("<")) {
-        return ("<", ">")
-    }
-    throw Exception("Invalid tag symbol `${tag}`")
-}
 
 protected interface WithTag {
-    func getCloseTag(): String
+    prop close: String
     func withTag(tag: String): String
     func withoutTag(tag: String): String
     func withoutTag(): String
@@ -23,18 +15,20 @@ protected interface WithTag {
  * Add auxiliary methods to wrap strings with react tags.
  */
 extend String <: WithTag {
-    public func getCloseTag(): String {
-        if (this.startsWith("[") && this.endsWith("]")) {
-            return "[/${this[1..this.size-1]}]"
+    public prop close: String {
+        get() {
+            if (this.startsWith(OPEN_TAG_SYMBOL) && this.endsWith(CLOSE_TAG_SYMBOL)) {
+                return "${OPEN_TAG_SYMBOL}/${this[1..this.size-1]}${CLOSE_TAG_SYMBOL}"
+            }
+            throw Exception("Invalid tag name `${this}`")
         }
-        throw Exception("Invalid tag name `${this}`")
     }
 
     /**
      * Wrap the string with the specified tag if necessary
      */
     public func withTag(tag: String): String {
-        let closeTag = tag.getCloseTag()
+        let closeTag = tag.close
         let content = this.trimAscii()
         if (!content.startsWith(tag)) {
             return "${tag} ${content} ${closeTag}"
@@ -53,7 +47,7 @@ extend String <: WithTag {
     public func withoutTag(tag: String): String {
         var content = this.trimAscii()
         content = content.removePrefix(tag)
-        content = content.removeSuffix(tag.getCloseTag())
+        content = content.removeSuffix(tag.close)
         return content.trimAscii()
     }
 

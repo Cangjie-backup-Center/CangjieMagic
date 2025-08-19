@@ -8,12 +8,12 @@ import magic.parser.{Tag, WithTag}
 let EXECUTION_DEFINITION = """
 The execution is a chronological event stream containing the following types of events:
     - A tool has been used, which is function call comprising the tool name and arguments
-    - ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.getCloseTag()}
+    - ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.close}
 """
     //-----------------------------------------------------------------
     // The thought message is not described in the execution definition
     //-----------------------------------------------------------------
-    // - ${Tag.THOUGHT} a wait moment that contains reflection on execution and thoughts on subsequent execution ${Tag.THOUGHT.getCloseTag()}
+    // - ${Tag.THOUGHT} a wait moment that contains reflection on execution and thoughts on subsequent execution ${Tag.THOUGHT.close}
 
 let PLAN_PROMPT = """
 Based on the execution, make a plan about how to solve the user question next.
@@ -58,23 +58,23 @@ let ANSWER_PROMPT = """
 Based on the execution, answer the user question now.
 ${EXECUTION_DEFINITION}
 
-Wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}.
+Wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.close}.
 """
 
 let ANSWER_WITH_STRUCTURE_OUTPUT_PROMPT = """
 Based on the execution, answer the user question now.
 ${EXECUTION_DEFINITION}
 
-Wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.getCloseTag()}.
+Wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.close}.
 
 You MUST output a JSON value obey the schema as the answer. The schema to follow:
 {output_schema}
 
 Examples:
 Output:
-${Tag.ANSWER} ```json 1 ``` ${Tag.ANSWER.getCloseTag()}
-${Tag.ANSWER} ```json "result" ``` ${Tag.ANSWER.getCloseTag()}
-${Tag.ANSWER} ```json ["abc", "xyz"] ``` ${Tag.ANSWER.getCloseTag()}
+${Tag.ANSWER} ```json 1 ``` ${Tag.ANSWER.close}
+${Tag.ANSWER} ```json "result" ``` ${Tag.ANSWER.close}
+${Tag.ANSWER} ```json ["abc", "xyz"] ``` ${Tag.ANSWER.close}
 """
 
 let THINK_PROMPT = """

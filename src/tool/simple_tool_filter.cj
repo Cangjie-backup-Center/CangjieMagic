@@ -245,7 +245,7 @@ protected class SimpleToolFilter <: ToolFilter {
         var response = Option<Response>.None
         if (let Some(_chatResp) <- chatResp) {
             try {
-                response = ParserUtils.extractLastValue<Response>(_chatResp.message.content)
+                response = ParserUtils.extractFirstValue<Response>(_chatResp.message.content)
             } catch (ex: ParserException) {
                 LogUtils.error("Failed to parse the chat model response `${_chatResp.message.content}`; ${ex.reason}")
             }

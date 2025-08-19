@@ -190,7 +190,7 @@ public class AiFuncAgent <: BaseAgent {
      */
     private func convertResult<T>(rawResult: String): T where T <: Jsonable<T> {
         try {
-            let jo = ParserUtils.extractLastValue<JsonObject>(rawResult)
+            let jo = ParserUtils.extractFirstValue<JsonObject>(rawResult)
             if (jo.containsKey("func_result")) {
                 return T.fromJsonValue(jo["func_result"])
             } else if (jo.containsKey("func_error")) {

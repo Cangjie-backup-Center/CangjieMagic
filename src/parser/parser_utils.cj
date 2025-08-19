@@ -55,41 +55,22 @@ public struct ParserUtils {
             return None
         }
         var numberOfBraces = 0
+        var inString = false
+        var escaped = false
         for (idx in start..str.size) {
-            match (str[idx]) {
-                case b'{' =>
-                    numberOfBraces += 1
-                case b'}' =>
-                    numberOfBraces -= 1
-                    // Found the end of the JSON object
-                    if (numberOfBraces == 0) {
-                        return str[start..(idx+1)].trimAscii()
-                    }
-                case _ => ()
+            let ch = str[idx]
+            if (ch == b'{' && !inString) {
+                numberOfBraces += 1
+            } else if (ch == b'}' && !inString) {
+                numberOfBraces -= 1
+                // Found the end of the JSON object
+                if (numberOfBraces == 0) {
+                    return str[start..(idx+1)].trimAscii()
+                }
+            } else if (ch == b'"' && !escaped) {
+                inString = !inString
             }
-        }
-        return None
-    }
-
-    private static func extractLastJsonWithHeuristic(str: String): Option<String> {
-        let end = if (let Some(idx) <- str.lastIndexOf("}")) {
-            idx
-        } else {
-            return None
-        }
-        var numberOfBraces = 0
-        for (idx in end..=0:-1) {
-            match (str[idx]) {
-                case b'{' =>
-                    numberOfBraces -= 1
-                    // Found the beginning of the JSON object
-                    if (numberOfBraces == 0) {
-                        return str[idx..=end].trimAscii()
-                    }
-                case b'}' =>
-                    numberOfBraces += 1
-                case _ => ()
-            }
+            escaped = (ch == b'\\' && !escaped)
         }
         return None
     }
@@ -108,13 +89,17 @@ public struct ParserUtils {
         return extractCode(str, lang, last: false)
     }
 
-    public static func parseToolRequest(str: String): ToolRequest {
-        let json = JsonValue.fromStr(str)
+    private static func parseToolRequest(json: JsonValue): ToolRequest {
         let name = JsonUtils.getString(json, "name").getOrThrow({
             => ParserException("Failed to parse tool request: tool name is missing")
         })
         let args = JsonUtils.getJsonObject(json, "arguments") ?? JsonObject()
         return ToolRequest(name: name, args: args)
+    }
+
+    public static func extractFirstToolRequest(str: String): ToolRequest {
+        let json  = extractFirstJsonValue(str)
+        return parseToolRequest(json)
     }
 
     /**
@@ -123,29 +108,23 @@ public struct ParserUtils {
      * - or, there is no ```json marks.
      * So, we use a heuristic method to extract the JSON string if failed.
      */
-    private static func extractToolRequest(str: String, last!: Bool): ToolRequest {
-        let (codeExtractor, jsonExecutorHeuristic) = if (last) {
-            (extractLastCode, extractLastJsonWithHeuristic)
-        } else {
-            (extractFirstCode, extractFirstJsonWithHeuristic)
-        }
-
-        if (let Some(jsonStr) <- codeExtractor(str, "json")) {
+    public static func extractFirstJsonValue(str: String): JsonValue {
+        if (let Some(jsonStr) <- extractCode(str, "json", last: false)) {
             try {
                 LogUtils.trace("Extracted JSON string: `${jsonStr}`")
-                return parseToolRequest(jsonStr)
+                return JsonValue.fromStr(jsonStr)
             } catch (ex: JsonException) {
-                // If the JSON string is not a valid ToolRequest, try to extract it using heuristic;
+                // If the string is not a valid JSON object, try to extract again using heuristic;
                 // so, this exception is not thrown
-                LogUtils.trace("Failed to parse the JSON string as ToolRequest: `${str}`; trying heuristic extraction")
+                LogUtils.trace("Failed to parse the string as JSON: `${str}`; trying heuristic extraction")
             }
         }
-        if (let Some(jsonStr) <- jsonExecutorHeuristic(str)) {
+        if (let Some(jsonStr) <- extractFirstJsonWithHeuristic(str)) {
             LogUtils.trace("Extracted JSON string with heuristic: `${jsonStr}`")
             try {
-                return parseToolRequest(jsonStr)
+                return JsonValue.fromStr(jsonStr)
             } catch (ex: JsonException) {
-                let msg = "Failed to parse the JSON string as ToolRequest: `${jsonStr}`"
+                let msg = "Failed to parse the string as JSON: `${jsonStr}`"
                 LogUtils.debug(msg)
                 throw ParserException(msg)
             }
@@ -154,36 +133,12 @@ public struct ParserUtils {
         }
     }
 
-    public static func extractFirstToolRequest(str: String): ToolRequest {
-        return extractToolRequest(str, last: false)
-    }
-
-    /**
-     * Similar to `extractFirstToolRequest`, but extracts the last ToolRequest from the string.
-     */
-    public static func extractLastToolRequest(str: String): ToolRequest {
-        return extractToolRequest(str, last: true)
-    }
-
-    public static func extractLastJsonValue(str: String): JsonValue {
-        let jsonStr = extractLastCode(str, "json") ?? extractLastJsonWithHeuristic(str).getOrThrow({ =>
-            ParserException("There is no JSON output in the string: ${str}")
-        })
-        LogUtils.trace("Extracted JSON string: `${jsonStr}`")
-        // Parse the JSON string to the expected type
-        try {
-            return JsonValue.fromStr(jsonStr)
-        } catch (ex: JsonException) {
-            throw ParserException("Failed to parse the JSON string `${jsonStr}`")
-        }
-    }
-
     /**
      * Extract the last value of the specified type from a string that contains a JSON value.
      */
-    public static func extractLastValue<T>(str: String): T where T <: Jsonable<T> {
+    public static func extractFirstValue<T>(str: String): T where T <: Jsonable<T> {
         // Parse the JSON string to the expected type
-        let jv = extractLastJsonValue(str)
+        let jv = extractFirstJsonValue(str)
         try {
             return T.fromJsonValue(jv)
         } catch (ex: JsonableException) {
