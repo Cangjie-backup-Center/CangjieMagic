@@ -236,6 +236,13 @@ protected func isRetUnit(funcDecl: FuncDecl): Bool {
     }
 }
 
+func isOption(typeNode: TypeNode): Bool {
+    if (let Some(varType) <- (typeNode as RefType)) {
+        return varType.identifier.value == "Option"
+    }
+    return false
+}
+
 class ReturnVisitor <: Visitor {
     var visited = false
 
