@@ -189,13 +189,6 @@ private func buildCtorMethod(attr: JsonableAttr): Tokens {
     )
 }
 
-private func isOption(typeNode: TypeNode): Bool {
-    if (let Some(varType) <- (typeNode as RefType)) {
-        return varType.identifier.value == "Option"
-    }
-    return false
-}
-
 private func buildGetTypeSchemaMethod(attr: JsonableAttr): Tokens {
     let body = Tokens()
     for (varDecl in attr.variables) {
