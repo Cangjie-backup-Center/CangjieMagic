@@ -77,6 +77,17 @@ public class Conversation <: Iterable<ChatRound> {
         return this.chatRounds[index]
     }
 
+    /**
+     * Slice the conversation, used by compactBy
+     */
+    private operator func [](range: Range<Int64>): Conversation {
+        let result = Conversation()
+        for (chatRound in this.chatRounds[range]) {
+            result.chatRounds.add(chatRound)
+        }
+        return result
+    }
+
     public prop size: Int64 {
         get() { this.chatRounds.size }
     }
@@ -91,18 +102,33 @@ public class Conversation <: Iterable<ChatRound> {
 
     /**
      * Compact the current conversation and save the summary
+     * `firstN` means first first N chat rounds to be compact
      * `keepOrigin` means whether save the original conversation messages
      */
-    public func compactBy(compactor: ConversationCompactor, keepOrigin!: Bool = true): String {
-        let summary = compactor.compact(this)
+    public func compactBy(compactor: ConversationCompactor,
+                          firstN!: Option<Int64> = None,
+                          keepOrigin!: Bool = true): String {
+        let end = min(firstN ?? this.chatRounds.size, this.chatRounds.size)
+        // Whether the full conversation is to be compact
+        // If so, there is no need to create a new conversation
+        let conversation2Compact = if (end == this.chatRounds.size) {
+            this
+        } else {
+            this[0..end]
+        }
+        let summary = compactor.compact(conversation2Compact)
         this.compactedConversations.add(
             CompactedConversation(
-                if (keepOrigin) { this.chatRounds.toArray() } else { None },
+                if (keepOrigin) { conversation2Compact.chatRounds.toArray() } else { None },
                 summary
             )
         )
-        // Remove the current conversation
-        this.chatRounds.clear()
+        // Reset the current conversation
+        if (end == this.chatRounds.size) {
+            this.chatRounds.clear()
+        } else {
+            this.chatRounds.remove(0..end)
+        }
         return summary
     }
 }
