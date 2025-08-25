@@ -58,6 +58,17 @@ protected struct HttpUtilsImpl {
     static private func parseOutput(output: String): (String, String) {
         // Split the last line (status code) from the rest (response body)
         let lines = output.trimAscii().split("\n")
+        
+        // Handle empty output case
+        if (lines.size == 0) {
+            throw HttpException("Empty response from curl command")
+        }
+        
+        // Handle case with only status code
+        if (lines.size == 1) {
+            return ("", lines[0].trimAscii())
+        }
+        
         let response = String.join(lines[0..(lines.size-1)], delimiter: "\n") // All lines except last
         let status = lines[lines.size-1].trimAscii()  // Last line is the status code
         return (response, status)
