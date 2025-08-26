@@ -102,10 +102,7 @@ protected struct JsonUtils {
 
     public static func getJsonValue(j: JsonValue, key: String): Option<JsonValue> {
         if (let Some(jo) <- JsonUtils.asJsonObject(j)) {
-            match (jo.get(key)) {
-                case Some(value) => return value
-                case None => return None
-            }
+            return jo.get(key)
         }
         return None
     }

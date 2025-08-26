@@ -3,11 +3,11 @@
  */
 package magic.core.message
 
-import magic.jsonable.ToJsonValue
+import magic.jsonable.{FromJsonValue, ToJsonValue, JsonUtils}
 
 import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
 
-public class Message <: ToString & ToJsonValue {
+public class Message <: ToString & FromJsonValue<Message> & ToJsonValue {
     /**
      * Name of the message sender
      */
@@ -66,6 +66,16 @@ public class Message <: ToString & ToJsonValue {
             jo.put("reason", JsonString(r))
         }
         return jo
+    }
+
+    redef public static func fromJsonValue(json: JsonValue): Message {
+        return Message(
+            MessageRole.fromStr(JsonUtils.getString(json, "role").getOrThrow()),
+            JsonUtils.getString(json, "content") ?? "",
+            name: JsonUtils.getString(json, "name") ?? "",
+            image: JsonUtils.getString(json, "image"),
+            reason: JsonUtils.getString(json, "reason"),
+        )
     }
 
     //---------------------------------------------------------------------

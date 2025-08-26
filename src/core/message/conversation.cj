@@ -3,17 +3,37 @@
  */
 package magic.core.message
 
+import magic.jsonable.{Jsonable, FromJsonValue, ToJsonValue, JsonUtils}
+
 import std.collection.{ArrayList}
+import std.fs.{Path, File}
+import stdx.encoding.json.*
 
 /**
  * A single chat round in a conversation, consisting of a question and an answer
  * along with the optional execution step messages.
  */
-public struct ChatRound <: ToString {
+public class ChatRound <: ToString & FromJsonValue<ChatRound> & ToJsonValue {
     public ChatRound(
         public let question: Message, // The question message from the user
         public let answer: Message, // The answer message from the assistant
         public let steps: MessageList) {// Optional execution step messages, if any
+    }
+
+    override public func toJsonValue(): JsonValue {
+        let jo = JsonObject()
+        jo.put("question", this.question.toJsonValue())
+        jo.put("answer", this.answer.toJsonValue())
+        jo.put("steps", this.steps.toJsonValue())
+        return jo
+    }
+
+    redef static public func fromJsonValue(json: JsonValue): ChatRound {
+        return ChatRound(
+            Message.fromJsonValue(JsonUtils.getJsonValue(json, "question").getOrThrow()),
+            Message.fromJsonValue(JsonUtils.getJsonValue(json, "answer").getOrThrow()),
+            MessageList.fromJsonValue(JsonUtils.getJsonValue(json, "steps").getOrThrow())
+        )
     }
 
     override public func toString(): String {
@@ -21,7 +41,7 @@ public struct ChatRound <: ToString {
     }
 }
 
-public class CompactedConversation {
+public class CompactedConversation <: FromJsonValue<CompactedConversation> & ToJsonValue {
     public CompactedConversation(
         /**
          * Chat rounds of the conversation
@@ -33,12 +53,28 @@ public class CompactedConversation {
          */
         public let summary: String
     ) { }
+
+    override public func toJsonValue(): JsonValue {
+        let jo = JsonObject()
+        if (let Some(chatRounds) <- this.chatRounds) {
+            jo.put("chatRounds", chatRounds.toJsonValue())
+        }
+        jo.put("summary", JsonString(summary))
+        return jo
+    }
+
+    redef static public func fromJsonValue(json: JsonValue): CompactedConversation {
+        return CompactedConversation(
+            JsonUtils.getJsonValue(json, "chatRounds").map { jv => Array<ChatRound>.fromJsonValue(jv) },
+            JsonUtils.getString(json, "summary").getOrThrow()
+        )
+    }
 }
 
 /**
  * A conversation is a collection of QA chat rounds.
  */
-public class Conversation <: Iterable<ChatRound> {
+public class Conversation <: Iterable<ChatRound> & FromJsonValue<Conversation> & ToJsonValue  {
     /**
      * Chat round of the current conversation
      */
@@ -130,5 +166,40 @@ public class Conversation <: Iterable<ChatRound> {
             this.chatRounds.remove(0..end)
         }
         return summary
+    }
+
+    override public func toJsonValue(): JsonValue {
+        let jo = JsonObject()
+        jo.put("chatRounds", this.chatRounds.toArray().toJsonValue())
+        jo.put("compactedConversations", this.compactedConversations.toArray().toJsonValue())
+        return jo
+    }
+
+    redef static public func fromJsonValue(json: JsonValue): Conversation {
+        let conversation = Conversation()
+        conversation.chatRounds.add(all: Array<ChatRound>.fromJsonValue(
+            JsonUtils.getJsonValue(json, "chatRounds").getOrThrow()
+        ))
+        if (let Some(jv) <- JsonUtils.getJsonValue(json, "compactedConversations")) {
+            conversation.compactedConversations.add(all: Array<CompactedConversation>.fromJsonValue(jv))
+        }
+        return conversation
+    }
+
+    /**
+     * Save the conversation to a file
+     */
+    public func save(path: Path): Unit {
+        File.writeTo(path, this.toJsonValue().toJsonString().toArray())
+    }
+
+    /**
+     * Load a conversation from a file
+     */
+    public static func load(path: Path): Conversation {
+        return File.readFrom(path) |>
+            String.fromUtf8 |>
+            JsonValue.fromStr |>
+            Conversation.fromJsonValue
     }
 }

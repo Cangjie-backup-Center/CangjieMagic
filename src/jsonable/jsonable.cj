@@ -10,16 +10,18 @@ public interface ToJsonValue {
     func toJsonValue(): JsonValue
 }
 
-public interface Jsonable<T> <: ToJsonValue /* where T <: Jsonable<T> */ {
-    /**
-     * Get the type schema of T
-     */
-    static func getTypeSchema(): TypeSchema
-
+public interface FromJsonValue<T> {
     /**
      * Deserialize from a Json value
      */
     static func fromJsonValue(json: JsonValue): T
+}
+
+public interface Jsonable<T> <: FromJsonValue<T> & ToJsonValue /* where T <: Jsonable<T> */ {
+    /**
+     * Get the type schema of T
+     */
+    static func getTypeSchema(): TypeSchema
 
     /**
      * Deserialize from a Json string
@@ -101,11 +103,7 @@ extend Bool <: Jsonable<Bool> {
     }
 }
 
-extend<T> Array<T> <: Jsonable<Array<T>> where T <: Jsonable<T> {
-    public static func getTypeSchema(): TypeSchema {
-        return TypeSchema.Arr(T.getTypeSchema())
-    }
-
+extend<T> Array<T> <: FromJsonValue<Array<T>> & ToJsonValue where T <: FromJsonValue<T> & ToJsonValue {
     public static func fromJsonValue(json: JsonValue): Array<T> {
         let jsArr = JsonUtils.asJsonArray(json).getOrThrow({
                 => JsonableException("Convert to Array error. Value: ${json.toJsonString()}")
@@ -119,6 +117,12 @@ extend<T> Array<T> <: Jsonable<Array<T>> where T <: Jsonable<T> {
         return JsonArray(
             this |> map<T, JsonValue>({ value: T => value.toJsonValue() }) |> collectArray
         )
+    }
+}
+
+extend<T> Array<T> <: Jsonable<Array<T>> where T <: Jsonable<T> {
+    public static func getTypeSchema(): TypeSchema {
+        return TypeSchema.Arr(T.getTypeSchema())
     }
 }
 

@@ -3,12 +3,16 @@
  */
 package magic.core.message
 
-import std.collection.{ArrayList}
+import magic.jsonable.{FromJsonValue, ToJsonValue, JsonUtils}
+
+import std.collection.{ArrayList, map, collectArray}
+import stdx.encoding.json.*
 
 /**
  * A collection of chat messages
  */
-public open class MessageList <: ToString & Iterable<Message> {
+public open class MessageList <: ToString & Iterable<Message> &
+                                 FromJsonValue<MessageList> & ToJsonValue {
     protected let messages: ArrayList<Message>
 
     public init() {
@@ -67,5 +71,21 @@ public open class MessageList <: ToString & Iterable<Message> {
 
     public func toArray(): Array<Message> {
         return messages.toArray()
+    }
+
+    override public func toJsonValue(): JsonValue {
+        JsonUtils.buildJsonArray(
+            this.messages |>
+                map { m => m.toJsonValue() } |>
+                collectArray
+        )
+    }
+
+    redef public static func fromJsonValue(json: JsonValue): MessageList {
+        return MessageList(
+            json.asArray().getItems() |>
+                map { jv => Message.fromJsonValue(jv) } |>
+                collectArray
+        )
     }
 }
