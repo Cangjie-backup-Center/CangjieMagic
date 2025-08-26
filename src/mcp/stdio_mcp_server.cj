@@ -8,7 +8,7 @@ import magic.core.tool.Tool
 import magic.jsonable.*
 import magic.log.LogUtils
 
-import std.console.{Console, ConsoleReader, ConsoleWriter}
+import std.env.{getStdIn, getStdOut, ConsoleReader, ConsoleWriter}
 import std.collection.{ArrayList}
 import magic.tool.AgentAsTool
 
@@ -21,8 +21,8 @@ public class StdioMCPServer <: AbsMCPServer {
 
     public init(tools: Array<Tool>) {
         super(tools)
-        this.reader = Console.stdIn
-        this.writer = Console.stdOut
+        this.reader = getStdIn()
+        this.writer = getStdOut()
     }
 
     /**
