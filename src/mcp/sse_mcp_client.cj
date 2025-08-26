@@ -3,19 +3,25 @@
  */
 package magic.mcp
 
+import magic.dsl.jsonable
 import magic.core.tool.Tool
-import magic.utils.newProcess
 import magic.jsonable.*
 import magic.log.LogUtils
+import magic.config.Config
 import magic.utils.http.{HttpUtils, SSEvent}
 import magic.utils.http.SSEventStream
-import magic.config.Config
+import magic.utils.newProcess
 
 import std.io.{StringReader, StringWriter, OutputStream, InputStream}
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import std.time.DateTime
 import stdx.encoding.url.URL
-import stdx.encoding.json.{JsonValue, JsonObject}
+import stdx.encoding.json.*
+
+@jsonable
+public class SseMCPInitParams {
+    public let url: String
+}
 
 /**
  * MCP client via the stdio transport
@@ -34,6 +40,14 @@ public class SseMCPClient <: AbsMCPClient {
         this.baseURL = items[0]
         this.lastInitTime = DateTime.now()
         this.doInit()
+    }
+
+    override public prop initParams: JsonObject {
+        get() {
+            let jo = JsonObject()
+            jo.put("url", JsonString(this.userURL))
+            return jo
+        }
     }
 
     private prop sseStream: SSEventStream {
