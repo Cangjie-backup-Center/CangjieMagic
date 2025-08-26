@@ -99,7 +99,7 @@ MCP Server Collection Example: https://gitcode.com/Cangjie-TPC/CangjieMagic-MCPS
 🤝 Welcome to join the official developer discussion group, where we can exchange and spark creative ideas together to build the most innovative Agent applications!
 
 <div align="center">
-  <img src="https://raw.gitcode.com/user-images/assets/4865175/ace1afda-65d8-4027-8b88-6ab8e8695848/2025-08-19.png" style="width:300px" />
+  <img src="https://raw.gitcode.com/user-images/assets/4865175/1f70a6e9-f614-4521-b3b1-3a06f268cc28/2025-08-26.png" style="width:300px" />
 </div>
 
 ## Other Tutorials
