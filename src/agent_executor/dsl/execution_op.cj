@@ -13,7 +13,7 @@ import magic.model.ModelUtils
 import magic.prompt.Template
 import magic.parser.{Tag, WithTag, ParserUtils, ParserException}
 import magic.log.LogUtils
-import magic.jsonable.{Jsonable, TypeSchema, JsonUtils}
+import magic.jsonable.{Jsonable, TypeSchema, JsonUtils, FromJsonValue, ToJsonValue}
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import stdx.encoding.json.*
@@ -168,7 +168,7 @@ public struct ExecutionOpSet {
         let observation = state.task.invokeTool(toolRequest)
         // Special terminal tools may stop the execution
         if (let Some(stopInfo) <- state.task.stopInfo) {
-            state.task.execution.addStepMessage(Message.assistant(stopInfo.result.withTag(Tag.ANSWER)))
+            // state.task.execution.addStepMessage(Message.assistant(stopInfo.result.withTag(Tag.ANSWER)))
             state.task.notify(Tag.ANSWER, stopInfo.result)
             return state
         }
@@ -216,7 +216,7 @@ public struct ExecutionOpSet {
         let msg = chatWithOperation(state, prompt, stop: [])
         // Parse the response
         LogUtils.info(state.task.agent.name, "ANSWER: ${msg.content}")
-        state.task.execution.addStepMessage(Message.assistant(msg.content.withTag(Tag.ANSWER)))
+        // state.task.execution.addStepMessage(Message.assistant(msg.content.withTag(Tag.ANSWER)))
         if (state.task.request.verbose) {
             if (let Some(subtask) <- state.subtask) {
                 let answer = "Solve the subtask ${subtask.description}\nAnswer: ${msg.content.withoutTag(Tag.ANSWER)}"

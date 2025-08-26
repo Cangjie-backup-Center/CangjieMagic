@@ -17,7 +17,7 @@ public class ConversationAgent <: BaseAgent {
 
     public let conversation: Conversation
 
-    public init(agent: Agent) {
+    public init(agent: Agent, conversation!: Option<Conversation> = None) {
         super (
             model: agent.model,
             name: "Conversation Agent",
@@ -31,7 +31,7 @@ public class ConversationAgent <: BaseAgent {
             interceptor: agent.interceptor
         )
         this.agent = agent
-        this.conversation = Conversation()
+        this.conversation = conversation ?? Conversation()
     }
 
     private func buildFullRequest(request: AgentRequest): AgentRequest {
