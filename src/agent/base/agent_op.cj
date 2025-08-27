@@ -21,9 +21,10 @@ public struct AgentOp {
     public static func chatLLM(agent: Agent,
                                messages: MessageList,
                                stop!: Option<Array<String>> = None,
-                               tools!: Array<Tool> = []): Option<ChatResponse> {
+                               tools!: Array<Tool> = [],
+                               validate!: Bool = true): Option<ChatResponse> {
         // Validate the system prompt if necessary
-        if (!messages.isEmpty() && messages[0].role == MessageRole.System) {
+        if (validate && !messages.isEmpty() && messages[0].role == MessageRole.System) {
             let sysPrompt = messages[0].content
             match (AgentOp.handle(agent, event: PromptValidateEvent(agent, sysPrompt))) {
                 case Continue => ()
