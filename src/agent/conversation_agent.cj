@@ -20,7 +20,7 @@ public class ConversationAgent <: BaseAgent {
     public init(agent: Agent, conversation!: Option<Conversation> = None) {
         super (
             model: agent.model,
-            name: "Conversation Agent",
+            name: agent.name,
             description: "An proxy agent that saves chat messages.",
             temperature: agent.temperature,
             systemPrompt: agent.systemPrompt,

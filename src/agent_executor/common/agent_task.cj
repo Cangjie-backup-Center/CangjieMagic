@@ -206,7 +206,7 @@ public open class AgentTask {
             }
         }
         try {
-            return AgentOp.chatLLM(this.agent, messages, stop: stop, tools: tools)
+            return AgentOp.chatLLM(this.agent, messages, stop: stop, tools: tools, validate: false)
                 .getOrThrow({ => throw ModelException("Fail to get chat model response") })
         } catch (ex: ModelException) {
             let request = ChatRequest(messages, temperature: agent.temperature, stop: stop)
