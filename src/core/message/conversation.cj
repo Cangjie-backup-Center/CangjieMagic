@@ -124,6 +124,12 @@ public class Conversation <: Iterable<ChatRound> & FromJsonValue<Conversation> &
         return result
     }
 
+    public func clone(): Conversation {
+        let result = Conversation()
+        result.chatRounds.add(all: this.chatRounds.toArray().clone())
+        result
+    }
+
     public prop size: Int64 {
         get() { this.chatRounds.size }
     }
