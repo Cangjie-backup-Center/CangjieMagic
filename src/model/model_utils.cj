@@ -24,7 +24,7 @@ public struct ModelUtils {
             LogUtils.error("The chat model did not reply an assistant message")
             return None
         }
-        if (message.content.isEmpty() && response.toolRequest.isNone()) {
+        if (message.content.isEmpty() && message.reason.isNone() && response.toolRequests.isEmpty()) {
             LogUtils.error("The chat model replied an empty message")
             return None
         }

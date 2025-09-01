@@ -20,14 +20,18 @@ Based on the execution, make a plan about how to solve the user question next.
 ${EXECUTION_DEFINITION}
 """
 
+// Prompts of parallel tool call is copied from https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use
 let ACTION_PROMPT = """
-Select a tool to accomplish the user question step by step.
+Select tools to accomplish the user question step by step.
+
+For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
 """
 
 let ACTION_PROMPT_WITH_TOOLS = """
 Decide which tool to use next based on the user question and the current state of the execution.
 ${EXECUTION_DEFINITION}
-You can select ONLY ONE tool!
+
+For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
 
 All available tools are listed:
 {tools}
@@ -41,17 +45,25 @@ You MUST output a JSON object with the following schema:
 ```
 For example,
 ```json
-{
-    "name": "foo"
-    "arguments": {
-        "url": "http://example.com",
-        "count": 3,
-        "items": ["abc", "xyz"]
-    }
-}
+[
+  {
+      "name": "foo"
+      "arguments": {
+          "url": "http://example.com",
+          "count": 3,
+          "items": ["abc", "xyz"]
+      }
+  },
+  {
+      "name": "bar"
+      "arguments": {
+          "arg": "http://example.com",
+      }
+  }
+]
 ```
 
-Now, select a tool and output it with required format.
+Now, select tools and output it with required format.
 """
 
 let ANSWER_PROMPT = """

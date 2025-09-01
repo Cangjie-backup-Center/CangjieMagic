@@ -103,7 +103,7 @@ extend Bool <: Jsonable<Bool> {
     }
 }
 
-extend<T> Array<T> <: FromJsonValue<Array<T>> & ToJsonValue where T <: FromJsonValue<T> & ToJsonValue {
+extend<T> Array<T> <: FromJsonValue<Array<T>> where T <: FromJsonValue<T> {
     public static func fromJsonValue(json: JsonValue): Array<T> {
         let jsArr = JsonUtils.asJsonArray(json).getOrThrow({
                 => JsonableException("Convert to Array error. Value: ${json.toJsonString()}")
@@ -112,7 +112,9 @@ extend<T> Array<T> <: FromJsonValue<Array<T>> & ToJsonValue where T <: FromJsonV
                map { item: JsonValue => T.fromJsonValue(item) } |>
                collectArray
     }
+}
 
+extend<T> Array<T> <: ToJsonValue where T <: ToJsonValue {
     public func toJsonValue(): JsonValue {
         return JsonArray(
             this |> map<T, JsonValue>({ value: T => value.toJsonValue() }) |> collectArray

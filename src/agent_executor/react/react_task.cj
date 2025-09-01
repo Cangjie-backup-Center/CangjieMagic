@@ -45,10 +45,13 @@ protected class ReactTask <: AgentTask {
                 if (tc.thought != "") {
                     this.addAndLogMessage(Message.assistant(tc.thought.withTag(Tag.THOUGHT)))
                 }
+                // LLM may generate parallel tools to run, but we run them sequentially currently
                 this.addAndLogMessage(Message.assistant(tc.text.withTag(Tag.ACTION)))
-                let observation = this.invokeTool(tc.request)
-                this.addAndLogMessage(Message.assistant(observation.withTag(Tag.OBSERVATION)))
-                this.notify(Tag.OBSERVATION, observation)
+                for (toolRequest in tc.requests) {
+                    let observation = this.invokeTool(toolRequest)
+                    this.addAndLogMessage(Message.assistant(observation.withTag(Tag.OBSERVATION)))
+                    this.notify(Tag.OBSERVATION, observation)
+                }
             case ReactStep.Answer(answer) =>
                 if (answer.thought != "") {
                     addAndLogMessage(Message.assistant(answer.thought.withTag(Tag.THOUGHT)))

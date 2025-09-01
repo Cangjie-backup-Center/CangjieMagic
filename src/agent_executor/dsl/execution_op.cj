@@ -111,7 +111,7 @@ public struct ExecutionOpSet {
             isInjected = true
         }
         try {
-            let chatResp = if (Config.enableFunctionCall) {
+            let chatResp = if (Config.enableModelToolCall) {
                 chatWithOperation(
                     state,
                     ACTION_PROMPT,
@@ -138,59 +138,85 @@ public struct ExecutionOpSet {
         }
     }
 
-    private static func doInvokeTool(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
-        LogUtils.info(state.task.agent.name, "Action: ${chatResp}")
-        // Parse the tool request from the chat response:
-        // If the chat response does not contain a tool request,
-        // extract the request from the message content
-        let toolRequest = try {
-            chatResp.toolRequest ?? ParserUtils.extractFirstToolRequest(chatResp.message.content)
+    /**
+     * Parse the tool request from the chat response:
+     * If the chat response does not contain a tool request,
+     * extract the request from the message content
+    */
+    private static func parseToolRequests(chatResp: ChatResponse): Array<ToolRequest> {
+        if (!chatResp.toolRequests.isEmpty()) {
+            return chatResp.toolRequests
+        }
+        // First, try to parse tool request array
+        try {
+            return ParserUtils.extractToolRequestArray(chatResp.message.content)
+        } catch (ex: ParserException) {
+            LogUtils.info("Failed to extract tool request array")
+        }
+        // Otherwise, try to parse a single tool request
+        try {
+            let toolRequest = ParserUtils.extractToolRequest(chatResp.message.content)
+            return [toolRequest]
         } catch (ex: ParserException) {
             LogUtils.info("Failed to extract tool request")
             // If function call is enabled and failing to extract the tool request,
             // treat the content as the final answer
-            if (Config.enableFunctionCall) {
-                ToolRequest(
-                    name: AnswerTool.NAME,
-                    args: JsonUtils.buildJsonObject([
-                        ("result", chatResp.message.content)
-                    ])
-                )
+            if (Config.enableModelToolCall) {
+                return [
+                    ToolRequest(
+                        name: AnswerTool.NAME,
+                        args: JsonUtils.buildJsonObject([
+                            ("result", chatResp.message.content)
+                        ])
+                    )
+                ]
             } else {
                 throw ex
             }
         }
+    }
+
+    private static func doInvokeTool(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
+        LogUtils.debug(state.task.agent.name, "Action: ${chatResp}")
+        let toolRequests = parseToolRequests(chatResp)
         // We also add reasoning content to the step messages
         if (let Some(reason) <- chatResp.message.reason) {
             Message.assistant(reason) // Without tag?
         }
-        // Execute the tool and Tag.ACTION is notified during invoking the tool
-        let observation = state.task.invokeTool(toolRequest)
-        // Special terminal tools may stop the execution
-        if (let Some(stopInfo) <- state.task.stopInfo) {
-            // state.task.execution.addStepMessage(Message.assistant(stopInfo.result.withTag(Tag.ANSWER)))
-            state.task.notify(Tag.ANSWER, stopInfo.result)
-            return state
-        }
+        // LLM may generate parallel tools to run, but we run them sequentially currently
+        // Execute each tool
+        for (toolRequest in toolRequests) {
+            LogUtils.info(state.task.agent.name, "Action: ${toolRequests.toJsonValue().toJsonString()}")
+            // No need to notify the tool request here because it's notified during invoking the tool
+            let observation = state.task.invokeTool(toolRequest)
+            // Special terminal tools may stop the execution
+            if (let Some(stopInfo) <- state.task.stopInfo) {
+                // state.task.execution.addStepMessage(Message.assistant(stopInfo.result.withTag(Tag.ANSWER)))
+                state.task.notify(Tag.ANSWER, stopInfo.result)
+                return state
+            }
 
-        // Add action and observation to the messageList
-        if (Config.enableFunctionCall) {
-            state.execution.addStepMessage(
-                Message.assistant("${toolRequest.toJsonValue().toJsonString()}\n")
-            )
-            state.execution.addStepMessage(
-                Message.user(observation),
-            )
-        } else {
-            state.execution.addStepMessage(
-                Message.assistant("```json\n${toolRequest.toJsonValue().toJsonString()}\n```".withTag(Tag.ACTION)),
-            )
-            state.execution.addStepMessage(
-                Message.user(observation.withTag(Tag.OBSERVATION)),
-            )
+            // Add action and observation to the messageList
+            // If function call is not enabled, we wrap the messages with tags
+            // to guide the LLM generating formatted response
+            if (Config.enableModelToolCall) {
+                state.execution.addStepMessage(
+                    Message.assistant("${toolRequest.toJsonValue().toJsonString()}\n")
+                )
+                state.execution.addStepMessage(
+                    Message.user(observation),
+                )
+            } else {
+                state.execution.addStepMessage(
+                    Message.assistant("```json\n${toolRequest.toJsonValue().toJsonString()}\n```".withTag(Tag.ACTION)),
+                )
+                state.execution.addStepMessage(
+                    Message.user(observation.withTag(Tag.OBSERVATION)),
+                )
+            }
+            LogUtils.info(state.task.agent.name, "Observation: ${observation}")
+            state.task.notify(Tag.OBSERVATION, observation)
         }
-        LogUtils.info(state.task.agent.name, "Observation: ${observation}")
-        state.task.notify(Tag.OBSERVATION, observation)
         return state
     }
 
@@ -250,7 +276,7 @@ public struct ExecutionOpSet {
             var currState = state
             for (tool in tools) {
                 // Prepare input messages
-                let chatResp = if (Config.enableFunctionCall) {
+                let chatResp = if (Config.enableModelToolCall) {
                     chatWithOperation(currState, TOOL_PROMPT, tools: tools, stop: [])
                 } else {
                     let prompt = TOOL_PROMPT.format(
