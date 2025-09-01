@@ -127,6 +127,7 @@ public class Conversation <: Iterable<ChatRound> & FromJsonValue<Conversation> &
     public func clone(): Conversation {
         let result = Conversation()
         result.chatRounds.add(all: this.chatRounds.toArray().clone())
+        result.compactedConversations.add(all: this.compactedConversations.toArray().clone())
         result
     }
 
