@@ -7,7 +7,16 @@ import magic.core.tool.ToolRequest
 import magic.jsonable.{Jsonable, JsonUtils, JsonableException}
 import magic.log.LogUtils
 
+import std.collection.{map, collectArray}
 import stdx.encoding.json.*
+
+/**
+ * Represent which Json type to extract
+ */
+public enum ExtractGoal {
+    | Object
+    | Array
+}
 
 public struct ParserUtils {
     private static func extractCode(str: String, lang: String, last!: Bool): Option<String> {
@@ -44,12 +53,17 @@ public struct ParserUtils {
     }
 
     /**
-     * Extract a JSON object from the string using a heuristic method.
-     * This method tries to find the first complete JSON object in the string.
+     * Extract a JSON object/array from the string using a heuristic method.
+     * This method tries to find the first complete JSON object/array in the string.
      * It is not guaranteed to work in all cases, but it is useful for quick extraction.
+     * `target`:
      */
-    private static func extractFirstJsonWithHeuristic(str: String): Option<String> {
-        let start = if (let Some(idx) <- str.indexOf("{")) {
+    private static func extractFirstJsonWithHeuristic(str: String, goal!: ExtractGoal): Option<String> {
+        let (beginSymbol, endSymbol) = match(goal) {
+            case ExtractGoal.Object => (b'{', b'}')
+            case ExtractGoal.Array => (b'[', b']')
+        }
+        let start = if (let Some(idx) <- str.indexOf(beginSymbol)) {
             idx
         } else {
             return None
@@ -59,9 +73,9 @@ public struct ParserUtils {
         var escaped = false
         for (idx in start..str.size) {
             let ch = str[idx]
-            if (ch == b'{' && !inString) {
+            if (ch == beginSymbol && !inString) {
                 numberOfBraces += 1
-            } else if (ch == b'}' && !inString) {
+            } else if (ch == endSymbol && !inString) {
                 numberOfBraces -= 1
                 // Found the end of the JSON object
                 if (numberOfBraces == 0) {
@@ -97,9 +111,18 @@ public struct ParserUtils {
         return ToolRequest(name: name, args: args)
     }
 
-    public static func extractFirstToolRequest(str: String): ToolRequest {
-        let json  = extractFirstJsonValue(str)
+    public static func extractToolRequest(str: String): ToolRequest {
+        let json  = extractFirstJsonValue(str, goal: ExtractGoal.Object)
         return parseToolRequest(json)
+    }
+
+    public static func extractToolRequestArray(str: String): Array<ToolRequest> {
+        let json  = extractFirstJsonValue(str, goal: ExtractGoal.Array)
+        if (let Some(ja) <- JsonUtils.asJsonArray(json)) {
+            return ja.getItems() |> map { jv => parseToolRequest(jv) } |> collectArray
+        } else {
+            throw ParserException("Failed to parse tool request array: not array")
+        }
     }
 
     /**
@@ -108,7 +131,7 @@ public struct ParserUtils {
      * - or, there is no ```json marks.
      * So, we use a heuristic method to extract the JSON string if failed.
      */
-    public static func extractFirstJsonValue(str: String): JsonValue {
+    public static func extractFirstJsonValue(str: String, goal!: ExtractGoal): JsonValue {
         if (let Some(jsonStr) <- extractCode(str, "json", last: false)) {
             try {
                 LogUtils.trace("Extracted JSON string: `${jsonStr}`")
@@ -119,7 +142,7 @@ public struct ParserUtils {
                 LogUtils.trace("Failed to parse the string as JSON: `${str}`; trying heuristic extraction")
             }
         }
-        if (let Some(jsonStr) <- extractFirstJsonWithHeuristic(str)) {
+        if (let Some(jsonStr) <- extractFirstJsonWithHeuristic(str, goal: goal)) {
             LogUtils.trace("Extracted JSON string with heuristic: `${jsonStr}`")
             try {
                 return JsonValue.fromStr(jsonStr)
@@ -138,7 +161,7 @@ public struct ParserUtils {
      */
     public static func extractFirstValue<T>(str: String): T where T <: Jsonable<T> {
         // Parse the JSON string to the expected type
-        let jv = extractFirstJsonValue(str)
+        let jv = extractFirstJsonValue(str, goal: ExtractGoal.Object)
         try {
             return T.fromJsonValue(jv)
         } catch (ex: JsonableException) {

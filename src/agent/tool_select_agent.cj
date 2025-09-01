@@ -73,7 +73,7 @@ public class ToolSelectAgent <: BaseAgent {
     public func select(question: String): Option<ToolRequest> {
         let result = this.chat("Now, select the tool for the question: ${question}.")
         try {
-            let toolRequest = ParserUtils.extractFirstToolRequest(result)
+            let toolRequest = ParserUtils.extractToolRequest(result)
             LogUtils.info(this.name, "Select Tool: ${toolRequest.toString()}")
             return toolRequest
         } catch (_: ParserException) {

@@ -258,7 +258,7 @@ public open class AgentTask {
                 toolResult = toolResponse.content
                 // Check whether the tool has special attributes
                 if ((tool.extra.get("compactable") ?? "false") == "true" &&
-                            toolResult.size > Config.resultSummarizeThreshold) {
+                            toolResult.size > Config.toolResultCompactThreshold) {
                     // If the tool is compactable, we can compact its result
                     let compactor = SimpleToolCompactor(ChatModelWrapper(this))
                     let summary = compactor.compact(toolRequest, toolResponse)

@@ -16,28 +16,19 @@ import magic.jsonable.TypeSchema
 import stdx.encoding.json.JsonObject
 
 // Modified from https://smith.langchain.com/hub/hwchase17/react
+// Prompts of parallel tool call is copied from https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use
 protected let REACT_SYSTEM_PROMPT_PREFIX = """
 # Guidelines
 Use the following format to accomplish user's request:
 ${Tag.THOUGHT} think about what to do next to solve the question ${Tag.THOUGHT.close}
-${Tag.ACTION} use a tool, the action must be a json object wrapped by ```json and ```
-    ```json
-    {
-        "name": string, name of the tool, it must refer to one of available tools
-        "arguments": { [key: string]: unknown }, arguments for the tool, each argument must be a valid json value required by the tool; it can be omitted, if the tool does not accept parameters
-    }
-    ```
-    For example,
-    ```json
-    {
-        "name": "foo"
-        "arguments": {
-            "url": "http://example.com",
-            "count": 3,
-            "items": ["abc", "xyz"]
+${Tag.ACTION} use tools, the action must be a Json array:
+    [
+        {
+            "name": string, name of the tool, it must refer to one of available tools
+            "arguments": { [key: string]: unknown }, arguments for the tool, each argument must be a valid json value required by the tool; it can be omitted, if the tool does not accept parameters
         }
-    }
-    ```
+    ]
+    For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
 ${Tag.ACTION.close}
 ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.close}
 ... (Thought/Action/Observation may repeat N times to accomplish user's request)
@@ -49,12 +40,36 @@ If there are no available tools, generate final answer directly.
 You must generate either a pair of ${Tag.THOUGHT} and ${Tag.ACTION} or a single ${Tag.ANSWER}.
 """
 
+private let ACTION_EXAMPLE = """
+${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.close}
+${Tag.ACTION}
+[
+  {
+      "name": "foo"
+      "arguments": {
+          "url": "http://example.com",
+          "count": 3,
+          "items": ["abc", "xyz"]
+      }
+  },
+  {
+      "name": "bar"
+      "arguments": {
+          "arg": "http://example.com",
+      }
+  }
+]
+${Tag.ACTION.close}
+"""
+
 protected let REACT_SYSTEM_PROMPT = """
 ${REACT_SYSTEM_PROMPT_PREFIX}
+**Output Examples:**
 
-Examples:
-Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.close} ${Tag.ACTION} ```json <a JSON object representing the tool usage> ``` ${Tag.ACTION.close}
-Output: ${Tag.ANSWER} <output result here> ${Tag.ANSWER.close}
+Output-1:
+${ACTION_EXAMPLE}
+Output-2:
+${Tag.ANSWER} <output result here> ${Tag.ANSWER.close}
 """
 
 protected let REACT_SYSTEM_PROMPT_WITH_STRUCTURE_OUTPUT = """
@@ -63,9 +78,11 @@ ${REACT_SYSTEM_PROMPT_PREFIX}
 You MUST output a JSON value obey the schema as the answer. The schema to follow:
 {output_schema}
 
-Examples:
-Output: ${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.close} ${Tag.ACTION} ```json <a JSON object representing the tool usage> ``` ${Tag.ACTION.close}
-Output: ${Tag.ANSWER} ```json <output a JSON value here as the answer> ``` ${Tag.ANSWER.close}
+**Output Examples:**
+Output-1:
+${ACTION_EXAMPLE}
+Output-2:
+${Tag.ANSWER} ```json <output a JSON value here as the answer> ``` ${Tag.ANSWER.close}
 """
 
 private let REACT_SUMMARIZE_SYSTEM_PROMPT = """

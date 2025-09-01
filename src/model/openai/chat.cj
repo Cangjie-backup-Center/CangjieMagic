@@ -364,25 +364,21 @@ public class OpenAIChatModel <: ChatModel {
             openAIMsg.content,
             reason: openAIMsg.reasoning_content
         )
-        let toolRequest: Option<ToolRequest> = if (!choice.message.tool_calls.isEmpty()) {
-            if (choice.message.tool_calls.size > 1) {
-                LogUtils.error("The chat model replied multiple tool calls")
-            }
-            let toolCall = choice.message.tool_calls[0]
-            ToolRequest(
-                name: toolCall.function.name,
-                args: JsonValue.fromStr(toolCall.function.arguments).asObject()
-            )
-        } else {
-            None
-        }
+        let toolRequests = choice.message.tool_calls |>
+            map { toolCall =>
+                ToolRequest(
+                    name: toolCall.function.name,
+                    args: JsonValue.fromStr(toolCall.function.arguments).asObject()
+                )
+            } |>
+            collectArray
         let usage = ChatUsage(
             promptTokens: resp.usage.prompt_tokens,
             completionTokens: resp.usage.completion_tokens,
             // totalTokens: resp.usage.total_tokens,
             timeCost: duration
         )
-        return ChatResponse(resp.model, message, toolRequest: toolRequest, usage: usage)
+        return ChatResponse(resp.model, message, toolRequests: toolRequests, usage: usage)
     }
 
     override public func asyncCreate(chatReq: ChatRequest): AsyncChatResponse {

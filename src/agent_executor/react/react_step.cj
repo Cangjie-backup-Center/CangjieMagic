@@ -15,9 +15,9 @@ protected enum FailureLevel {
 
 protected struct ToolCall {
     protected ToolCall(
-        protected let thought!: String,      // Thoughts of choosing the tool
-        protected let request!: ToolRequest, // Tool call request
-        protected let text!: String          // The original tool call representation
+        protected let thought!: String,              // Thoughts of choosing the tool
+        protected let requests!: Array<ToolRequest>, // Tool call request
+        protected let text!: String                  // The original tool call representation
     ) { }
 }
 
@@ -90,12 +90,11 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
         match ((thought, Tag.extract(content, Tag.ACTION))) {
             case (_, Some(action)) =>
                 try {
-                    let request = ParserUtils.extractFirstToolRequest(action)
                     return ReactStep.Action(
                         ToolCall(
                             text: action,
                             thought: thought ?? "",
-                            request: request
+                            requests: ParserUtils.extractToolRequestArray(action)
                         )
                     )
                 } catch (ex: ParserException) {

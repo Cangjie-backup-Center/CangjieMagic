@@ -122,16 +122,16 @@ public class Config {
     // public static var filterThink = false
 
     /**
-     * Whether to enable function call in LLMs.
+     * Whether to use the function call feature of LLMs.
      * This option is used in "tool-loop", "dsl" and "react" executor.
      */
-    public static var enableFunctionCall = false
+    public static var enableModelToolCall = false
 
     /**
      * The threshold to decide whether to summarize the tool result when the tool enables summarization.
      * The threshold is in byte size.
      */
-    public static var resultSummarizeThreshold = 1500
+    public static var toolResultCompactThreshold = 1500
 
     /**
      * Provide a way to easily get/set environment variables

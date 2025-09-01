@@ -202,18 +202,15 @@ public class OllamaChatModel <: ChatModel {
         let resp = OllamaChatResponse.fromJsonValue(JsonValue.fromStr(body))
         let msg = resp.message
 
-        let toolRequest: Option<ToolRequest> = if (msg.tool_calls.isEmpty()) {
-            None
-        } else {
-            if (msg.tool_calls.size > 1) {
-                LogUtils.error("The chat model replied multiple tool calls")
-            }
-            let toolCall = msg.tool_calls[0]
-            ToolRequest(
-                name: toolCall.function.name,
-                args: toolCall.function.arguments
-            )
-        }
+
+        let toolRequests = msg.tool_calls |>
+            map { toolCall =>
+                ToolRequest(
+                    name: toolCall.function.name,
+                    args: toolCall.function.arguments
+                )
+            } |>
+            collectArray
 
         let usage = ChatUsage(
             promptTokens: resp.prompt_eval_count ?? 0,
@@ -225,7 +222,7 @@ public class OllamaChatModel <: ChatModel {
         return ChatResponse(
             model,
             Message(MessageRole.fromStr(msg.role), msg.content, reason: msg.thinking),
-            toolRequest: toolRequest,
+            toolRequests: toolRequests,
             usage: usage
         )
     }
