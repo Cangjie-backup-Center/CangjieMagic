@@ -2,7 +2,37 @@ import re
 import os
 import sys
 
-def extract_events(file_path):
+PATTERN = r"""
+public\s+class\s+(?P<class_name>\w+)\s*<:\s*\w+\s*{\s*//\s*Return:\s*(?P<return_type>\w+) # Class name and return type
+.*?  # Skip until constructor
+public\s+(?P<class_name2>\w+)\(  # Constructor start
+(?P<members>.*?) # Parameters
+\)\s*\{
+"""
+
+class Event:
+    def __init__(self, name, return_type, members):
+        self.name = name
+        self.return_type = return_type
+        self.members = members
+
+    @property
+    def handler_type(self) -> str:
+        return f"{self.name}Handler"
+
+    @property
+    def handler_return_type(self) -> str:
+        if self.return_type == "Unit":
+            return "Unit"
+        else:
+            return f"EventResponse<{self.return_type}>"
+
+    @property
+    def handler_list(self) -> str:
+        return f"{self.name[0].lower()}{self.name[1:]}Handlers"
+
+
+def extract_events(file_path) -> list[Event]:
     """Extract all public struct names from the given file.
     Args:
         file_path (str): Path to the file to parse
@@ -17,12 +47,14 @@ def extract_events(file_path):
 
             # Find all public struct declarations using regex
             # Pattern matches: public struct StructName {
-            matches = re.finditer(r'public\s+class\s+(\w+)\s*<:\s*InteractionEvent\s*\{ // Return: (\w+)', content)
+            matches = re.finditer(PATTERN, content, re.DOTALL | re.VERBOSE)
 
             for match in matches:
-                struct_name = match.group(1).strip()
-                return_type = match.group(2).strip()
-                events.append((struct_name, return_type))
+                struct_name = match.group('class_name').strip()
+                return_type = match.group('return_type').strip()
+                # print(match.group('members'))
+                members = match.group('members').strip()
+                events.append(Event(struct_name, return_type, members))
 
     except FileNotFoundError:
         print(f"Error: File not found - {file_path}")
@@ -33,7 +65,7 @@ def extract_events(file_path):
         print("No event names found in the input file.")
         sys.exit(1)
 
-    print(f"Found event names: {', '.join([name for name, _ in events])}")
+    print(f"Found event names: {', '.join([event.name for event in events])}")
 
     return events
 
@@ -48,6 +80,7 @@ event_handler_manager_code_header = '''
 package magic.interaction
 
 import magic.core.interaction.*
+import magic.core.agent.{Agent, AgentRequest, AgentResponse}
 import magic.core.tool.{ToolRequest, ToolResponse}
 import magic.core.model.{ChatRequest, ChatResponse}
 import magic.utils.randomString
@@ -63,7 +96,6 @@ public class EventHandlerManager {
         private let name!: String = randomString(size: 8)
     ) { }
 
-
     private static var _global: Option<EventHandlerManager> = None
     public static prop global: EventHandlerManager {
         get() {
@@ -76,9 +108,55 @@ public class EventHandlerManager {
             }
         }
     }
+
 """
 
-def generate_event_handler_manager(events):
+#
+# For event handlers not returning values
+#
+event_handler_template_1 = """
+    // Handler for {struct_name} events
+    private let {list_field} = ArrayList<{handler_type}>()
+
+    // Add addHandler method
+    public func addHandler(handler: {handler_type}): Unit {{
+        this.{list_field}.add(handler)
+    }}
+
+    // Add handle method
+    protected func handle(evt: {struct_name}): {return_type} {{
+        for (handler in this.{list_field}) {{
+           handler(evt)
+       }}
+    }}
+"""
+
+#
+# For event handlers returning values
+#
+event_handler_template_2 = """
+    // Handler for {struct_name} events
+    private let {list_field} = ArrayList<{handler_type}>()
+
+    // Add addHandler method
+    public func addHandler(handler: {handler_type}): Unit {{
+        this.{list_field}.add(handler)
+    }}
+
+    // Add handle method
+    protected func handle(evt: {struct_name}): {return_type} {{
+        for (handler in this.{list_field}) {{
+           match (handler(evt)) {{
+               case Continue => ()
+               case Continue(v) => return Continue(v)
+               case Terminate(v) => return Terminate(v)
+           }}
+       }}
+       return Continue
+    }}
+"""
+
+def generate_event_handler_manager(events: list[Event]):
     """Generate the EventHandlerManager code for the given struct names.
     Args:
         events (list): List of struct names to generate handlers for
@@ -88,45 +166,28 @@ def generate_event_handler_manager(events):
     code = [event_handler_manager_code_header]
 
     # Generate type aliases for each event handler first
-    for struct_name, return_type in events:
-        code.append(f"public type {struct_name}EventHandler = ({struct_name}) -> EventResponse<{return_type}>")
+    for event in events:
+        code.append(f"public type {event.handler_type} = ({event.name}) -> {event.handler_return_type}")
 
     code.append(event_handler_manager_header)
 
     # Generate private fields and methods for each struct
-    for struct_name, return_type in events:
-        handler_type = f"{struct_name}EventHandler"
-        list_field = f"{struct_name[0].lower()}{struct_name[1:]}EventHandlers"
-
-        # Add field
-        code.append(f"    // Handler for {struct_name} events")
-        code.append(f"    private let {list_field} = ArrayList<{handler_type}>()")
-        code.append("")
-
-        # Add addHandler method
-        code.append(f"    public func addHandler(handler: {handler_type}): Unit {{")
-        code.append(f"        this.{list_field}.add(handler)")
-        code.append("    }")
-        code.append("")
-
-        # Add handle method
-        code.append(f"    protected func handle(evt: {struct_name}): EventResponse<{return_type}> {{")
-        code.append(f"        for (handler in this.{list_field}) {{")
-        code.append("            match (handler(evt)) {")
-        code.append("                case Continue => ()")
-        code.append("                case Continue(v) => return Continue(v)")
-        code.append("                case Terminate(v) => return Terminate(v)")
-        code.append("            }")
-        code.append("        }")
-        code.append("        return Continue")
-        code.append("    }")
-        code.append("")
+    for event in events:
+        args = {
+            "struct_name": event.name,
+            "return_type": event.handler_return_type,
+            "handler_type": event.handler_type,
+            "list_field": event.handler_list
+        }
+        if event.return_type == "Unit":
+            code.append(event_handler_template_1.format(**args))
+        else:
+            code.append(event_handler_template_2.format(**args))
 
     # Generate the merge method
     code.append(f"    protected func merge(another: EventHandlerManager): Unit {{")
-    for struct_name, return_type in events:
-        handler_type = f"{struct_name}EventHandler"
-        list_field = f"{struct_name[0].lower()}{struct_name[1:]}EventHandlers"
+    for event in events:
+        list_field = event.handler_list
         code.append(f"        this.{list_field}.add(all: another.{list_field})")
 
     code.append("    }")
@@ -174,18 +235,18 @@ def generate_event_stream_visitor(events):
     # Generate the merge method
     code.append("    private func onEvent(event: InteractionEvent): Unit {")
     code.append("        match (event.kind) {")
-    for event_name, return_type in events:
-        event_kind = event_name.replace("Event", "")
+    for event in events:
+        event_kind = event.name.replace("Event", "")
 
         code.append(f"           case EventKind.{event_kind} => ")
-        code.append(f"                this.on((event as {event_name}).getOrThrow())")
+        code.append(f"                this.on((event as {event.name}).getOrThrow())")
     code.append("           case EventKind.Sentinel => throw UnsupportedException('Unreachable')")
     code.append("        }")
     code.append("    }")
 
     # Generate on methods for each event
-    for event_name, return_type in events:
-        code.append(f"    open public func on(event: {event_name}): Unit {{ }}")
+    for event in events:
+        code.append(f"    open public func on(event: {event.name}): Unit {{ }}")
         code.append("")
 
     code.append("}")

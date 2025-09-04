@@ -41,7 +41,7 @@ public class ConsolePrinter <: EventStreamVisitor {
         getStdOut().writeln(tag.close.withColor(tagColor))
     }
 
-    override public func on(event: ToolCallEvent): Unit {
+    override public func on(event: ToolCallStartEvent): Unit {
         let tag = Tag.ACTION
         let tagColor = getTagColor(tag)
             getStdOut().writeln(tag.withColor(tagColor))

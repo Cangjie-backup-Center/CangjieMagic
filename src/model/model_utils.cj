@@ -74,10 +74,7 @@ public struct ModelUtils {
     }
 
     public static func agentMakeChat(agent: Agent,
-                                     messages: MessageList,
-                                     stop!: Option<Array<String>> = None,
-                                     tools!: Array<Tool> = []): Option<ChatResponse> {
-        let request = ChatRequest(messages, temperature: agent.temperature, stop: stop, tools: tools)
+                                     request: ChatRequest): Option<ChatResponse> {
         return ModelUtils.makeChatImpl(agent.model, request, who: agent.name)
     }
 }

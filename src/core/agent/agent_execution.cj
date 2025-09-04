@@ -38,5 +38,11 @@ public interface AgentExecution {
      * Internally used thought it's public
      */
     func setAnswer(answer: String): Unit
+
+    /**
+     * Set the cancellation mark
+     * Internally used.
+     */
+    func markCancellation(): Unit
 }
 

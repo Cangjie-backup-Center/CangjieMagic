@@ -16,6 +16,9 @@ class InteractAttr <: Attr {
 
     init() { super(AttrMap()) }
 
+    // Async interaction or not
+    var async = false
+
     static func parse(attrTokens: Tokens): InteractAttr {
         let map = AttrParser(attrTokens).parseAttr(
             macroName: "interact",
@@ -43,6 +46,16 @@ class InteractAttr <: Attr {
 
 public macro interact(attrTokens: Tokens, input: Tokens): Tokens {
     let attr = InteractAttr.parse(attrTokens)
+    let content = transformInteract(input, attr)
+    if (attr.dump) {
+        printTokens(content)
+    }
+    return content
+}
+
+public macro asyncInteract(attrTokens: Tokens, input: Tokens): Tokens {
+    let attr = InteractAttr.parse(attrTokens)
+    attr.async = true
     let content = transformInteract(input, attr)
     if (attr.dump) {
         printTokens(content)
@@ -85,9 +98,14 @@ func transformInteract(input: Tokens, attr: InteractAttr): Tokens {
             })
         ))
     }
+    let funcName = if (attr.async) {
+        newIdentifierToken("_asyncInteract")
+    } else {
+        newIdentifierToken("_interact")
+    }
     return quote(
         {=> $body
-            return interaction($(attr.agent), request: $(attr.request), manager: manager)
+            return $funcName( $(attr.agent), request: $(attr.request), manager: manager )
         }()
     )
 }

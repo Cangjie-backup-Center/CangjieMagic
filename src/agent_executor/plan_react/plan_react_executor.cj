@@ -54,16 +54,18 @@ protected class PlanReactExecutor <: AgentExecutor {
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         let planTask = PlanTask(agent, request)
         try {
+            planTask.begin()
             this.prepareBeforeRun(planTask)
             this.solveSubtasks(planTask)
             // Summarize the result
             let result = resultSummarize(planTask)
             LogUtils.info(agent.name, "Summarized answer: ${result}")
             return AgentResponse(result, execution: planTask.execution)
+        } catch (ex: AgentCancelException) {
+            LogUtils.info("Task cancelled by user")
+            return AgentResponse(ex.result)
         } finally {
-            if (request.verbose) {
-                planTask.execution.events.close()
-            }
+            planTask.end()
         }
     }
 
@@ -72,14 +74,16 @@ protected class PlanReactExecutor <: AgentExecutor {
         // Create the worker thread
         let fut: Future<Iterator<String>> = spawn {
             try {
+                planTask.begin()
                 this.prepareBeforeRun(planTask)
                 this.solveSubtasks(planTask)
                 // Summarize the result
                 return asyncResultSummarize(planTask)
+            } catch (ex: AgentCancelException) {
+                LogUtils.info("Task cancelled by user")
+                return AsyncAgentResponse([ex.result].iterator())
             } finally {
-                if (request.verbose) {
-                    planTask.execution.events.close()
-                }
+                planTask.end()
             }
         }
         return AsyncAgentResponse(

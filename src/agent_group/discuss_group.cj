@@ -41,17 +41,17 @@ enum Selection {
 
 abstract class DiscussGroup {
     let host: Agent
-    let topic: String
+    let request: AgentRequest
     let members: ArrayList<Agent>
     let discussion = MessageList()
     var currSpeakerIndex = 0
 
-    public init(topic: String, members: ArrayList<Agent>) {
+    public init(request: AgentRequest, members: ArrayList<Agent>) {
         this.host = BaseAgent(
             name: "FreeGroup Host",
             model: members[0].model // Set the chat model of the first member
         )
-        this.topic = topic
+        this.request = request
         this.members = members
     }
 
@@ -109,7 +109,7 @@ abstract class DiscussGroup {
     private func buildSpeakPrompt(speakerName: String): String {
         return AGENT_SPEAK_PROMPT.format(
             ("name", speakerName),
-            ("topic", topic),
+            ("topic", this.request.question),
             ("discussion", buildDiscussionPrompt())
         )
     }

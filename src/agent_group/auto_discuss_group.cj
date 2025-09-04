@@ -45,8 +45,8 @@ Select the next speaker or make the final answer.
 """
 
 class AutoDiscussGroup <: DiscussGroup {
-    init(topic!: String, members!: ArrayList<Agent>) {
-        super(topic, members)
+    init(request!: AgentRequest, members!: ArrayList<Agent>) {
+        super(request, members)
     }
 
     private func buildSelectSystemPrompt(): String {
@@ -57,7 +57,7 @@ class AutoDiscussGroup <: DiscussGroup {
         return AUTO_SPEAKER_SELECT_PROMPT.format(
             ("numOfAgent", members.size),
             ("agents", strBuilder),
-            ("topic", topic),
+            ("topic", this.request.question),
             ("discussion", buildDiscussionPrompt())
         )
     }
@@ -72,7 +72,7 @@ class AutoDiscussGroup <: DiscussGroup {
             Message.user("Now, select the next speaker or make the final answer")
         )
 
-        let msg = match (AgentOp.chatLLM(this.host, messageList)) {
+        let msg = match (AgentOp.chatLLM(this.host, messageList, forRequest: this.request)) {
             case Some(chatResp) => chatResp.message
             case None => return Selection.Failure("LLM response error")
         }

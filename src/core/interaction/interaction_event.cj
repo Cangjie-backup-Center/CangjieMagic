@@ -5,18 +5,31 @@ package magic.core.interaction
 
 import std.deriving.*
 
+/**
+ * Kinds of interaction events
+ */
 @Derive[Equatable, ToString]
 protected enum EventKind {
-    | ToolCall
-    | PromptValidate
-    | AnswerValidate
+    | ToolCallStart
+    | ToolCallEnd
+
+    | AgentStart
+    | AgentEnd
+    | AgentTimeout
+
+    | ChatModelStart
+    | ChatModelEnd
     | ChatModelFailure
-    | Timeout
+
     | UserInput
     | Notify
+
     | Sentinel
 }
 
+/**
+ * The base type of events
+ */
 public open class InteractionEvent <: ToString {
     protected InteractionEvent(
         protected let kind: EventKind

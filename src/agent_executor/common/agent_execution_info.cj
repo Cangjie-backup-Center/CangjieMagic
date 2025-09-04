@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.agent.base
+package magic.agent_executor.common
 
 import magic.core.agent.*
 import magic.core.message.*
@@ -9,10 +9,10 @@ import magic.core.rag.{Retrieval, RetrievalInfo}
 import magic.parser.TagChannel
 import magic.core.interaction.*
 import magic.tokenizer.TokenizerLoader
+import magic.log.LogUtils
 
 import std.collection.ArrayList
-import std.collection.concurrent.BlockingQueue
-import std.sync.Mutex
+import std.sync.{Mutex, AtomicBool}
 
 /**
  * Bookkeeping information during the agent execution
@@ -44,6 +44,23 @@ public class AgentExecutionInfo <: AgentExecution {
      * Retrieved documents during execution
      */
     private let _retrievalInfo = ArrayList<RetrievalInfo>()
+
+    /**
+     * The cancellation mark
+     */
+    private let cancellation = AtomicBool(false)
+
+    /**
+     * Use the same prop name as thread for convention
+     */
+    protected prop hasPendingCancellation: Bool {
+        get() { this.cancellation.load() }
+    }
+
+    override public func markCancellation(): Unit {
+        LogUtils.debug("Mark cancellation for the agent execution")
+        this.cancellation.store(true)
+    }
 
     override public prop retrievalInfo: ArrayList<RetrievalInfo> {
         get() { this._retrievalInfo }

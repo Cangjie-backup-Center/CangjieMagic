@@ -18,9 +18,9 @@ public class ReactExecutor <: AgentExecutor {
     }
 
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
-        LogUtils.info("React executor runs ${agent.name}")
         let task = ReactTask(agent, request)
         try {
+            task.begin()
             for (_ in 0..this.loop) {
                 if (let Some(answer) <- task.runOnce()) {
                     return AgentResponse(answer, execution: task.execution)
@@ -31,19 +31,20 @@ public class ReactExecutor <: AgentExecutor {
             }
             let answer = task.summarize()
             return AgentResponse(answer, execution: task.execution)
+        } catch (ex: AgentCancelException) {
+            LogUtils.info("Task cancelled by user")
+            return AgentResponse(ex.result)
         } finally {
-            if (task.request.verbose) {
-                task.execution.events.close()
-            }
+            task.end()
         }
     }
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
-        LogUtils.info("React executor async runs ${agent.name}")
         let task = ReactTask(agent, request)
         // Create a thread to execute the react task
         let fut: Future<Iterator<String>> = spawn {
             try {
+                task.begin()
                 for (_ in 0..this.loop) {
                     if (let Some(asyncAnswer) <- task.asyncRunOnce()) {
                         return asyncAnswer
@@ -55,10 +56,11 @@ public class ReactExecutor <: AgentExecutor {
                 }
                 LogUtils.info("Exceed the max react loop")
                 return task.asyncSummarize()
+            } catch (ex: AgentCancelException) {
+                LogUtils.info("Task cancelled by user")
+                return AsyncAgentResponse([ex.result].iterator())
             } finally {
-                if (request.verbose) {
-                    task.execution.events.close()
-                }
+                task.end()
             }
         }
         return AsyncAgentResponse(FutureIteratorWrapper(task, fut), execution: task.execution)
