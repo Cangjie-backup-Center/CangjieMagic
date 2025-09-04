@@ -66,24 +66,25 @@ public class NaiveExecutor <: AgentExecutor {
     public override func run(agent: Agent, request: AgentRequest): AgentResponse {
         let task = AgentTask(agent, request, initPrompt: false)
         try {
-            LogUtils.info("${agent.name} runs")
+            task.begin()
             task.execution.addMessages(this.buildNaiveSystemPrompts(task))
             task.execution.addRequest(request)
             LogUtils.info(agent.name, task.execution.messages)
             let msg = task.chatLLM(task.execution.messages).message
             LogUtils.info(agent.name, msg)
             return AgentResponse(msg.content, execution: task.execution)
+        } catch (ex: AgentCancelException) {
+            LogUtils.info("Task cancelled by user")
+            return AgentResponse(ex.result)
         } finally {
-            if (request.verbose) {
-                task.execution.events.close()
-            }
+            task.end()
         }
     }
 
     public override func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
         let task = AgentTask(agent, request, initPrompt: false)
         try {
-            LogUtils.info("${agent.name} async runs")
+            task.begin()
             task.execution.addMessages(this.buildNaiveSystemPrompts(task))
             task.execution.addRequest(request)
 
@@ -92,10 +93,11 @@ public class NaiveExecutor <: AgentExecutor {
                 ChatRequest(task.execution.messages, temperature: agent.temperature)
             )
             return AsyncAgentResponse(asyncChatResp.iter(), execution: task.execution)
+        } catch (ex: AgentCancelException) {
+            LogUtils.info("Task cancelled by user")
+            return AsyncAgentResponse([ex.result].iterator())
         } finally {
-            if (request.verbose) {
-                task.execution.events.close()
-            }
+            task.end()
         }
     }
 }

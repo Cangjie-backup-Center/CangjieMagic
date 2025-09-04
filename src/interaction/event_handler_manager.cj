@@ -9,25 +9,30 @@
 package magic.interaction
 
 import magic.core.interaction.*
+import magic.core.agent.{Agent, AgentRequest, AgentResponse}
 import magic.core.tool.{ToolRequest, ToolResponse}
 import magic.core.model.{ChatRequest, ChatResponse}
 import magic.utils.randomString
 
 import std.collection.ArrayList
 
-public type ToolCallEventEventHandler = (ToolCallEvent) -> EventResponse<ToolResponse>
-public type PromptValidateEventEventHandler = (PromptValidateEvent) -> EventResponse<Bool>
-public type AnswerValidateEventEventHandler = (AnswerValidateEvent) -> EventResponse<Bool>
-public type ChatModelFailureEventEventHandler = (ChatModelFailureEvent) -> EventResponse<ChatResponse>
-public type TimeoutEventEventHandler = (TimeoutEvent) -> EventResponse<Unit>
-public type UserInputEventEventHandler = (UserInputEvent) -> EventResponse<String>
-public type NotifyEventEventHandler = (NotifyEvent) -> EventResponse<Unit>
+public type ToolCallStartEventHandler = (ToolCallStartEvent) -> EventResponse<ToolResponse>
+public type ToolCallEndEventHandler = (ToolCallEndEvent) -> Unit
+public type ChatModelStartEventHandler = (ChatModelStartEvent) -> EventResponse<ChatResponse>
+public type ChatModelEndEventHandler = (ChatModelEndEvent) -> Unit
+public type ChatModelFailureEventHandler = (ChatModelFailureEvent) -> EventResponse<ChatResponse>
+public type AgentStartEventHandler = (AgentStartEvent) -> EventResponse<AgentResponse>
+public type AgentEndEventHandler = (AgentEndEvent) -> Unit
+public type AgentTimeoutEventHandler = (AgentTimeoutEvent) -> Unit
+public type UserInputEventHandler = (UserInputEvent) -> EventResponse<String>
+public type NotifyEventHandler = (NotifyEvent) -> Unit
 
 public class EventHandlerManager {
+    protected static let CLASS_NAME = "event-handler-manager"
+
     public EventHandlerManager(
         private let name!: String = randomString(size: 8)
     ) { }
-
 
     private static var _global: Option<EventHandlerManager> = None
     public static prop global: EventHandlerManager {
@@ -42,139 +47,202 @@ public class EventHandlerManager {
         }
     }
 
-    // Handler for ToolCallEvent events
-    private let toolCallEventEventHandlers = ArrayList<ToolCallEventEventHandler>()
 
-    public func addHandler(handler: ToolCallEventEventHandler): Unit {
-        this.toolCallEventEventHandlers.add(handler)
+
+    // Handler for ToolCallStartEvent events
+    private let toolCallStartEventHandlers = ArrayList<ToolCallStartEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: ToolCallStartEventHandler): Unit {
+        this.toolCallStartEventHandlers.add(handler)
     }
 
-    protected func handle(evt: ToolCallEvent): EventResponse<ToolResponse> {
-        for (handler in this.toolCallEventEventHandlers) {
-            match (handler(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
+    // Add handle method
+    protected func handle(evt: ToolCallStartEvent): EventResponse<ToolResponse> {
+        for (handler in this.toolCallStartEventHandlers) {
+           match (handler(evt)) {
+               case Continue => ()
+               case Continue(v) => return Continue(v)
+               case Terminate(v) => return Terminate(v)
+           }
+       }
+       return Continue
     }
 
-    // Handler for PromptValidateEvent events
-    private let promptValidateEventEventHandlers = ArrayList<PromptValidateEventEventHandler>()
 
-    public func addHandler(handler: PromptValidateEventEventHandler): Unit {
-        this.promptValidateEventEventHandlers.add(handler)
+    // Handler for ToolCallEndEvent events
+    private let toolCallEndEventHandlers = ArrayList<ToolCallEndEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: ToolCallEndEventHandler): Unit {
+        this.toolCallEndEventHandlers.add(handler)
     }
 
-    protected func handle(evt: PromptValidateEvent): EventResponse<Bool> {
-        for (handler in this.promptValidateEventEventHandlers) {
-            match (handler(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
+    // Add handle method
+    protected func handle(evt: ToolCallEndEvent): Unit {
+        for (handler in this.toolCallEndEventHandlers) {
+           handler(evt)
+       }
     }
 
-    // Handler for AnswerValidateEvent events
-    private let answerValidateEventEventHandlers = ArrayList<AnswerValidateEventEventHandler>()
 
-    public func addHandler(handler: AnswerValidateEventEventHandler): Unit {
-        this.answerValidateEventEventHandlers.add(handler)
+    // Handler for ChatModelStartEvent events
+    private let chatModelStartEventHandlers = ArrayList<ChatModelStartEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: ChatModelStartEventHandler): Unit {
+        this.chatModelStartEventHandlers.add(handler)
     }
 
-    protected func handle(evt: AnswerValidateEvent): EventResponse<Bool> {
-        for (handler in this.answerValidateEventEventHandlers) {
-            match (handler(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
+    // Add handle method
+    protected func handle(evt: ChatModelStartEvent): EventResponse<ChatResponse> {
+        for (handler in this.chatModelStartEventHandlers) {
+           match (handler(evt)) {
+               case Continue => ()
+               case Continue(v) => return Continue(v)
+               case Terminate(v) => return Terminate(v)
+           }
+       }
+       return Continue
     }
+
+
+    // Handler for ChatModelEndEvent events
+    private let chatModelEndEventHandlers = ArrayList<ChatModelEndEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: ChatModelEndEventHandler): Unit {
+        this.chatModelEndEventHandlers.add(handler)
+    }
+
+    // Add handle method
+    protected func handle(evt: ChatModelEndEvent): Unit {
+        for (handler in this.chatModelEndEventHandlers) {
+           handler(evt)
+       }
+    }
+
 
     // Handler for ChatModelFailureEvent events
-    private let chatModelFailureEventEventHandlers = ArrayList<ChatModelFailureEventEventHandler>()
+    private let chatModelFailureEventHandlers = ArrayList<ChatModelFailureEventHandler>()
 
-    public func addHandler(handler: ChatModelFailureEventEventHandler): Unit {
-        this.chatModelFailureEventEventHandlers.add(handler)
+    // Add addHandler method
+    public func addHandler(handler: ChatModelFailureEventHandler): Unit {
+        this.chatModelFailureEventHandlers.add(handler)
     }
 
+    // Add handle method
     protected func handle(evt: ChatModelFailureEvent): EventResponse<ChatResponse> {
-        for (handler in this.chatModelFailureEventEventHandlers) {
-            match (handler(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
+        for (handler in this.chatModelFailureEventHandlers) {
+           match (handler(evt)) {
+               case Continue => ()
+               case Continue(v) => return Continue(v)
+               case Terminate(v) => return Terminate(v)
+           }
+       }
+       return Continue
     }
 
-    // Handler for TimeoutEvent events
-    private let timeoutEventEventHandlers = ArrayList<TimeoutEventEventHandler>()
 
-    public func addHandler(handler: TimeoutEventEventHandler): Unit {
-        this.timeoutEventEventHandlers.add(handler)
+    // Handler for AgentStartEvent events
+    private let agentStartEventHandlers = ArrayList<AgentStartEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: AgentStartEventHandler): Unit {
+        this.agentStartEventHandlers.add(handler)
     }
 
-    protected func handle(evt: TimeoutEvent): EventResponse<Unit> {
-        for (handler in this.timeoutEventEventHandlers) {
-            match (handler(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
+    // Add handle method
+    protected func handle(evt: AgentStartEvent): EventResponse<AgentResponse> {
+        for (handler in this.agentStartEventHandlers) {
+           match (handler(evt)) {
+               case Continue => ()
+               case Continue(v) => return Continue(v)
+               case Terminate(v) => return Terminate(v)
+           }
+       }
+       return Continue
     }
+
+
+    // Handler for AgentEndEvent events
+    private let agentEndEventHandlers = ArrayList<AgentEndEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: AgentEndEventHandler): Unit {
+        this.agentEndEventHandlers.add(handler)
+    }
+
+    // Add handle method
+    protected func handle(evt: AgentEndEvent): Unit {
+        for (handler in this.agentEndEventHandlers) {
+           handler(evt)
+       }
+    }
+
+
+    // Handler for AgentTimeoutEvent events
+    private let agentTimeoutEventHandlers = ArrayList<AgentTimeoutEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: AgentTimeoutEventHandler): Unit {
+        this.agentTimeoutEventHandlers.add(handler)
+    }
+
+    // Add handle method
+    protected func handle(evt: AgentTimeoutEvent): Unit {
+        for (handler in this.agentTimeoutEventHandlers) {
+           handler(evt)
+       }
+    }
+
 
     // Handler for UserInputEvent events
-    private let userInputEventEventHandlers = ArrayList<UserInputEventEventHandler>()
+    private let userInputEventHandlers = ArrayList<UserInputEventHandler>()
 
-    public func addHandler(handler: UserInputEventEventHandler): Unit {
-        this.userInputEventEventHandlers.add(handler)
+    // Add addHandler method
+    public func addHandler(handler: UserInputEventHandler): Unit {
+        this.userInputEventHandlers.add(handler)
     }
 
+    // Add handle method
     protected func handle(evt: UserInputEvent): EventResponse<String> {
-        for (handler in this.userInputEventEventHandlers) {
-            match (handler(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
+        for (handler in this.userInputEventHandlers) {
+           match (handler(evt)) {
+               case Continue => ()
+               case Continue(v) => return Continue(v)
+               case Terminate(v) => return Terminate(v)
+           }
+       }
+       return Continue
     }
+
 
     // Handler for NotifyEvent events
-    private let notifyEventEventHandlers = ArrayList<NotifyEventEventHandler>()
+    private let notifyEventHandlers = ArrayList<NotifyEventHandler>()
 
-    public func addHandler(handler: NotifyEventEventHandler): Unit {
-        this.notifyEventEventHandlers.add(handler)
+    // Add addHandler method
+    public func addHandler(handler: NotifyEventHandler): Unit {
+        this.notifyEventHandlers.add(handler)
     }
 
-    protected func handle(evt: NotifyEvent): EventResponse<Unit> {
-        for (handler in this.notifyEventEventHandlers) {
-            match (handler(evt)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
+    // Add handle method
+    protected func handle(evt: NotifyEvent): Unit {
+        for (handler in this.notifyEventHandlers) {
+           handler(evt)
+       }
     }
 
     protected func merge(another: EventHandlerManager): Unit {
-        this.toolCallEventEventHandlers.add(all: another.toolCallEventEventHandlers)
-        this.promptValidateEventEventHandlers.add(all: another.promptValidateEventEventHandlers)
-        this.answerValidateEventEventHandlers.add(all: another.answerValidateEventEventHandlers)
-        this.chatModelFailureEventEventHandlers.add(all: another.chatModelFailureEventEventHandlers)
-        this.timeoutEventEventHandlers.add(all: another.timeoutEventEventHandlers)
-        this.userInputEventEventHandlers.add(all: another.userInputEventEventHandlers)
-        this.notifyEventEventHandlers.add(all: another.notifyEventEventHandlers)
+        this.toolCallStartEventHandlers.add(all: another.toolCallStartEventHandlers)
+        this.toolCallEndEventHandlers.add(all: another.toolCallEndEventHandlers)
+        this.chatModelStartEventHandlers.add(all: another.chatModelStartEventHandlers)
+        this.chatModelEndEventHandlers.add(all: another.chatModelEndEventHandlers)
+        this.chatModelFailureEventHandlers.add(all: another.chatModelFailureEventHandlers)
+        this.agentStartEventHandlers.add(all: another.agentStartEventHandlers)
+        this.agentEndEventHandlers.add(all: another.agentEndEventHandlers)
+        this.agentTimeoutEventHandlers.add(all: another.agentTimeoutEventHandlers)
+        this.userInputEventHandlers.add(all: another.userInputEventHandlers)
+        this.notifyEventHandlers.add(all: another.notifyEventHandlers)
     }
 }

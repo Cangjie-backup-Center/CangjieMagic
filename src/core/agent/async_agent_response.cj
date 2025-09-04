@@ -5,17 +5,28 @@ package magic.core.agent
 
 import magic.core.message.Message
 import magic.parser.{Tag, WithTag}
+import magic.log.LogUtils
 
 /**
  * The asynchronous execution response from an agent executor
  */
 public class AsyncAgentResponse <: Iterator<String> {
+    /**
+     * Data chunks of the final result
+     */
     private let chunks: Iterator<String>
 
     /**
      * Merge all chunk content
      */
     private let buffer = StringBuilder()
+
+    /**
+     * Whether the execution is finished
+     * If not finished, the content is still being generated
+     * If finished, the content is complete
+     */
+    private var finished = false
 
     /**
      * Internal information during the execution
@@ -41,13 +52,20 @@ public class AsyncAgentResponse <: Iterator<String> {
      */
     public prop content: String {
         get() {
-            // Consume all chunks
-            for (_ in this) { }
-            buffer.toString()
+            if (this.finished) {
+                return buffer.toString()
+            } else {
+                // Consume all chunks
+                for (_ in this) { }
+                return buffer.toString()
+            }
         }
     }
 
     override public func next(): Option<String> {
+        if (this.finished) {
+            return None
+        }
         if (let Some(chunk) <- this.chunks.next()) {
             buffer.append(chunk)
             return chunk
@@ -55,7 +73,18 @@ public class AsyncAgentResponse <: Iterator<String> {
             if (let Some(execution) <- this._execution) {
                 execution.setAnswer(buffer.toString())
             }
+            this.finished = true
             return None
         }
+    }
+
+    /**
+     * Cancel the agent execution
+     * Wait until the execution is stopped.
+     */
+    public func cancel(): Unit {
+        this.execution.markCancellation()
+        // Consume all chunks
+        for (_ in this) { }
     }
 }

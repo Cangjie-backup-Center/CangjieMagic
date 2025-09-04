@@ -72,7 +72,7 @@ public abstract class AbsAgent <: Agent {
                 LogUtils.info(this.name, userMsg)
                 messageList.addMessage(userMsg)
                 // Continue to let the model repair the output
-                let msg = AgentOp.chatLLM(this, messageList).getOrThrow({ =>
+                let msg = AgentOp.chatLLM(this, messageList, forRequest: request).getOrThrow({ =>
                     AgentExecutionException("Fail to get chat model response")
                 }).message
                 LogUtils.info(this.name, msg)

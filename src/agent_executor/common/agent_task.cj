@@ -3,7 +3,7 @@
  */
 package magic.agent_executor.common
 
-import magic.agent.base.{AgentExecutionInfo, AgentOp}
+import magic.agent.base.AgentOp
 import magic.core.agent.*
 import magic.core.message.*
 import magic.core.model.*
@@ -21,16 +21,6 @@ import magic.prompt.Template
 
 import std.collection.{ArrayList, HashMap, any, map, collectArray}
 import std.sync.AtomicBool
-
-/**
- * Early stop information for the agent task.
- * It contains the reason for stopping and the result of the task.
- */
-protected struct EarlyStopInfo {
-    EarlyStopInfo(
-        protected let reason: String,
-        protected let result!: String) { }
-}
 
 /**
  * AgentTask represents a task that is being executed by an agent executor.
@@ -52,9 +42,44 @@ public open class AgentTask {
     private let toolResultCache = ToolResultCache()
 
     /**
-     * Whether the task is stopped
+     * Whether the task is stopped by an early-stop tool
      */
-    protected var stopInfo: Option<EarlyStopInfo> = None
+    private var _stopInfo: Option<EarlyStopInfo> = None
+
+    protected prop stopInfo: Option<EarlyStopInfo> {
+        get() {
+            // If the task is already stopped, return the stop info
+            if (let Some(info) <- this._stopInfo) {
+                return info
+            }
+            // Check whether the first task is cancelled by the user
+            // TODO: only async tasks check the cancellation status
+            if (let Some(firstTask) <- AgentTaskStackUtils.first()) {
+                if (firstTask.execution.hasPendingCancellation) {
+                    // If the first task is cancelled, we stop this task as well
+                    throw AgentCancelException()
+                }
+            }
+            this._stopInfo
+        }
+    }
+
+    /**
+     * Stop the task with the given reason and result.
+     * The task will be marked as stopped.
+     */
+    protected func stop(reason: EarlyStopReason, result!: String, log!: String = ""): Unit {
+        // Already stopped
+        if (this._stopInfo.isSome()) {
+            LogUtils.error(agent.name, "Task already stopped, ignore the stop request")
+            return
+        }
+        this._stopInfo = EarlyStopInfo(reason, result: result)
+        if (!log.isEmpty()) {
+            LogUtils.info(agent.name, log)
+        }
+        LogUtils.info(agent.name, "Early stopped: ${reason}; with result: ${result}")
+    }
 
     /**
      * The builtin tool to view the detailed results stored in the cache
@@ -121,19 +146,18 @@ public open class AgentTask {
         let manager = EventHandlerManager()
         // Check whether to set the verbose event handlers,
         // react workers of the plan-react executor will not set verbose event handlers
-        let need2set = if (let Some(flag) <- request.extra.get(AgentRequestExtra.SET_VERBOSE_EVENT_HANDLER)) {
+        let needSet = if (let Some(flag) <- request.extra.get(AgentRequestExtra.SET_VERBOSE_EVENT_HANDLER)) {
             (flag as AtomicBool).getOrThrow().load()
         } else {
             true
         }
-        if (need2set) {
-            manager.addHandler { evt: ToolCallEvent =>
+        if (needSet) {
+            manager.addHandler { evt: ToolCallStartEvent =>
                 execution.events.put(evt)
                 Continue
             }
             manager.addHandler { evt: NotifyEvent =>
                 execution.events.put(evt)
-                Continue
             }
         }
         // If event handlers exist, add new handlers, and update the request
@@ -176,48 +200,39 @@ public open class AgentTask {
         }
     }
 
+    //-------------------------------------------------------------------------------------
+    // Two important methods must be called before and after the task execution
+    protected func begin(): Unit {
+        LogUtils.info("${this.agent.name} runs")
+        AgentOp.handle(event: AgentStartEvent(this.agent, this.request))
+        AgentTaskStackUtils.push(this)
+    }
+
+    protected func end(): Unit {
+        if (this.request.verbose) {
+            this.execution.events.close()
+        }
+        AgentOp.handle(event: AgentEndEvent(this.agent, this.request))
+        AgentTaskStackUtils.pop()
+    }
+
+    //-------------------------------------------------------------------------------------
+
     /**
-     * Note that: ALWAYS call this method to use the LLM
+     * Note that: Agents ALWAYS call this method to use the LLM
      */
     protected func chatLLM(messages: MessageList,
                            stop!: Option<Array<String>> = None,
                            tools!: Array<Tool> = []): ChatResponse {
-        // Validate the system prompt if necessary
-        if (!messages.isEmpty() && messages[0].role == MessageRole.System) {
-            let sysPrompt = messages[0].content
-            let eventResponse = AgentOp.handle(
-                this.agent,
-                event: PromptValidateEvent(this.agent, sysPrompt),
-                forRequest: this.request
-            )
-            match (eventResponse) {
-                case EventResponse.Continue => ()
-                case EventResponse.Continue(status) =>
-                    // Whether the system prompt is valid
-                    if (!status) {
-                        let info = "Terminated because of invalid system prompt: ${sysPrompt}"
-                        this.stop(info, result: info)
-                        return ChatResponse("prompt validator", Message.assistant(info))
-                    }
-                case EventResponse.Terminate(_) =>
-                    let info = "Terminated because of invalid system prompt: ${sysPrompt}"
-                    this.stop(info, result: info)
-                    return ChatResponse("prompt validator", Message.assistant(info))
-            }
+        if (this.stopInfo.isSome()) {
+            throw AgentCancelException()
         }
-        try {
-            return AgentOp.chatLLM(this.agent, messages, stop: stop, tools: tools, validate: false)
-                .getOrThrow({ => throw ModelException("Fail to get chat model response") })
-        } catch (ex: ModelException) {
-            let request = ChatRequest(messages, temperature: agent.temperature, stop: stop)
-            let eventResponse = AgentOp.handle(this.agent, event: ChatModelFailureEvent(this.agent, request, ex.error), forRequest: this.request)
-            return match (eventResponse) {
-                case EventResponse.Continue => throw ex
-                case EventResponse.Continue(resp) => resp
-                case EventResponse.Terminate(resp) =>
-                    this.stop("Terminated by chat model failure event handler", result: resp.toString())
-                    resp
-            }
+        match (AgentOp.chatLLM(this.agent, messages, stop: stop, tools: tools, forRequest: this.request)) {
+            case Some(resp) => resp
+            case None =>
+                let info = "Terminated because of invalid chat model response."
+                this.stop(EarlyStopReason.EventHandlerTerminated, result: info)
+                return ChatResponse("Event Handler", Message.assistant(info))
         }
     }
 
@@ -235,6 +250,9 @@ public open class AgentTask {
      * Run the tool and return observation messages
      */
     protected func invokeTool(toolRequest: ToolRequest): String {
+        if (this.stopInfo.isSome()) {
+            throw AgentCancelException()
+        }
         // Find the tool
         let toolOpt = this.findTool(toolRequest.name)
         if (toolOpt.isNone()) {
@@ -244,7 +262,7 @@ public open class AgentTask {
         }
         var toolResult: String = ""
         let tool = toolOpt.getOrThrow()
-        match (AgentOp.handle(this.agent, event: ToolCallEvent(this.agent, toolRequest), forRequest: this.request)) {
+        match (AgentOp.handle(event: ToolCallStartEvent(this.agent, toolRequest), forRequest: this.request)) {
             case EventResponse.Continue =>
                 // Invoke the tool
                 let toolResponse = try {
@@ -258,7 +276,7 @@ public open class AgentTask {
                 toolResult = toolResponse.content
                 // Check whether the tool has special attributes
                 if ((tool.extra.get("compactable") ?? "false") == "true" &&
-                            toolResult.size > Config.toolResultCompactThreshold) {
+                    toolResult.size > Config.toolResultCompactThreshold) {
                     // If the tool is compactable, we can compact its result
                     let compactor = SimpleToolCompactor(ChatModelWrapper(this))
                     let summary = compactor.compact(toolRequest, toolResponse)
@@ -271,29 +289,29 @@ public open class AgentTask {
                 }
                 if ((tool.extra.get("terminal") ?? "false") == "true") {
                     // If the tool is terminal, we stop the execution
-                    this.stop("Tool `${tool.name}` terminates the task", result: toolResult)
+                    this.stop(
+                        EarlyStopReason.ToolTerminated,
+                        result: toolResult,
+                        log: "Tool `${tool.name}` terminates the task"
+                    )
                 }
             case EventResponse.Continue(resp) =>
                 toolResult = resp.content
             case EventResponse.Terminate(resp) =>
                 toolResult = resp.content
-                this.stop("Terminated by tool call event handler", result: toolResult)
+                this.stop(
+                    EarlyStopReason.EventHandlerTerminated,
+                    result: toolResult,
+                    log: "Terminated by tool call event handler"
+                )
         }
+        AgentOp.handle(event: ToolCallEndEvent(this.agent, toolRequest, ToolResponse(toolResult)), forRequest: this.request)
         return toolResult
-    }
-
-    /**
-     * Stop the task with the given reason and result.
-     * The task will be marked as stopped.
-     */
-    protected func stop(reason: String, result!: String): Unit {
-        this.stopInfo = EarlyStopInfo(reason, result: result)
-        LogUtils.info(agent.name, "Early stopped: ${reason}; with result: ${result}")
     }
 
     protected func notify(tag: String, content: String): Unit {
         if (this.request.verbose) {
-            AgentOp.handle(agent, event: NotifyEvent(this.agent, tag, content), forRequest: this.request)
+            AgentOp.handle(event: NotifyEvent(this.agent, tag, content), forRequest: this.request)
         }
     }
 }

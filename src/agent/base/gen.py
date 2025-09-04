@@ -7,8 +7,45 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from interaction.gen import extract_events
 
-code_template = '''
-    static public func handle(agent: Agent, event!: {struct_name}, forRequest!: Option<AgentRequest> = None): EventResponse<{return_type}> {{
+# For event handlers: NOT returning values & Without agent request
+code_template_1_1 = '''
+    static public func handle(event!: {struct_name}, forRequest!: Option<AgentRequest> = None): {return_type} {{
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(request) <- forRequest) {{
+            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
+                managers.add((object as EventHandlerManager).getOrThrow())
+            }}
+        }}
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {{
+            manager.handle(event)
+        }}
+    }}
+'''
+
+# For event handlers: NOT returning values & With agent request
+code_template_1_2 = '''
+    static public func handle(event!: {struct_name}): {return_type} {{
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(object) <- event.agentRequest.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
+            managers.add((object as EventHandlerManager).getOrThrow())
+        }}
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {{
+            manager.handle(event)
+        }}
+    }}
+'''
+
+# For event handlers: returning values & Without agent request
+code_template_2_1 = '''
+    static public func handle(event!: {struct_name}, forRequest!: Option<AgentRequest> = None): EventResponse<{return_type}> {{
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {{
             if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
@@ -30,25 +67,56 @@ code_template = '''
     }}
 '''
 
+# For event handlers: returning values & With agent request
+code_template_2_2 = '''
+    static public func handle(event!: {struct_name}): EventResponse<{return_type}> {{
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(object) <- event.agentRequest.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
+            managers.add((object as EventHandlerManager).getOrThrow())
+        }}
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {{
+            match (manager.handle(event)) {{
+                case Continue => ()
+                case Continue(v) => return Continue(v)
+                case Terminate(v) => return Terminate(v)
+            }}
+        }}
+        return Continue
+    }}
+'''
+
+
+
 def generate_code(events):
     """Generate the EventHandlerManager code for the given struct names.
-
     Args:
         events (list): List of struct names to generate handlers for
-
     Returns:
         str: The generated code
     """
     code = []
 
     # Generate private fields and methods for each struct
-    for struct_name, return_type in events:
+    for event in events:
         # Add handle method
         args = {
-            "struct_name": struct_name,
-            "return_type": return_type
+            "struct_name": event.name,
+            "return_type": event.return_type
         }
-        code.append(code_template.format(**args))
+        if event.return_type == "Unit":
+            if 'AgentRequest' not in event.members:
+                code.append(code_template_1_1.format(**args))
+            else:
+                code.append(code_template_1_2.format(**args))
+        else:
+            if 'AgentRequest' not in event.members:
+                code.append(code_template_2_1.format(**args))
+            else:
+                code.append(code_template_2_2.format(**args))
 
     return ''.join(code)
 

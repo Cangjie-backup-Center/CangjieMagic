@@ -364,21 +364,28 @@ public class OpenAIChatModel <: ChatModel {
             openAIMsg.content,
             reason: openAIMsg.reasoning_content
         )
-        let toolRequests = choice.message.tool_calls |>
-            map { toolCall =>
-                ToolRequest(
-                    name: toolCall.function.name,
-                    args: JsonValue.fromStr(toolCall.function.arguments).asObject()
+        let toolRequests = ArrayList<ToolRequest>()
+        for (toolCall in choice.message.tool_calls) {
+            // If the output is too long, output may be truncated,
+            // which result in incomplete Json string of the tool call
+            try {
+                toolRequests.add(
+                    ToolRequest(
+                        name: toolCall.function.name,
+                        args: JsonValue.fromStr(toolCall.function.arguments).asObject()
+                    )
                 )
-            } |>
-            collectArray
+            } catch(ex: JsonException) {
+                LogUtils.debug("Invalid tool call: ${toolCall.toJsonValue().toJsonString()}")
+            }
+        }
         let usage = ChatUsage(
             promptTokens: resp.usage.prompt_tokens,
             completionTokens: resp.usage.completion_tokens,
             // totalTokens: resp.usage.total_tokens,
             timeCost: duration
         )
-        return ChatResponse(resp.model, message, toolRequests: toolRequests, usage: usage)
+        return ChatResponse(resp.model, message, toolRequests: toolRequests.toArray(), usage: usage)
     }
 
     override public func asyncCreate(chatReq: ChatRequest): AsyncChatResponse {

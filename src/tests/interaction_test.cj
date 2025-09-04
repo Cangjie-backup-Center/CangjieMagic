@@ -22,7 +22,7 @@ private class Foo {
 @Test
 func testInteract() {
     @interact[agent: Foo(), request: AgentRequest("22 + 33 = ?")](
-        case evt: ToolCallEvent =>
+        case evt: ToolCallStartEvent =>
             @PowerAssert(evt.toolRequest.name == "add")
             return EventResponse.Continue
     )

@@ -7,6 +7,7 @@ import magic.core.agent.*
 import magic.core.message.{Message, MessageList}
 import magic.core.model.{ChatRequest}
 import magic.config.Config
+import magic.agent.base.AgentOp
 import magic.agent_executor.common.{AgentTask, FutureIteratorWrapper}
 import magic.agent_executor.dsl.{ExecutionOpSet, ExecutionState}
 import magic.log.LogUtils
@@ -14,6 +15,7 @@ import magic.model.ModelUtils
 import magic.parser.{Tag, WithTag}
 import magic.prompt.Template
 import magic.tool.NativeFuncTool
+import magic.interaction.{AgentStartEvent, AgentEndEvent}
 import magic.utils.*
 
 /*
@@ -30,9 +32,9 @@ public class ToolLoopExecutor <: AgentExecutor {
     }
 
     private func doRun(task: AgentTask): String {
-        LogUtils.info("${task.agent.name} runs")
         var state = ExecutionState(task)
         try {
+            task.begin()
             for (_ in 0..this.loop) {
                 state = ExecutionOpSet.action(state)
                 if (state.done) {
@@ -46,10 +48,11 @@ public class ToolLoopExecutor <: AgentExecutor {
             LogUtils.info("Exceed the max loop")
             state = ExecutionOpSet.answer(state)
             return state.answer
+        } catch (ex: AgentCancelException) {
+            LogUtils.info("Task cancelled by user")
+            return ex.result
         } finally {
-            if (task.request.verbose) {
-                task.execution.events.close()
-            }
+            task.end()
         }
     }
 

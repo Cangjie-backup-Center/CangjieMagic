@@ -22,36 +22,36 @@ public struct AgentOp {
                                messages: MessageList,
                                stop!: Option<Array<String>> = None,
                                tools!: Array<Tool> = [],
-                               validate!: Bool = true): Option<ChatResponse> {
-        // Validate the system prompt if necessary
-        if (validate && !messages.isEmpty() && messages[0].role == MessageRole.System) {
-            let sysPrompt = messages[0].content
-            match (AgentOp.handle(agent, event: PromptValidateEvent(agent, sysPrompt))) {
-                case Continue => ()
-                case Continue(status) =>
-                    if (!status) {
-                    LogUtils.info("Chat model request is blocked because of invalid system prompt: ${sysPrompt}")
-                    }
-                    return None
-                case Terminate(_) =>
-                    LogUtils.info("Chat model request is blocked because of invalid system prompt: ${sysPrompt}")
-                    return None
-            }
+                               forRequest!: AgentRequest): Option<ChatResponse> {
+        let chatRequest = ChatRequest(messages, temperature: agent.temperature, stop: stop, tools: tools)
+        // The chat model start event call site
+        let chatResponse = match (AgentOp.handle(event: ChatModelStartEvent(agent, chatRequest), forRequest: forRequest)) {
+            case Continue => AgentOp.chatLLMWithFailure(agent, chatRequest)
+            case Continue(chatResponse) => chatResponse
+            case Terminate(_) =>
+                LogUtils.info("Chat model request is terminated")
+                return None
         }
+        if (let Some(resp) <- chatResponse) {
+            AgentOp.handle(event: ChatModelEndEvent(agent, chatRequest, resp), forRequest: forRequest)
+        }
+        return chatResponse
+    }
 
+    private static func chatLLMWithFailure(agent: Agent, chatRequest: ChatRequest): Option<ChatResponse> {
         try {
-            return ModelUtils.agentMakeChat(agent, messages, stop: stop, tools: tools)
+            return ModelUtils.agentMakeChat(agent, chatRequest)
                 .getOrThrow({ => throw ModelException("Fail to get chat model response") })
         } catch (ex: ModelException) {
-            let request = ChatRequest(messages, temperature: agent.temperature, )
-            match (AgentOp.handle(agent, event: ChatModelFailureEvent(agent, request, ex.error))) {
+            match (AgentOp.handle(event: ChatModelFailureEvent(agent, chatRequest, ex.error))) {
                 case EventResponse.Continue =>
                     LogUtils.info("Chat model failure handler return None")
+                    throw ex // If the model exception is not handled, rethrow it
                 case EventResponse.Continue(resp) => return resp
                 case EventResponse.Terminate(_) =>
                     LogUtils.info("Chat model failure handler terminates")
+                    return None
             }
-            return None
         }
     }
 
@@ -61,7 +61,7 @@ public struct AgentOp {
     //--------------------------------------------------
     // The following are event handlers: NEVER DELETE/MODIFY THIS LINE
 
-    static public func handle(agent: Agent, event!: ToolCallEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ToolResponse> {
+    static public func handle(event!: ToolCallStartEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ToolResponse> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
             if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
@@ -82,7 +82,23 @@ public struct AgentOp {
         return Continue
     }
 
-    static public func handle(agent: Agent, event!: PromptValidateEvent, forRequest!: Option<AgentRequest> = None): EventResponse<Bool> {
+    static public func handle(event!: ToolCallEndEvent, forRequest!: Option<AgentRequest> = None): Unit {
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(request) <- forRequest) {
+            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+                managers.add((object as EventHandlerManager).getOrThrow())
+            }
+        }
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {
+            manager.handle(event)
+        }
+    }
+
+    static public func handle(event!: ChatModelStartEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ChatResponse> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
             if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
@@ -103,7 +119,23 @@ public struct AgentOp {
         return Continue
     }
 
-    static public func handle(agent: Agent, event!: AnswerValidateEvent, forRequest!: Option<AgentRequest> = None): EventResponse<Bool> {
+    static public func handle(event!: ChatModelEndEvent, forRequest!: Option<AgentRequest> = None): Unit {
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(request) <- forRequest) {
+            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+                managers.add((object as EventHandlerManager).getOrThrow())
+            }
+        }
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {
+            manager.handle(event)
+        }
+    }
+
+    static public func handle(event!: ChatModelFailureEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ChatResponse> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
             if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
@@ -124,7 +156,56 @@ public struct AgentOp {
         return Continue
     }
 
-    static public func handle(agent: Agent, event!: ChatModelFailureEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ChatResponse> {
+    static public func handle(event!: AgentStartEvent): EventResponse<AgentResponse> {
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(object) <- event.agentRequest.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            managers.add((object as EventHandlerManager).getOrThrow())
+        }
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {
+            match (manager.handle(event)) {
+                case Continue => ()
+                case Continue(v) => return Continue(v)
+                case Terminate(v) => return Terminate(v)
+            }
+        }
+        return Continue
+    }
+
+    static public func handle(event!: AgentEndEvent): Unit {
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(object) <- event.agentRequest.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            managers.add((object as EventHandlerManager).getOrThrow())
+        }
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {
+            manager.handle(event)
+        }
+    }
+
+    static public func handle(event!: AgentTimeoutEvent, forRequest!: Option<AgentRequest> = None): Unit {
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(request) <- forRequest) {
+            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+                managers.add((object as EventHandlerManager).getOrThrow())
+            }
+        }
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {
+            manager.handle(event)
+        }
+    }
+
+    static public func handle(event!: UserInputEvent, forRequest!: Option<AgentRequest> = None): EventResponse<String> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
             if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
@@ -145,7 +226,7 @@ public struct AgentOp {
         return Continue
     }
 
-    static public func handle(agent: Agent, event!: TimeoutEvent, forRequest!: Option<AgentRequest> = None): EventResponse<Unit> {
+    static public func handle(event!: NotifyEvent, forRequest!: Option<AgentRequest> = None): Unit {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
             if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
@@ -157,55 +238,8 @@ public struct AgentOp {
         managers.add(EventHandlerManager.global)
 
         for (manager in managers) {
-            match (manager.handle(event)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
+            manager.handle(event)
         }
-        return Continue
-    }
-
-    static public func handle(agent: Agent, event!: UserInputEvent, forRequest!: Option<AgentRequest> = None): EventResponse<String> {
-        let managers = ArrayList<EventHandlerManager>()
-        if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
-                managers.add((object as EventHandlerManager).getOrThrow())
-            }
-        }
-        // Then, event handlers of the agent
-        // Last, global event handlers
-        managers.add(EventHandlerManager.global)
-
-        for (manager in managers) {
-            match (manager.handle(event)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
-    }
-
-    static public func handle(agent: Agent, event!: NotifyEvent, forRequest!: Option<AgentRequest> = None): EventResponse<Unit> {
-        let managers = ArrayList<EventHandlerManager>()
-        if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
-                managers.add((object as EventHandlerManager).getOrThrow())
-            }
-        }
-        // Then, event handlers of the agent
-        // Last, global event handlers
-        managers.add(EventHandlerManager.global)
-
-        for (manager in managers) {
-            match (manager.handle(event)) {
-                case Continue => ()
-                case Continue(v) => return Continue(v)
-                case Terminate(v) => return Terminate(v)
-            }
-        }
-        return Continue
     }
     // end of event handlers. NEVER DELETE/MODIFY THIS LINE
 }

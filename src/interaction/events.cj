@@ -4,46 +4,60 @@
 package magic.interaction
 
 import magic.core.interaction.*
-import magic.core.agent.Agent
-import magic.core.tool.ToolRequest
-import magic.core.model.ChatRequest
+import magic.core.agent.{Agent, AgentRequest, AgentResponse}
+import magic.core.tool.{ToolRequest, ToolResponse}
+import magic.core.model.{ChatRequest, ChatResponse}
 import magic.core.agent.AgentExecution
 
 import std.deriving.*
 
 /**
- * Triggered when a tool call requires human approval.
+ * Triggered when before tool call
  */
-public class ToolCallEvent <: InteractionEvent { // Return: ToolResponse
-    public ToolCallEvent(
+public class ToolCallStartEvent <: InteractionEvent { // Return: ToolResponse
+    public ToolCallStartEvent(
         public let agent: Agent,
         public let toolRequest: ToolRequest // Details of the tool being invoked
     ) {
-        super(EventKind.ToolCall)
+        super(EventKind.ToolCallStart)
     }
 }
 
 /**
- * Triggered before execution to validate the agent’s system prompt.
+ * Triggered when after tool call
  */
-public class PromptValidateEvent <: InteractionEvent { // Return: Bool
-    public PromptValidateEvent(
+public class ToolCallEndEvent <: InteractionEvent { // Return: Unit
+    public ToolCallEndEvent(
         public let agent: Agent,
-        public let prompt: String // The initial LLM system prompt
+        public let toolRequest: ToolRequest,  // Details of the tool being invoked
+        public let toolResponse: ToolResponse // Result of calling the tool
     ) {
-        super(EventKind.PromptValidate)
+        super(EventKind.ToolCallEnd)
     }
 }
 
 /**
- * Triggered after execution to validate the agent’s final response.
+ * Triggered before an agent calling the chat model
  */
-public class AnswerValidateEvent <: InteractionEvent { // Return: Bool
-    public AnswerValidateEvent(
+public class ChatModelStartEvent <: InteractionEvent { // Return: ChatResponse
+    public ChatModelStartEvent(
         public let agent: Agent,
-        public let answer: String // The agent's generated output
+        public let chatRequest: ChatRequest
     ) {
-        super(EventKind.AnswerValidate)
+        super(EventKind.ChatModelStart)
+    }
+}
+
+/**
+ * Triggered after an agent calling the chat model
+ */
+public class ChatModelEndEvent <: InteractionEvent { // Return: Unit
+    public ChatModelEndEvent(
+        public let agent: Agent,
+        public let chatRequest: ChatRequest,
+        public let chatResponse: ChatResponse
+    ) {
+        super(EventKind.ChatModelEnd)
     }
 }
 
@@ -61,14 +75,40 @@ public class ChatModelFailureEvent <: InteractionEvent { // Return: ChatResponse
 }
 
 /**
+ * Triggered after execution to validate the agent’s final response.
+ */
+public class AgentStartEvent <: InteractionEvent { // Return: AgentResponse
+    public AgentStartEvent(
+        public let agent: Agent,
+        public let agentRequest: AgentRequest
+    ) {
+        super(EventKind.AgentStart)
+    }
+}
+
+/**
+ * Triggered after execution to validate the agent’s final response.
+ */
+public class AgentEndEvent <: InteractionEvent { // Return: Unit
+    public AgentEndEvent(
+        public let agent: Agent,
+        public let agentRequest: AgentRequest
+        // Since sync and async agent requests result in different response type,
+        // we do not use them
+    ) {
+        super(EventKind.AgentEnd)
+    }
+}
+
+/**
  * Triggered when agent execution exceeds a time limit.
  */
-public class TimeoutEvent <: InteractionEvent { // Return: Unit
-    public TimeoutEvent(
+public class AgentTimeoutEvent <: InteractionEvent { // Return: Unit
+    public AgentTimeoutEvent(
         public let agent: Agent,
         public let execution: AgentExecution // The stalled execution context
     ) {
-        super(EventKind.Timeout)
+        super(EventKind.AgentTimeout)
     }
 }
 

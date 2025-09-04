@@ -24,16 +24,22 @@ public abstract class EventStreamVisitor {
 
     private func onEvent(event: InteractionEvent): Unit {
         match (event.kind) {
-           case EventKind.ToolCall => 
-                this.on((event as ToolCallEvent).getOrThrow())
-           case EventKind.PromptValidate => 
-                this.on((event as PromptValidateEvent).getOrThrow())
-           case EventKind.AnswerValidate => 
-                this.on((event as AnswerValidateEvent).getOrThrow())
+           case EventKind.ToolCallStart => 
+                this.on((event as ToolCallStartEvent).getOrThrow())
+           case EventKind.ToolCallEnd => 
+                this.on((event as ToolCallEndEvent).getOrThrow())
+           case EventKind.ChatModelStart => 
+                this.on((event as ChatModelStartEvent).getOrThrow())
+           case EventKind.ChatModelEnd => 
+                this.on((event as ChatModelEndEvent).getOrThrow())
            case EventKind.ChatModelFailure => 
                 this.on((event as ChatModelFailureEvent).getOrThrow())
-           case EventKind.Timeout => 
-                this.on((event as TimeoutEvent).getOrThrow())
+           case EventKind.AgentStart => 
+                this.on((event as AgentStartEvent).getOrThrow())
+           case EventKind.AgentEnd => 
+                this.on((event as AgentEndEvent).getOrThrow())
+           case EventKind.AgentTimeout => 
+                this.on((event as AgentTimeoutEvent).getOrThrow())
            case EventKind.UserInput => 
                 this.on((event as UserInputEvent).getOrThrow())
            case EventKind.Notify => 
@@ -41,15 +47,21 @@ public abstract class EventStreamVisitor {
            case EventKind.Sentinel => throw UnsupportedException('Unreachable')
         }
     }
-    open public func on(event: ToolCallEvent): Unit { }
+    open public func on(event: ToolCallStartEvent): Unit { }
 
-    open public func on(event: PromptValidateEvent): Unit { }
+    open public func on(event: ToolCallEndEvent): Unit { }
 
-    open public func on(event: AnswerValidateEvent): Unit { }
+    open public func on(event: ChatModelStartEvent): Unit { }
+
+    open public func on(event: ChatModelEndEvent): Unit { }
 
     open public func on(event: ChatModelFailureEvent): Unit { }
 
-    open public func on(event: TimeoutEvent): Unit { }
+    open public func on(event: AgentStartEvent): Unit { }
+
+    open public func on(event: AgentEndEvent): Unit { }
+
+    open public func on(event: AgentTimeoutEvent): Unit { }
 
     open public func on(event: UserInputEvent): Unit { }
 

@@ -3,7 +3,8 @@
  */
 package magic.agent
 
-import magic.agent.base.{BaseAgent, AgentExecutionInfo}
+import magic.agent.base.BaseAgent
+import magic.agent_executor.common.AgentExecutionInfo
 import magic.core.*
 import magic.model.ModelManager
 import magic.log.LogUtils

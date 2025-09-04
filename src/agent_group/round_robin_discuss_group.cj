@@ -31,13 +31,13 @@ The following is the discussion content.
 """
 
 class RoundRobinDiscussGroup <: DiscussGroup {
-    init(topic!: String, members!: ArrayList<Agent>) {
-        super(topic, members)
+    init(request!: AgentRequest, members!: ArrayList<Agent>) {
+        super(request, members)
     }
 
     private func buildSelectSystemPrompt(): String {
         return RR_SPEAKER_SELECT_PROMPT.format(
-            ("topic", topic),
+            ("topic", this.request.question),
             ("discussion", buildDiscussionPrompt())
         )
     }
@@ -55,7 +55,7 @@ class RoundRobinDiscussGroup <: DiscussGroup {
             Message.user("Select the next speaker now")
         )
 
-        let msg = match (AgentOp.chatLLM(this.host, messageList)) {
+        let msg = match (AgentOp.chatLLM(this.host, messageList, forRequest: this.request)) {
             case Some(chatResp) => chatResp.message
             case None => return Selection.Failure("LLM model failed")
         }
