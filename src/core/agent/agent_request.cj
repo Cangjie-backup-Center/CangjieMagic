@@ -3,9 +3,12 @@
  */
 package magic.core.agent
 
-import magic.core.message.Conversation
+import magic.core.message.{Conversation, MessageList}
+import magic.core.interaction.EventStream
+import magic.jsonable.TypeSchema
 
-import std.collection.HashMap
+import std.collection.{ArrayList, HashMap}
+import std.fs.Path
 
 /**
  * The execution request to an agent executor
@@ -49,26 +52,63 @@ public class AgentRequest {
         this.maxTool = maxTool
     }
 
+    //-----------------------------------------------------------------
+    // The following fields are used internally by the agent executor
+    //-----------------------------------------------------------------
+
     /**
-     * Save extra internal data structures; currently support:
-     * - "previous-execution": AgentExecution
-     *    An agent request may be handled by multiple agents,
-     *    so this field stores previous execution info
-     *
-     * - AgentRequestExtra.EVENT_HANDLER_MANAGER: EventHandlerManager
-     *    Users can register event handlers for each request
-     * - "install-verbose-event-handler": AtomicBool
-     *    Subagents may inherit event handlers from its parent agent
-     *    Default: true
-     * - "output-schema": TypeSchema
+     * Subagent may need to access the previous execution context
      */
-    protected let extra = HashMap<String, Any>()
-}
+    protected var parentContext: Option<MessageList> = None
 
-protected class AgentRequestExtra {
-    protected static let EVENT_HANDLER_MANAGER = "event-handler-manager"
+    /**
+     * Subagents may inherit the event stream of the parent agent
+     */
+    protected var eventStream: Option<EventStream> = None
 
-    protected static let SET_VERBOSE_EVENT_HANDLER = "set-verbose-event-handler"
+     /**
+      * Users can register event handlers for each request
+      */
+    protected var eventHandlerManager: Option<Object> = None // Avoid circular import
 
-    protected static let OUTPUT_SCHEMA = "output-schema"
+    /**
+     * Output schema for structured output
+     */
+    protected var outputSchema: Option<TypeSchema> = None
+
+    /**
+     * Imported files from the request question
+     * Processed by the importer utility
+     */
+    protected var importedFiles = ArrayList<(Path, String)>()
+
+    /**
+     * Whether the request has been dispatched to a subagent
+     */
+    protected var dispatchToSubagent : Bool = false
+
+    /**
+     * Clone the request with some fields changed
+     */
+    protected func clone(question!: Option<String> = None,
+                         image!: Option<String> = None,
+                         conversation!: Option<Conversation> = None,
+                         verbose!: Option<Bool> = None,
+                         maxTool!: Option<Int64> = None): AgentRequest {
+        let req = AgentRequest(
+            question ?? this.question,
+            image: image ?? this.image,
+            conversation: conversation ?? this.conversation,
+            verbose: verbose ?? this.verbose,
+            maxTool: maxTool ?? this.maxTool,
+        )
+
+        req.parentContext = this.parentContext
+        req.eventStream = this.eventStream
+        req.eventHandlerManager = this.eventHandlerManager
+        req.outputSchema = this.outputSchema
+        req.importedFiles = this.importedFiles
+        req.dispatchToSubagent = this.dispatchToSubagent
+        return req
+    }
 }

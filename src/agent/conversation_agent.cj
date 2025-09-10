@@ -38,15 +38,8 @@ public class ConversationAgent <: BaseAgent {
         if (request.conversation.isSome()) {
             LogUtils.error("The request of ConversationAgent should have no conversation, which will be omitted.")
         }
-        let req = AgentRequest(
-            request.question,
-            conversation: this.conversation,
-            image: request.image,
-            maxTool: request.maxTool,
-            verbose: request.verbose
-        )
-        req.extra.add(all: request.extra.toArray())
-        return req
+        // Clone the request and set the conversation
+        return request.clone(conversation: this.conversation)
     }
 
     override public func chat(request: AgentRequest): AgentResponse {

@@ -23,6 +23,8 @@ public type ChatModelEndEventHandler = (ChatModelEndEvent) -> Unit
 public type ChatModelFailureEventHandler = (ChatModelFailureEvent) -> EventResponse<ChatResponse>
 public type AgentStartEventHandler = (AgentStartEvent) -> EventResponse<AgentResponse>
 public type AgentEndEventHandler = (AgentEndEvent) -> Unit
+public type SubAgentStartEventHandler = (SubAgentStartEvent) -> EventResponse<AgentResponse>
+public type SubAgentEndEventHandler = (SubAgentEndEvent) -> Unit
 public type AgentTimeoutEventHandler = (AgentTimeoutEvent) -> Unit
 public type UserInputEventHandler = (UserInputEvent) -> EventResponse<String>
 public type NotifyEventHandler = (NotifyEvent) -> Unit
@@ -181,6 +183,43 @@ public class EventHandlerManager {
     }
 
 
+    // Handler for SubAgentStartEvent events
+    private let subAgentStartEventHandlers = ArrayList<SubAgentStartEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: SubAgentStartEventHandler): Unit {
+        this.subAgentStartEventHandlers.add(handler)
+    }
+
+    // Add handle method
+    protected func handle(evt: SubAgentStartEvent): EventResponse<AgentResponse> {
+        for (handler in this.subAgentStartEventHandlers) {
+           match (handler(evt)) {
+               case Continue => ()
+               case Continue(v) => return Continue(v)
+               case Terminate(v) => return Terminate(v)
+           }
+       }
+       return Continue
+    }
+
+
+    // Handler for SubAgentEndEvent events
+    private let subAgentEndEventHandlers = ArrayList<SubAgentEndEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: SubAgentEndEventHandler): Unit {
+        this.subAgentEndEventHandlers.add(handler)
+    }
+
+    // Add handle method
+    protected func handle(evt: SubAgentEndEvent): Unit {
+        for (handler in this.subAgentEndEventHandlers) {
+           handler(evt)
+       }
+    }
+
+
     // Handler for AgentTimeoutEvent events
     private let agentTimeoutEventHandlers = ArrayList<AgentTimeoutEventHandler>()
 
@@ -241,6 +280,8 @@ public class EventHandlerManager {
         this.chatModelFailureEventHandlers.add(all: another.chatModelFailureEventHandlers)
         this.agentStartEventHandlers.add(all: another.agentStartEventHandlers)
         this.agentEndEventHandlers.add(all: another.agentEndEventHandlers)
+        this.subAgentStartEventHandlers.add(all: another.subAgentStartEventHandlers)
+        this.subAgentEndEventHandlers.add(all: another.subAgentEndEventHandlers)
         this.agentTimeoutEventHandlers.add(all: another.agentTimeoutEventHandlers)
         this.userInputEventHandlers.add(all: another.userInputEventHandlers)
         this.notifyEventHandlers.add(all: another.notifyEventHandlers)

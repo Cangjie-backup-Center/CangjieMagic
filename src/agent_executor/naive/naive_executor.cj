@@ -44,7 +44,7 @@ public class NaiveExecutor <: AgentExecutor {
         } else {
             task.agent.systemPrompt
         }
-        return task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
+        return task.request.outputSchema
             .map { schema =>
                 NAIVE_SYSTEM_PROMPT_WITH_STRUCTURE_OUTPUT.format([
                     ("system_prompt", sysPrompt),
@@ -54,22 +54,22 @@ public class NaiveExecutor <: AgentExecutor {
             .getOrDefault({ => sysPrompt })
     }
 
-    private func buildNaiveSystemPrompts(task: AgentTask): Array<Message> {
+    private func buildAgentTask(agent: Agent, request: AgentRequest): AgentTask {
+        let task = AgentTask(agent, request)
         PromptBuilder()
             .system(this.buildNaiveSystemPrompt(task))
             .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
             .memory(PromptBuilder.buildAgentMemoryPrompt(task))
-            .conversation(task.request.conversation)
-            .buildFor(this, keepStepMessage: false)
+            .conversation(task.request.conversation, withStepMessage: false)
+            .request(request)
+            .fillTo(task)
+        return task
     }
 
     public override func run(agent: Agent, request: AgentRequest): AgentResponse {
-        let task = AgentTask(agent, request, initPrompt: false)
+        let task = this.buildAgentTask(agent, request)
         try {
             task.begin()
-            task.execution.addMessages(this.buildNaiveSystemPrompts(task))
-            task.execution.addRequest(request)
-            LogUtils.info(agent.name, task.execution.messages)
             let msg = task.chatLLM(task.execution.messages).message
             LogUtils.info(agent.name, msg)
             return AgentResponse(msg.content, execution: task.execution)
@@ -82,12 +82,9 @@ public class NaiveExecutor <: AgentExecutor {
     }
 
     public override func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
-        let task = AgentTask(agent, request, initPrompt: false)
+        let task = this.buildAgentTask(agent, request)
         try {
             task.begin()
-            task.execution.addMessages(this.buildNaiveSystemPrompts(task))
-            task.execution.addRequest(request)
-
             LogUtils.info(agent.name, task.execution.messages)
             let asyncChatResp = agent.model.asyncCreate(
                 ChatRequest(task.execution.messages, temperature: agent.temperature)

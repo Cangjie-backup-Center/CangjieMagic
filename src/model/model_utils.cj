@@ -31,15 +31,11 @@ public struct ModelUtils {
         return response
     }
 
-    private static func makeChatImpl(model: ChatModel, request: ChatRequest, who!: Option<String> = None): Option<ChatResponse> {
+    private static func makeChatImpl(model: ChatModel, request: ChatRequest): Option<ChatResponse> {
         LogUtils.debug('--------------- Begin of chat model request ------------')
         try {
-            if (let Some(name) <- who) {
             LogUtils.debug('  --------------- [Request Messages] ------------')
-                LogUtils.debug(name, request.messageList)
-            } else {
-                LogUtils.debug(request.messageList)
-            }
+            LogUtils.debug(request.messageList)
             LogUtils.debug('  --------------- [End of Request Messages] ------------')
             // The LLM may return an empty reply?
             for (_ in 0..Config.modelRetryNumber) {
@@ -70,11 +66,11 @@ public struct ModelUtils {
                                 temperature!: Option<Float64> = None,
                                 stop!: Option<Array<String>> = None): Option<ChatResponse> {
         let request = ChatRequest(messageList, temperature: temperature, stop: stop)
-        return ModelUtils.makeChatImpl(model, request, who: name)
+        return ModelUtils.makeChatImpl(model, request)
     }
 
     public static func agentMakeChat(agent: Agent,
                                      request: ChatRequest): Option<ChatResponse> {
-        return ModelUtils.makeChatImpl(agent.model, request, who: agent.name)
+        return ModelUtils.makeChatImpl(agent.model, request)
     }
 }

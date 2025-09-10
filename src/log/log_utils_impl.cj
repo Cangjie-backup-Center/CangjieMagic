@@ -86,7 +86,7 @@ struct LogUtilsImpl {
 
     public static func agentTrace(name: String, msg: String): Unit {
         let logger = getNamedLogger(name)
-        logger.trace("${name}: ${msg}")
+        logger.trace("[${name}] ${msg}")
     }
 
     //------------------------------------------------------------
@@ -97,7 +97,7 @@ struct LogUtilsImpl {
 
     public static func agentDebug(name: String, msg: String): Unit {
         let logger = getNamedLogger(name)
-        logger.debug("${name}: ${msg}")
+        logger.debug("[${name}] ${msg}")
     }
 
     //------------------------------------------------------------
@@ -108,7 +108,7 @@ struct LogUtilsImpl {
 
     public static func agentInfo(name: String, msg: String): Unit {
         let logger = getNamedLogger(name)
-        logger.info("${name}: ${msg}")
+        logger.info("[${name}] ${msg}")
     }
 
     //------------------------------------------------------------
@@ -119,6 +119,6 @@ struct LogUtilsImpl {
 
     public static func agentError(name: String, msg: String): Unit {
         let logger = getNamedLogger(name)
-        logger.error("${name}: ${msg}")
+        logger.error("[${name}] ${msg}")
     }
 }

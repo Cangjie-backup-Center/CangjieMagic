@@ -202,7 +202,6 @@ public class OllamaChatModel <: ChatModel {
         let resp = OllamaChatResponse.fromJsonValue(JsonValue.fromStr(body))
         let msg = resp.message
 
-
         let toolRequests = msg.tool_calls |>
             map { toolCall =>
                 ToolRequest(

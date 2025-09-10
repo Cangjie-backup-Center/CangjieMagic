@@ -101,20 +101,20 @@ protected class HttpStream <: Iterator<String> & InputStream {
         return line
     }
 
-    public func put(data: Array<Byte>): Unit {
+    protected func put(data: Array<Byte>): Unit {
         // LogUtils.debug("put data: `${data}`")
         queue.add(Item.Bytes(data))
     }
 
-    public func markEOF(): Unit {
+    protected func markEOF(): Unit {
         queue.add(Item.EOF)
     }
 
-    public func markError(): Unit {
+    protected func markError(): Unit {
         queue.add(Item.Error)
     }
 
-    public func close(): Unit {
+    protected func close(): Unit {
         this.markEOF()
         if (let Some(fn) <- this.closeFn) {
             fn()

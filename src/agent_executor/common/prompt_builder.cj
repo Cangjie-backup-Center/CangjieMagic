@@ -3,10 +3,10 @@
  */
 package magic.agent_executor.common
 
-import magic.core.agent.AgentExecutor
+import magic.core.agent.{AgentRequest, AgentExecutor, AgentExecutionException}
 import magic.core.tool.Tool
 import magic.core.rag.RetrieverMode
-import magic.core.message.{Message, Conversation}
+import magic.core.message.{Message, Conversation, MessageList}
 import magic.tokenizer.{TokenizerLoader, TokenizerType}
 import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
@@ -22,8 +22,15 @@ import std.collection.{ArrayList, forEach, map, filter, collectArray, enumerate}
  */
 protected class PromptBuilder {
     private let systemMessages = ArrayList<Message>()
-    private var _conversation: Option<Conversation> = None
 
+    private var _conversation: Option<Conversation> = None
+    private var conversationWithStepMessage = false
+
+    private var _request: Option<AgentRequest> = None
+
+    /**
+     * Agent System Prompt
+     */
     public func system(prompt: String): PromptBuilder {
         if (!prompt.trimAscii().isEmpty()) {
             this.systemMessages.add(Message.system(prompt))
@@ -31,6 +38,9 @@ protected class PromptBuilder {
         this
     }
 
+    /**
+     * Agent Retrieval Prompt
+     */
     public func retrieval(prompt: String): PromptBuilder {
         // Treat retrieval prompt as a part of the system message
         this.system(prompt)
@@ -46,8 +56,20 @@ protected class PromptBuilder {
         this.system(prompt)
     }
 
-    public func conversation(con: Option<Conversation>): PromptBuilder {
-        this._conversation = con
+    /**
+     * Conversation between the agent and user
+     */
+    public func conversation(conversation: Option<Conversation>, withStepMessage!: Bool): PromptBuilder {
+        this._conversation = conversation
+        this.conversationWithStepMessage = withStepMessage
+        this
+    }
+
+    /**
+     * The agent request, which is the user question
+     */
+    public func request(request: AgentRequest): PromptBuilder {
+        this._request = request
         this
     }
 
@@ -74,40 +96,67 @@ protected class PromptBuilder {
         }
     }
 
-    public func buildFor(executor: AgentExecutor, keepStepMessage!: Bool): Array<Message> {
-        // Merge system prompt messageList message, and user messages
-        let allMessages = ArrayList<Message>()
+    /**
+     * Fill the prompts to the task execution message list
+     */
+    public func fillTo(task: AgentTask): Unit {
+        // If the request is not set, use the task request
+        if (this._request.isNone()) {
+            this.request(task.request)
+        }
+        this.fillTo(task.execution, forExecutor: task.agent.executor)
+    }
+
+    public func fillTo(execution: AgentExecutionInfo, forExecutor!: AgentExecutor): Unit {
+        // Ensure that only fill to an empty execution message list
+        if (!execution.messages.isEmpty()) {
+            throw AgentExecutionException("PromptBuilder: The task execution messages is not empty")
+        }
+        //----------------------------------------------------------
+        // Add messages in order to the task execution message list
+        //----------------------------------------------------------
+        // 1. Merge system prompts
         let systemPrompt = this.mergeSystemPrompt()
         if (!systemPrompt.trimAscii().isEmpty()) {
-            allMessages.add(Message.system(systemPrompt))
+            execution.addMessage(Message.system(systemPrompt))
         }
-        // Add conversation summary
+        // 2. Add conversation summary
         if (let Some(summary) <- this.mergeConversationSummary()) {
-            allMessages.add(Message.system(summary))
+            execution.addMessage(Message.system(summary))
         }
-        // Add conversation messages in order
+        // 3. Add conversation messages in order
         if (let Some(con) <- this._conversation) {
             for (chatRound in con) {
-                allMessages.add(chatRound.question)
-                if (keepStepMessage) {
+                execution.addMessage(chatRound.question)
+                if (this.conversationWithStepMessage) {
                     for (msg in chatRound.steps) {
-                        allMessages.add(msg)
+                        execution.addMessage(msg)
                     }
                 }
-                if(executor.name == "react" || executor.name == "plan-react") {
-                    allMessages.add(Message.assistant(chatRound.answer.content.withTag(Tag.ANSWER)))
+                // Wrap the answer with tags for react and plan-react agents
+                // to guide the LLM to generate correct final answers
+                if(forExecutor.name == "react" ||
+                   forExecutor.name == "plan-react") {
+                    execution.addMessage(Message.assistant(chatRound.answer.content.withTag(Tag.ANSWER)))
                 } else {
-                    allMessages.add(Message.assistant(chatRound.answer.content))
+                    execution.addMessage(Message.assistant(chatRound.answer.content))
                 }
             }
         }
-        return allMessages.toArray()
+        // 4. Add user request (together with its step messages if any)
+        execution.addRequest(
+            this._request.getOrThrow({ =>
+                AgentExecutionException("PromptBuilder: request is not set")
+            })
+        )
+        LogUtils.info("Prompt Builder", "----- Initialize Agent Execution Messages -----")
+        LogUtils.info(execution.messages)
+        LogUtils.info("Prompt Builder", "----- End of Agent Execution Messages -----")
     }
 
     //-------------------------------------------------------------------
     // Methods for building prompt parts
     //-------------------------------------------------------------------
-
     protected static func buildAgentToolsPrompt(task: AgentTask): String {
         let tools = task.availableTools
         if (tools.size == 0) {

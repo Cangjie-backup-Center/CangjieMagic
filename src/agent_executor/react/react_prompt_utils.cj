@@ -4,7 +4,6 @@
 package magic.agent_executor.react
 
 import magic.core.*
-import magic.core.agent.AgentRequestExtra
 import magic.agent_executor.common.AgentTask
 import magic.core.message.{Message, Conversation}
 import magic.agent_executor.common.PromptBuilder
@@ -125,25 +124,14 @@ Output either a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, or a single ${Tag.ANSW
 """
 
 protected struct ReactPromptUtils {
-    private static func buildReactSystemPrompt(task: AgentTask): String {
-        return task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
+    static func buildReactSystemPrompt(task: AgentTask): String {
+        return task.request.outputSchema
             .map { schema =>
                 REACT_SYSTEM_PROMPT_WITH_STRUCTURE_OUTPUT.format([
                     ("output_schema", (schema as TypeSchema).getOrThrow())
                 ])
             }
             .getOrDefault({ => REACT_SYSTEM_PROMPT.trimAscii() })
-    }
-
-    static func buildReactPrompt(task: AgentTask): Array<Message> {
-        PromptBuilder()
-            .system(ReactPromptUtils.buildReactSystemPrompt(task))
-            .tool(PromptBuilder.buildAgentToolsPrompt(task))
-            .system(task.agent.systemPrompt)
-            .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
-            .memory(PromptBuilder.buildAgentMemoryPrompt(task))
-            .conversation(task.request.conversation)
-            .buildFor(task.agent.executor, keepStepMessage: true)
     }
 
     static func buildReactSummarizePrompt(task: AgentTask): Array<Message> {

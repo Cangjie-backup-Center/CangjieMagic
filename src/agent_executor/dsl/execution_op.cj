@@ -103,8 +103,7 @@ public struct ExecutionOpSet {
         }
         // Inject the `answer` special tool
         var isInjected = false
-        let schema = state.task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
-            .flatMap { value: Any => (value as TypeSchema) }
+        let schema = state.task.request.outputSchema
         let answerTool = BuiltinToolUtils.buildAnswerTool(schema)
         if (state.task.agent.toolManager.findTool(answerTool.name).isNone()) {
             state.task.agent.toolManager.addTool(answerTool)
@@ -151,17 +150,18 @@ public struct ExecutionOpSet {
         try {
             return ParserUtils.extractToolRequestArray(chatResp.message.content)
         } catch (ex: ParserException) {
-            LogUtils.info("Failed to extract tool request array")
+            LogUtils.debug("Failed to extract tool request array")
         }
         // Otherwise, try to parse a single tool request
         try {
             let toolRequest = ParserUtils.extractToolRequest(chatResp.message.content)
             return [toolRequest]
         } catch (ex: ParserException) {
-            LogUtils.info("Failed to extract tool request")
+            LogUtils.debug("Failed to extract tool request")
             // If function call is enabled and failing to extract the tool request,
             // treat the content as the final answer
             if (Config.enableModelToolCall) {
+                LogUtils.info("Failed to extract tool request. Treat the content as the final answer.")
                 return [
                     ToolRequest(
                         name: AnswerTool.NAME,
@@ -185,8 +185,8 @@ public struct ExecutionOpSet {
         }
         // LLM may generate parallel tools to run, but we run them sequentially currently
         // Execute each tool
+        LogUtils.info(state.task.agent.name, "Action: ${toolRequests.toJsonValue().toJsonString()}")
         for (toolRequest in toolRequests) {
-            LogUtils.info(state.task.agent.name, "Action: ${toolRequests.toJsonValue().toJsonString()}")
             // No need to notify the tool request here because it's notified during invoking the tool
             let observation = state.task.invokeTool(toolRequest)
             // Special terminal tools may stop the execution
@@ -232,7 +232,7 @@ public struct ExecutionOpSet {
         if (state.done) {
             return state
         }
-        let prompt = state.task.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)
+        let prompt = state.task.request.outputSchema
             .map { schema =>
                 ANSWER_WITH_STRUCTURE_OUTPUT_PROMPT.format([
                     ("output_schema", (schema as TypeSchema).getOrThrow())
@@ -322,7 +322,6 @@ public struct ExecutionOpSet {
                 AgentTask(
                     state.task.agent,
                     AgentRequest(subtask.description, verbose: state.task.request.verbose),
-                    initPrompt: false
                 )
             )
             // Set the verbose event stream

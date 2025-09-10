@@ -6,7 +6,10 @@ package magic.config
 import magic.core.model.{ChatModel, EmbeddingModel}
 import magic.core.tokenizer.Tokenizer
 import magic.utils.{exists, setEnv, getEnv}
+
 import std.unicode.UnicodeStringExtension
+import std.fs.{File, Path}
+import std.regex.Regex
 
 /**
  * Wrapper for providing a convenient way to get and set environment variables.
@@ -18,6 +21,38 @@ public struct EnvWrapper {
 
     public operator func [](name: String, value!: String): Unit {
         return setEnv(name, value)
+    }
+
+    /**
+     * Load the environment variables from a .env file.
+     */
+    public func load(path: Path): String {
+        if (!exists(path)) {
+            return "${path} does not exist"
+        }
+        let strBuilder = StringBuilder()
+        try {
+            let content = String.fromUtf8(File.readFrom(path))
+            // A simple regex to match key-value pairs in the .env file
+            let regex = Regex("^\\s*([\\w.]+)\\s*=\\s*(\"[^\"]*\"|'[^']*'|[^#]*)\\s*(?:#.*)?$")
+            for (line in content.split("\n")) {
+                if (let Some(md) <- regex.find(line, group: true)) {
+                    let key = md.matchString(1).trimAscii()
+                    var value = md.matchString(2).trimAscii()
+                    // strip quote marks if necessary
+                    if (value.startsWith('"')) {
+                        value = value.replace('"', "")
+                    } else if (value.startsWith("'")) {
+                        value = value.replace("'", "")
+                    }
+                    strBuilder.append("[ENV Set] ${key}=${value}")
+                    setEnv(key, value)
+                }
+            }
+        } catch (e: Exception) {
+            strBuilder.append("Failed to read .env file")
+        }
+        return strBuilder.toString()
     }
 }
 
@@ -157,4 +192,27 @@ public class Config {
      * The max read timeout in http requests. MS
      */
      public static var httpReadTimeout = 60000 // ms
+
+    /**
+     * Import paths for file import functionality
+     * Used to resolve @<path> references in agent requests
+     * Default includes current directory "."
+     */
+    public static var importPaths = ["."]
+
+    /**
+     * Register uncaught exception handler for threads spawn by `Agent.asyncChat`
+     * A bug in Cangjie std.core.Thread?
+     * If we use Thread.handleUncaughtExceptionBy outside this project,
+     * it will not affect threads spawn in this project.
+     */
+    private static var _threadExceptionHandler: Option<(Thread, Exception) -> Unit> = None
+    public static mut prop threadExceptionHandler: Option<(Thread, Exception) -> Unit> {
+        get() { _threadExceptionHandler }
+        set(handler) {
+            if (let Some(h) <- handler) {
+                Thread.handleUncaughtExceptionBy(h)
+            }
+        }
+    }
 }

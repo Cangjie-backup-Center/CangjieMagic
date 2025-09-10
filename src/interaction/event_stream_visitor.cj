@@ -38,6 +38,10 @@ public abstract class EventStreamVisitor {
                 this.on((event as AgentStartEvent).getOrThrow())
            case EventKind.AgentEnd => 
                 this.on((event as AgentEndEvent).getOrThrow())
+           case EventKind.SubAgentStart => 
+                this.on((event as SubAgentStartEvent).getOrThrow())
+           case EventKind.SubAgentEnd => 
+                this.on((event as SubAgentEndEvent).getOrThrow())
            case EventKind.AgentTimeout => 
                 this.on((event as AgentTimeoutEvent).getOrThrow())
            case EventKind.UserInput => 
@@ -60,6 +64,10 @@ public abstract class EventStreamVisitor {
     open public func on(event: AgentStartEvent): Unit { }
 
     open public func on(event: AgentEndEvent): Unit { }
+
+    open public func on(event: SubAgentStartEvent): Unit { }
+
+    open public func on(event: SubAgentEndEvent): Unit { }
 
     open public func on(event: AgentTimeoutEvent): Unit { }
 

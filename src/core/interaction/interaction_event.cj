@@ -17,6 +17,9 @@ protected enum EventKind {
     | AgentEnd
     | AgentTimeout
 
+    | SubAgentStart
+    | SubAgentEnd
+
     | ChatModelStart
     | ChatModelEnd
     | ChatModelFailure

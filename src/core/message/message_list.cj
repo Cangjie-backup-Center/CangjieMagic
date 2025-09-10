@@ -23,6 +23,10 @@ public open class MessageList <: ToString & Iterable<Message> &
         this.messages = ArrayList<Message>(messages)
     }
 
+    public func clone(): MessageList {
+        MessageList(this.messages.clone())
+    }
+
     public open func addMessage(msg: Message): Unit {
         messages.add(msg)
     }

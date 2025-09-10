@@ -27,11 +27,41 @@ The output should be complete but also brief.
 Now, make the summary:
 """
 
-protected class AgentAsTool <: AbsTool {
-    protected let agent: Agent
+private const SIMPLE_PARAM_DESCRIPTION = """
+A clear and comprehensive question for the tool.
+"""
 
-    public init(agent: Agent) {
+private const PARAM_DESCRIPTION = """
+A complete question that defines the task for the tool.
+This should include:
+- The core question or instruction
+- Any necessary context or constraints
+- Expected output format if relevant
+Example: 'What is the capital of France? Respond with just the city name.'
+"""
+
+/**
+ * Defines the execution mode for sub-agents (whether they inherit the main agent's context).
+ */
+public enum SubAgentMode {
+    /**
+     * Sub-agent executes independently without any context from the main agent
+     */
+    | Isolated
+
+    /**
+     * Sub-agent inherits the full context (state, history, data, etc.) from the main agent
+     */
+    | WithContext
+}
+
+public class AgentAsTool <: AbsTool {
+    protected let agent: Agent
+    protected let mode: SubAgentMode
+
+    public init(agent: Agent, mode!: SubAgentMode = SubAgentMode.Isolated) {
         this.agent = agent
+        this.mode = mode
     }
 
     public prop name: String {
@@ -49,7 +79,16 @@ protected class AgentAsTool <: AbsTool {
     }
 
     public prop parameters: Array<ToolParameter> {
-        get() { [ToolParameter("question", "The input question", TypeSchema.Str)] }
+        get() {
+            // For isolated sub-agents, we need full context in the question parameter
+            // For context-inheriting sub-agents, a simple question parameter suffices
+            match (this.mode) {
+                case SubAgentMode.Isolated =>
+                    [ToolParameter("question", PARAM_DESCRIPTION, TypeSchema.Str)]
+                case SubAgentMode.WithContext =>
+                    [ToolParameter("question", SIMPLE_PARAM_DESCRIPTION, TypeSchema.Str)]
+            }
+        }
     }
 
     public prop retType: TypeSchema {

@@ -19,7 +19,7 @@ protected class FutureIteratorWrapper <: Iterator<String> {
     private let buffer = StringBuilder()
 
     override public func next(): Option<String> {
-        let iterator = fut.get()
+        let iterator = fut.get() // The exception will be thrown here if any
         let data = iterator.next()
         match (data) {
             case Some(v) => buffer.append(v)

@@ -119,12 +119,67 @@ protected func move(source: Path, to: Path, overwrite: Bool): Unit {
     rename(source, to: to, overwrite: overwrite)
 }
 
-protected func readFile(path: Path): String {
+/**
+ * Make sure the path exists and is a regular file, then read its content
+ */
+public func readFile(path: Path,
+                     withLineNumber!: Bool = false,
+                     startLine!: Int64 = 1,
+                     endLine!: Int64 = Int64.Max): String {
+    var currentLine = 1
+    let lines = ArrayList<String>()
+
     try (file = File(path, OpenMode.Read)) {
         let reader = StringReader(file)
-        return reader.readToEnd()
+        while (let Some(line) <- reader.readln()) {
+            if (currentLine < startLine) {
+                // Skip this line
+            } else if (currentLine <= endLine) {
+                // End of file reached
+                lines.add(line)
+            } else {
+                break // Stop reading further
+            }
+            currentLine += 1
+        }
     }
-    throw UnsupportedException()
+
+    if (withLineNumber) {
+        // Format with line number (right-aligned)
+        let width = countDigits(currentLine)
+        return String.join(
+            lines.toArray() |>
+                enumerate |>
+                map { tuple =>
+                    let lineNo = tuple[0] + startLine
+                    let line = tuple[1]
+                    return "${lineNo.toString().padStart(width)}  ${line}"
+                } |>
+                collectArray,
+            delimiter: "\n"
+        )
+    } else {
+        return String.join(lines.toArray(), delimiter: "\n")
+    }
+}
+
+/**
+ * Alternative implementation (without logarithm)
+ */
+public func countDigits(num: Int64): Int64 {
+    // Handle 0 case
+    if (num == 0) {
+        return 1
+    }
+    // Handle negative numbers by taking absolute value
+    var n = if (num < 0) { -num } else { num }
+
+    var count = 0
+    while (n > 0) {
+        n = n / 10
+        count += 1
+    }
+    return count
 }
 
 protected func writeFile(path: Path, content: String): Unit {
