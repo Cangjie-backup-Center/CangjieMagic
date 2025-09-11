@@ -188,6 +188,12 @@ private func transformAi(input: Tokens, attr: AiAttr): Tokens {
                         tm.addTool($tool)
                     )
                 )
+            case AgentToolAttr.AgentTool(expr) =>
+                addTools.append(
+                    quote(
+                        tm.addTool( $expr )
+                    )
+                )
             case AgentToolAttr.NativeToolset(toolset) =>
                 addTools.append(
                     quote(

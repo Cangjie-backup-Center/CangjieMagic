@@ -78,7 +78,7 @@ class AsyncReactStep {
                 throw AgentExecutionException("Unreachable")
             }
             let content = "${thought}\n${action}"
-            LogUtils.info("React action content: ${content}")
+            LogUtils.debug("React action content: ${content}")
             return ReactStep.fromStr(content)
         } catch (ex: Exception) {
             return ReactStep.Failure(

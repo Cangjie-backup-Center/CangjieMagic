@@ -27,14 +27,17 @@ public abstract class AbsAgent <: Agent {
     }
 
     public open override func chat(request: AgentRequest): AgentResponse {
+        // Process file imports
+        let processedRequest = AgentOp.preprocessRequest(request)
+
         if (let Some(interceptor) <- this.interceptor) {
-            if (interceptor.shouldIntercept(request)) {
-                return interceptor.doIntercept(request)
+            if (interceptor.shouldIntercept(processedRequest)) {
+                return interceptor.doIntercept(processedRequest)
             } else {
-                interceptor.doBypass(request)
+                interceptor.doBypass(processedRequest)
             }
         }
-        let resp = this.executor.run(this, request)
+        let resp = this.executor.run(this, processedRequest)
         if (let Some(memory) <- this.memory) {
             memory.update(resp.execution.chatRound.toString()) // Update the agent memory
         }
@@ -46,7 +49,9 @@ public abstract class AbsAgent <: Agent {
     }
 
     override open public func asyncChat(request: AgentRequest): AsyncAgentResponse {
-        return this.executor.asyncRun(this, request)
+        // Process file imports
+        let processedRequest = AgentOp.preprocessRequest(request)
+        return this.executor.asyncRun(this, processedRequest)
     }
 
     public func chatGet<T>(question: String): Option<T> where T <: Jsonable<T> {
@@ -58,7 +63,7 @@ public abstract class AbsAgent <: Agent {
      * and convert the response content to the required type
      */
     public func chatGet<T>(request: AgentRequest): Option<T> where T <: Jsonable<T> {
-        request.extra.add(AgentRequestExtra.OUTPUT_SCHEMA, T.getTypeSchema())
+        request.outputSchema = T.getTypeSchema()
         let resp = this.chat(request)
         // Reuse the message list
         var (answer, messageList) = (resp.content, resp.execution.messages)

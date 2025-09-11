@@ -12,7 +12,7 @@ code_template_1_1 = '''
     static public func handle(event!: {struct_name}, forRequest!: Option<AgentRequest> = None): {return_type} {{
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {{
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
+            if (let Some(object) <- request.eventHandlerManager) {{
                 managers.add((object as EventHandlerManager).getOrThrow())
             }}
         }}
@@ -30,7 +30,7 @@ code_template_1_1 = '''
 code_template_1_2 = '''
     static public func handle(event!: {struct_name}): {return_type} {{
         let managers = ArrayList<EventHandlerManager>()
-        if (let Some(object) <- event.agentRequest.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
+        if (let Some(object) <- event.agentRequest.eventHandlerManager) {{
             managers.add((object as EventHandlerManager).getOrThrow())
         }}
         // Then, event handlers of the agent
@@ -48,7 +48,7 @@ code_template_2_1 = '''
     static public func handle(event!: {struct_name}, forRequest!: Option<AgentRequest> = None): EventResponse<{return_type}> {{
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {{
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
+            if (let Some(object) <- request.eventHandlerManager) {{
                 managers.add((object as EventHandlerManager).getOrThrow())
             }}
         }}
@@ -71,7 +71,7 @@ code_template_2_1 = '''
 code_template_2_2 = '''
     static public func handle(event!: {struct_name}): EventResponse<{return_type}> {{
         let managers = ArrayList<EventHandlerManager>()
-        if (let Some(object) <- event.agentRequest.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {{
+        if (let Some(object) <- event.agentRequest.eventHandlerManager) {{
             managers.add((object as EventHandlerManager).getOrThrow())
         }}
         // Then, event handlers of the agent

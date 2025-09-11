@@ -11,6 +11,9 @@ import magic.core.message.*
 import magic.interaction.*
 import magic.log.LogUtils
 import magic.model.ModelUtils
+import magic.utils.Importer
+import magic.config.Config
+import magic.core.agent.AgentRequest
 
 import std.collection.ArrayList
 
@@ -18,6 +21,17 @@ import std.collection.ArrayList
  * Agent common operations
  */
 public struct AgentOp {
+    /**
+     * Preprocess AgentRequest to resolve file imports
+     */
+    public static func preprocessRequest(request: AgentRequest): AgentRequest {
+        // Create importer with configured import paths
+        let importer = Importer(Config.importPaths)
+        let importedFiles = importer.importFiles(request.question)
+        request.importedFiles.add(all: importedFiles)
+        return request
+    }
+
     public static func chatLLM(agent: Agent,
                                messages: MessageList,
                                stop!: Option<Array<String>> = None,
@@ -64,7 +78,7 @@ public struct AgentOp {
     static public func handle(event!: ToolCallStartEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ToolResponse> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            if (let Some(object) <- request.eventHandlerManager) {
                 managers.add((object as EventHandlerManager).getOrThrow())
             }
         }
@@ -85,7 +99,7 @@ public struct AgentOp {
     static public func handle(event!: ToolCallEndEvent, forRequest!: Option<AgentRequest> = None): Unit {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            if (let Some(object) <- request.eventHandlerManager) {
                 managers.add((object as EventHandlerManager).getOrThrow())
             }
         }
@@ -101,7 +115,7 @@ public struct AgentOp {
     static public func handle(event!: ChatModelStartEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ChatResponse> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            if (let Some(object) <- request.eventHandlerManager) {
                 managers.add((object as EventHandlerManager).getOrThrow())
             }
         }
@@ -122,7 +136,7 @@ public struct AgentOp {
     static public func handle(event!: ChatModelEndEvent, forRequest!: Option<AgentRequest> = None): Unit {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            if (let Some(object) <- request.eventHandlerManager) {
                 managers.add((object as EventHandlerManager).getOrThrow())
             }
         }
@@ -138,7 +152,7 @@ public struct AgentOp {
     static public func handle(event!: ChatModelFailureEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ChatResponse> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            if (let Some(object) <- request.eventHandlerManager) {
                 managers.add((object as EventHandlerManager).getOrThrow())
             }
         }
@@ -158,7 +172,7 @@ public struct AgentOp {
 
     static public func handle(event!: AgentStartEvent): EventResponse<AgentResponse> {
         let managers = ArrayList<EventHandlerManager>()
-        if (let Some(object) <- event.agentRequest.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+        if (let Some(object) <- event.agentRequest.eventHandlerManager) {
             managers.add((object as EventHandlerManager).getOrThrow())
         }
         // Then, event handlers of the agent
@@ -177,7 +191,40 @@ public struct AgentOp {
 
     static public func handle(event!: AgentEndEvent): Unit {
         let managers = ArrayList<EventHandlerManager>()
-        if (let Some(object) <- event.agentRequest.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+        if (let Some(object) <- event.agentRequest.eventHandlerManager) {
+            managers.add((object as EventHandlerManager).getOrThrow())
+        }
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {
+            manager.handle(event)
+        }
+    }
+
+    static public func handle(event!: SubAgentStartEvent): EventResponse<AgentResponse> {
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(object) <- event.agentRequest.eventHandlerManager) {
+            managers.add((object as EventHandlerManager).getOrThrow())
+        }
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {
+            match (manager.handle(event)) {
+                case Continue => ()
+                case Continue(v) => return Continue(v)
+                case Terminate(v) => return Terminate(v)
+            }
+        }
+        return Continue
+    }
+
+    static public func handle(event!: SubAgentEndEvent): Unit {
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(object) <- event.agentRequest.eventHandlerManager) {
             managers.add((object as EventHandlerManager).getOrThrow())
         }
         // Then, event handlers of the agent
@@ -192,7 +239,7 @@ public struct AgentOp {
     static public func handle(event!: AgentTimeoutEvent, forRequest!: Option<AgentRequest> = None): Unit {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            if (let Some(object) <- request.eventHandlerManager) {
                 managers.add((object as EventHandlerManager).getOrThrow())
             }
         }
@@ -208,7 +255,7 @@ public struct AgentOp {
     static public func handle(event!: UserInputEvent, forRequest!: Option<AgentRequest> = None): EventResponse<String> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            if (let Some(object) <- request.eventHandlerManager) {
                 managers.add((object as EventHandlerManager).getOrThrow())
             }
         }
@@ -229,7 +276,7 @@ public struct AgentOp {
     static public func handle(event!: NotifyEvent, forRequest!: Option<AgentRequest> = None): Unit {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {
-            if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
+            if (let Some(object) <- request.eventHandlerManager) {
                 managers.add((object as EventHandlerManager).getOrThrow())
             }
         }

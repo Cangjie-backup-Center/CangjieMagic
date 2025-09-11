@@ -27,7 +27,7 @@ public struct LogUtils {
     }
 
     public static func debug(msg: Message): Unit {
-        debug("Chat Message[ ${msg.role} ]: ${msg.content}")
+        debug(msg.toString())
     }
 
     public static func debug(messages: MessageList): Unit {
@@ -37,14 +37,14 @@ public struct LogUtils {
     }
 
     public static func debug(name: String, msg: String): Unit {
-        debug("${name}: ${msg}")
+        debug("[${name}] ${msg}")
         if (Config.enableAgentLog) {
             LogUtilsImpl.agentDebug(name, msg)
         }
     }
 
     public static func debug(name: String, msg: Message): Unit {
-        debug(name, "Chat Message[ ${msg.role} ]: ${msg.content}")
+        debug(name, msg.toString())
     }
 
     public static func debug(name: String, messages: MessageList): Unit {
@@ -60,18 +60,18 @@ public struct LogUtils {
     }
 
     public static func info(name: String, msg: String): Unit {
-        info("${name}: ${msg}")
+        info("[${name}] ${msg}")
         if (Config.enableAgentLog) {
             LogUtilsImpl.agentInfo(name, msg)
         }
     }
 
     public static func info(msg: Message): Unit {
-        info("Chat Message[ ${msg.role} ]: ${msg.content}")
+        info(msg.toString())
     }
 
     public static func info(name: String, msg: Message): Unit {
-        info(name, "Chat Message[ ${msg.role} ]: ${msg.content}")
+        info(name, msg.toString())
     }
 
     public static func info(messages: MessageList): Unit {
@@ -105,7 +105,7 @@ public struct LogUtils {
     }
 
     public static func error(name: String, msg: String): Unit {
-        error("${name}: ${msg}")
+        error("[${name}] ${msg}")
         if (Config.enableAgentLog) {
             LogUtilsImpl.agentError(name, msg)
         }

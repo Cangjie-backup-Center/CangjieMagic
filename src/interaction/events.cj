@@ -75,7 +75,7 @@ public class ChatModelFailureEvent <: InteractionEvent { // Return: ChatResponse
 }
 
 /**
- * Triggered after execution to validate the agent’s final response.
+ * Triggered before an agent start to execute
  */
 public class AgentStartEvent <: InteractionEvent { // Return: AgentResponse
     public AgentStartEvent(
@@ -87,7 +87,7 @@ public class AgentStartEvent <: InteractionEvent { // Return: AgentResponse
 }
 
 /**
- * Triggered after execution to validate the agent’s final response.
+ * Triggered after agent execution
  */
 public class AgentEndEvent <: InteractionEvent { // Return: Unit
     public AgentEndEvent(
@@ -97,6 +97,31 @@ public class AgentEndEvent <: InteractionEvent { // Return: Unit
         // we do not use them
     ) {
         super(EventKind.AgentEnd)
+    }
+}
+
+/**
+ * Triggered before a subAgent, i.e., AgentAsTool, starts execution
+ */
+public class SubAgentStartEvent <: InteractionEvent { // Return: AgentResponse
+    public SubAgentStartEvent(
+        public let agent: Agent,
+        public let agentRequest: AgentRequest
+    ) {
+        super(EventKind.SubAgentStart)
+    }
+}
+
+/**
+ * Triggered before a subAgent, i.e., AgentAsTool, starts execution
+ */
+public class SubAgentEndEvent <: InteractionEvent { // Return: Unit
+    public SubAgentEndEvent(
+        public let agent: Agent,
+        public let agentRequest: AgentRequest,
+        public let agentResponse: AgentResponse
+    ) {
+        super(EventKind.SubAgentEnd)
     }
 }
 

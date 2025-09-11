@@ -16,7 +16,7 @@ import magic.jsonable.ToJsonValue
 import magic.log.LogUtils
 import magic.interaction.*
 import magic.model.ModelUtils
-import magic.tool.SimpleToolFilter
+import magic.tool.{SimpleToolFilter, AgentAsTool, SubAgentMode}
 import magic.prompt.Template
 
 import std.collection.{ArrayList, HashMap, any, map, collectArray}
@@ -40,6 +40,40 @@ public open class AgentTask {
      * A cache for tool results for compacting tool invocation results
      */
     private let toolResultCache = ToolResultCache()
+
+    /**
+     * Create a new AgentTask with the given agent and request.
+     * If `initPrompt` is true, it will initialize the messageList with system and user messages.
+     */
+    protected init(agent: Agent, request: AgentRequest) {
+        this.agent = agent
+        this.request = request
+        this.execution = AgentExecutionInfo(agent, request)
+        if (request.verbose) {
+            initVerboseEventHandlers(this.request, this.execution)
+        }
+    }
+
+    private static func initVerboseEventHandlers(request: AgentRequest, execution: AgentExecutionInfo): Unit {
+        let manager = EventHandlerManager()
+        // dispatched subagents (e.g., react workers of the plan-react executor) will not set verbose event handlers
+        // because the they inherit the verbose event handlers from the request
+        if (!request.dispatchToSubagent) {
+            manager.addHandler { evt: ToolCallStartEvent =>
+                execution.events.put(evt)
+                Continue
+            }
+            manager.addHandler { evt: NotifyEvent =>
+                execution.events.put(evt)
+            }
+        }
+        // If event handlers exist, add new handlers, and update the request
+        // Note new handlers will be added before existed handlers
+        if (let Some(object) <- request.eventHandlerManager) {
+            manager.merge((object as EventHandlerManager).getOrThrow())
+        }
+        request.eventHandlerManager = manager
+    }
 
     /**
      * Whether the task is stopped by an early-stop tool
@@ -116,59 +150,6 @@ public open class AgentTask {
     }
 
     /**
-     * Create a new AgentTask with the given agent and request.
-     * If `initPrompt` is true, it will initialize the messageList with system and user messages.
-     */
-    protected init(agent: Agent, request: AgentRequest, initPrompt!: Bool) {
-        this.agent = agent
-        this.request = request
-        if (let Some(execution) <- request.extra.get("previous-execution")) {
-            this.execution = (execution as AgentExecutionInfo).getOrThrow()
-        } else {
-            this.execution = AgentExecutionInfo(agent)
-        }
-        if (initPrompt) {
-            this.execution.addMessages(
-                PromptBuilder()
-                    .system(agent.systemPrompt)
-                    .conversation(request.conversation)
-                    .buildFor(agent.executor, keepStepMessage: true)
-            )
-            this.execution.addRequest(request)
-            LogUtils.info(agent.name, this.execution.messages)
-        }
-        if (request.verbose) {
-            setVerboseEventHandlers(this.request, this.execution)
-        }
-    }
-
-    private static func setVerboseEventHandlers(request: AgentRequest, execution: AgentExecutionInfo): Unit {
-        let manager = EventHandlerManager()
-        // Check whether to set the verbose event handlers,
-        // react workers of the plan-react executor will not set verbose event handlers
-        let needSet = if (let Some(flag) <- request.extra.get(AgentRequestExtra.SET_VERBOSE_EVENT_HANDLER)) {
-            (flag as AtomicBool).getOrThrow().load()
-        } else {
-            true
-        }
-        if (needSet) {
-            manager.addHandler { evt: ToolCallStartEvent =>
-                execution.events.put(evt)
-                Continue
-            }
-            manager.addHandler { evt: NotifyEvent =>
-                execution.events.put(evt)
-            }
-        }
-        // If event handlers exist, add new handlers, and update the request
-        // Note new handlers will be added before existed handlers
-        if (let Some(object) <- request.extra.get(AgentRequestExtra.EVENT_HANDLER_MANAGER)) {
-            manager.merge((object as EventHandlerManager).getOrThrow())
-        }
-        request.extra[AgentRequestExtra.EVENT_HANDLER_MANAGER] = manager
-    }
-
-    /**
      * Get available and related tools for the current request
      */
     var _availableTools: Option<Array<Tool>> = None
@@ -217,7 +198,6 @@ public open class AgentTask {
     }
 
     //-------------------------------------------------------------------------------------
-
     /**
      * Note that: Agents ALWAYS call this method to use the LLM
      */
@@ -235,6 +215,8 @@ public open class AgentTask {
                 return ChatResponse("Event Handler", Message.assistant(info))
         }
     }
+
+    //-------------------------------------------------------------------------------------
 
     private func findTool(name: String): Option<Tool> {
         if (name == RetrieverTool.NAME) {
@@ -266,7 +248,13 @@ public open class AgentTask {
             case EventResponse.Continue =>
                 // Invoke the tool
                 let toolResponse = try {
-                    tool.invoke(toolRequest.args)
+                    if (tool is AgentAsTool) {
+                        // If the tool is an agent, we invoke the agent
+                        this.invokeAgentAsTool(toolRequest, (tool as AgentAsTool).getOrThrow())
+                    } else {
+                        // Normal tool invocation
+                        tool.invoke(toolRequest.args)
+                    }
                 } catch (ex: ToolException) {
                     return "Fail to invoke the tool `${toolRequest.name}`. Reason: ${ex.reason}"
                 } catch (_: Exception) {
@@ -307,6 +295,54 @@ public open class AgentTask {
         }
         AgentOp.handle(event: ToolCallEndEvent(this.agent, toolRequest, ToolResponse(toolResult)), forRequest: this.request)
         return toolResult
+    }
+
+    /**
+     * Invoke an subagent
+     */
+    protected func invokeAgentAsTool(toolRequest: ToolRequest, tool: AgentAsTool): ToolResponse {
+        // Fetch the question for the sub-agent
+        let questionToSubAgent = if (toolRequest.args.size == 1) {
+            // The agent tool must receive a string
+            toolRequest.args["question"].asString().getValue()
+        } else {
+            throw ToolException("Agent as tool with invalid arguments")
+        }
+        // Prepare the request for the sub-agent
+        let subRequest = AgentRequest(
+            questionToSubAgent,
+            verbose: this.request.verbose,
+            maxTool: this.request.maxTool
+        )
+        match (tool.mode) {
+            case SubAgentMode.WithContext =>
+                // The sub-agent inherits the full context from the parent agent
+                //    conversation: None, // Conversation is not inherited?
+                subRequest.parentContext = this.execution.stepMessages.clone()
+            case SubAgentMode.Isolated =>
+                () // The sub-agent executes independently without any context from the main agent
+        }
+
+        // Inherit the event handlers
+        subRequest.eventHandlerManager = this.request.eventHandlerManager
+        // Inherit the event stream
+        subRequest.eventStream = this.request.eventStream
+        // Mark the request as dispatched to a subagent
+        subRequest.dispatchToSubagent = true
+
+        let resp = match (AgentOp.handle(event: SubAgentStartEvent(tool.agent, subRequest))) {
+            case EventResponse.Continue => tool.agent.chat(subRequest)
+            case EventResponse.Continue(r) => r
+            case EventResponse.Terminate(r) =>
+                this.stop(
+                    EarlyStopReason.EventHandlerTerminated,
+                    result: r.content,
+                    log: "Terminated by sub-agent end event handler"
+                )
+                r
+        }
+        AgentOp.handle(event: SubAgentEndEvent(tool.agent, subRequest, resp))
+        return ToolResponse(resp.content)
     }
 
     protected func notify(tag: String, content: String): Unit {

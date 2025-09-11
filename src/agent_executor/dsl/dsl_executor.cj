@@ -5,13 +5,25 @@ package magic.agent_executor.dsl
 
 import magic.core.agent.*
 import magic.agent.base.{AgentOp, UserDefinedAgent}
-import magic.agent_executor.common.{AgentTask, FutureIteratorWrapper}
+import magic.agent_executor.common.{AgentTask, PromptBuilder, FutureIteratorWrapper}
 import magic.log.LogUtils
 import magic.interaction.{AgentStartEvent, AgentEndEvent}
 
 public class DslExecutor <: AgentExecutor {
     override public prop name: String {
         get() { "dsl" }
+    }
+
+    private func buildAgentTask(agent: Agent, request: AgentRequest): AgentTask {
+       let task = AgentTask(agent, request)
+       PromptBuilder()
+            .system(agent.systemPrompt)
+            .retrieval(PromptBuilder.buildAgentRetrievalPrompt(task))
+            .memory(PromptBuilder.buildAgentMemoryPrompt(task))
+            .conversation(request.conversation, withStepMessage: true)
+            .request(request)
+            .fillTo(task)
+        return task
     }
 
     private func doRun(task: AgentTask): String {
@@ -38,13 +50,13 @@ public class DslExecutor <: AgentExecutor {
     }
 
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
-        let task = AgentTask(agent, request, initPrompt: true)
+        let task = this.buildAgentTask(agent, request)
         let answer = this.doRun(task)
         return AgentResponse(answer, execution: task.execution)
     }
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
-        let task = AgentTask(agent, request, initPrompt: true)
+        let task = this.buildAgentTask(agent, request)
         let fut: Future<Iterator<String>> = spawn {
             let answer = this.doRun(task)
             return [answer].iterator()

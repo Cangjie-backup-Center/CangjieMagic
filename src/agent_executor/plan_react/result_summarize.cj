@@ -49,7 +49,7 @@ Output:
 """
 
 private func buildSummarizePrompt(planTask: PlanTask): String {
-    if (let Some(schema) <- planTask.request.extra.get(AgentRequestExtra.OUTPUT_SCHEMA)) {
+    if (let Some(schema) <- planTask.request.outputSchema) {
         return RESULT_SUMMARIZE_PROMPT_WITH_OUTPUT_SCHEMA.format([
             ("question", planTask.request.question),
             ("progress", planTask.progress),

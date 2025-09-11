@@ -13,6 +13,7 @@ enum AgentToolAttr {
     | StdioMcp(String, HashMap<String, Token>)
     | HttpMcp(String)
     | NativeFuncTool(Token)
+    | AgentTool(Expr)
     | NativeToolset(Expr)
 
     static func parse(rawAttr: Tokens): AgentToolAttr {
@@ -91,6 +92,9 @@ enum AgentToolAttr {
             let callExpr = (expr as CallExpr).getOrThrow()
             if (!(callExpr.callFunc is RefExpr)) {
                 throw DslException("Invalid native tool set config `${rawAttr}`")
+            }
+            if ((callExpr.callFunc as RefExpr).getOrThrow().identifier.value == "AgentAsTool") {
+                return AgentToolAttr.AgentTool(callExpr)
             }
             return AgentToolAttr.NativeToolset(callExpr)
         } else {
@@ -632,6 +636,12 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                 addTools.append(
                     quote(
                         tm.addTool($tool)
+                    )
+                )
+            case AgentToolAttr.AgentTool(expr) =>
+                addTools.append(
+                    quote(
+                        tm.addTool( ($expr) )
                     )
                 )
             case AgentToolAttr.NativeToolset(toolset) =>

@@ -4,13 +4,13 @@
 package magic.agent
 
 import magic.agent.base.BaseAgent
-import magic.agent_executor.common.AgentExecutionInfo
-import magic.core.*
-import magic.model.ModelManager
-import magic.log.LogUtils
-import magic.tool.AgentAsTool
+import magic.core.agent.*
+import magic.core.interaction.EventStream
 import magic.interaction.NotifyEvent
+import magic.log.LogUtils
+import magic.model.ModelManager
 import magic.parser.{Tag, WithTag}
+import magic.tool.AgentAsTool
 
 /**
  * This agent is used to dispatch user question to other agents.
@@ -33,9 +33,10 @@ public class DispatchAgent <: BaseAgent {
     override public func asyncChat(request: AgentRequest): AsyncAgentResponse {
         if (let Some(agent) <- this.doSelect(request)) {
             if (request.verbose) {
-                let execution = AgentExecutionInfo(agent)
-                execution.events.put(NotifyEvent(this, Tag.INFO, "Dispatch to the agent: ${agent.name}"))
-                request.extra.add("previous-execution", execution)
+                let eventStream = EventStream()
+                eventStream.put(NotifyEvent(this, Tag.INFO, "Dispatch to the agent: ${agent.name}"))
+                // Let the selected agent know the previous execution
+                request.eventStream = eventStream
             }
             return agent.asyncChat(request)
         } else {

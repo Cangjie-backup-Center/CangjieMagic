@@ -36,7 +36,7 @@ public class AgentExecutionInfo <: AgentExecution {
 
     /**
      * Messages about solving the request, which are used to build the chat round
-     * Not all messages (like error-fixing messages) are used to build the chat round
+     * Some messages (like error-fixing messages) are excluded
      */
     protected let stepMessages = MessageList()
 
@@ -49,6 +49,23 @@ public class AgentExecutionInfo <: AgentExecution {
      * The cancellation mark
      */
     private let cancellation = AtomicBool(false)
+
+    /**
+     * A communication channel to transfer verbose events during the agent execution
+     * Only access this field when setting `verbose: true` in AgentRequest
+     */
+    protected var _events: Option<EventStream> = None
+
+    public init(agent: Agent, request: AgentRequest) {
+        let tokenizer = TokenizerLoader.default()
+        this.messageList = MessageList()
+        this._events = request.eventStream
+        // Use bounded message list?
+        // this.messageList = BoundedMessageList(
+        //     agent.model.contextLength,
+        //     computeFn: { str => return tokenizer.countToken(str) }
+        // )
+    }
 
     /**
      * Use the same prop name as thread for convention
@@ -66,23 +83,42 @@ public class AgentExecutionInfo <: AgentExecution {
         get() { this._retrievalInfo }
     }
 
-    public init(agent: Agent) {
-        let tokenizer = TokenizerLoader.default()
-        this.messageList = MessageList()
-        // Use bounded message list?
-        // this.messageList = BoundedMessageList(
-        //     agent.model.contextLength,
-        //     computeFn: { str => return tokenizer.countToken(str) }
-        // )
-    }
-
     override public prop messages: MessageList {
         get() { this.messageList }
     }
 
     public func addRequest(request: AgentRequest): Unit {
         this.request = request
-        this.messageList.addMessage(Message.user(request.question, image: request.image))
+
+        // Add previous execution messages from the parent agent if any
+        if (let Some(parentContext) <- request.parentContext) {
+            let strBuilder = StringBuilder("--- Previous Context ---\n")
+            for (msg in parentContext) {
+                strBuilder.append("${msg}\n")
+            }
+            strBuilder.append("--- End of Previous Context ---\n")
+            this.messageList.addMessage(Message.assistant(strBuilder.toString()))
+        }
+        // Remove the @ tags from the question
+        var newQuestion = request.question
+        // Merge all imported files
+        let strBuilder = StringBuilder()
+        for ((path, content) in request.importedFiles) {
+            newQuestion = newQuestion.replace("@${path}", path.toString()) // Remove the @ tag
+            strBuilder.append(
+                "--- File of ${path} ---\n${content}\n--- End of File ${path} ---\n"
+            )
+        }
+        // Add messages in the following order:
+        // 1. Add the user question as the first user message
+        this.messageList.addMessage(Message.user(newQuestion, image: request.image))
+        // 2. Add imported files as user messages
+        // Note that the imported file are separated from the user question
+        // This is to avoid imported files being put to next chat rounds
+        if (strBuilder.size > 0) {
+            this.messageList.addMessage(Message.user(strBuilder.toString()))
+        }
+
     }
 
     public func addMessage(msg: Message): Unit {
@@ -112,11 +148,6 @@ public class AgentExecutionInfo <: AgentExecution {
         this.retrievalInfo.add(RetrievalInfo(query, retrieval))
     }
 
-    /**
-     * A communication channel to transfer verbose events during the agent execution
-     * Only access this field when setting `verbose: true` in AgentRequest
-     */
-    protected var _events: Option<EventStream> = None
     private let mutex = Mutex()
     public prop events: EventStream {
         get() {

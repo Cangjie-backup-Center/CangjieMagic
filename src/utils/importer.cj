@@ -1,0 +1,179 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+ */
+package magic.utils
+
+import std.fs.{File, Path, exists, OpenMode, FileInfo}
+import std.io.StringReader
+import std.collection.{HashMap, ArrayList, ArrayQueue, map, enumerate, collectArray}
+
+/**
+ * Helper struct to hold file content and its container file path
+ */
+private struct Ref {
+    Ref(
+        let referencePath: String, // The referenced path, e.g. @a/b/c
+        let containerFile: Option<Path> // The file that contains this reference
+    ) { }
+}
+
+/**
+ * File importer utility for processing file references in strings
+ */
+public class Importer {
+    /**
+     * Directories to search for imported files, in order
+     */
+    private let searchDirs: Array<String>
+
+    /**
+     * Whether to include line numbers in imported file content
+     */
+    private let withLineNumber: Bool
+
+    /**
+     * Record of already processed files to prevent circular references
+     */
+    private let processedFiles = HashMap<String, Bool>() // Prevent circular references
+
+    /**
+     * Initialize importer with search directories
+     */
+    public init(searchDirs: Array<String>, withLineNumber!: Bool = true) {
+        this.searchDirs = searchDirs
+        this.withLineNumber = withLineNumber
+    }
+
+    /**
+     * Parse string and import all referenced files using queue-based approach
+     * Returns array of (filePath, content) tuples
+     */
+    public func importFiles(str: String): Array<(Path, String)> {
+        // Clear processed files record (start fresh for each call)
+        processedFiles.clear()
+
+        let results = ArrayList<(Path, String)>()
+        let queue = ArrayQueue<Ref>()
+
+        // Add initial references from the input string
+        let initialReferences = extractReferences(str)
+        for (ref in initialReferences) {
+            queue.add(Ref(ref, None))  // No container file for top-level references
+        }
+
+        // Process queue until empty
+        while (let Some(currentRef) <- queue.remove()) {
+            if (let Some((filePath, fileContent)) <- importSingleFile(currentRef)) {
+                // Add the result to our results
+                results.add((Path(currentRef.referencePath), fileContent))
+
+                // Extract references from the file content and add to queue
+                let newReferences = extractReferences(fileContent)
+                for (newRef in newReferences) {
+                    queue.add(Ref(newRef, filePath))
+                }
+            }
+        }
+
+        return results.toArray()
+    }
+
+    /**
+     * Extract all file references from string of format @a/b/c
+     */
+    private func extractReferences(str: String): Array<String> {
+        let result = ArrayList<String>()
+        let runes = str.toRuneArray()
+        var i = 0
+
+        while (i < runes.size) {
+            if (runes[i] == r'@') {
+                let startIndex = i + 1
+                var endIndex = startIndex
+
+                while (endIndex < runes.size &&
+                    (runes[endIndex] == r'/' ||
+                        runes[endIndex] == r'.' ||
+                        runes[endIndex] == r'_' ||
+                        runes[endIndex] == r'-' ||
+                        runes[endIndex].isAsciiNumberOrLetter())) {
+                    endIndex += 1
+                }
+
+                if (endIndex > startIndex) {
+                    let path = String(runes[startIndex..endIndex])
+                    // Validate the path before adding
+                    if (isValidPath(path)) {
+                        result.add(path)
+                    }
+                }
+
+                i = endIndex
+            } else {
+                i += 1
+            }
+        }
+
+        return result.toArray()
+    }
+
+    /**
+     * Validate if a path is valid and exists
+     */
+    private func isValidPath(path: String): Bool {
+        // Skip empty paths or paths starting with '/'
+        if (path.isEmpty() || path.startsWith("/")) {
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Import a single file and return (Path, content) tuple
+     */
+    private func importSingleFile(ref: Ref): Option<(Path, String)> {
+        let filePath = ref.referencePath
+
+        // Check if it's an absolute path (not allowed)
+        if (Path(filePath).isAbsolute()) {
+            return None
+        }
+        // Security check: prevent path traversal attacks
+        if (filePath.contains("..") || filePath.contains("~/")) {
+            return None
+        }
+
+        // Search for files in searchDirs order
+        for (basePath in searchDirs) {
+            // Construct full path, considering container file if any
+            let fullPath = if (basePath == ".") {
+                if (let Some(containerFilePath) <- ref.containerFile) {
+                    containerFilePath.parent.join(filePath)
+                } else {
+                    Path(filePath)
+                }
+            } else {
+                Path(basePath).join(filePath)
+            }
+
+            // Check if file exists
+            if (exists(fullPath) && FileInfo(fullPath).isRegular()) {
+                // Check if this file has been processed before (prevent circular references)
+                let canonicalPath = canonicalize(fullPath).toString()
+                if (processedFiles.contains(canonicalPath)) {
+                    return None  // Circular reference detected
+                }
+
+                // Mark as processed
+                processedFiles[canonicalPath] = true
+
+                // Read file content
+                let content = readFile(fullPath, withLineNumber: this.withLineNumber)
+                return (fullPath, content)
+            }
+        }
+
+        // File not found
+        return None
+    }
+}

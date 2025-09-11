@@ -11,7 +11,7 @@ protected class PlanTask <: AgentTask {
     private var _knowledge: Option<String>
 
     protected init(agent: Agent, request: AgentRequest) {
-        super(agent, request, initPrompt: false)
+        super(agent, request)
         this._subtasks = None
         this._knowledge = None
     }

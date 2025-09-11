@@ -4,7 +4,7 @@
 package magic.agent_executor.react
 
 import magic.core.*
-import magic.agent_executor.common.AgentTask
+import magic.agent_executor.common.{AgentTask, PromptBuilder}
 import magic.core.message.{Message, MessageList}
 import magic.log.LogUtils
 import magic.model.ModelUtils
@@ -13,12 +13,17 @@ import magic.parser.{TagStreamParser, ParserException, WithTag, Tag}
 
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
-        super(agent, request, initPrompt: false)
-        this.execution.addMessages(ReactPromptUtils.buildReactPrompt(this))
-        this.execution.addRequest(request)
-        LogUtils.info(agent.name, "----- Build Agent Task -----")
-        LogUtils.info(agent.name, this.execution.messages)
-        LogUtils.info(agent.name, "----- End of Build Agent Task -----")
+        super(agent, request)
+
+        PromptBuilder()
+            .system(ReactPromptUtils.buildReactSystemPrompt(this))
+            .tool(PromptBuilder.buildAgentToolsPrompt(this))
+            .system(this.agent.systemPrompt)
+            .retrieval(PromptBuilder.buildAgentRetrievalPrompt(this))
+            .memory(PromptBuilder.buildAgentMemoryPrompt(this))
+            .conversation(request.conversation, withStepMessage: true)
+            .request(request)
+            .fillTo(this)
     }
 
     /**

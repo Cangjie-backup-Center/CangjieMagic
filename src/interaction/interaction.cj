@@ -10,12 +10,12 @@ import magic.core.agent.*
  */
 public func _interact(agent: Agent, request!: AgentRequest,
                                     manager!: EventHandlerManager): AgentResponse {
-    request.extra[AgentRequestExtra.EVENT_HANDLER_MANAGER] = manager
+    request.eventHandlerManager = manager
     return agent.chat(request)
 }
 
 public func _asyncInteract(agent: Agent, request!: AgentRequest,
                                          manager!: EventHandlerManager): AsyncAgentResponse {
-    request.extra[AgentRequestExtra.EVENT_HANDLER_MANAGER] = manager
+    request.eventHandlerManager = manager
     return agent.asyncChat(request)
 }
