@@ -4,7 +4,7 @@
 package magic.agent
 
 import magic.agent.base.BaseAgent
-import magic.core.agent.{AgentRequest, AgentResponse}
+import magic.core.agent.{AgentRequest, AgentResponse, AgentResponseStatus}
 import magic.core.model.ChatModel
 import magic.jsonable.Jsonable
 
@@ -26,6 +26,7 @@ public class ToolAgent<T> <: BaseAgent where T <: Jsonable<T> {
 
     override public func chat(request: AgentRequest): AgentResponse {
         return AgentResponse(
+            AgentResponseStatus.Success,
             fn(request.question).toJsonValue().toJsonString()
         )
     }

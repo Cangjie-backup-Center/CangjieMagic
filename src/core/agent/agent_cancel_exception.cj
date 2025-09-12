@@ -7,9 +7,10 @@ package magic.core.agent
  * This exception is used to indicate that the agent execution is cancelled by user.
  */
 public class AgentCancelException <: Exception {
-    public let result: String = "Cancelled by user"
+    protected let reason: String
 
-    public init() {
+    public init(reason!: String = "Cancelled by user") {
         super("Cancelled by user")
+        this.reason = reason
     }
 }

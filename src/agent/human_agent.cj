@@ -4,7 +4,7 @@
 package magic.agent
 
 import magic.agent.base.BaseAgent
-import magic.core.agent.{AgentRequest, AgentResponse}
+import magic.core.agent.{AgentRequest, AgentResponse, AgentResponseStatus}
 import magic.core.model.ChatModel
 
 import std.console.Console
@@ -37,6 +37,6 @@ public class HumanAgent <: BaseAgent {
     }
 
     override public func chat(request: AgentRequest): AgentResponse {
-        return AgentResponse(qaFunc(request.question))
+        return AgentResponse(AgentResponseStatus.Success, qaFunc(request.question))
     }
 }

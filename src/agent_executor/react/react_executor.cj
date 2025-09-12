@@ -23,17 +23,14 @@ public class ReactExecutor <: AgentExecutor {
             task.begin()
             for (_ in 0..this.loop) {
                 if (let Some(answer) <- task.runOnce()) {
-                    return AgentResponse(answer, execution: task.execution)
+                    return AgentResponse(AgentResponseStatus.Success, answer, execution: task.execution)
                 } else if (let Some(stopInfo) <- task.stopInfo) {
                     LogUtils.info("Task stopped: ${stopInfo.reason}")
-                    return AgentResponse(stopInfo.result, execution: task.execution)
+                    return AgentResponse(AgentResponseStatus.Success, stopInfo.result, execution: task.execution)
                 }
             }
             let answer = task.summarize()
-            return AgentResponse(answer, execution: task.execution)
-        } catch (ex: AgentCancelException) {
-            LogUtils.info("Task cancelled by user")
-            return AgentResponse(ex.result)
+            return AgentResponse(AgentResponseStatus.Success, answer, execution: task.execution)
         } finally {
             task.end()
         }
@@ -56,9 +53,6 @@ public class ReactExecutor <: AgentExecutor {
                 }
                 LogUtils.info("Exceed the max react loop")
                 return task.asyncSummarize()
-            } catch (ex: AgentCancelException) {
-                LogUtils.info("Task cancelled by user")
-                return AsyncAgentResponse([ex.result].iterator())
             } finally {
                 task.end()
             }

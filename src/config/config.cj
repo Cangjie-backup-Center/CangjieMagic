@@ -45,7 +45,7 @@ public struct EnvWrapper {
                     } else if (value.startsWith("'")) {
                         value = value.replace("'", "")
                     }
-                    strBuilder.append("[ENV Set] ${key}=${value}")
+                    strBuilder.append("[ENV Set] ${key}=${value}\n")
                     setEnv(key, value)
                 }
             }
@@ -206,13 +206,13 @@ public class Config {
      * If we use Thread.handleUncaughtExceptionBy outside this project,
      * it will not affect threads spawn in this project.
      */
-    private static var _threadExceptionHandler: Option<(Thread, Exception) -> Unit> = None
-    public static mut prop threadExceptionHandler: Option<(Thread, Exception) -> Unit> {
-        get() { _threadExceptionHandler }
-        set(handler) {
-            if (let Some(h) <- handler) {
-                Thread.handleUncaughtExceptionBy(h)
-            }
-        }
-    }
+    // private static var _threadExceptionHandler: Option<(Thread, Exception) -> Unit> = None
+    // public static mut prop threadExceptionHandler: Option<(Thread, Exception) -> Unit> {
+    //     get() { _threadExceptionHandler }
+    //     set(handler) {
+    //         if (let Some(h) <- handler) {
+    //             Thread.handleUncaughtExceptionBy(h)
+    //         }
+    //     }
+    // }
 }

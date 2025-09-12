@@ -17,6 +17,11 @@ public class AsyncAgentResponse <: Iterator<String> {
     private let chunks: Iterator<String>
 
     /**
+     * The status of the response
+     */
+    private var _status: Option<AgentResponseStatus> = None
+
+    /**
      * Merge all chunk content
      */
     private let buffer = StringBuilder()
@@ -47,18 +52,38 @@ public class AsyncAgentResponse <: Iterator<String> {
     }
 
     /**
-     * The execution result
+     * The final result
      * This is a synchronous method, which will wait until the executor completes
      */
     public prop content: String {
         get() {
-            if (this.finished) {
-                return buffer.toString()
-            } else {
-                // Consume all chunks
-                for (_ in this) { }
-                return buffer.toString()
+            if (!this.finished) {
+                this.waitUntilFinished()
             }
+            return buffer.toString()
+        }
+    }
+
+    /**
+     * The status of the response
+     * This is a synchronous method, which will wait until the executor completes
+     */
+    public prop status: AgentResponseStatus {
+        get() {
+            if (!this.finished) {
+                this.waitUntilFinished()
+            }
+            return this._status.getOrThrow()
+        }
+    }
+
+    /**
+     * Wait until the response is finished
+     */
+    private func waitUntilFinished() {
+        if (!this.finished) {
+            // Consume all chunks
+            for (_ in this) { }
         }
     }
 
@@ -66,20 +91,35 @@ public class AsyncAgentResponse <: Iterator<String> {
         if (this.finished) {
             return None
         }
-        if (let Some(chunk) <- this.chunks.next()) {
-            buffer.append(chunk)
-            return chunk
-        } else {
-            if (let Some(execution) <- this._execution) {
-                execution.setAnswer(buffer.toString())
+
+        try {
+            match (this.chunks.next()) { // The exception will be thrown here if any
+                case Some(data) =>
+                    buffer.append(data)
+                    return data
+                case None =>
+                    let answer = buffer.toString()
+                    if (let Some(execution) <- this._execution) {
+                        execution.setAnswer(answer)
+                    }
+                    this._status = AgentResponseStatus.Success
+                    this.finished = true
+                    return None
             }
+        } catch (ex: AgentCancelException) {
+            LogUtils.info("Task cancelled by user")
+            // Clear the result buffer
+            this.buffer.reset()
+            // Set the status to canceled
+            this._status = AgentResponseStatus.Cancelled
+            this.buffer.append(ex.reason)
             this.finished = true
             return None
         }
     }
 
     /**
-     * Cancel the agent execution
+     * Cancelled the agent execution
      * Wait until the execution is stopped.
      */
     public func cancel(): Unit {

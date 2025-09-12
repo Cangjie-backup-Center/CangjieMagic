@@ -72,10 +72,7 @@ public class NaiveExecutor <: AgentExecutor {
             task.begin()
             let msg = task.chatLLM(task.execution.messages).message
             LogUtils.info(agent.name, msg)
-            return AgentResponse(msg.content, execution: task.execution)
-        } catch (ex: AgentCancelException) {
-            LogUtils.info("Task cancelled by user")
-            return AgentResponse(ex.result)
+            return AgentResponse(AgentResponseStatus.Success, msg.content, execution: task.execution)
         } finally {
             task.end()
         }
@@ -90,9 +87,6 @@ public class NaiveExecutor <: AgentExecutor {
                 ChatRequest(task.execution.messages, temperature: agent.temperature)
             )
             return AsyncAgentResponse(asyncChatResp.iter(), execution: task.execution)
-        } catch (ex: AgentCancelException) {
-            LogUtils.info("Task cancelled by user")
-            return AsyncAgentResponse([ex.result].iterator())
         } finally {
             task.end()
         }

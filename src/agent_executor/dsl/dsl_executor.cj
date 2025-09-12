@@ -41,9 +41,6 @@ public class DslExecutor <: AgentExecutor {
                 throw AgentExecutionException("Agent has not solved the question")
             }
             return finalState.answer
-        } catch (ex: AgentCancelException) {
-            LogUtils.info("Task cancelled by user")
-            return ex.result
         } finally {
             task.end()
         }
@@ -51,8 +48,13 @@ public class DslExecutor <: AgentExecutor {
 
     override public func run(agent: Agent, request: AgentRequest): AgentResponse {
         let task = this.buildAgentTask(agent, request)
-        let answer = this.doRun(task)
-        return AgentResponse(answer, execution: task.execution)
+        try {
+            let answer = this.doRun(task)
+            return AgentResponse(AgentResponseStatus.Success, answer, execution: task.execution)
+        } catch (ex: AgentCancelException) {
+            LogUtils.info("Task cancelled by user")
+            return AgentResponse(AgentResponseStatus.Cancelled, ex.reason, execution: task.execution)
+        }
     }
 
     override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse {
@@ -60,7 +62,7 @@ public class DslExecutor <: AgentExecutor {
         let fut: Future<Iterator<String>> = spawn {
             let answer = this.doRun(task)
             return [answer].iterator()
-        }
+        } // Cancelled exception will be handled in AsyncAgentResponse
         return AsyncAgentResponse(FutureIteratorWrapper(task, fut), execution: task.execution)
     }
 }

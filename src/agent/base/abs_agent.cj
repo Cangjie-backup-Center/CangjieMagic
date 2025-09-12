@@ -22,6 +22,22 @@ import magic.parser.{ParserUtils, ParserException}
 //------------------------------------------------
 
 public abstract class AbsAgent <: Agent {
+    /**
+     * Register uncaught exception handler to avoid ugly stack traces
+     * Since this class will always be used as a base class,
+     * we register the exception handler here.
+    */
+    static init() {
+        Thread.handleUncaughtExceptionBy { thread: Thread, ex: Exception =>
+            let strBuilder = StringBuilder()
+            strBuilder.append("Uncaught exception in thread ${thread.name}: ${ex}")
+            for (ste in ex.getStackTrace()) {
+                strBuilder.append("${ste.fileName}:${ste.lineNumber} ${ste.methodName}\n")
+            }
+            LogUtils.error(strBuilder.toString())
+        }
+    }
+
     public func chat(question: String): String {
         return chat(AgentRequest(question)).content
     }
@@ -37,11 +53,16 @@ public abstract class AbsAgent <: Agent {
                 interceptor.doBypass(processedRequest)
             }
         }
-        let resp = this.executor.run(this, processedRequest)
-        if (let Some(memory) <- this.memory) {
-            memory.update(resp.execution.chatRound.toString()) // Update the agent memory
+        try {
+            let resp = this.executor.run(this, processedRequest)
+            if (let Some(memory) <- this.memory) {
+                memory.update(resp.execution.chatRound.toString()) // Update the agent memory
+            }
+            return resp
+        } catch (ex: AgentCancelException) {
+            LogUtils.info("Task cancelled by user")
+            return AgentResponse(AgentResponseStatus.Cancelled, ex.reason)
         }
-        return resp
     }
 
     public func asyncChat(question: String): AsyncAgentResponse {
