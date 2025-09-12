@@ -26,7 +26,7 @@ public class DispatchAgent <: BaseAgent {
         if (let Some(agent) <- this.doSelect(request)) {
             return agent.chat(request)
         } else {
-            return AgentResponse("Unknown Question")
+            return AgentResponse(AgentResponseStatus.Success, "Unknown Question")
         }
     }
 

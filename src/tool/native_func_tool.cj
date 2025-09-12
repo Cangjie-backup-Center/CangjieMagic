@@ -4,6 +4,7 @@
 package magic.tool
 
 import magic.core.tool.*
+import magic.core.agent.AgentCancelException
 import magic.jsonable.TypeSchema
 import std.collection.{ArrayList, HashMap}
 
@@ -64,14 +65,8 @@ open public class NativeFuncTool <: AbsTool {
      */
     override public func invoke(args: HashMap<String, JsonValue>): ToolResponse {
         if (let Some(fn) <- _fnOpt) {
-           try {
-                let result = fn(args)
-                return ToolResponse(result)
-            } catch (ex: ToolException) {
-                throw ex
-            } catch (ex: Exception) {
-                throw ToolException("Fail to invoke the native function tool. Reason: ${ex.toString()}")
-            }
+            let result = fn(args)
+            return ToolResponse(result)
         } else {
             throw ToolException("The tool `${_name}` has not a native function")
         }

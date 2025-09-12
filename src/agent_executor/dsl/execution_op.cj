@@ -187,6 +187,19 @@ public struct ExecutionOpSet {
         // Execute each tool
         LogUtils.info(state.task.agent.name, "Action: ${toolRequests.toJsonValue().toJsonString()}")
         for (toolRequest in toolRequests) {
+            // Add action to the message list
+            // If function call is not enabled, we wrap the messages with tags
+            // to guide the LLM generating formatted response
+            if (Config.enableModelToolCall) {
+                state.execution.addStepMessage(
+                    Message.assistant("${toolRequest.toJsonValue().toJsonString()}\n")
+                )
+            } else {
+                state.execution.addStepMessage(
+                    Message.assistant("```json\n${toolRequest.toJsonValue().toJsonString()}\n```".withTag(Tag.ACTION)),
+                )
+            }
+
             // No need to notify the tool request here because it's notified during invoking the tool
             let observation = state.task.invokeTool(toolRequest)
             // Special terminal tools may stop the execution
@@ -196,20 +209,12 @@ public struct ExecutionOpSet {
                 return state
             }
 
-            // Add action and observation to the messageList
-            // If function call is not enabled, we wrap the messages with tags
-            // to guide the LLM generating formatted response
+            // Add tool call result to the message list
             if (Config.enableModelToolCall) {
-                state.execution.addStepMessage(
-                    Message.assistant("${toolRequest.toJsonValue().toJsonString()}\n")
-                )
                 state.execution.addStepMessage(
                     Message.user(observation),
                 )
             } else {
-                state.execution.addStepMessage(
-                    Message.assistant("```json\n${toolRequest.toJsonValue().toJsonString()}\n```".withTag(Tag.ACTION)),
-                )
                 state.execution.addStepMessage(
                     Message.user(observation.withTag(Tag.OBSERVATION)),
                 )

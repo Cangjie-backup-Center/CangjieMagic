@@ -60,10 +60,7 @@ protected class PlanReactExecutor <: AgentExecutor {
             // Summarize the result
             let result = resultSummarize(planTask)
             LogUtils.info(agent.name, "Summarized answer: ${result}")
-            return AgentResponse(result, execution: planTask.execution)
-        } catch (ex: AgentCancelException) {
-            LogUtils.info("Task cancelled by user")
-            return AgentResponse(ex.result)
+            return AgentResponse(AgentResponseStatus.Success, result, execution: planTask.execution)
         } finally {
             planTask.end()
         }
@@ -79,9 +76,6 @@ protected class PlanReactExecutor <: AgentExecutor {
                 this.solveSubtasks(planTask)
                 // Summarize the result
                 return asyncResultSummarize(planTask)
-            } catch (ex: AgentCancelException) {
-                LogUtils.info("Task cancelled by user")
-                return AsyncAgentResponse([ex.result].iterator())
             } finally {
                 planTask.end()
             }

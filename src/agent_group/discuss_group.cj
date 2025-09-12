@@ -74,7 +74,7 @@ abstract class DiscussGroup {
                     LogUtils.info(this.host.name, "Select the next speaker: ${agent.name}")
                     agent
                 case Summary(result) =>
-                    return AgentResponse(result)
+                    return AgentResponse(AgentResponseStatus.Success, result)
                 case Failure(reason) =>
                     throw AgentExecutionException("Host failed to select the next agent. Reason: ${reason}")
             }

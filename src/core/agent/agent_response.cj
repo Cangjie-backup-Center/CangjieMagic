@@ -6,9 +6,22 @@ package magic.core.agent
 import magic.core.message.MessageList
 
 /**
+ * The status of the agent response
+ */
+public enum AgentResponseStatus {
+    | Success // The execution is successful
+    | Cancelled  // The execution is canceled by user
+}
+
+/**
  The execution response from an agent executor
  */
 public struct AgentResponse {
+    /**
+     * The status of the agent response
+     */
+    public let status: AgentResponseStatus
+
     /**
      * The execution result
      */
@@ -23,11 +36,13 @@ public struct AgentResponse {
         get() { this._execution.getOrThrow() }
     }
 
-    public init(content: String) {
+    public init(status: AgentResponseStatus, content: String) {
+        this.status = status
         this.content = content
     }
 
-    public init(content: String, execution!: AgentExecution) {
+    public init(status: AgentResponseStatus, content: String, execution!: AgentExecution) {
+        this.status = status
         this.content = content
         this._execution = execution
         execution.setAnswer(content)
