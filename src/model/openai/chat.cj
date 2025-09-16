@@ -358,6 +358,13 @@ public class OpenAIChatModel <: ChatModel {
             throw ModelException(msg)
         }
         let choice = resp.choices[0]
+        // If the output is too long, output may be truncated,
+        // which result in incomplete Json string of the tool call
+        // Throw an exception to notify the callers
+        if (choice.finish_reason == "length") {
+            LogUtils.error("The chat model replied a message truncated by length")
+            throw ModelException("length")
+        }
         let openAIMsg = choice.message
         let message = Message(
             MessageRole.fromStr(openAIMsg.role),

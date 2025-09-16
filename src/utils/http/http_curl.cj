@@ -58,17 +58,17 @@ protected struct HttpUtilsImpl {
     static private func parseOutput(output: String): (String, String) {
         // Split the last line (status code) from the rest (response body)
         let lines = output.trimAscii().split("\n")
-        
+
         // Handle empty output case
         if (lines.size == 0) {
             throw HttpException("Empty response from curl command")
         }
-        
+
         // Handle case with only status code
         if (lines.size == 1) {
             return ("", lines[0].trimAscii())
         }
-        
+
         let response = String.join(lines[0..(lines.size-1)], delimiter: "\n") // All lines except last
         let status = lines[lines.size-1].trimAscii()  // Last line is the status code
         return (response, status)
@@ -90,7 +90,7 @@ protected struct HttpUtilsImpl {
             removeIfExists(tempPath)
         }
         let (resp, status) = HttpUtilsImpl.parseOutput(out)
-        LogUtils.debug("Raw http response: ${out}")
+        LogUtils.trace("Raw http response: ${out}")
         if (status != "200" && status != "202") {
             let msg = "Http status: ${status}.\nHttp response: ${resp}"
             LogUtils.error("curl ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")

@@ -39,7 +39,11 @@ public abstract class AbsAgent <: Agent {
     }
 
     public func chat(question: String): String {
-        return chat(AgentRequest(question)).content
+        let resp = chat(AgentRequest(question))
+        if (resp.status == AgentResponseStatus.Cancelled) {
+            throw AgentCancelException(reason: resp.content)
+        }
+        return resp.content
     }
 
     public open override func chat(request: AgentRequest): AgentResponse {
@@ -55,12 +59,16 @@ public abstract class AbsAgent <: Agent {
         }
         try {
             let resp = this.executor.run(this, processedRequest)
-            if (let Some(memory) <- this.memory) {
-                memory.update(resp.execution.chatRound.toString()) // Update the agent memory
+            match (resp.status) {
+                case AgentResponseStatus.Success =>
+                    if (let Some(memory) <- this.memory) {
+                        memory.update(resp.execution.chatRound.toString()) // Update the agent memory
+                    }
+                case AgentResponseStatus.Cancelled => ()
             }
             return resp
         } catch (ex: AgentCancelException) {
-            LogUtils.info("Task cancelled by user")
+            LogUtils.info("Agent execution cancelled by user")
             return AgentResponse(AgentResponseStatus.Cancelled, ex.reason)
         }
     }

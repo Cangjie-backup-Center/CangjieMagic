@@ -15,18 +15,18 @@ import stdx.encoding.json.{JsonValue, JsonObject, JsonString, JsonInt}
 public struct ToolRequest <: ToString & ToJsonValue {
     private static var globalId = AtomicInt64(1)
 
-    public let id: Int64                        // Unique id for each tool request
+    // public let id: Int64                        // Unique id for each tool request
     public let name: String                     // Tool name
     public let args: HashMap<String, JsonValue> // Tool arguments
 
     public init(name!: String, args!: HashMap<String, JsonValue>) {
-        this.id = globalId.fetchAdd(1)
+        // this.id = globalId.fetchAdd(1)
         this.name = name
         this.args = args
     }
 
     public init(name!: String, args!: JsonObject) {
-        this.id = globalId.fetchAdd(1)
+        // this.id = globalId.fetchAdd(1)
         this.name = name
         this.args = args.getFields()
     }
