@@ -20,12 +20,12 @@ func logHttpInfo(method: String, url: String, header: HashMap<String, String>, b
     } else {
         "http ${method}"
     }
-    LogUtils.debug("${action}: ${url}")
+    LogUtils.trace("${action}: ${url}")
     for ((k,v) in header) {
-        LogUtils.debug("header: ${k} - ${v}")
+        LogUtils.trace("header: ${k} - ${v}")
     }
     if (let Some(b) <- body) {
-        LogUtils.debug("body: ${b.toString()}")
+        LogUtils.trace("body: ${b.toString()}")
     }
 }
 

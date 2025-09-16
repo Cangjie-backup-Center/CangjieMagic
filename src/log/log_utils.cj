@@ -20,6 +20,16 @@ public struct LogUtils {
         }
     }
 
+    public static func trace(msg: Message): Unit {
+        trace(msg.toString())
+    }
+
+    public static func trace(messages: MessageList): Unit {
+        for (msg in messages) {
+            trace(msg)
+        }
+    }
+
     //------------------------------------------------------------
 
     public static func debug(msg: String): Unit {

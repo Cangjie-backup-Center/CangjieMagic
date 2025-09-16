@@ -22,6 +22,7 @@ private class OllamaChatResponse {
     let created_at: String
     let message: OllamaChatMessage
     let done: Bool
+    let done_reason: String
 
     let total_duration: Option<Int64>
     // let load_duration: Option<Int64>
@@ -58,6 +59,12 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
                 continue
             }
             let resp = OllamaChatResponse.fromJsonValue(JsonValue.fromStr(data))
+            // If the output is too long, output may be truncated,
+            // which result in incomplete Json string of the tool call
+            // Throw an exception to notify the callers
+            if (resp.done_reason == "length") {
+                throw ModelException("length")
+            }
             if (resp.done) {
                 return AsyncChatChunk(
                     message: Message(MessageRole.fromStr(resp.message.role), resp.message.content),

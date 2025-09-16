@@ -72,7 +72,7 @@ protected struct HttpUtilsImpl {
         if (msg == "[ERROR_request]") {
             throw HttpException("Http request error")
         }
-        LogUtils.debug("Raw http response: ${msg}")
+        LogUtils.trace("Raw http response: ${msg}")
         return msg
     }
 

@@ -107,7 +107,7 @@ public class AsyncAgentResponse <: Iterator<String> {
                     return None
             }
         } catch (ex: AgentCancelException) {
-            LogUtils.info("Task cancelled by user")
+            LogUtils.info("Agent execution cancelled by user")
             // Clear the result buffer
             this.buffer.reset()
             // Set the status to canceled

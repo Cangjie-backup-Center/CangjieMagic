@@ -5,9 +5,12 @@ package magic.core.agent
 
 import magic.core.message.MessageList
 
+import std.deriving.Derive
+
 /**
  * The status of the agent response
  */
+@Derive[ToString, Equatable]
 public enum AgentResponseStatus {
     | Success // The execution is successful
     | Cancelled  // The execution is canceled by user
