@@ -566,7 +566,8 @@ class A {
 Agent 通过 `tools` 属性配置使用的 MCP 服务器以及自定义工具函数。该属性接收多个 MCP 服务器/工具函数，每个配置可采用如下的语法：
 
 - `stdio` 传输协议的 MCP 服务器，`stdioMCP(<command>, <env-kv-pair>*)`，编写启动 MCP 服务器的命令行以及可选的环境变量设置。例如，`stdioMCP("command and arguments", ENV_1: "value1", ENV_2, "value2")`。
-- `http/sse` 传输协议的 MCP 服务器，`mcpHttp(<url>)`，编写 MCP 服务器的地址。例如， `httpMCP("https://abc.com/mcp")`。
+- `sse` 传输协议的 MCP 服务器，`sseMCP(<url>)`，编写 MCP 服务器的地址。例如， `httpMCP("https://abc.com/mcp")`。
+- `http` 传输协议的 MCP 服务器，`httpMCP(<url>, <headers-kv-pair>*)`，编写 MCP 服务器的地址。例如， `httpMCP("https://abc.com/mcp", API_KEY: "your key")`。
 - 工具函数 `<func-id>+`，例如，`foo, bar`。注意 ⚠️：如果工具被定义在 Agent 类的内部，那么它能被其所属的 Agent 直接使用，即**无需**在 `tools` 属性中显式指定。
 - 工具集构造 `<expr>`，通常是工具集类型的实例化，例如 `MyToolset()`。
 
@@ -599,7 +600,7 @@ agent.toolManager.addTools(client.getTools())
 此外，在 `tools` 配置中**同样支持以 JSON 配置的语法设置 MCP 服务器**：
 
 - `stdio` 传输，配置方式为：由 `command`（启动命令）和 `args`（启动参数）构成，并可选设置启动的环境变量  `env`。
-- `HTTP SSE` 传输，配置方式为：通过 `url` 指定 MCP 服务器的地址
+- `sse` 传输，配置方式为：通过 `url` 指定 MCP 服务器的地址
 
 ```cangjie
 @agent[

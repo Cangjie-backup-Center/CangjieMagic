@@ -7,11 +7,66 @@ import magic.log.LogUtils
 
 import std.collection.HashMap
 import stdx.encoding.json.JsonObject
+import stdx.net.http.HttpHeaders
 
 protected class HttpException <: Exception {
     protected HttpException(
         protected let error: String
     ) { super(error) }
+}
+
+/**
+ * Used for hybrid http request, return either a string or a stream.
+ */
+protected enum HttpResultOption {
+    | Json(String)
+    | Stream(HttpStream)
+}
+
+protected class HttpResult {
+    protected let status: Int64
+    protected let header: HttpHeaders
+    protected let value: HttpResultOption
+
+    protected init(status!: Int64, header!: Array<(String, String)>, value!: HttpResultOption) {
+        this.status = status
+        this.value = value
+        this.header = HttpHeaders()
+        for ((k,v) in header) {
+            this.header.add(k,v)
+        }
+    }
+
+    protected init(status!: Int64, header!: HashMap<String, String>, value!: HttpResultOption) {
+        this.status = status
+        this.value = value
+        this.header = HttpHeaders()
+        for ((k,v) in header) {
+            this.header.add(k,v)
+        }
+    }
+
+    protected init(status!: Int64, header!: HttpHeaders, value!: HttpResultOption) {
+        this.status = status
+        this.header = header
+        this.value = value
+    }
+
+    public func isSuccess(): Bool {
+        return this.status >= 200 && this.status < 300
+    }
+
+    public func isAccepted(): Bool {
+        return this.status == 202
+    }
+
+    public func isNotFound(): Bool {
+        return this.status == 404
+    }
+
+    public func isBadRequest(): Bool {
+        return this.status == 400
+    }
 }
 
 func logHttpInfo(method: String, url: String, header: HashMap<String, String>, body: Option<JsonObject>, async!: Bool = false) {
@@ -56,6 +111,13 @@ protected struct HttpUtils {
                                     body: JsonObject,
                                     verify!: Bool = false): HttpStream {
         return HttpUtilsImpl.asyncSend("POST", url, header, body, verify: verify)
+    }
+
+    static protected func hybridPost(url: String,
+                                     header: HashMap<String, String>,
+                                     body: JsonObject,
+                                     verify!: Bool = false): HttpResult {
+        return HttpUtilsImpl.hybridSend("POST", url, header, body, verify: verify)
     }
 
     /**
