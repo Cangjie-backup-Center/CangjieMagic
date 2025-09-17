@@ -173,12 +173,31 @@ private func transformAi(input: Tokens, attr: AiAttr): Tokens {
                         tm.addTools($client.tools)
                     )
                 )
-            case AgentToolAttr.HttpMcp(_url) =>
+            case AgentToolAttr.SseMcp(_url) =>
                 let url = newLiteralToken(_url)
                 let client = newIdentifierToken("_client_${i}")
                 addTools.append(
                     quote(
                         let $client = SseMCPClient($url)
+                        tm.addTools($client.tools)
+                    )
+                )
+            case AgentToolAttr.HttpMcp(_url, _headers) =>
+                let url = newLiteralToken(_url)
+                let headers = joinTokens(
+                    _headers.iterator() |>
+                        map { tuple: (String, Token) =>
+                            let key = newLiteralToken(tuple[0])
+                            let value = tuple[1]
+                            return quote( ($key, $value) )
+                        } |>
+                        collectArray,
+                    Token(TokenKind.COMMA)
+                )
+                let client = newIdentifierToken("_client_${i}")
+                addTools.append(
+                    quote(
+                        let $client = HttpMCPClient($url, headers: [$headers])
                         tm.addTools($client.tools)
                     )
                 )

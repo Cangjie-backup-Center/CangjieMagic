@@ -5,6 +5,7 @@ package magic.utils.http
 
 import magic.log.LogUtils
 import magic.utils.getEnv
+import magic.config.Config
 
 import std.collection.HashMap
 @When[cjc_version < "1.0.0"]
@@ -31,9 +32,9 @@ private func buildHttpClient(url: String, verify: Bool): Client {
     }
     let TcpSocketConnector = { sa: SocketAddress =>
         let socket = TcpSocket(sa)
-        socket.readTimeout = Duration.second * 60
-        socket.writeTimeout = Duration.second * 60
-        socket.connect(timeout: Duration.second * 60)
+        socket.readTimeout = Duration.millisecond * Config.httpReadWriteTimeout
+        socket.writeTimeout = Duration.millisecond * Config.httpReadWriteTimeout
+        socket.connect(timeout: Duration.millisecond * Config.httpConnectTimeout)
         return socket
     }
     cb.connector(TcpSocketConnector)
@@ -72,7 +73,15 @@ private func sendHttp(method: String,
                       verify: Bool): (Client, HttpResponse) {
     let client = buildHttpClient(url, verify)
     let req = prepareHttpRequest(method, url, header, body)
-    return (client, client.send(req))
+    let response = client.send(req)
+    if (response.status != HttpStatusCode.STATUS_OK &&
+        response.status != HttpStatusCode.STATUS_ACCEPTED) {
+        let msg = "Http status: ${response.status}.\nHttp response: ${readHttpBody(response)}"
+        LogUtils.error("Http ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
+        LogUtils.error(msg)
+        throw HttpException(msg)
+    }
+    return (client, response)
 }
 
 private func readHttpBody(resp: HttpResponse): String {
@@ -92,16 +101,12 @@ protected struct HttpUtilsImpl {
         // header.put("Accept", "application/json")
         logHttpInfo(method, url, header, body, async: false)
         let (client, resp) = sendHttp(method, url, header, body, verify)
+        return processJson(client, resp)
+    }
+
+    static private func processJson(client: Client, response: HttpResponse): String {
         try {
-            let respBody = readHttpBody(resp)
-            if (resp.status != HttpStatusCode.STATUS_OK &&
-                resp.status != HttpStatusCode.STATUS_ACCEPTED) {
-                let msg = "Http status: ${resp.status}.\nHttp response: ${respBody}"
-                LogUtils.error("Http ${method} ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
-                LogUtils.error(msg)
-                throw HttpException(msg)
-            }
-            return respBody
+            return readHttpBody(response)
         } finally {
             client.close()
         }
@@ -113,35 +118,54 @@ protected struct HttpUtilsImpl {
                                     body: Option<JsonObject>,
                                     verify!: Bool): HttpStream {
         logHttpInfo(method, url, header, body, async: true)
+        // header.add("Accept", "text/event-stream")
+        let (client, resp) = sendHttp(method, url, header, body, verify)
         let httpStream = HttpStream()
         spawn {
-            // header.add("Accept", "text/event-stream")
-            let (client, resp) = sendHttp(method, url, header, body, verify)
-            let buffer = Array<Byte>(1024 * 10, { _ => 0})
-            var length = 0
-            while (true) {
-                length = resp.body.read(buffer)
-                if (length == 0) {
-                    break
-                } else {
-                    httpStream.put(buffer[..length].clone())
-                }
-            }
-            if (resp.status != HttpStatusCode.STATUS_OK &&
-                resp.status != HttpStatusCode.STATUS_ACCEPTED) {
-                LogUtils.error("Http ${method} ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
-                // The last read bytes consist of the error message
-                // let err = String(buffer[..length])
-                // LogUtils.error("Error: ${err}; ${resp}")
-                httpStream.put([b'\n']) // The error message may not end with a newline
-                httpStream.markError()
-            } else {
-                // Put the termination mark
-                LogUtils.debug("End http stream. Status: ${resp.status}")
-                httpStream.markEOF()
-            }
-            client.close()
+            processStream(client, resp, httpStream)
         }
         return httpStream
+    }
+
+    static private func processStream(client: Client, response: HttpResponse, httpStream: HttpStream): Unit {
+        let buffer = Array<Byte>(1024 * 10, { _ => 0})
+        while (true) {
+            let length = response.body.read(buffer)
+            if (length == 0) {
+                break
+            } else {
+                httpStream.put(buffer[..length].clone())
+            }
+        }
+        // Put the termination mark
+        LogUtils.debug("End http stream. Status: ${response.status}")
+        httpStream.markEOF()
+        client.close()
+    }
+
+    static protected func hybridSend(method: String,
+                                     url: String,
+                                     header: HashMap<String, String>,
+                                     body: Option<JsonObject>,
+                                     verify!: Bool): HttpResult {
+        logHttpInfo(method, url, header, body, async: false)
+        let (client, resp) = sendHttp(method, url, header, body, verify)
+        if ((resp.headers.getFirst("Content-Type") ?? "") == "text/event-stream") {
+            let httpStream = HttpStream()
+            spawn {
+                processStream(client, resp, httpStream)
+            }
+            return HttpResult(
+                status: Int64(resp.status),
+                header: resp.headers,
+                value: HttpResultOption.Stream(httpStream)
+            )
+        } else {
+            return HttpResult(
+                status: Int64(resp.status),
+                header: resp.headers,
+                value: HttpResultOption.Json(processJson(client, resp))
+            )
+        }
     }
 }

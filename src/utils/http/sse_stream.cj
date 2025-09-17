@@ -71,7 +71,7 @@ protected struct SSEvent <: ToString {
 protected class SSEventStream <: Iterator<SSEvent> {
     private let sseStream: SSEStream
 
-    init(httpStream: HttpStream) {
+    protected init(httpStream: HttpStream) {
         this.sseStream = SSEStream(httpStream)
     }
 

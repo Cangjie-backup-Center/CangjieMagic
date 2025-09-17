@@ -189,9 +189,9 @@ public class Config {
      public static var httpConnectTimeout = 60000 // ms
 
     /**
-     * The max read timeout in http requests. MS
+     * The max read/write timeout in http requests. MS
      */
-     public static var httpReadTimeout = 60000 // ms
+     public static var httpReadWriteTimeout = 60000 // ms
 
     /**
      * Import paths for file import functionality

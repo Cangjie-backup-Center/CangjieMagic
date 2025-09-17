@@ -11,7 +11,8 @@ import std.collection.{ArrayList, HashMap, map, collectArrayList, collectArray}
 
 enum AgentToolAttr {
     | StdioMcp(String, HashMap<String, Token>)
-    | HttpMcp(String)
+    | SseMcp(String)
+    | HttpMcp(String, HashMap<String, Token>)
     | NativeFuncTool(Token)
     | AgentTool(Expr)
     | NativeToolset(Expr)
@@ -27,12 +28,11 @@ enum AgentToolAttr {
                 throw DslException("Invalid agent tool config `${rawAttr}`")
             }
             let name = rawAttr[0].value
-            if(name == "stdioMCP") {
-                return AgentToolAttr.parseStdio(rawAttr)
-            } else if (name == "httpMCP") {
-                return AgentToolAttr.parseHttp(rawAttr)
-            } else {
-                return AgentToolAttr.parseNative(rawAttr)
+            return match (name) {
+                case "stdioMCP" | "stdioMcp" => AgentToolAttr.parseStdio(rawAttr)
+                case "sseMCP" | "sseMcp" => AgentToolAttr.parseSse(rawAttr)
+                case "httpMCP" | "httpMcp" => AgentToolAttr.parseHttp(rawAttr)
+                case _ => AgentToolAttr.parseNative(rawAttr)
             }
         }
     }
@@ -62,9 +62,9 @@ enum AgentToolAttr {
     }
 
     /**
-     * A single string literal, like http("https://...")
+     * A single string literal, like sseMcp("https://...")
      */
-    static func parseHttp(rawAttr: Tokens): AgentToolAttr {
+    static func parseSse(rawAttr: Tokens): AgentToolAttr {
         // Reconstruct the values as a list and parse it
         let urls = ArrayParser(rawAttr[1..], beginSymbol: TokenKind.LPAREN, endSymbol: TokenKind.RPAREN)
             .parseArrayOf(TokenKind.STRING_LITERAL) |>
@@ -73,7 +73,31 @@ enum AgentToolAttr {
         if (urls.size != 1) {
             throw DslException("Invalid MCP http server config `${rawAttr}`")
         }
-        return AgentToolAttr.HttpMcp(urls[0])
+        return AgentToolAttr.SseMcp(urls[0])
+    }
+
+    /**
+     * The first item is a string literal, followed by headers,
+     * like httpMCP("https://...", Authorization: "Bearer ...", ...)
+     */
+    static func parseHttp(rawAttr: Tokens): AgentToolAttr {
+        if (rawAttr.size < 4 ||
+            rawAttr[1].kind != TokenKind.LPAREN ||
+            (rawAttr[2].kind != TokenKind.STRING_LITERAL &&
+             rawAttr[2].kind != TokenKind.SINGLE_QUOTED_STRING_LITERAL) ||
+            rawAttr[rawAttr.size-1].kind != TokenKind.RPAREN) {
+            throw DslException("Invalid MCP stdio server config `${rawAttr}`")
+        }
+        let commandLine = rawAttr[2].value
+        // Reconstruct environment arguments as a map
+        let mapAttr = Tokens([Token(TokenKind.LCURL)])
+        // Skip the first four tokens: stdio ( "..." ,
+        if (rawAttr.size > 4) {
+            mapAttr.append(rawAttr[4..(rawAttr.size-1)])
+        }
+        mapAttr.append(Token(TokenKind.RCURL))
+        let headers = MapParser(mapAttr).parseMapOf(TokenKind.STRING_LITERAL)
+        return AgentToolAttr.HttpMcp(commandLine, headers)
     }
 
     /**
@@ -119,7 +143,7 @@ enum AgentToolAttr {
             )
         } else {
             let url = rawMapAttr.get("url").getOrThrow()[0]
-            return AgentToolAttr.HttpMcp(url.value)
+            return AgentToolAttr.SseMcp(url.value)
         }
     }
 
@@ -229,7 +253,7 @@ class AgentAttr <: Attr {
     /**
      * tools: [
      *   stdioMCP("...", ABC: "VALUE", ...)
-     *   httpMCP("...")
+     *   sseMCP("...")
      *   id
      * ]
      */
@@ -623,7 +647,7 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                         tm.addTools($client.tools)
                     )
                 )
-            case AgentToolAttr.HttpMcp(_url) =>
+            case AgentToolAttr.SseMcp(_url) =>
                 let url = newLiteralToken(_url)
                 let client = newIdentifierToken("_client_${i}")
                 addTools.append(
@@ -632,6 +656,26 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                         tm.addTools($client.tools)
                     )
                 )
+            case AgentToolAttr.HttpMcp(_url, _headers) =>
+                let url = newLiteralToken(_url)
+                let headers = joinTokens(
+                    _headers.iterator() |>
+                        map { tuple: (String, Token) =>
+                            let key = newLiteralToken(tuple[0])
+                            let value = tuple[1]
+                            return quote( ($key, $value) )
+                        } |>
+                        collectArrayList,
+                    Token(TokenKind.COMMA)
+                )
+                let client = newIdentifierToken("_client_${i}")
+                addTools.append(
+                    quote(
+                        let $client = HttpMCPClient($url, headers: [$headers])
+                        tm.addTools($client.tools)
+                    )
+                )
+
             case AgentToolAttr.NativeFuncTool(tool) =>
                 addTools.append(
                     quote(

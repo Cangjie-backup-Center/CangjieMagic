@@ -73,7 +73,7 @@ public class SseMCPClient <: AbsMCPClient {
     override protected func doBeforeRequest(): Unit {
         // Before sending the request, initialize the MCP
         let dur = DateTime.now() - this.lastInitTime
-        if (dur.toMilliseconds() > (Config.httpReadTimeout - 10000)) {
+        if (dur.toMilliseconds() > (Config.httpReadWriteTimeout - 10000)) {
             LogUtils.info("Reinitialize the sse session. Close ${this.endpoint}")
             this.sseStream.close()
             this.doInit()
