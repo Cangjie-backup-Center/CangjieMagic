@@ -31,7 +31,7 @@ public enum TokenizerType {
  * Support Qwen/Deepseek/TickToken[cl100k] Only
  */
 public class TokenizerLoader {
-    
+
     public static func default(): Tokenizer {
         if (let Some(tk) <- Config.defaultTokenizer) {
             tk
@@ -43,8 +43,8 @@ public class TokenizerLoader {
     public static func load(tokenizerType: TokenizerType, vocabPath: String): Tokenizer {
         try {
             match (tokenizerType) {
-                case Cl100k => Cl100kTokenizer(vocabPath)
-                case DeepSeek | Qwen => BPETokenizer(vocabPath)
+                case Cl100k => Cl100kTokenizer(Path(vocabPath))
+                case DeepSeek | Qwen => BPETokenizer(Path(vocabPath))
             }
         } catch (e: Exception) {
             throw UnsupportedException("Illegal Tokenizer Vocab ${vocabPath}")

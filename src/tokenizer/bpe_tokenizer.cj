@@ -10,20 +10,20 @@ public class BPETokenizer <: AbstractBPETokenizer {
     let _tokenizer_json: TokenizerJson
     let _tokenizer_config: BPETokenizerConfig
 
-    public init(modelPath: String) {
+    public init(modelPath: Path) {
         // load config from tokenizer.json
         if (!exists(modelPath)) {
             throw Exception("modelPath file:${modelPath} dos not exists")
         }
         this._tokenizer_json = TokenizerJson.fromJson(
-            readFile(Path(modelPath).join("tokenizer.json"))
+            readFile(modelPath.join("tokenizer.json"))
         )
         this._tokenizer_config = BPETokenizerConfig.fromJson(
-            readFile(Path(modelPath).join("tokenizer_config.json"))
+            readFile(modelPath.join("tokenizer_config.json"))
         )
         this._addBosToken = this._tokenizer_config._addBosToken
         this._addEosToken = this._tokenizer_config._addEosToken
-        this._bosToken = this._tokenizer_config._bosToken 
+        this._bosToken = this._tokenizer_config._bosToken
         this._eosToken= this._tokenizer_config._eosToken
         this.popRuneBiMapping()
         this.popVocab()

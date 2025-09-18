@@ -16,8 +16,8 @@ import magic.config.Config
 import std.fs.*
 
 @agent[
-    model: "deepseek:deepseek-chat", 
-    executor: "naive", 
+    model: "deepseek:deepseek-chat",
+    executor: "naive",
     rag: { source: miniRagRetriever(), mode: "static" }
 ]
 class MiniRagAgent {
@@ -36,7 +36,7 @@ class MiniRagAgent {
 func instantiate(): MiniRag {
     let model = ModelManager.createChatModel("deepseek:deepseek-chat")
     let embeddingModel = ModelManager.createEmbeddingModel("ollama:bge-m3:567m")
-    let tokenizer = Cl100kTokenizer("resource/mini_rag/tiktoken/cl100k_base.tiktoken")
+    let tokenizer = Cl100kTokenizer(Path("resource/mini_rag/tiktoken/cl100k_base.tiktoken"))
     MiniRagBuilder(MiniRagConfig(model, embeddingModel, tokenizer)).build()
 }
 
