@@ -22,7 +22,7 @@ ${EXECUTION_DEFINITION}
 
 // Prompts of parallel tool call is copied from https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use
 let ACTION_PROMPT = """
-Select tools to accomplish the user question step by step.
+Decide which tools to use next based on the current state of the execution.
 
 For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
 """
