@@ -11,18 +11,25 @@ import std.sort.*
 class TikTokenConfig {
     let _pre_split_regex: Regex = Regex(
         "('([sdmt]|ll|ve|re)| ?[[:punct:]]?[[:alpha:]]+| ?[[:punct:]]?[[:digit:]]+| ?[[:punct:]]?[^\\s\\w]+|\\s+)")
+
     let _added_tokens: Array<(String, UInt32)> = [("<|endoftext|>", 100257), ("<|fim_prefix|>", 100258),
         ("<|fim_middle|>", 100259), ("<|fim_suffix|>", 100260), ("<|endofprompt|>", 100276)]
+
     let _vocab: ArrayList<(Array<Byte>, UInt32)>
+
     init(vocab: ArrayList<(Array<Byte>, UInt32)>) {
         this._vocab = vocab
     }
 
-    public static func load(path: String): TikTokenConfig {
-        let lines = readLines(Path(path))
+    public static func load(path: Path): TikTokenConfig {
+        let content = readFile(path)
+        return parse(content)
+    }
+
+    public static func parse(content: String): TikTokenConfig {
         let vocab = ArrayList<(Array<Byte>, UInt32)>()
-        for (line in lines) {
-            let arr = line.split(" ")
+        for (line in content.split('\n')) {
+            let arr = line.trimAscii().split(" ")
             if (arr.size != 2) {
                 continue
             }
@@ -38,8 +45,17 @@ class TikTokenConfig {
 public class Cl100kTokenizer <: AbstractBPETokenizer {
     let _config: TikTokenConfig
 
-    public init(path: String) {
-        this._config = TikTokenConfig.load(path)
+    public init(tikTokenPath: Path) {
+        this._config = TikTokenConfig.load(tikTokenPath)
+        this.doInit()
+    }
+
+    public init(tikTokenContent: String) {
+        this._config = TikTokenConfig.parse(tikTokenContent)
+        this.doInit()
+    }
+
+    private func doInit() {
         this.popRuneBiMapping()
 
         let ranks = ArrayList<String>()
