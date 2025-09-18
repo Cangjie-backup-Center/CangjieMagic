@@ -258,13 +258,13 @@ public open class AgentTask {
                 } catch (ex: AgentCancelException) {
                     throw ex // throw the exception to the upper level to cancel the execution
                 } catch (ex: ToolException) {
-                    return "Fail to invoke the tool `${toolRequest.name}`. Reason: ${ex.reason}"
+                    return "Fail to invoke the tool with tool exception `${toolRequest.name}`. Reason: ${ex.reason}"
                 } catch (ex: Exception) {
                     let strBuilder = StringBuilder()
                     for (ste in ex.getStackTrace()) {
                         strBuilder.append("${ste.fileName}:${ste.lineNumber} ${ste.methodName}\n")
                     }
-                    return "Fail to invoke the tool `${strBuilder}`"
+                    return "Fail to invoke the tool with exception `${strBuilder}`"
                 }
                 // Save the tool result
                 toolResult = toolResponse.content

@@ -214,16 +214,9 @@ class AgentAttr <: Attr {
         get() { getString("description") ?? "" }
     }
 
-    prop temperature: Option<Float64> {
+    prop temperature: Option<Tokens> {
         get() {
-            if (let Some(v) <- getLiteral("temperature")) {
-                try {
-                    return Float64.tryParse(v)
-                } catch (_: IllegalArgumentException) {
-                    throw DslException("Invalid temperature attribute")
-                }
-            }
-            return None
+            return getTokens("temperature")
         }
     }
 
@@ -478,8 +471,7 @@ func buildAgentDescriptionProp(agentAttr: AgentAttr): Tokens {
 
 func buildAgentTemperatureProp(agentAttr: AgentAttr): Tokens {
     let tokens = if (let Some(t) <- agentAttr.temperature) {
-        let token = newLiteralToken(t)
-        quote(Some($token))
+        t
     } else {
         quote(None)
     }
