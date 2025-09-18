@@ -73,15 +73,21 @@ private func sendHttp(method: String,
                       verify: Bool): (Client, HttpResponse) {
     let client = buildHttpClient(url, verify)
     let req = prepareHttpRequest(method, url, header, body)
-    let response = client.send(req)
-    if (response.status != HttpStatusCode.STATUS_OK &&
-        response.status != HttpStatusCode.STATUS_ACCEPTED) {
-        let msg = "Http status: ${response.status}.\nHttp response: ${readHttpBody(response)}"
+    try {
+        let response = client.send(req)
+        if (response.status != HttpStatusCode.STATUS_OK &&
+            response.status != HttpStatusCode.STATUS_ACCEPTED) {
+            let msg = "Http status: ${response.status}.\nHttp response: ${readHttpBody(response)}"
+            LogUtils.error("Http ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
+            LogUtils.error(msg)
+            throw HttpException(msg)
+        }
+        return (client, response)
+    } catch (ex: Exception) {
         LogUtils.error("Http ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
-        LogUtils.error(msg)
-        throw HttpException(msg)
+        LogUtils.debug(ex)
+        throw HttpException(ex.message)
     }
-    return (client, response)
 }
 
 private func readHttpBody(resp: HttpResponse): String {
