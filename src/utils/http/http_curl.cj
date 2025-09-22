@@ -19,6 +19,11 @@ import stdx.net.http.HttpHeaders
 @When[cjc_version < "1.0.0"]
 import std.time.Duration
 
+@When[os == "Windows"]
+private const IS_WINDOWS = true
+@When[os != "Windows"]
+private const IS_WINDOWS = false
+
 private func prepareCurlArgs(method: String, url: String, header: HashMap<String, String>, body: Option<JsonObject>, verify: Bool): Array<String> {
     let args = ArrayList<String>()
     args.add("-X")
@@ -68,9 +73,18 @@ protected struct HttpUtilsImpl {
         logHttpInfo(method, url, header, body, async: async)
         let args = prepareCurlArgs(method, url, header, body, verify)
         try {
-            let subProcess = newProcess("curl", args)
+            let subProcess = if (IS_WINDOWS) {
+                newProcess("curl.exe", args)
+            } else {
+                newProcess("curl", args)
+            }
+            if (IS_WINDOWS) { // Windows need to wait a while to get the stderr ?
+                sleep(Duration.second * 1)
+            }
             let errReader = StringReader<InputStream>(subProcess.stdErr)
-            let _ = errReader.readln() // Wait until the first line is read
+            LogUtils.trace("Curl process args: ${args}")
+            let err = errReader.readln() // Wait until the first line is read
+            LogUtils.trace("Curl process stderr first line: ${err}")
             return subProcess
         } finally {
             if (body.isSome() && !Config.saveModelRequest) {
