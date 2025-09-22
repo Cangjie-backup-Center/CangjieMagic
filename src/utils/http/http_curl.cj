@@ -94,6 +94,7 @@ protected struct HttpUtilsImpl {
                                body: Option<JsonObject>,
                                verify!: Bool): Option<String> {
         let (subProcess, tempPath) = newCurlProcess(method, url, header, body, verify, async: false)
+        parseCurlVerboseOutput(subProcess)
         return processJson(subProcess, tempPath)
     }
 
