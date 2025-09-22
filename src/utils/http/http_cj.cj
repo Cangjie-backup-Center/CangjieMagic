@@ -7,7 +7,7 @@ import magic.log.LogUtils
 import magic.utils.getEnv
 import magic.config.Config
 
-import std.collection.HashMap
+import std.collection.{HashMap, contains}
 @When[cjc_version < "1.0.0"]
 import std.socket.{SocketAddress, TcpSocket}
 @When[cjc_version >= "1.0.0"]
@@ -156,7 +156,8 @@ protected struct HttpUtilsImpl {
                                      verify!: Bool): HttpResult {
         logHttpInfo(method, url, header, body, async: false)
         let (client, resp) = sendHttp(method, url, header, body, verify)
-        if ((resp.headers.getFirst("Content-Type") ?? "") == "text/event-stream") {
+        if (resp.headers.get("Content-Type") |> contains("text/event-stream") ||
+            resp.headers.get("content-type") |> contains("text/event-stream")) {
             let httpStream = HttpStream()
             spawn {
                 processStream(client, resp, httpStream)

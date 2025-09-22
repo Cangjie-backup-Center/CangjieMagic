@@ -9,7 +9,7 @@ import magic.utils.{saveTempFile, newProcess, removeIfExists}
 
 import std.io.InputStream
 import std.io.StringReader
-import std.collection.{ArrayList, HashMap}
+import std.collection.{ArrayList, HashMap, HashSet, contains}
 import std.process.SubProcess
 import std.regex.Regex
 import std.convert.Parsable
@@ -158,12 +158,9 @@ protected struct HttpUtilsImpl {
                                      verify!: Bool): HttpResult {
         let subProcess = newCurlProcess(method, url, header, body, verify, async: false)
 
-        let errReader = StringReader<InputStream>(subProcess.stdErr)
-        let err = errReader.readToEnd()
-        LogUtils.trace("Raw http response headers: ${err}")
-        let (status, respHeader) = parseCurlVerboseMessage(err)
+        let (status, respHeader) = parseCurlVerboseMessage(subProcess)
 
-        if ((respHeader.getFirst("Content-Type") ?? "") == "text/event-stream") {
+        if (respHeader.get("content-type") |> contains("text/event-stream")) {
             let httpStream = HttpStream()
             spawn {
                 processStream(subProcess, httpStream)
@@ -185,20 +182,39 @@ protected struct HttpUtilsImpl {
     /**
      * Parse the curl output to get the status code and headers.
      */
-    protected static func parseCurlVerboseMessage(curlOutput: String): (Int64, HttpHeaders) {
+    protected static func parseCurlVerboseMessage(subProcess: SubProcess): (Int64, HttpHeaders) {
+        let errReader = StringReader<InputStream>(subProcess.stdErr)
         // Extract status line (e.g., "< HTTP/1.1 200 OK")
+        // And required headers
         var status = 200
         let header = HttpHeaders()
-        for (line in curlOutput.split("\n")) {
+        let requiredHeaders = HashSet(["content-type"])
+
+        while (let Some(line) <- errReader.readln()) {
             if (line.startsWith("< HTTP/")) {
-                let regex = Regex("^< HTTP/\\d\\.\\d (\\d{3}) .+$")
+                LogUtils.trace("Raw http response header line: ${line}")
+                let regex = Regex("^< HTTP/\\d(\\.\\d)? (\\d{3}) .+$")
                 if (let Some(md) <- regex.find(line, group: true)) {
-                    status = Int64.parse(md.matchString(1))
+                    status = Int64.parse(md.matchString(2))
+                    LogUtils.trace("Got Http status: ${status}")
                 }
             } else if (line.startsWith("< ")) {
                 let regex = Regex("^< ([^:]+): (.+)$")
                 if (let Some(md) <- regex.find(line, group: true)) {
-                    header.add(md.matchString(1), md.matchString(2))
+                    LogUtils.trace("Raw http response header line: ${line}")
+                    let key = md.matchString(1).trimAscii().toAsciiLower()
+                    // If the required header is not set, add it
+                    if (requiredHeaders.contains(key)) {
+                        for (value in md.matchString(2).trimAscii().split(",")) {
+                            header.add(key, value.trimAscii())
+                            LogUtils.trace("Got Http header: ${key}: ${value}")
+                        }
+                        requiredHeaders.remove(key)
+                    }
+                }
+                // All required headers are set
+                if (requiredHeaders.isEmpty()) {
+                    break
                 }
             }
         }
