@@ -13,3 +13,5 @@ venv/
 .venv/
 .DS_Store
 build-script-cache/
+**/__pycache__/
+src/main*.cj
