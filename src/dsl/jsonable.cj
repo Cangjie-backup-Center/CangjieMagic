@@ -263,11 +263,22 @@ private func buildFromJsonMethod(attr: JsonableAttr): Tokens {
                     newLiteralToken(varName)
                 }
                 let varType = varDecl.declType
+
+                // Case 1: field has default value
+                try {
+                    let initExpr = varDecl.expr
+                    return quote(
+                        $fieldName: jo.get($fieldNameStr).map({ v => $varType.fromJsonValue(v) }).getOrDefault({ => $initExpr })
+                    )
+                } catch (_: ASTException) {
+                    // Skip the exception
+                }
+                // Case 2: field type has default value
                 if (let Some(defaultValue) <- getDefaultValueOfType(varType)) {
                     return quote(
                         $fieldName: $varType.fromJsonValue(jo.get($fieldNameStr).getOrDefault({ => $defaultValue }))
                     )
-                } else{
+                } else{ // Case 3: field has no default value
                     return quote(
                         $fieldName: $varType.fromJsonValue(jo.get($fieldNameStr).getOrThrow({ => throw JsonableException("Get JSON object field error")}))
                     )
