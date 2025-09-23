@@ -113,12 +113,12 @@ public struct ExecutionOpSet {
             let chatResp = if (Config.enableModelToolCall) {
                 chatWithOperation(
                     state,
-                    ACTION_PROMPT,
+                    getActionPrompt(),
                     tools: state.task.availableTools,
                     stop: [Tag.OBSERVATION]
                 )
             } else {
-                let prompt = ACTION_PROMPT_WITH_TOOLS.format([
+                let prompt = getActionPromptWithTools().format([
                     ("tools", PromptBuilder.buildAgentToolsPrompt(state.task))
                 ])
                 chatWithOperation(
@@ -177,15 +177,19 @@ public struct ExecutionOpSet {
     }
 
     private static func doInvokeTool(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
-        LogUtils.debug(state.task.agent.name, "Action: ${chatResp}")
-        let toolRequests = parseToolRequests(chatResp)
+        LogUtils.debug(state.task.agent.name, "To invoke tool: ${chatResp}")
+        var toolRequests = parseToolRequests(chatResp)
         // We also add reasoning content to the step messages
         if (let Some(reason) <- chatResp.message.reason) {
             Message.assistant(reason) // Without tag?
         }
         // LLM may generate parallel tools to run, but we run them sequentially currently
         // Execute each tool
-        LogUtils.info(state.task.agent.name, "Action: ${toolRequests.toJsonValue().toJsonString()}")
+        LogUtils.info(state.task.agent.name, "Tool call: ${toolRequests.toJsonValue().toJsonString()}")
+        // If parallel tool call is disabled, we only run the first tool request
+        if (!Config.enableParallelToolCall && toolRequests.size > 1) {
+            toolRequests = [toolRequests[0]]
+        }
         for (toolRequest in toolRequests) {
             // Add action to the message list
             // If function call is not enabled, we wrap the messages with tags

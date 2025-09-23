@@ -157,10 +157,16 @@ public class Config {
     // public static var filterThink = false
 
     /**
-     * Whether to use the function call feature of LLMs.
+     * Whether to use the tool call feature of LLMs.
      * This option is used in "tool-loop", "dsl" and "react" executor.
      */
     public static var enableModelToolCall = false
+
+    /**
+     * Whether to enable parallel tool call feature of LLMs.
+     * This option is used in "tool-loop", "dsl" and "react" executor.
+     */
+    public static var enableParallelToolCall = true
 
     /**
      * The threshold to decide whether to summarize the tool result when the tool enables summarization.
