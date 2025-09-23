@@ -4,6 +4,7 @@
 package magic.agent_executor.dsl
 
 import magic.parser.{Tag, WithTag}
+import magic.config.Config
 
 let EXECUTION_DEFINITION = """
 The execution is a chronological event stream containing the following types of events:
@@ -21,27 +22,34 @@ ${EXECUTION_DEFINITION}
 """
 
 // Prompts of parallel tool call is copied from https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use
-let ACTION_PROMPT = """
-Decide which tools to use next based on the current state of the execution.
-
+private func getToolCallParallelDescription(): String {
+    if (Config.enableParallelToolCall) {
+"""
+Decide which tools to use next based on the current execution state.
 For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
 """
-
-let ACTION_PROMPT_WITH_TOOLS = """
-Decide which tool to use next based on the user question and the current state of the execution.
-${EXECUTION_DEFINITION}
-
-For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
-
-All available tools are listed:
-{tools}
-
-You MUST output a JSON object with the following schema:
-```json
-{
-    "name": string, name of the tool, it must refer to one of available tools
-    "arguments": { [key: string]: unknown }, arguments for the tool, each argument must be a valid json value required by the tool; it can be omitted, if the tool does not accept parameters
+    } else {
+"""
+Decide which tool to use next based on the current execution state. ONLY one tool can be used.
+"""
+    }
 }
+
+func getActionPrompt(): String {
+    getToolCallParallelDescription()
+}
+
+private func getToolCallExample(): String {
+    if (Config.enableParallelToolCall) {
+"""
+You MUST output a JSON array with the following schema:
+```json
+[
+    {
+        "name": string, name of the tool, it must refer to one of available tools
+        "arguments": { [key: string]: unknown }, arguments for the tool, each argument must be a valid json value required by the tool; it can be omitted, if the tool does not accept parameters
+    }
+]
 ```
 For example,
 ```json
@@ -62,9 +70,44 @@ For example,
   }
 ]
 ```
-
-Now, select tools and output it with required format.
 """
+    } else {
+"""
+You MUST output a JSON object with the following schema:
+```json
+{
+    "name": string, name of the tool, it must refer to one of available tools
+    "arguments": { [key: string]: unknown }, arguments for the tool, each argument must be a valid json value required by the tool; it can be omitted, if the tool does not accept parameters
+}
+```
+For example,
+```json
+{
+    "name": "foo"
+    "arguments": {
+        "url": "http://example.com",
+        "count": 3,
+        "items": ["abc", "xyz"]
+    }
+}
+```
+"""
+    }
+}
+
+func getActionPromptWithTools(): String {
+"""
+Decide which tool to use next based on the user question and the current execution state.
+${getToolCallParallelDescription()}
+${EXECUTION_DEFINITION}
+
+All available tools are listed:
+{tools}
+
+${getToolCallExample()}
+Now, make the tool decision and output the result with required format.
+"""
+}
 
 let ANSWER_PROMPT = """
 Based on the execution, answer the user question now.

@@ -7,7 +7,7 @@ import magic.core.agent.*
 import magic.agent.base.BaseAgent
 import magic.core.message.{Message, MessageList}
 import magic.core.model.ChatRequest
-import magic.agent_executor.react.{ReactPromptUtils, ReactExecutor, REACT_SYSTEM_PROMPT}
+import magic.agent_executor.react.{ReactPromptUtils, ReactExecutor}
 import magic.interaction.EventHandlerManager
 import magic.utils.*
 import magic.log.LogUtils

@@ -3,6 +3,7 @@
  */
 package magic.agent_executor.react
 
+import magic.config.Config
 import magic.parser.{ParserUtils, ParserException}
 import magic.core.tool.ToolRequest
 import magic.log.LogUtils
@@ -90,11 +91,16 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
         match ((thought, Tag.extract(content, Tag.ACTION))) {
             case (_, Some(action)) =>
                 try {
+                    let toolCalls = if (Config.enableParallelToolCall) {
+                        ParserUtils.extractToolRequestArray(action)
+                    } else {
+                        [ParserUtils.extractToolRequest(action)]
+                    }
                     return ReactStep.Action(
                         ToolCall(
                             text: action,
                             thought: thought ?? "",
-                            requests: ParserUtils.extractToolRequestArray(action)
+                            requests: toolCalls
                         )
                     )
                 } catch (ex: ParserException) {
