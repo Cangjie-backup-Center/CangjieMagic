@@ -22,7 +22,7 @@ private enum Item {
  * A http stream is an iterator of strings
  * Wrap of a blocking queue to support streaming.
  */
-protected class HttpStream <: Iterator<String> & InputStream {
+public class HttpStream <: Iterator<String> & InputStream {
     private let queue = LinkedBlockingQueue<Item>()
     private let byteBuffer = ArrayList<Byte>()
     private let closeFn: Option<() -> Unit>
