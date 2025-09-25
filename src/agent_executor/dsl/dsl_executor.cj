@@ -33,8 +33,8 @@ public class DslExecutor <: AgentExecutor {
         let initState = ExecutionState(task)
         try {
             task.begin()
-            let object = ag.__CUSTOMIZED_EXECUTION_FUNC__(initState).getOrThrow({ =>
-                throw AgentExecutionException("Agent failed to execute __CUSTOMIZED_EXECUTION_FUNC__")
+            let object = ag.__customized_execution_func__(initState).getOrThrow({ =>
+                throw AgentExecutionException("Agent failed to execute __customized_execution_func__")
             })
             let finalState = (object as ExecutionState).getOrThrow()
             if (!finalState.done) {

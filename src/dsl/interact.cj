@@ -78,36 +78,51 @@ public macro asyncInteract(attrTokens: Tokens, input: Tokens): Tokens {
  * }()
  */
 func transformInteract(input: Tokens, attr: InteractAttr): Tokens {
-    let matchExpr = try {
-        // Wrap the input tokens as a match expr for easily parsing
-        let expr = parseExpr(quote(match(_fake_var) { $input }))
-        (expr as MatchExpr).getOrThrow({ =>
-            DslException("Failed to parse @interact body: \n```\n${input.toString()}```")
-        })
-    } catch (_: ParseASTException) {
-        throw DslException("Failed to parse @interact body: \n```\n${input.toString()}```")
-    }
-    let body = quote(
-        let manager = EventHandlerManager()
-    )
-    for (caseClause in matchExpr.matchCases) {
-        checkInteractCase(caseClause)
-        body.append(quote(
-            manager.addHandler({
-                $( caseClause.patterns[0] ) => $( caseClause.block )
-            })
-        ))
-    }
+    let body = transformEventHandlers(input)
     let funcName = if (attr.async) {
         newIdentifierToken("_asyncInteract")
     } else {
         newIdentifierToken("_interact")
     }
     return quote(
-        {=> $body
+        {=>
+            $body
             return $funcName( $(attr.agent), request: $(attr.request), manager: manager )
         }()
     )
+}
+
+/*
+ * Transform the event handlers in @interact body as a event handler manager
+ * case evt: ABCEvent => ...
+ * case evt: XYZEvent => ...
+ * AS
+ * let manager = EventHandlerManager()
+ * manager.addHandler({evt: ABCEvent => ... })
+ * manager.addHandler({evt: XYZEvent => ... })
+ */
+func transformEventHandlers(tokens: Tokens) {
+    let matchExpr = try {
+        // Wrap the input tokens as a match expr for easily parsing
+        let expr = parseExpr(quote(match(_fake_var) { $tokens }))
+        (expr as MatchExpr).getOrThrow({ =>
+            DslException("Failed to parse @interact body: \n```\n${tokens.toString()}```")
+        })
+    } catch (_: ParseASTException) {
+        throw DslException("Failed to parse @interact body: \n```\n${tokens.toString()}```")
+    }
+    let result = quote(
+        let manager = EventHandlerManager()
+    )
+    for (caseClause in matchExpr.matchCases) {
+        checkInteractCase(caseClause)
+        result.append(quote(
+            manager.addHandler({
+                $( caseClause.patterns[0] ) => $( caseClause.block )
+            })
+        ))
+    }
+    return result
 }
 
 private func checkInteractCase(caseClause: MatchCase): Unit {

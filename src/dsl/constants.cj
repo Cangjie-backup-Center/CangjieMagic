@@ -5,9 +5,10 @@ macro package magic.dsl
 
 import std.ast.*
 
-let PROMPT_BUILDER = Token(TokenKind.IDENTIFIER, "__PROMPT_BUILDER__")
-let SYSTEM_PROMPT_FUNC = "__SYSTEM_PROMPT_FUNC__"
-let USER_PROMPT_FUNC = "__USER_PROMPT_FUNC__"
+let PROMPT_BUILDER = Token(TokenKind.IDENTIFIER, "__prompt_builder__")
+let SYSTEM_PROMPT_FUNC = "__system_prompt_func__"
+let USER_PROMPT_FUNC = "__user_prompt_func__"
+let HANDLER_FUNC_NAME = "__handler_func__"
 
 let TEMPLATE_FUNC_NAME_POSTFIX = "__template_"
 let TOOL_METADATA_BUILDER_PREFIX = "__tool_metadata_of_"

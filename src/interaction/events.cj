@@ -9,8 +9,6 @@ import magic.core.tool.{ToolRequest, ToolResponse}
 import magic.core.model.{ChatRequest, ChatResponse}
 import magic.core.agent.AgentExecution
 
-import std.deriving.*
-
 /**
  * Triggered when before tool call
  */
