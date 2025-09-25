@@ -169,6 +169,16 @@ public class Config {
     public static var enableParallelToolCall = true
 
     /**
+     * Whether to enable tool call check, like checking repeated tool calls
+     */
+    public static var enableToolCallCheck = false
+
+    /**
+     * Whether to enable json retry when the model response is not valid json.
+     */
+    public static var enableJsonRetry = true
+
+    /**
      * The threshold to decide whether to summarize the tool result when the tool enables summarization.
      * The threshold is in byte size.
      */

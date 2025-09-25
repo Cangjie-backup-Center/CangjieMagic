@@ -23,10 +23,10 @@ public struct AsyncChatChunk <: ToString {
 }
 
 /**
- * Wrap the async chat chunks as a string iterator
+ * Wrap the async chat response as a string iterator
  */
-private class ContentIterator <: Iterator<String> {
-    ContentIterator(
+private class AsyncChatResponseIterator <: Iterator<String> {
+    AsyncChatResponseIterator(
         private let asyncChatResp: AsyncChatResponse,
         private let withReason: Bool
     ) { }
@@ -44,8 +44,7 @@ private class ContentIterator <: Iterator<String> {
     }
 }
 
-public class AsyncChatResponse <: ToString {
-    public let model: String
+public class AsyncChatResponse <: ChatResponse {
     public let chunks: Iterator<AsyncChatChunk>
     // The following fields will be update during receiving chunks
     private var role = MessageRole.Assistant
@@ -56,11 +55,37 @@ public class AsyncChatResponse <: ToString {
     private let finished = AtomicBool(false)
 
     protected init(model: String, chunks: Iterator<AsyncChatChunk>) {
-        this.model = model
+        super(model)
         this.chunks = chunks
     }
 
-    protected func next(): Option<AsyncChatChunk> {
+    override public prop usage: Option<ChatUsage> {
+        get() {
+            if (!finished.load()) {
+                return None
+            } else {
+                _usage
+            }
+        }
+    }
+
+    /**
+     * This method is synchronous, it will wait until the chat response completes.
+     */
+    override public prop message: Message {
+        get() {
+            if (!finished.load()) {
+                // Consume all chunks
+                while (let Some(_) <- this.next()) { }
+            }
+            this._message
+        }
+    }
+
+    /**
+     * Used by AsyncChatResponseIterator
+     */
+    func next(): Option<AsyncChatChunk> {
         if (finished.load()) {
             return None
         }
@@ -82,41 +107,6 @@ public class AsyncChatResponse <: ToString {
     }
 
     public func iter(withReason!: Bool = true): Iterator<String> {
-        ContentIterator(this, withReason)
-    }
-
-    public prop usage: Option<ChatUsage> {
-        get() {
-            if (!finished.load()) {
-                return None
-            } else {
-                _usage
-            }
-        }
-    }
-
-    /**
-     * This method is synchronous, it will wait until the chat response completes.
-     */
-    public prop message: Message {
-        get() {
-            if (!finished.load()) {
-                // Consume all chunks
-                while (let Some(_) <- this.next()) { }
-            }
-            this._message
-        }
-    }
-
-    public func toString(): String {
-        if (!finished.load()) {
-            return "Unfinished"
-        }
-        let strBuilder = StringBuilder()
-        strBuilder.append("ChatResult: model[${model}] usage[${usage.toString()}]")
-        strBuilder.append("  ")
-        strBuilder.append(this.message.toString())
-        strBuilder.append("\n")
-        strBuilder.toString()
+        AsyncChatResponseIterator(this, withReason)
     }
 }

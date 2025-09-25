@@ -19,8 +19,18 @@ import magic.model.ModelUtils
 import magic.tool.{SimpleToolFilter, AgentAsTool, SubAgentMode}
 import magic.prompt.Template
 
-import std.collection.{ArrayList, HashMap, any, map, collectArray}
+import std.collection.{ArrayList, ArrayDeque, HashMap, any, map, collectArray}
 import std.sync.AtomicBool
+
+/**
+ * ToolCallCheckStatus represents the status of a tool call check.
+ */
+private enum ToolCallCheckStatus {
+    | Normal
+    | Warning(String)
+    | Hijack(ToolResponse)
+    | Stop(ToolResponse)
+}
 
 /**
  * AgentTask represents a task that is being executed by an agent executor.
@@ -40,6 +50,11 @@ public open class AgentTask {
      * A cache for tool results for compacting tool invocation results
      */
     private let toolResultCache = ToolResultCache()
+
+    /**
+     * A cache for tool requests for checking invalid tool calls, e.g., repeating tool calls
+     */
+    private let toolRequestCache = ArrayDeque<ToolRequest>()
 
     /**
      * Create a new AgentTask with the given agent and request.
@@ -185,7 +200,6 @@ public open class AgentTask {
     // Two important methods must be called before and after the task execution
     protected func begin(): Unit {
         LogUtils.info("${this.agent.name} runs")
-        AgentOp.handle(event: AgentStartEvent(this.agent, this.request))
         AgentTaskStackUtils.push(this)
     }
 
@@ -193,7 +207,6 @@ public open class AgentTask {
         if (this.request.verbose) {
             this.execution.events.close()
         }
-        AgentOp.handle(event: AgentEndEvent(this.agent, this.request))
         AgentTaskStackUtils.pop()
     }
 
@@ -229,12 +242,113 @@ public open class AgentTask {
     }
 
     /**
+     * Check whether the tool call is valid
+     * Return None if the tool call is valid, otherwise return the error message
+     */
+    private func checkToolCall(toolRequest: ToolRequest): ToolCallCheckStatus {
+        if (!Config.enableToolCallCheck) {
+            return ToolCallCheckStatus.Normal
+        }
+        // Cascading checking with Short-circuit evaluation
+        let warning = this.checkSameToolCall(toolRequest) ??
+                      (this.checkRepeatedToolCall(toolRequest) ?? "")
+
+        // Add the tool request to the cache, and only the last 10 tool requests are cached
+        if (this.toolRequestCache.size > 10) {
+            this.toolRequestCache.removeFirst()
+        }
+        this.toolRequestCache.addLast(toolRequest)
+
+        if (warning == "") {
+            return ToolCallCheckStatus.Normal
+        }
+        // If there is a warning, we call event handlers
+        match (AgentOp.handle(event: ToolCallRepeatEvent(this.agent, toolRequest),
+                              forRequest: this.request)) {
+            case EventResponse.Continue =>
+                return ToolCallCheckStatus.Warning(warning)
+            case EventResponse.Continue(resp) =>
+                return ToolCallCheckStatus.Hijack(resp)
+            case EventResponse.Terminate(resp) =>
+                return ToolCallCheckStatus.Stop(resp)
+        }
+    }
+
+    /**
+     * Check if the tool is exactly repeated
+     */
+    private func checkSameToolCall(toolRequest: ToolRequest): Option<String> {
+        if (let Some(lastToolRequest) <- this.toolRequestCache.last) {
+            if (lastToolRequest.toString() == toolRequest.toString()) {
+                let msg = "Warning: Detected repeated tool `${toolRequest.name}` calls with identical parameters. AVOID redundant tool calls. Reuse prior results if inputs match. If repetition is needed, state the reason briefly. Proceed efficiently."
+                LogUtils.debug(msg)
+                return msg
+            }
+        }
+        return None
+    }
+
+    /**
+     * Check if the tool is called repeatedly
+     */
+    private func checkRepeatedToolCall(toolRequest: ToolRequest): Option<String> {
+        let lastToolRequests = this.toolRequestCache.toArray()
+        var sameCount = 0
+        for (i in (lastToolRequests.size-1)..=0:-1) { // Iterate from the end to the beginning
+            if (lastToolRequests[i].name == toolRequest.name) {
+                sameCount += 1
+            } else {
+                return None
+            }
+            if (sameCount >= 2) { // If the tool is called more than 4 times, consider it as repeated
+                let msg = "Warning: Detected repeated tool `${toolRequest.name}` calls. Consolidate inputs and invoke the tool once with comprehensive arguments to improve efficiency. If repetition is needed, state the reason briefly."
+                LogUtils.debug(msg)
+                return msg
+            }
+        }
+        return None
+    }
+
+    /**
      * Run the tool and return observation messages
      */
     protected func invokeTool(toolRequest: ToolRequest): String {
         if (this.stopInfo.isSome()) {
             throw AgentCancelException()
         }
+        // Check the tool call request
+        // If there is a warning and its event handler hijacks the request, return the result
+        let warningOpt: Option<String> = match (this.checkToolCall(toolRequest)) {
+            case ToolCallCheckStatus.Normal => None
+            case ToolCallCheckStatus.Warning(msg) => msg
+            case ToolCallCheckStatus.Hijack(resp) =>
+                AgentOp.handle(event: ToolCallEndEvent(this.agent, toolRequest, resp), forRequest: this.request)
+                return resp.content
+            case ToolCallCheckStatus.Stop(resp) =>
+                this.stop(
+                    EarlyStopReason.EventHandlerTerminated,
+                    result: resp.content,
+                    log: "Terminated by repeated tool call event handler"
+                )
+                AgentOp.handle(event: ToolCallEndEvent(this.agent, toolRequest, resp), forRequest: this.request)
+                return resp.content
+        }
+        // Now, the normal process of calling a tool
+        let toolResult = this.doInvokeTool(toolRequest)
+        // Call event handlers
+        AgentOp.handle(event: ToolCallEndEvent(this.agent, toolRequest, ToolResponse(toolResult)), forRequest: this.request)
+        // If there is a warning, add it to the result to guide the agent
+        if (let Some(warning) <- warningOpt) {
+            return "${warning}\n\nResult of the tool:\n${toolResult}"
+        } else {
+            return toolResult
+        }
+    }
+
+    /**
+     * Invoke the tool and return the result
+     */
+    private func doInvokeTool(toolRequest: ToolRequest): String {
         // Find the tool
         let toolOpt = this.findTool(toolRequest.name)
         if (toolOpt.isNone()) {
@@ -242,64 +356,63 @@ public open class AgentTask {
             let names = this.agent.toolManager.tools |> map { t => t.name } |> collectArray
             return "Tool `${toolRequest.name}` not found in ${names}"
         }
-        var toolResult: String = ""
         let tool = toolOpt.getOrThrow()
         match (AgentOp.handle(event: ToolCallStartEvent(this.agent, toolRequest), forRequest: this.request)) {
-            case EventResponse.Continue =>
-                // Invoke the tool
-                let toolResponse = try {
-                    if (tool is AgentAsTool) {
-                        // If the tool is an agent, we invoke the agent
-                        this.invokeAgentAsTool(toolRequest, (tool as AgentAsTool).getOrThrow())
-                    } else {
-                        // Normal tool invocation
-                        tool.invoke(toolRequest.args)
-                    }
-                } catch (ex: AgentCancelException) {
-                    throw ex // throw the exception to the upper level to cancel the execution
-                } catch (ex: ToolException) {
-                    return "Tool `${toolRequest.name}` did not run successfully. Reason: ${ex.reason}"
-                } catch (ex: Exception) {
-                    let strBuilder = StringBuilder()
-                    for (ste in ex.getStackTrace()) {
-                        strBuilder.append("${ste.fileName}:${ste.lineNumber} ${ste.methodName}\n")
-                    }
-                    return "Fail to invoke the tool with exception `${strBuilder}`"
-                }
-                // Save the tool result
-                toolResult = toolResponse.content
-                // Check whether the tool has special attributes
-                if ((tool.extra.get("compactable") ?? "false") == "true" &&
-                    toolResult.size > Config.toolResultCompactThreshold) {
-                    // If the tool is compactable, we can compact its result
-                    let compactor = SimpleToolCompactor(ChatModelWrapper(this))
-                    let summary = compactor.compact(toolRequest, toolResponse)
-                    // Put the compacted results to the cache
-                    toolResult = this.toolResultCache.put(
-                        toolRequest: toolRequest,
-                        toolResponse: toolResponse,
-                        compactedResult: summary
-                    )
-                }
-                if ((tool.extra.get("terminal") ?? "false") == "true") {
-                    // If the tool is terminal, we stop the execution
-                    this.stop(
-                        EarlyStopReason.ToolTerminated,
-                        result: toolResult,
-                        log: "Tool `${tool.name}` terminates the task"
-                    )
-                }
+            case EventResponse.Continue => () // Do nothing
             case EventResponse.Continue(resp) =>
-                toolResult = resp.content
+                return resp.content
             case EventResponse.Terminate(resp) =>
-                toolResult = resp.content
+                let toolResult = resp.content
                 this.stop(
                     EarlyStopReason.EventHandlerTerminated,
                     result: toolResult,
                     log: "Terminated by tool call event handler"
                 )
+                return toolResult
         }
-        AgentOp.handle(event: ToolCallEndEvent(this.agent, toolRequest, ToolResponse(toolResult)), forRequest: this.request)
+        // Invoke the tool
+        let toolResponse = try {
+            if (tool is AgentAsTool) {
+                // If the tool is an agent, we invoke the agent
+                this.invokeAgentAsTool(toolRequest, (tool as AgentAsTool).getOrThrow())
+            } else {
+                // Normal tool invocation
+                tool.invoke(toolRequest.args)
+            }
+        } catch (ex: AgentCancelException) {
+            throw ex // throw the exception to the upper level to cancel the execution
+        } catch (ex: ToolException) {
+            return "Tool `${toolRequest.name}` did not run successfully. Reason: ${ex.reason}"
+        } catch (ex: Exception) {
+            let strBuilder = StringBuilder()
+            for (ste in ex.getStackTrace()) {
+                strBuilder.append("${ste.fileName}:${ste.lineNumber} ${ste.methodName}\n")
+            }
+            return "Fail to invoke the tool with exception `${strBuilder}`"
+        }
+        // Save the tool result
+        var toolResult = toolResponse.content
+        // Check whether the tool has special attributes
+        if ((tool.extra.get("compactable") ?? "false") == "true" &&
+            toolResult.size > Config.toolResultCompactThreshold) {
+            // If the tool is compactable, we can compact its result
+            let compactor = SimpleToolCompactor(ChatModelWrapper(this))
+            let summary = compactor.compact(toolRequest, toolResponse)
+            // Put the compacted results to the cache
+            toolResult = this.toolResultCache.put(
+                toolRequest: toolRequest,
+                toolResponse: toolResponse,
+                compactedResult: summary
+            )
+        }
+        // If the tool is terminal, we stop the execution
+        if ((tool.extra.get("terminal") ?? "false") == "true") {
+            this.stop(
+                EarlyStopReason.ToolTerminated,
+                result: toolResult,
+                log: "Tool `${tool.name}` terminates the task"
+            )
+        }
         return toolResult
     }
 
@@ -351,6 +464,11 @@ public open class AgentTask {
         return ToolResponse(resp.content)
     }
 
+    //-------------------------------------------------------------------------------------
+
+    /**
+     * Call the notify event handler
+     */
     protected func notify(tag: String, content: String): Unit {
         if (this.request.verbose) {
             AgentOp.handle(event: NotifyEvent(this.agent, tag, content), forRequest: this.request)

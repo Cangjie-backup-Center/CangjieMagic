@@ -52,7 +52,7 @@ public class DslExecutor <: AgentExecutor {
             let answer = this.doRun(task)
             return AgentResponse(AgentResponseStatus.Success, answer, execution: task.execution)
         } catch (ex: AgentCancelException) {
-            LogUtils.info("Agent execution cancelled by user")
+            LogUtils.info("Task cancelled by user")
             return AgentResponse(AgentResponseStatus.Cancelled, ex.reason, execution: task.execution)
         }
     }
