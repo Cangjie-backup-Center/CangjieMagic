@@ -191,12 +191,16 @@ class AgentAttr <: Attr {
         return AgentAttr(map)
     }
 
+    // Whether defined by @prompt
     var hasPrompt = false
     var solidPrompt = true
 
     prop model: String {
         get() { getString("model") ?? "deepseek:deepseek-chat" }
     }
+
+    // Whether defined by @execution
+    var hasExecutionDSL = false
 
     prop executor: String {
         get() {
@@ -208,7 +212,8 @@ class AgentAttr <: Attr {
         }
     }
 
-    var hasExecutionDSL = false
+    // Whether defined by @handler
+    var hasEventHandler = false
 
     prop description: String {
         get() { getString("description") ?? "" }
@@ -295,6 +300,11 @@ public macro agent(input: Tokens): Tokens {
             agentAttr.hasExecutionDSL = m.getBool("executionDSL")
         }
     }
+    for (m in getChildMessages("handler")) {
+        if (m.hasItem("defineHandler")) {
+            agentAttr.hasEventHandler = m.getBool("defineHandler")
+        }
+    }
 
     return transformAgent(input, agentAttr)
 }
@@ -317,6 +327,11 @@ public macro agent(attr: Tokens, input: Tokens): Tokens {
     for (m in getChildMessages("execution")) {
         if (m.hasItem("defineExecution")) {
             agentAttr.hasExecutionDSL = m.getBool("defineExecution")
+        }
+    }
+    for (m in getChildMessages("handler")) {
+        if (m.hasItem("defineHandler")) {
+            agentAttr.hasEventHandler = m.getBool("defineHandler")
         }
     }
 
@@ -361,6 +376,7 @@ func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): Tokens {
             $( buildAgentToolManagerProp(classDecl, agentAttr) )
             $( buildAgentRetrieverProp(agentAttr) )
             $( buildAgentMemoryProp(agentAttr) )
+            $( buildAgentEventHandlerProp(agentAttr) )
         }
     )
 }
@@ -702,6 +718,32 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
 
                         __TOOL_MANAGER__ = Some(tm)
                         return tm
+                }
+            }
+        }
+    )
+}
+
+//============================================================================================
+
+func buildAgentEventHandlerProp(agentAttr: AgentAttr) {
+    if (!agentAttr.hasEventHandler) {
+        return quote(
+            public override prop eventHandlerManager: Option<Object> {
+                get() { return None }
+            }
+        )
+    }
+    return quote(
+        private var __EVENT_HANDLER__: Option<EventHandlerManager> = None
+        public override prop eventHandlerManager: Option<Object> {
+            get() {
+                match (__EVENT_HANDLER__) {
+                    case Some(handler) => return handler
+                    case None =>
+                        let handler = $( newIdentifierToken(HANDLER_FUNC_NAME) )()
+                        __EVENT_HANDLER__ = Some(handler)
+                        return handler
                 }
             }
         }

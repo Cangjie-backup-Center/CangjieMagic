@@ -76,7 +76,7 @@ private func isExecutionOp(token: Token): Bool {
 
 private func transformExecution(input: Tokens, executionAttr: ExecutionAttr): Tokens {
     let funcTokens = quote(
-        override public func __CUSTOMIZED_EXECUTION_FUNC__(state: Object): Option<Object> {
+        override public func __customized_execution_func__(state: Object): Option<Object> {
             return ((state as ExecutionState) ?? ExecutionState()) |> $input
         }
     )

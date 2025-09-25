@@ -60,6 +60,12 @@ public interface Agent {
     mut prop interceptor: Option<Interceptor>
 
     /**
+     * The agent event handler manager, since there is cycle dependency between agent and event handler manager,
+     * we use Object instead of EventHandlerManager.
+     */
+    prop eventHandlerManager: Option<Object>
+
+    /**
      * Query the agent and get the answer
      * It may throw AgentExecutionException
      */
