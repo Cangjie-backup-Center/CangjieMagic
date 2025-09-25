@@ -18,6 +18,7 @@ import std.collection.ArrayList
 
 public type ToolCallStartEventHandler = (ToolCallStartEvent) -> EventResponse<ToolResponse>
 public type ToolCallEndEventHandler = (ToolCallEndEvent) -> Unit
+public type ToolCallRepeatEventHandler = (ToolCallRepeatEvent) -> EventResponse<ToolResponse>
 public type ChatModelStartEventHandler = (ChatModelStartEvent) -> EventResponse<ChatResponse>
 public type ChatModelEndEventHandler = (ChatModelEndEvent) -> Unit
 public type ChatModelFailureEventHandler = (ChatModelFailureEvent) -> EventResponse<ChatResponse>
@@ -85,6 +86,27 @@ public class EventHandlerManager {
         for (handler in this.toolCallEndEventHandlers) {
            handler(evt)
        }
+    }
+
+
+    // Handler for ToolCallRepeatEvent events
+    private let toolCallRepeatEventHandlers = ArrayList<ToolCallRepeatEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: ToolCallRepeatEventHandler): Unit {
+        this.toolCallRepeatEventHandlers.add(handler)
+    }
+
+    // Add handle method
+    protected func handle(evt: ToolCallRepeatEvent): EventResponse<ToolResponse> {
+        for (handler in this.toolCallRepeatEventHandlers) {
+           match (handler(evt)) {
+               case Continue => ()
+               case Continue(v) => return Continue(v)
+               case Terminate(v) => return Terminate(v)
+           }
+       }
+       return Continue
     }
 
 
@@ -275,6 +297,7 @@ public class EventHandlerManager {
     protected func merge(another: EventHandlerManager): Unit {
         this.toolCallStartEventHandlers.add(all: another.toolCallStartEventHandlers)
         this.toolCallEndEventHandlers.add(all: another.toolCallEndEventHandlers)
+        this.toolCallRepeatEventHandlers.add(all: another.toolCallRepeatEventHandlers)
         this.chatModelStartEventHandlers.add(all: another.chatModelStartEventHandlers)
         this.chatModelEndEventHandlers.add(all: another.chatModelEndEventHandlers)
         this.chatModelFailureEventHandlers.add(all: another.chatModelFailureEventHandlers)

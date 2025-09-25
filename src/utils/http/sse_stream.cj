@@ -46,7 +46,7 @@ protected class SSEStream <: Iterator<SSEItem> {
             }
             throw HttpException("Invalid sse line: `${line}`")
         }
-        LogUtils.debug("SSE stream finished")
+        LogUtils.trace("SSE stream finished")
         return None
     }
 

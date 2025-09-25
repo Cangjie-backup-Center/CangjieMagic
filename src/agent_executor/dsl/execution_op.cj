@@ -160,7 +160,7 @@ public struct ExecutionOpSet {
             LogUtils.debug("Failed to extract tool request")
             // If function call is enabled and failing to extract the tool request,
             // treat the content as the final answer
-            if (Config.enableModelToolCall) {
+            if (Config.enableModelToolCall && !Config.enableJsonRetry) {
                 LogUtils.info("Failed to extract tool request. Treat the content as the final answer.")
                 return [
                     ToolRequest(
@@ -178,7 +178,25 @@ public struct ExecutionOpSet {
 
     private static func doInvokeTool(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
         LogUtils.debug(state.task.agent.name, "To invoke tool: ${chatResp}")
-        var toolRequests = parseToolRequests(chatResp)
+        var toolRequests = try {
+            parseToolRequests(chatResp)
+        } catch (ex: ParserException) {
+            LogUtils.error(state.task.agent.name, "Failed to parse tool request: ${ex.message}")
+            let guideline = "The Json object of tool call is invalid. Please think about it and try again."
+            if (Config.enableModelToolCall) {
+                state.execution.addMessage( // Not add as a step message
+                    Message.assistant("${chatResp.message.content}\n")
+                )
+                state.execution.addMessage(Message.user(guideline))
+            } else {
+                state.execution.addMessage(
+                    Message.assistant("```json\n${chatResp.message.content}\n```".withTag(Tag.ACTION)),
+                )
+                state.execution.addMessage(Message.user(guideline.withTag(Tag.OBSERVATION)))
+            }
+            return state
+
+        }
         // We also add reasoning content to the step messages
         if (let Some(reason) <- chatResp.message.reason) {
             Message.assistant(reason) // Without tag?

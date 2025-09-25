@@ -37,6 +37,18 @@ public class ToolCallEndEvent <: InteractionEvent { // Return: Unit
 }
 
 /**
+ * Triggered when repeated tool call
+ */
+public class ToolCallRepeatEvent <: InteractionEvent { // Return: ToolResponse
+    public ToolCallRepeatEvent(
+        public let agent: Agent,
+        public let toolRequest: ToolRequest  // Details of the tool being invoked
+    ) {
+        super(EventKind.ToolCallRepeat)
+    }
+}
+
+/**
  * Triggered before an agent calling the chat model
  */
 public class ChatModelStartEvent <: InteractionEvent { // Return: ChatResponse
@@ -92,8 +104,8 @@ public class AgentStartEvent <: InteractionEvent { // Return: AgentResponse
 public class AgentEndEvent <: InteractionEvent { // Return: Unit
     public AgentEndEvent(
         public let agent: Agent,
-        public let agentRequest: AgentRequest
-        // Since sync and async agent requests result in different response type,
+        public let agentRequest: AgentRequest,
+        public let agentResponse: Option<AgentResponse>
         // we do not use them
     ) {
         super(EventKind.AgentEnd)

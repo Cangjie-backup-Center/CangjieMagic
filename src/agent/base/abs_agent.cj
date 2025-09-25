@@ -10,6 +10,7 @@ import magic.model.ModelUtils
 import magic.jsonable.Jsonable
 import magic.log.LogUtils
 import magic.parser.{ParserUtils, ParserException}
+import magic.interaction.{AgentStartEvent, AgentEndEvent}
 
 //------------------------------------------------
 // The agent type hierarchy:
@@ -49,27 +50,35 @@ public abstract class AbsAgent <: Agent {
     public open override func chat(request: AgentRequest): AgentResponse {
         // Process file imports
         let processedRequest = AgentOp.preprocessRequest(request)
+        AgentOp.handle(event: AgentStartEvent(this, request))
 
-        if (let Some(interceptor) <- this.interceptor) {
-            if (interceptor.shouldIntercept(processedRequest)) {
-                return interceptor.doIntercept(processedRequest)
-            } else {
-                interceptor.doBypass(processedRequest)
-            }
-        }
         try {
+            if (let Some(interceptor) <- this.interceptor) {
+                if (interceptor.shouldIntercept(processedRequest)) {
+                    let resp = interceptor.doIntercept(processedRequest)
+                    AgentOp.handle(event: AgentEndEvent(this, request, resp))
+                    return resp
+                } else {
+                    interceptor.doBypass(processedRequest)
+                }
+            }
             let resp = this.executor.run(this, processedRequest)
             match (resp.status) {
                 case AgentResponseStatus.Success =>
+                    // Update the agent memory if needed
                     if (let Some(memory) <- this.memory) {
-                        memory.update(resp.execution.chatRound.toString()) // Update the agent memory
+                        memory.update(resp.execution.chatRound.toString())
                     }
                 case AgentResponseStatus.Cancelled => ()
             }
+            AgentOp.handle(event: AgentEndEvent(this, request, resp))
             return resp
         } catch (ex: AgentCancelException) {
             LogUtils.info("Agent execution cancelled by user")
             return AgentResponse(AgentResponseStatus.Cancelled, ex.reason)
+        } catch (ex: Exception) {
+            AgentOp.handle(event: AgentEndEvent(this, request, None))
+            throw ex
         }
     }
 
@@ -80,7 +89,17 @@ public abstract class AbsAgent <: Agent {
     override open public func asyncChat(request: AgentRequest): AsyncAgentResponse {
         // Process file imports
         let processedRequest = AgentOp.preprocessRequest(request)
-        return this.executor.asyncRun(this, processedRequest)
+        AgentOp.handle(event: AgentStartEvent(this, request))
+        let asyncResp = this.executor.asyncRun(this, processedRequest)
+        asyncResp.setFinishFn({ okay =>
+            if (okay) {
+                AgentOp.handle(event: AgentEndEvent(this, request, asyncResp))
+            } else {
+                AgentOp.handle(event: AgentEndEvent(this, request, None))
+
+            }
+        })
+        return asyncResp
     }
 
     public func chatGet<T>(question: String): Option<T> where T <: Jsonable<T> {

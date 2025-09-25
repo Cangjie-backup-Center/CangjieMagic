@@ -112,6 +112,27 @@ public struct AgentOp {
         }
     }
 
+    static public func handle(event!: ToolCallRepeatEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ToolResponse> {
+        let managers = ArrayList<EventHandlerManager>()
+        if (let Some(request) <- forRequest) {
+            if (let Some(object) <- request.eventHandlerManager) {
+                managers.add((object as EventHandlerManager).getOrThrow())
+            }
+        }
+        // Then, event handlers of the agent
+        // Last, global event handlers
+        managers.add(EventHandlerManager.global)
+
+        for (manager in managers) {
+            match (manager.handle(event)) {
+                case Continue => ()
+                case Continue(v) => return Continue(v)
+                case Terminate(v) => return Terminate(v)
+            }
+        }
+        return Continue
+    }
+
     static public func handle(event!: ChatModelStartEvent, forRequest!: Option<AgentRequest> = None): EventResponse<ChatResponse> {
         let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {

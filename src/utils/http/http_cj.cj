@@ -144,7 +144,7 @@ protected struct HttpUtilsImpl {
             }
         }
         // Put the termination mark
-        LogUtils.debug("End http stream. Status: ${response.status}")
+        LogUtils.trace("End http stream. Status: ${response.status}")
         httpStream.markEOF()
         client.close()
     }

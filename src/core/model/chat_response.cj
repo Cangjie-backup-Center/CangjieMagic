@@ -9,13 +9,43 @@ import magic.jsonable.{ToJsonValue, Jsonable}
 
 import stdx.encoding.json.{JsonValue, JsonObject, JsonString}
 
-public struct ChatResponse <: ToString & ToJsonValue {
-    public ChatResponse(
-        public let model: String,
-        public let message: Message,
-        public let toolRequests!: Array<ToolRequest> = [],
-        public let usage!: Option<ChatUsage> = None
-    ) { }
+open public class ChatResponse <: ToString & ToJsonValue {
+    private let _model: String
+    private let _message: Message
+    private let _toolRequests: Array<ToolRequest>
+    private let _usage: Option<ChatUsage>
+
+    public init(
+        model: String,
+        message: Message,
+        toolRequests!: Array<ToolRequest> = [],
+        usage!: Option<ChatUsage> = None
+    ) {
+        this._model = model
+        this._message = message
+        this._toolRequests = toolRequests
+        this._usage = usage
+    }
+
+    protected init(model: String) {
+        this(model, Message.user(""))
+    }
+
+    public prop model: String {
+        get() { this._model }
+    }
+
+    open public prop message: Message {
+        get() { this._message }
+    }
+
+    open public prop toolRequests: Array<ToolRequest> {
+        get() { this._toolRequests }
+    }
+
+    open public prop usage: Option<ChatUsage> {
+        get() { this._usage }
+    }
 
     override public func toJsonValue(): JsonValue {
         let jo = JsonObject()

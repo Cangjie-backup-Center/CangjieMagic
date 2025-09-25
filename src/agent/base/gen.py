@@ -170,9 +170,11 @@ def replace_content_between_markers(file_path, start_marker, end_marker, new_con
         return False
 
 def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     # Input and output file paths
-    input_file = "../../interaction/events.cj"
-    output_file = "./agent_op.cj"
+    input_file = os.path.join(script_dir, "../../interaction/events.cj")
+    output_file = os.path.join(script_dir, "./agent_op.cj")
 
     # Extract struct names
     events = extract_events(input_file)
