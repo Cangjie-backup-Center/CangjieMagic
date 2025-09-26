@@ -258,8 +258,7 @@ protected struct HttpUtilsImpl {
                 }
             }
         }
+        LogUtils.trace("Parsed curl verbose output done. Status: ${status}")
         return (status, header)
     }
-
-
 }
