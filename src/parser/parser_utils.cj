@@ -152,7 +152,8 @@ public struct ParserUtils {
                 throw ParserException(msg)
             }
         } else {
-            throw ParserException("There is no JSON output in the string: ${str}")
+            // The error message "NO JSON" is IMPORTANT, which will be used in JSON retrying
+            throw ParserException("There is NO JSON output in the string: ${str}")
         }
     }
 

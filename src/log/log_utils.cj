@@ -123,9 +123,21 @@ public struct LogUtils {
 
     //------------------------------------------------------------
 
-    public static func debug(ex: Exception): Unit {
+    public static func info(ex: Exception): Unit {
         for (ste in ex.getStackTrace()) {
             info("${ste.fileName}:${ste.lineNumber} ${ste.methodName}")
+        }
+    }
+
+    public static func debug(ex: Exception): Unit {
+        for (ste in ex.getStackTrace()) {
+            debug("${ste.fileName}:${ste.lineNumber} ${ste.methodName}")
+        }
+    }
+
+    public static func error(ex: Exception): Unit {
+        for (ste in ex.getStackTrace()) {
+            error("${ste.fileName}:${ste.lineNumber} ${ste.methodName}")
         }
     }
 }

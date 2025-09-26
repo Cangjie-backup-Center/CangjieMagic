@@ -6,10 +6,12 @@ package magic.utils
 import std.fs.{File, Path, exists, OpenMode, FileInfo}
 import std.io.StringReader
 import std.collection.{HashMap, ArrayList, ArrayQueue, map, enumerate, collectArray}
+import std.deriving.Derive
 
 /**
  * Helper struct to hold file content and its container file path
  */
+@Derive[ToString]
 private struct Ref {
     Ref(
         let referencePath: String, // The referenced path, e.g. @a/b/c
@@ -39,7 +41,7 @@ public class Importer {
     /**
      * Initialize importer with search directories
      */
-    public init(searchDirs: Array<String>, withLineNumber!: Bool = true) {
+    public init(searchDirs: Array<String>, withLineNumber!: Bool = false) {
         this.searchDirs = searchDirs
         this.withLineNumber = withLineNumber
     }
@@ -63,7 +65,9 @@ public class Importer {
 
         // Process queue until empty
         while (let Some(currentRef) <- queue.remove()) {
+            println("current ref: ${currentRef}")
             if (let Some((filePath, fileContent)) <- importSingleFile(currentRef)) {
+                println("load file content: ${fileContent}")
                 // Add the result to our results
                 results.add((Path(currentRef.referencePath), fileContent))
 
@@ -146,16 +150,22 @@ public class Importer {
         // Search for files in searchDirs order
         for (basePath in searchDirs) {
             // Construct full path, considering container file if any
+            // Case 1: if base path is ".", which means the referred path is relative to the container file
             let fullPath = if (basePath == ".") {
+                // Case 1.1: relative to the container file path
                 if (let Some(containerFilePath) <- ref.containerFile) {
-                    containerFilePath.parent.join(filePath)
-                } else {
+                    let dir = containerFilePath.parent
+                    if (dir.isEmpty()) {
+                        Path(filePath)
+                    } else {
+                        dir.join(filePath)
+                    }
+                } else { // Case 1.2: if it does not have a container file, it's relative to the current dir
                     Path(filePath)
                 }
-            } else {
+            } else { // Case 2: otherwise, the path is relative to the base path
                 Path(basePath).join(filePath)
             }
-
             // Check if file exists
             if (exists(fullPath) && FileInfo(fullPath).isRegular()) {
                 // Check if this file has been processed before (prevent circular references)

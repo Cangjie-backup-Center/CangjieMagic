@@ -121,4 +121,12 @@ protected struct HttpUtilsImpl {
         )
         return httpStream
     }
+
+    static protected func hybridSend(method: String,
+                                     url: String,
+                                     header: HashMap<String, String>,
+                                     body: Option<JsonObject>,
+                                     verify!: Bool): HttpResult {
+        throw UnsupportedException()
+    }
 }
