@@ -206,12 +206,6 @@ extend<T> HashMap<String, T> <: Jsonable<HashMap<String, T>> where T <: Jsonable
     }
 }
 
-// extend JsonValue <: ToJsonValue {
-//     public func toJsonValue(): JsonValue {
-//         return this
-//     }
-// }
-
 extend JsonObject <: Jsonable<JsonObject> {
     public func toJsonValue(): JsonValue {
         return this

@@ -14,8 +14,38 @@ import magic.model.ModelUtils
 import magic.utils.Importer
 import magic.config.Config
 import magic.core.agent.AgentRequest
+import magic.parser.{ParserUtils, ParserException}
 
 import std.collection.ArrayList
+
+private let REPAIR_JSON_SYSTEM_PROMPT = """
+You are a JSON repair assistant. Your task is to receive an invalid or malformed JSON string and correct it to produce valid, parseable JSON.
+
+Follow these rules strictly:
+
+**Preserve Data**: Do not alter, add, or remove any actual data values (strings, numbers, booleans, nulls) unless absolutely necessary for validity.
+
+**Fix Syntax**: Correct common JSON syntax errors such as:
+
+- Missing or mismatched quotes around keys or strings.
+- Trailing commas in objects or arrays.
+- Use of single quotes instead of double quotes.
+- Improper use of comments (remove or convert if needed).
+- Unescaped characters within strings (e.g., newlines, quotes).
+- Missing or extra commas.
+- Incorrect capitalization of true, false, or null.
+
+**Maintain Structure**: Keep the intended hierarchical structure of objects and arrays.
+
+**Output Only**: Return only the corrected JSON string. Do not include explanations, markdown formatting, or code blocks.
+
+**Validate Output**: Ensure the final output is valid JSON that can be parsed by standard JSON parsers.
+
+If the input is already valid JSON, return it unchanged.
+If the input is severely corrupted and cannot be reliably repaired, return an empty JSON object: {}.
+
+Now, wait for the user to provide the JSON string to repair.
+"""
 
 /**
  * Agent common operations
@@ -67,6 +97,56 @@ public struct AgentOp {
                     return None
             }
         }
+    }
+
+    /**
+     * Parse the tool request from the chat response:
+     * If the chat response does not contain a tool request,
+     * extract the request from the message content
+    */
+    public static func parseToolRequests(agent: Agent, chatResp: ChatResponse, forRequest!: AgentRequest): Array<ToolRequest> {
+        if (!chatResp.toolRequests.isEmpty()) {
+            return chatResp.toolRequests
+        }
+        return AgentOp.parseToolRequests(agent, chatResp.message.content, forRequest: forRequest)
+    }
+
+    private static func parseToolRequests(agent: Agent, content: String, forRequest!: AgentRequest): Array<ToolRequest> {
+        // First, try to parse tool request array
+        try {
+            return ParserUtils.extractToolRequestArray(content)
+        } catch (ex: ParserException) {
+            LogUtils.debug("Failed to extract tool request array")
+        }
+        // Otherwise, try to parse a single tool request
+        try {
+            let toolRequest = ParserUtils.extractToolRequest(content)
+            return [toolRequest]
+        } catch (ex: ParserException) {
+            LogUtils.debug("Failed to extract tool request")
+            // If there is a invalid JSON object, repair it
+            if (!ex.reason.contains("NO JSON") && Config.enableJsonRepair) {
+                if (let Some(repairedJsonStr) <- AgentOp.repairJson(agent, content, forRequest: forRequest)) {
+                    return [ParserUtils.extractToolRequest(content)]
+                }
+            }
+            throw ex // Throw the exception again
+        }
+    }
+
+    private static func repairJson(agent: Agent, invalidJson: String, forRequest!: AgentRequest): Option<String> {
+        let chatResp = AgentOp.chatLLM(
+            agent,
+            MessageList([
+                Message.system(REPAIR_JSON_SYSTEM_PROMPT),
+                Message.user(invalidJson)
+            ]),
+            forRequest: forRequest
+        )
+        if (let Some(resp) <- chatResp) {
+            return resp.message.content
+        }
+        return None
     }
 
     //--------------------------------------------------

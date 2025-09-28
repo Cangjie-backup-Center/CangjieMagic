@@ -174,9 +174,16 @@ public class Config {
     public static var enableToolCallCheck = false
 
     /**
-     * Whether to enable json retry when the model response is not valid json.
+     * Whether to enable json repair when the model response is not valid json.
      */
-    public static var enableJsonRetry = true
+    public static var enableJsonRepair = true
+
+    /**
+     * Control the max output token of models.
+     * See model provider API doc for details.
+     */
+    // public static var modelMaxTokens: Option<Int64> = None
+    // public static var modelMaxCompletionTokens: Option<Int64> = None
 
     /**
      * The threshold to decide whether to summarize the tool result when the tool enables summarization.

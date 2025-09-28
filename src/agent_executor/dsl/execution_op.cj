@@ -4,6 +4,7 @@
 package magic.agent_executor.dsl
 
 import magic.agent_executor.common.{AgentTask, PromptBuilder, AnswerTool, BuiltinToolUtils}
+import magic.agent.base.AgentOp
 import magic.core.agent.*
 import magic.core.tool.{Tool, ToolRequest}
 import magic.core.message.{Message, MessageList}
@@ -142,28 +143,18 @@ public struct ExecutionOpSet {
      * If the chat response does not contain a tool request,
      * extract the request from the message content
     */
-    private static func parseToolRequests(chatResp: ChatResponse): Array<ToolRequest> {
-        if (!chatResp.toolRequests.isEmpty()) {
-            return chatResp.toolRequests
-        }
-        // First, try to parse tool request array
-        try {
-            return ParserUtils.extractToolRequestArray(chatResp.message.content)
-        } catch (ex: ParserException) {
-            LogUtils.debug("Failed to extract tool request array")
-        }
+    private static func parseToolRequests(agent: Agent, chatResp: ChatResponse, forRequest: AgentRequest): Array<ToolRequest> {
         // Otherwise, try to parse a single tool request
         try {
-            let toolRequest = ParserUtils.extractToolRequest(chatResp.message.content)
-            return [toolRequest]
+            return AgentOp.parseToolRequests(agent, chatResp, forRequest: forRequest)
         } catch (ex: ParserException) {
-            LogUtils.debug("Failed to extract tool request")
+            LogUtils.debug("Failed to extract tool requests")
             // If function call is enabled,
-            // and failing to extract a JSON object (i.e., the tool request) or json retry is disable,
+            // and there is no Json string || Json repair is disable,
             // treat the content as the final answer
             if (Config.enableModelToolCall &&
-                (ex.reason.contains("NO JSON") || !Config.enableJsonRetry)) {
-                LogUtils.info("Failed to extract tool request. Treat the content as the final answer.")
+                (ex.reason.contains("NO JSON") || !Config.enableJsonRepair)) {
+                LogUtils.info("Failed to extract tool requests. Treat the content as the final answer.")
                 return [
                     ToolRequest(
                         name: AnswerTool.NAME,
@@ -172,13 +163,12 @@ public struct ExecutionOpSet {
                         ])
                     )
                 ]
-            } else {
-                throw ex
             }
+            throw ex // Throw the exception again
         }
     }
 
-    private static func retryJson(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
+    private static func repairJsonOutput(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
         let guideline = "The Json object of tool call is invalid. Please revise it and try again."
         if (Config.enableModelToolCall) {
             state.execution.addMessage( // Not add as a step message
@@ -197,11 +187,11 @@ public struct ExecutionOpSet {
     private static func doInvokeTool(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
         LogUtils.debug(state.task.agent.name, "To invoke tool: ${chatResp}")
         var toolRequests = try {
-            parseToolRequests(chatResp)
+            ExecutionOpSet.parseToolRequests(state.task.agent, chatResp, state.task.request)
         } catch (ex: ParserException) {
             LogUtils.error(state.task.agent.name, "Failed to parse tool request: ${ex.message}")
-            if (Config.enableJsonRetry) {
-                return retryJson(state, chatResp)
+            if (Config.enableJsonRepair) {
+                return repairJsonOutput(state, chatResp)
             } else {
                 throw ex
             }

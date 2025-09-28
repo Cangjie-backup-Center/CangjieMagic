@@ -90,6 +90,7 @@ public class OllamaChatModel <: ChatModel {
     private let model: String
     private let baseURL: String
     private var _contextLength: Int64
+    private var _maxTokens: Option<Int64>
 
     public init(
         model: String,
@@ -98,18 +99,24 @@ public class OllamaChatModel <: ChatModel {
         this.model = model
         this.baseURL = baseURL
         this._contextLength = contextLength
+        this._maxTokens = None
     }
 
     override public prop provider: String {
         get() { "ollama" }
     }
 
+    override public prop name: String {
+        get() { model }
+    }
+
     override public prop contextLength: Int64 {
         get() { _contextLength }
     }
 
-    override public prop name: String {
-        get() { model }
+    override public mut prop maxTokens: Option<Int64> {
+        get() { _maxTokens }
+        set(v) { _maxTokens = v }
     }
 
     override public func create(chatReq: ChatRequest): ChatResponse {
@@ -165,6 +172,9 @@ public class OllamaChatModel <: ChatModel {
                     )
                     options.put("stop", ja)
                 }
+            }
+            if (let Some(value) <- this.maxTokens) {
+                jo.put("num_predict", JsonInt(value))
             }
             jo.put("options", options)
         }

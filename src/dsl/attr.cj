@@ -29,7 +29,7 @@ protected open class Attr {
         if (let Some(tokens) <- map.get(key)) {
             let validTokens = filterTokens(tokens)
             if (validTokens.size != 1) {
-                throw Exception("Attr key-value error. Key: ${key}, Value: ${validTokens}")
+                throw DslException("Attr key-value error. Key: ${key}, Value: ${validTokens}")
             }
             return Some(validTokens[0].value)
         } else {
