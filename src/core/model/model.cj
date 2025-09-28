@@ -19,4 +19,8 @@ public interface Model {
      * Name of the model
      */
     prop name: String
+
+    prop fullName: String {
+        get() { "${provider}:${name}" }
+    }
 }

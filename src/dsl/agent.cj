@@ -166,7 +166,15 @@ enum AgentToolAttr {
     }
 }
 
-class AgentAttr <: Attr {
+/**
+ * The model attribute accept a string literal or an expression
+ */
+private enum ModelAttr {
+    | Literal(String)
+    | Expr(Tokens)
+}
+
+private class AgentAttr <: Attr {
     private static let ATTR_NAMES = [
         "model",
         "executor",
@@ -195,8 +203,22 @@ class AgentAttr <: Attr {
     var hasPrompt = false
     var solidPrompt = true
 
-    prop model: String {
-        get() { getString("model") ?? "deepseek:deepseek-chat" }
+    prop model: ModelAttr {
+        get() {
+            try {
+                if (let Some(v) <- getString("model")) {
+                    return ModelAttr.Literal(v)
+                }
+            } catch (_: DslException) {
+                // Value is not a string literal, skip the exception
+            }
+
+            if (let Some(expr) <- getTokens("model")) {
+                ModelAttr.Expr(expr)
+            } else {
+                ModelAttr.Literal("deepseek:deepseek-chat")
+            }
+        }
     }
 
     // Whether defined by @execution
@@ -342,7 +364,7 @@ public macro agent(attr: Tokens, input: Tokens): Tokens {
     return content
 }
 
-func transformAgent(input: Tokens, agentAttr: AgentAttr): Tokens {
+private func transformAgent(input: Tokens, agentAttr: AgentAttr): Tokens {
     let decl = parseDecl(input)
     if (decl.isClassDecl()) {
         return transformAgentClass(decl.asClassDecl(), agentAttr)
@@ -354,7 +376,7 @@ func transformAgent(input: Tokens, agentAttr: AgentAttr): Tokens {
 /**
  * Transform the class as an agent class type
  */
-func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): Tokens {
+private func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): Tokens {
     let modifier = classDecl.modifiers
 
     let genericTypeParamTokens = getGenericTypeParamsTokens(classDecl)
@@ -383,7 +405,7 @@ func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): Tokens {
 
 //=============================================================================
 
-func buildAgentSystemPromptProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
+private func buildAgentSystemPromptProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
     if (!agentAttr.hasPrompt) {
         return quote (
             private var __SYSTEM_PROMPT__: String = ""
@@ -417,7 +439,7 @@ func buildAgentSystemPromptProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
 
 //============================================================================================
 
-func buildAgentNameProp(classDecl: ClassDecl) {
+private func buildAgentNameProp(classDecl: ClassDecl) {
     let tokens = newLiteralToken(classDecl.identifier.value)
     return quote(
         public override prop name: String {
@@ -428,15 +450,19 @@ func buildAgentNameProp(classDecl: ClassDecl) {
 
 //============================================================================================
 
-func buildAgentModelProp(agentAttr: AgentAttr): Tokens {
-    let tokens = newLiteralToken(agentAttr.model)
+private func buildAgentModelProp(agentAttr: AgentAttr): Tokens {
+    let tokens = match (agentAttr.model) {
+        case ModelAttr.Literal(v) =>
+            quote(ModelManager.createChatModel( $(newLiteralToken(v)) ))
+        case ModelAttr.Expr(expr) => expr
+    }
     return quote(
         private var __IS_MODEL_INIT__ = false
         private var __MODEL__: Option<ChatModel> = None
         public override mut prop model: ChatModel {
             get() {
                 if (!__IS_MODEL_INIT__) {
-                    __MODEL__ = ModelManager.createChatModel($tokens)
+                    __MODEL__ = $tokens
                     __IS_MODEL_INIT__ = true
                 }
                 return __MODEL__.getOrThrow()
@@ -451,7 +477,7 @@ func buildAgentModelProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentExecutorProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentExecutorProp(agentAttr: AgentAttr): Tokens {
     let tokens = newLiteralToken(agentAttr.executor)
     return quote(
         private var __IS_EXECUTOR_INIT__ = false
@@ -474,7 +500,7 @@ func buildAgentExecutorProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentDescriptionProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentDescriptionProp(agentAttr: AgentAttr): Tokens {
     let tokens = newLiteralToken(agentAttr.description)
     return quote(
         public override prop description: String {
@@ -485,7 +511,7 @@ func buildAgentDescriptionProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentTemperatureProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentTemperatureProp(agentAttr: AgentAttr): Tokens {
     let tokens = if (let Some(t) <- agentAttr.temperature) {
         t
     } else {
@@ -546,7 +572,7 @@ private struct RagAttr {
     }
 }
 
-func buildAgentRetrieverProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentRetrieverProp(agentAttr: AgentAttr): Tokens {
     let retrieverInitTokens = if (agentAttr.rag.isEmpty()) {
         quote(None)
     } else {
@@ -595,7 +621,7 @@ func buildAgentRetrieverProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentMemoryProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentMemoryProp(agentAttr: AgentAttr): Tokens {
     let tokens = if (agentAttr.memory) {
         quote(Some(ShortMemory()))
     } else {
@@ -622,7 +648,7 @@ func buildAgentMemoryProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
+private func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
     let addTools = Tokens()
     // Internal tools
     for (name in agentAttr.internalTools) {
@@ -726,7 +752,7 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
 
 //============================================================================================
 
-func buildAgentEventHandlerProp(agentAttr: AgentAttr) {
+private func buildAgentEventHandlerProp(agentAttr: AgentAttr) {
     if (!agentAttr.hasEventHandler) {
         return quote(
             public override prop eventHandlerManager: Option<Object> {

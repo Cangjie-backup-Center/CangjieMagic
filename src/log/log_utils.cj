@@ -122,22 +122,23 @@ public struct LogUtils {
     }
 
     //------------------------------------------------------------
+    private static func buildExceptionMessage(ex: Exception): String {
+        let strBuilder = StringBuilder()
+        for (ste in ex.getStackTrace()) {
+            strBuilder.append("${ste.fileName}:${ste.lineNumber} ${ste.methodName}\n")
+        }
+        return strBuilder.toString()
+    }
 
     public static func info(ex: Exception): Unit {
-        for (ste in ex.getStackTrace()) {
-            info("${ste.fileName}:${ste.lineNumber} ${ste.methodName}")
-        }
+        info(buildExceptionMessage(ex))
     }
 
     public static func debug(ex: Exception): Unit {
-        for (ste in ex.getStackTrace()) {
-            debug("${ste.fileName}:${ste.lineNumber} ${ste.methodName}")
-        }
+        debug(buildExceptionMessage(ex))
     }
 
     public static func error(ex: Exception): Unit {
-        for (ste in ex.getStackTrace()) {
-            error("${ste.fileName}:${ste.lineNumber} ${ste.methodName}")
-        }
+        error(buildExceptionMessage(ex))
     }
 }

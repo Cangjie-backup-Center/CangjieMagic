@@ -29,6 +29,15 @@ class ChatModelWrapper <: ChatModel {
         }
     }
 
+    public mut prop maxTokens: Option<Int64> {
+        get() {
+            task.agent.model.maxTokens
+        }
+        set(v) {
+            task.agent.model.maxTokens = v
+        }
+    }
+
     public func create(request: ChatRequest): ChatResponse {
         return task.chatLLM(
             request.messageList,
