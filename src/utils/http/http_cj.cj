@@ -156,8 +156,8 @@ protected struct HttpUtilsImpl {
                                      verify!: Bool): HttpResult {
         logHttpInfo(method, url, header, body, async: false)
         let (client, resp) = sendHttp(method, url, header, body, verify)
-        if (resp.headers.get("Content-Type") |> contains("text/event-stream") ||
-            resp.headers.get("content-type") |> contains("text/event-stream")) {
+        if ((resp.headers.get("Content-Type") |> contains("text/event-stream")) ||
+            (resp.headers.get("content-type") |> contains("text/event-stream"))) {
             let httpStream = HttpStream()
             spawn {
                 processStream(client, resp, httpStream)
