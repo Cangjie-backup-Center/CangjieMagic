@@ -46,7 +46,7 @@ protected class SSEStream <: Iterator<SSEItem> {
             }
             throw HttpException("Invalid sse line: `${line}`")
         }
-        LogUtils.debug("SSE stream finished")
+        LogUtils.trace("SSE stream finished")
         return None
     }
 
@@ -71,7 +71,7 @@ protected struct SSEvent <: ToString {
 protected class SSEventStream <: Iterator<SSEvent> {
     private let sseStream: SSEStream
 
-    init(httpStream: HttpStream) {
+    protected init(httpStream: HttpStream) {
         this.sseStream = SSEStream(httpStream)
     }
 
@@ -84,10 +84,10 @@ protected class SSEventStream <: Iterator<SSEvent> {
                 }
                 sseItem.content
             } else {
-                LogUtils.debug("SSE stream finished")
+                LogUtils.trace("SSE stream finished")
                 return None
             }
-            LogUtils.debug("SSE stream read event: ${event}")
+            LogUtils.trace("SSE stream read event: ${event}")
 
             let data = if (let Some(sseItem) <- this.sseStream.next()) {
                 if (sseItem.tag != "data") {
@@ -95,10 +95,10 @@ protected class SSEventStream <: Iterator<SSEvent> {
                 }
                 sseItem.content
             } else {
-                LogUtils.debug("SSE stream finished")
+                LogUtils.trace("SSE stream finished")
                 return None
             }
-            LogUtils.debug("SSE stream read data: ${data}")
+            LogUtils.trace("SSE stream read data: ${data}")
 
             return SSEvent(event, data)
         }

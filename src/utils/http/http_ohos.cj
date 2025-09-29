@@ -72,7 +72,7 @@ protected struct HttpUtilsImpl {
         if (msg == "[ERROR_request]") {
             throw HttpException("Http request error")
         }
-        LogUtils.debug("Raw http response: ${msg}")
+        LogUtils.trace("Raw http response: ${msg}")
         return msg
     }
 
@@ -120,5 +120,13 @@ protected struct HttpUtilsImpl {
             options: httpOpt
         )
         return httpStream
+    }
+
+    static protected func hybridSend(method: String,
+                                     url: String,
+                                     header: HashMap<String, String>,
+                                     body: Option<JsonObject>,
+                                     verify!: Bool): HttpResult {
+        throw UnsupportedException()
     }
 }

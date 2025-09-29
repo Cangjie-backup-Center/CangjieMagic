@@ -221,8 +221,9 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
 public class OpenAIChatModel <: ChatModel {
     private let model: String
     private let baseURL: String
-    public let apiKey: String
+    private let apiKey: String
     private var _contextLength: Int64
+    private var _maxTokens: Option<Int64> = None
 
     public init(
         model: String,
@@ -246,6 +247,11 @@ public class OpenAIChatModel <: ChatModel {
 
     override public prop contextLength: Int64 {
         get() { _contextLength }
+    }
+
+    override public mut prop maxTokens: Option<Int64> {
+        get() { _maxTokens }
+        set(v) { _maxTokens = v }
     }
 
     override public func create(chatReq: ChatRequest): ChatResponse {
@@ -296,6 +302,9 @@ public class OpenAIChatModel <: ChatModel {
         }
         if (!chatReq.tools.isEmpty()) {
             jo.put("tools", this.tools2Json(chatReq.tools))
+        }
+        if (let Some(value) <- this.maxTokens) {
+            jo.put("max_tokens", JsonInt(value))
         }
         return jo
     }
@@ -358,6 +367,13 @@ public class OpenAIChatModel <: ChatModel {
             throw ModelException(msg)
         }
         let choice = resp.choices[0]
+        // If the output is too long, output may be truncated,
+        // which result in incomplete Json string of the tool call
+        // Throw an exception to notify the callers
+        if (choice.finish_reason == "length") {
+            LogUtils.error("The chat model replied a message truncated by length")
+            throw ModelException("length")
+        }
         let openAIMsg = choice.message
         let message = Message(
             MessageRole.fromStr(openAIMsg.role),

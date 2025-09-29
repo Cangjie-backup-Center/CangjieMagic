@@ -11,7 +11,8 @@ import std.collection.{ArrayList, HashMap, map, collectArrayList, collectArray}
 
 enum AgentToolAttr {
     | StdioMcp(String, HashMap<String, Token>)
-    | HttpMcp(String)
+    | SseMcp(String)
+    | HttpMcp(String, HashMap<String, Token>)
     | NativeFuncTool(Token)
     | AgentTool(Expr)
     | NativeToolset(Expr)
@@ -27,12 +28,11 @@ enum AgentToolAttr {
                 throw DslException("Invalid agent tool config `${rawAttr}`")
             }
             let name = rawAttr[0].value
-            if(name == "stdioMCP") {
-                return AgentToolAttr.parseStdio(rawAttr)
-            } else if (name == "httpMCP") {
-                return AgentToolAttr.parseHttp(rawAttr)
-            } else {
-                return AgentToolAttr.parseNative(rawAttr)
+            return match (name) {
+                case "stdioMCP" | "stdioMcp" => AgentToolAttr.parseStdio(rawAttr)
+                case "sseMCP" | "sseMcp" => AgentToolAttr.parseSse(rawAttr)
+                case "httpMCP" | "httpMcp" => AgentToolAttr.parseHttp(rawAttr)
+                case _ => AgentToolAttr.parseNative(rawAttr)
             }
         }
     }
@@ -62,9 +62,9 @@ enum AgentToolAttr {
     }
 
     /**
-     * A single string literal, like http("https://...")
+     * A single string literal, like sseMcp("https://...")
      */
-    static func parseHttp(rawAttr: Tokens): AgentToolAttr {
+    static func parseSse(rawAttr: Tokens): AgentToolAttr {
         // Reconstruct the values as a list and parse it
         let urls = ArrayParser(rawAttr[1..], beginSymbol: TokenKind.LPAREN, endSymbol: TokenKind.RPAREN)
             .parseArrayOf(TokenKind.STRING_LITERAL) |>
@@ -73,7 +73,31 @@ enum AgentToolAttr {
         if (urls.size != 1) {
             throw DslException("Invalid MCP http server config `${rawAttr}`")
         }
-        return AgentToolAttr.HttpMcp(urls[0])
+        return AgentToolAttr.SseMcp(urls[0])
+    }
+
+    /**
+     * The first item is a string literal, followed by headers,
+     * like httpMCP("https://...", Authorization: "Bearer ...", ...)
+     */
+    static func parseHttp(rawAttr: Tokens): AgentToolAttr {
+        if (rawAttr.size < 4 ||
+            rawAttr[1].kind != TokenKind.LPAREN ||
+            (rawAttr[2].kind != TokenKind.STRING_LITERAL &&
+             rawAttr[2].kind != TokenKind.SINGLE_QUOTED_STRING_LITERAL) ||
+            rawAttr[rawAttr.size-1].kind != TokenKind.RPAREN) {
+            throw DslException("Invalid MCP stdio server config `${rawAttr}`")
+        }
+        let commandLine = rawAttr[2].value
+        // Reconstruct environment arguments as a map
+        let mapAttr = Tokens([Token(TokenKind.LCURL)])
+        // Skip the first four tokens: stdio ( "..." ,
+        if (rawAttr.size > 4) {
+            mapAttr.append(rawAttr[4..(rawAttr.size-1)])
+        }
+        mapAttr.append(Token(TokenKind.RCURL))
+        let headers = MapParser(mapAttr).parseMapOf(TokenKind.STRING_LITERAL)
+        return AgentToolAttr.HttpMcp(commandLine, headers)
     }
 
     /**
@@ -119,7 +143,7 @@ enum AgentToolAttr {
             )
         } else {
             let url = rawMapAttr.get("url").getOrThrow()[0]
-            return AgentToolAttr.HttpMcp(url.value)
+            return AgentToolAttr.SseMcp(url.value)
         }
     }
 
@@ -142,7 +166,15 @@ enum AgentToolAttr {
     }
 }
 
-class AgentAttr <: Attr {
+/**
+ * The model attribute accept a string literal or an expression
+ */
+private enum ModelAttr {
+    | Literal(String)
+    | Expr(Tokens)
+}
+
+private class AgentAttr <: Attr {
     private static let ATTR_NAMES = [
         "model",
         "executor",
@@ -167,12 +199,30 @@ class AgentAttr <: Attr {
         return AgentAttr(map)
     }
 
+    // Whether defined by @prompt
     var hasPrompt = false
     var solidPrompt = true
 
-    prop model: String {
-        get() { getString("model") ?? "deepseek:deepseek-chat" }
+    prop model: ModelAttr {
+        get() {
+            try {
+                if (let Some(v) <- getString("model")) {
+                    return ModelAttr.Literal(v)
+                }
+            } catch (_: DslException) {
+                // Value is not a string literal, skip the exception
+            }
+
+            if (let Some(expr) <- getTokens("model")) {
+                ModelAttr.Expr(expr)
+            } else {
+                ModelAttr.Literal("deepseek:deepseek-chat")
+            }
+        }
     }
+
+    // Whether defined by @execution
+    var hasExecutionDSL = false
 
     prop executor: String {
         get() {
@@ -184,22 +234,16 @@ class AgentAttr <: Attr {
         }
     }
 
-    var hasExecutionDSL = false
+    // Whether defined by @handler
+    var hasEventHandler = false
 
     prop description: String {
         get() { getString("description") ?? "" }
     }
 
-    prop temperature: Option<Float64> {
+    prop temperature: Option<Tokens> {
         get() {
-            if (let Some(v) <- getLiteral("temperature")) {
-                try {
-                    return Float64.tryParse(v)
-                } catch (_: IllegalArgumentException) {
-                    throw DslException("Invalid temperature attribute")
-                }
-            }
-            return None
+            return getTokens("temperature")
         }
     }
 
@@ -229,7 +273,7 @@ class AgentAttr <: Attr {
     /**
      * tools: [
      *   stdioMCP("...", ABC: "VALUE", ...)
-     *   httpMCP("...")
+     *   sseMCP("...")
      *   id
      * ]
      */
@@ -278,6 +322,11 @@ public macro agent(input: Tokens): Tokens {
             agentAttr.hasExecutionDSL = m.getBool("executionDSL")
         }
     }
+    for (m in getChildMessages("handler")) {
+        if (m.hasItem("defineHandler")) {
+            agentAttr.hasEventHandler = m.getBool("defineHandler")
+        }
+    }
 
     return transformAgent(input, agentAttr)
 }
@@ -302,6 +351,11 @@ public macro agent(attr: Tokens, input: Tokens): Tokens {
             agentAttr.hasExecutionDSL = m.getBool("defineExecution")
         }
     }
+    for (m in getChildMessages("handler")) {
+        if (m.hasItem("defineHandler")) {
+            agentAttr.hasEventHandler = m.getBool("defineHandler")
+        }
+    }
 
     let content = transformAgent(input, agentAttr)
     if (agentAttr.dump) {
@@ -310,7 +364,7 @@ public macro agent(attr: Tokens, input: Tokens): Tokens {
     return content
 }
 
-func transformAgent(input: Tokens, agentAttr: AgentAttr): Tokens {
+private func transformAgent(input: Tokens, agentAttr: AgentAttr): Tokens {
     let decl = parseDecl(input)
     if (decl.isClassDecl()) {
         return transformAgentClass(decl.asClassDecl(), agentAttr)
@@ -322,7 +376,7 @@ func transformAgent(input: Tokens, agentAttr: AgentAttr): Tokens {
 /**
  * Transform the class as an agent class type
  */
-func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): Tokens {
+private func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): Tokens {
     let modifier = classDecl.modifiers
 
     let genericTypeParamTokens = getGenericTypeParamsTokens(classDecl)
@@ -344,13 +398,14 @@ func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): Tokens {
             $( buildAgentToolManagerProp(classDecl, agentAttr) )
             $( buildAgentRetrieverProp(agentAttr) )
             $( buildAgentMemoryProp(agentAttr) )
+            $( buildAgentEventHandlerProp(agentAttr) )
         }
     )
 }
 
 //=============================================================================
 
-func buildAgentSystemPromptProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
+private func buildAgentSystemPromptProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
     if (!agentAttr.hasPrompt) {
         return quote (
             private var __SYSTEM_PROMPT__: String = ""
@@ -384,7 +439,7 @@ func buildAgentSystemPromptProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
 
 //============================================================================================
 
-func buildAgentNameProp(classDecl: ClassDecl) {
+private func buildAgentNameProp(classDecl: ClassDecl) {
     let tokens = newLiteralToken(classDecl.identifier.value)
     return quote(
         public override prop name: String {
@@ -395,15 +450,19 @@ func buildAgentNameProp(classDecl: ClassDecl) {
 
 //============================================================================================
 
-func buildAgentModelProp(agentAttr: AgentAttr): Tokens {
-    let tokens = newLiteralToken(agentAttr.model)
+private func buildAgentModelProp(agentAttr: AgentAttr): Tokens {
+    let tokens = match (agentAttr.model) {
+        case ModelAttr.Literal(v) =>
+            quote(ModelManager.createChatModel( $(newLiteralToken(v)) ))
+        case ModelAttr.Expr(expr) => expr
+    }
     return quote(
         private var __IS_MODEL_INIT__ = false
         private var __MODEL__: Option<ChatModel> = None
         public override mut prop model: ChatModel {
             get() {
                 if (!__IS_MODEL_INIT__) {
-                    __MODEL__ = ModelManager.createChatModel($tokens)
+                    __MODEL__ = $tokens
                     __IS_MODEL_INIT__ = true
                 }
                 return __MODEL__.getOrThrow()
@@ -418,7 +477,7 @@ func buildAgentModelProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentExecutorProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentExecutorProp(agentAttr: AgentAttr): Tokens {
     let tokens = newLiteralToken(agentAttr.executor)
     return quote(
         private var __IS_EXECUTOR_INIT__ = false
@@ -441,7 +500,7 @@ func buildAgentExecutorProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentDescriptionProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentDescriptionProp(agentAttr: AgentAttr): Tokens {
     let tokens = newLiteralToken(agentAttr.description)
     return quote(
         public override prop description: String {
@@ -452,10 +511,9 @@ func buildAgentDescriptionProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentTemperatureProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentTemperatureProp(agentAttr: AgentAttr): Tokens {
     let tokens = if (let Some(t) <- agentAttr.temperature) {
-        let token = newLiteralToken(t)
-        quote(Some($token))
+        t
     } else {
         quote(None)
     }
@@ -514,7 +572,7 @@ private struct RagAttr {
     }
 }
 
-func buildAgentRetrieverProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentRetrieverProp(agentAttr: AgentAttr): Tokens {
     let retrieverInitTokens = if (agentAttr.rag.isEmpty()) {
         quote(None)
     } else {
@@ -563,7 +621,7 @@ func buildAgentRetrieverProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentMemoryProp(agentAttr: AgentAttr): Tokens {
+private func buildAgentMemoryProp(agentAttr: AgentAttr): Tokens {
     let tokens = if (agentAttr.memory) {
         quote(Some(ShortMemory()))
     } else {
@@ -590,7 +648,7 @@ func buildAgentMemoryProp(agentAttr: AgentAttr): Tokens {
 
 //============================================================================================
 
-func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
+private func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
     let addTools = Tokens()
     // Internal tools
     for (name in agentAttr.internalTools) {
@@ -623,7 +681,7 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                         tm.addTools($client.tools)
                     )
                 )
-            case AgentToolAttr.HttpMcp(_url) =>
+            case AgentToolAttr.SseMcp(_url) =>
                 let url = newLiteralToken(_url)
                 let client = newIdentifierToken("_client_${i}")
                 addTools.append(
@@ -632,6 +690,26 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
                         tm.addTools($client.tools)
                     )
                 )
+            case AgentToolAttr.HttpMcp(_url, _headers) =>
+                let url = newLiteralToken(_url)
+                let headers = joinTokens(
+                    _headers.iterator() |>
+                        map { tuple: (String, Token) =>
+                            let key = newLiteralToken(tuple[0])
+                            let value = tuple[1]
+                            return quote( ($key, $value) )
+                        } |>
+                        collectArrayList,
+                    Token(TokenKind.COMMA)
+                )
+                let client = newIdentifierToken("_client_${i}")
+                addTools.append(
+                    quote(
+                        let $client = HttpMCPClient($url, headers: [$headers])
+                        tm.addTools($client.tools)
+                    )
+                )
+
             case AgentToolAttr.NativeFuncTool(tool) =>
                 addTools.append(
                     quote(
@@ -666,6 +744,32 @@ func buildAgentToolManagerProp(classDecl: ClassDecl, agentAttr: AgentAttr) {
 
                         __TOOL_MANAGER__ = Some(tm)
                         return tm
+                }
+            }
+        }
+    )
+}
+
+//============================================================================================
+
+private func buildAgentEventHandlerProp(agentAttr: AgentAttr) {
+    if (!agentAttr.hasEventHandler) {
+        return quote(
+            public override prop eventHandlerManager: Option<Object> {
+                get() { return None }
+            }
+        )
+    }
+    return quote(
+        private var __EVENT_HANDLER__: Option<EventHandlerManager> = None
+        public override prop eventHandlerManager: Option<Object> {
+            get() {
+                match (__EVENT_HANDLER__) {
+                    case Some(handler) => return handler
+                    case None =>
+                        let handler = $( newIdentifierToken(HANDLER_FUNC_NAME) )()
+                        __EVENT_HANDLER__ = Some(handler)
+                        return handler
                 }
             }
         }

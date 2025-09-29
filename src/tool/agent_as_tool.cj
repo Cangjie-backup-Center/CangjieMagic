@@ -104,6 +104,9 @@ public class AgentAsTool <: AbsTool {
             // The agent tool must receive a string
             let question = args["question"].asString().getValue()
             let resp = this.agent.chat(AgentRequest(question))
+            if (resp.status == AgentResponseStatus.Cancelled) {
+                throw AgentCancelException(reason: resp.content)
+            }
             return ToolResponse(resp.content)
         } else {
             throw ToolException("Agent as tool with invalid arguments")

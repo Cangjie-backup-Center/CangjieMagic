@@ -20,6 +20,16 @@ public struct LogUtils {
         }
     }
 
+    public static func trace(msg: Message): Unit {
+        trace(msg.toString())
+    }
+
+    public static func trace(messages: MessageList): Unit {
+        for (msg in messages) {
+            trace(msg)
+        }
+    }
+
     //------------------------------------------------------------
 
     public static func debug(msg: String): Unit {
@@ -112,10 +122,23 @@ public struct LogUtils {
     }
 
     //------------------------------------------------------------
+    private static func buildExceptionMessage(ex: Exception): String {
+        let strBuilder = StringBuilder()
+        for (ste in ex.getStackTrace()) {
+            strBuilder.append("${ste.fileName}:${ste.lineNumber} ${ste.methodName}\n")
+        }
+        return strBuilder.toString()
+    }
+
+    public static func info(ex: Exception): Unit {
+        info(buildExceptionMessage(ex))
+    }
 
     public static func debug(ex: Exception): Unit {
-        for (ste in ex.getStackTrace()) {
-            info("${ste.fileName}:${ste.lineNumber} ${ste.methodName}")
-        }
+        debug(buildExceptionMessage(ex))
+    }
+
+    public static func error(ex: Exception): Unit {
+        error(buildExceptionMessage(ex))
     }
 }

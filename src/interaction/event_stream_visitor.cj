@@ -24,29 +24,31 @@ public abstract class EventStreamVisitor {
 
     private func onEvent(event: InteractionEvent): Unit {
         match (event.kind) {
-           case EventKind.ToolCallStart => 
+           case EventKind.ToolCallStart =>
                 this.on((event as ToolCallStartEvent).getOrThrow())
-           case EventKind.ToolCallEnd => 
+           case EventKind.ToolCallEnd =>
                 this.on((event as ToolCallEndEvent).getOrThrow())
-           case EventKind.ChatModelStart => 
+           case EventKind.ToolCallRepeat =>
+                this.on((event as ToolCallRepeatEvent).getOrThrow())
+           case EventKind.ChatModelStart =>
                 this.on((event as ChatModelStartEvent).getOrThrow())
-           case EventKind.ChatModelEnd => 
+           case EventKind.ChatModelEnd =>
                 this.on((event as ChatModelEndEvent).getOrThrow())
-           case EventKind.ChatModelFailure => 
+           case EventKind.ChatModelFailure =>
                 this.on((event as ChatModelFailureEvent).getOrThrow())
-           case EventKind.AgentStart => 
+           case EventKind.AgentStart =>
                 this.on((event as AgentStartEvent).getOrThrow())
-           case EventKind.AgentEnd => 
+           case EventKind.AgentEnd =>
                 this.on((event as AgentEndEvent).getOrThrow())
-           case EventKind.SubAgentStart => 
+           case EventKind.SubAgentStart =>
                 this.on((event as SubAgentStartEvent).getOrThrow())
-           case EventKind.SubAgentEnd => 
+           case EventKind.SubAgentEnd =>
                 this.on((event as SubAgentEndEvent).getOrThrow())
-           case EventKind.AgentTimeout => 
+           case EventKind.AgentTimeout =>
                 this.on((event as AgentTimeoutEvent).getOrThrow())
-           case EventKind.UserInput => 
+           case EventKind.UserInput =>
                 this.on((event as UserInputEvent).getOrThrow())
-           case EventKind.Notify => 
+           case EventKind.Notify =>
                 this.on((event as NotifyEvent).getOrThrow())
            case EventKind.Sentinel => throw UnsupportedException('Unreachable')
         }
@@ -54,6 +56,8 @@ public abstract class EventStreamVisitor {
     open public func on(event: ToolCallStartEvent): Unit { }
 
     open public func on(event: ToolCallEndEvent): Unit { }
+
+    open public func on(event: ToolCallRepeatEvent): Unit { }
 
     open public func on(event: ChatModelStartEvent): Unit { }
 

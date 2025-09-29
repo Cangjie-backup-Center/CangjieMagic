@@ -175,13 +175,7 @@ extend<T> Option<T> <: Jsonable<Option<T>> where T <: Jsonable<T> {
     }
 }
 
-extend<T> HashMap<String, T> <: Jsonable<HashMap<String, T>> where T <: Jsonable<T> {
-    public static func getTypeSchema(): TypeSchema {
-        // A hash map can be de/serialize to a JSON object;
-        // however, it has no type schemas because its fields are non-determined.
-        throw JsonableException("HashMap has no type schema")
-    }
-
+extend<T> HashMap<String, T> <: FromJsonValue<HashMap<String, T>> where T <: FromJsonValue<T> {
     public static func fromJsonValue(json: JsonValue): HashMap<String, T> {
         let map = HashMap<String, T>()
         let jsObj = JsonUtils.asJsonObject(json).getOrThrow({
@@ -192,7 +186,9 @@ extend<T> HashMap<String, T> <: Jsonable<HashMap<String, T>> where T <: Jsonable
         }
         return map
     }
+}
 
+extend<T> HashMap<String, T> <: ToJsonValue where T <: ToJsonValue {
     public func toJsonValue(): JsonValue {
         let map = HashMap<String, JsonValue>()
         for ((key, value) in this) {
@@ -202,11 +198,13 @@ extend<T> HashMap<String, T> <: Jsonable<HashMap<String, T>> where T <: Jsonable
     }
 }
 
-// extend JsonValue <: ToJsonValue {
-//     public func toJsonValue(): JsonValue {
-//         return this
-//     }
-// }
+extend<T> HashMap<String, T> <: Jsonable<HashMap<String, T>> where T <: Jsonable<T> {
+    public static func getTypeSchema(): TypeSchema {
+        // A hash map can be de/serialize to a JSON object;
+        // however, it has no type schemas because its fields are non-determined.
+        throw JsonableException("HashMap has no type schema")
+    }
+}
 
 extend JsonObject <: Jsonable<JsonObject> {
     public func toJsonValue(): JsonValue {

@@ -32,11 +32,11 @@ public struct ModelUtils {
     }
 
     private static func makeChatImpl(model: ChatModel, request: ChatRequest): Option<ChatResponse> {
-        LogUtils.debug('--------------- Begin of chat model request ------------')
+        LogUtils.trace('--------------- Begin of chat model request ------------')
         try {
-            LogUtils.debug('  --------------- [Request Messages] ------------')
-            LogUtils.debug(request.messageList)
-            LogUtils.debug('  --------------- [End of Request Messages] ------------')
+            LogUtils.trace('  --------------- [Request Messages] ------------')
+            LogUtils.trace(request.messageList)
+            LogUtils.trace('  --------------- [End of Request Messages] ------------')
             // The LLM may return an empty reply?
             for (_ in 0..Config.modelRetryNumber) {
                 let response = model.create(request)
@@ -48,7 +48,7 @@ public struct ModelUtils {
             }
             return None
         } finally {
-            LogUtils.debug('--------------- End of chat model request ------------')
+            LogUtils.trace('--------------- End of chat model request ------------')
         }
     }
 

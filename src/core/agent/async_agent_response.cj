@@ -10,16 +10,11 @@ import magic.log.LogUtils
 /**
  * The asynchronous execution response from an agent executor
  */
-public class AsyncAgentResponse <: Iterator<String> {
+public class AsyncAgentResponse <: AgentResponse {
     /**
      * Data chunks of the final result
      */
     private let chunks: Iterator<String>
-
-    /**
-     * The status of the response
-     */
-    private var _status: Option<AgentResponseStatus> = None
 
     /**
      * Merge all chunk content
@@ -34,28 +29,26 @@ public class AsyncAgentResponse <: Iterator<String> {
     private var finished = false
 
     /**
-     * Internal information during the execution
+     * Callback function when the execution is finished
+     * The first parameter is the whether the response is okay
      */
-    private var _execution: Option<AgentExecution> = None
-
-    public prop execution: AgentExecution {
-        get() { this._execution.getOrThrow() }
-    }
+    private var finishFn: Option<(Bool) -> Unit> = None
 
     public init(chunks: Iterator<String>) {
+        super(AgentResponseStatus.Success, "")
         this.chunks = chunks
     }
 
     public init(chunks: Iterator<String>, execution!: AgentExecution) {
+        super(AgentResponseStatus.Success, "", execution: execution)
         this.chunks = chunks
-        this._execution = execution
     }
 
     /**
      * The final result
      * This is a synchronous method, which will wait until the executor completes
      */
-    public prop content: String {
+    override public prop content: String {
         get() {
             if (!this.finished) {
                 this.waitUntilFinished()
@@ -68,13 +61,17 @@ public class AsyncAgentResponse <: Iterator<String> {
      * The status of the response
      * This is a synchronous method, which will wait until the executor completes
      */
-    public prop status: AgentResponseStatus {
+    override public prop status: AgentResponseStatus {
         get() {
             if (!this.finished) {
                 this.waitUntilFinished()
             }
-            return this._status.getOrThrow()
+            return this._status
         }
+    }
+
+    protected func setFinishFn(fn: (Bool) -> Unit) {
+        this.finishFn = fn
     }
 
     /**
@@ -104,17 +101,28 @@ public class AsyncAgentResponse <: Iterator<String> {
                     }
                     this._status = AgentResponseStatus.Success
                     this.finished = true
+                    if (let Some(fn) <- this.finishFn) {
+                        fn(true)
+                    }
                     return None
             }
         } catch (ex: AgentCancelException) {
-            LogUtils.info("Task cancelled by user")
+            LogUtils.info("Agent execution cancelled by user")
             // Clear the result buffer
             this.buffer.reset()
             // Set the status to canceled
             this._status = AgentResponseStatus.Cancelled
             this.buffer.append(ex.reason)
             this.finished = true
+            if (let Some(fn) <- this.finishFn) {
+                fn(true)
+            }
             return None
+        } catch (ex: Exception) {
+            if (let Some(fn) <- this.finishFn) {
+                fn(false)
+            }
+            throw ex
         }
     }
 

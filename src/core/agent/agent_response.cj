@@ -5,9 +5,12 @@ package magic.core.agent
 
 import magic.core.message.MessageList
 
+import std.deriving.Derive
+
 /**
  * The status of the agent response
  */
+@Derive[ToString, Equatable]
 public enum AgentResponseStatus {
     | Success // The execution is successful
     | Cancelled  // The execution is canceled by user
@@ -16,35 +19,51 @@ public enum AgentResponseStatus {
 /**
  The execution response from an agent executor
  */
-public struct AgentResponse {
+open public class AgentResponse <: Iterator<String> {
     /**
      * The status of the agent response
      */
-    public let status: AgentResponseStatus
+    protected var _status: AgentResponseStatus
 
     /**
-     * The execution result
+     * The agent result
      */
-    public let content: String
+    protected var _content: String
 
     /**
      * Internal information during the execution
      */
-    private var _execution: Option<AgentExecution> = None
+    protected var _execution: Option<AgentExecution> = None
+
+    open public prop status: AgentResponseStatus {
+        get() { this._status }
+    }
 
     public prop execution: AgentExecution {
         get() { this._execution.getOrThrow() }
     }
 
+    open public prop content: String {
+        get() { this._content }
+    }
+
     public init(status: AgentResponseStatus, content: String) {
-        this.status = status
-        this.content = content
+        this._status = status
+        this._content = content
     }
 
     public init(status: AgentResponseStatus, content: String, execution!: AgentExecution) {
-        this.status = status
-        this.content = content
+        this._status = status
+        this._content = content
         this._execution = execution
         execution.setAnswer(content)
+    }
+
+    /**
+     * Since AsyncAgentResponse cannot inherit from both Iterator<String> and AgentResponse,
+     * we need to override the next() method to return None.
+     */
+    open override public func next(): Option<String> {
+        return None
     }
 }

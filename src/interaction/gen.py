@@ -238,7 +238,7 @@ def generate_event_stream_visitor(events):
     for event in events:
         event_kind = event.name.replace("Event", "")
 
-        code.append(f"           case EventKind.{event_kind} => ")
+        code.append(f"           case EventKind.{event_kind} =>")
         code.append(f"                this.on((event as {event.name}).getOrThrow())")
     code.append("           case EventKind.Sentinel => throw UnsupportedException('Unreachable')")
     code.append("        }")
@@ -268,8 +268,10 @@ def write_file(output_path, content):
         print(f"Error writing to file: {e}")
 
 def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     # Input and output file paths
-    input_file = "./events.cj"
+    input_file = os.path.join(script_dir, "./events.cj")
 
     # Extract struct names
     events = extract_events(input_file)
@@ -277,12 +279,12 @@ def main():
     # Generate handler code
     code = generate_event_handler_manager(events)
     # Write to output file
-    write_file("./event_handler_manager.cj", code)
+    write_file(os.path.join(script_dir, "./event_handler_manager.cj"), code)
 
     # Generate event visitor code
     code = generate_event_stream_visitor(events)
     # Write to output file
-    write_file("./event_stream_visitor.cj", code)
+    write_file(os.path.join(script_dir, "./event_stream_visitor.cj"), code)
 
 if __name__ == "__main__":
     main()

@@ -157,10 +157,33 @@ public class Config {
     // public static var filterThink = false
 
     /**
-     * Whether to use the function call feature of LLMs.
+     * Whether to use the tool call feature of LLMs.
      * This option is used in "tool-loop", "dsl" and "react" executor.
      */
     public static var enableModelToolCall = false
+
+    /**
+     * Whether to enable parallel tool call feature of LLMs.
+     * This option is used in "tool-loop", "dsl" and "react" executor.
+     */
+    public static var enableParallelToolCall = true
+
+    /**
+     * Whether to enable tool call check, like checking repeated tool calls
+     */
+    public static var enableToolCallCheck = false
+
+    /**
+     * Whether to enable json repair when the model response is not valid json.
+     */
+    public static var enableJsonRepair = true
+
+    /**
+     * Control the max output token of models.
+     * See model provider API doc for details.
+     */
+    // public static var modelMaxTokens: Option<Int64> = None
+    // public static var modelMaxCompletionTokens: Option<Int64> = None
 
     /**
      * The threshold to decide whether to summarize the tool result when the tool enables summarization.
@@ -189,9 +212,9 @@ public class Config {
      public static var httpConnectTimeout = 60000 // ms
 
     /**
-     * The max read timeout in http requests. MS
+     * The max read/write timeout in http requests. MS
      */
-     public static var httpReadTimeout = 60000 // ms
+     public static var httpReadWriteTimeout = 60000 // ms
 
     /**
      * Import paths for file import functionality

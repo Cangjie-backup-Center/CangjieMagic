@@ -149,9 +149,9 @@ protected class PromptBuilder {
                 AgentExecutionException("PromptBuilder: request is not set")
             })
         )
-        LogUtils.info("Prompt Builder", "----- Initialize Agent Execution Messages -----")
-        LogUtils.info(execution.messages)
-        LogUtils.info("Prompt Builder", "----- End of Agent Execution Messages -----")
+        LogUtils.trace("Prompt Builder", "----- Initialize Agent Execution Messages -----")
+        LogUtils.trace(execution.messages)
+        LogUtils.trace("Prompt Builder", "----- End of Agent Execution Messages -----")
     }
 
     //-------------------------------------------------------------------

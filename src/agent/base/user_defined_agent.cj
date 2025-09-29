@@ -16,13 +16,13 @@ public abstract class UserDefinedAgent <: AbsAgent {
 
     public func chat(variables: HashMap<String, ToString>): String {
         return chat(
-            AgentRequest(__USER_PROMPT_FUNC__().format(variables))
+            AgentRequest(__user_prompt_func__().format(variables))
         ).content
     }
 
     public func chat(variables: Array<(String, ToString)>): String {
         return chat(
-            AgentRequest(__USER_PROMPT_FUNC__().format(variables))
+            AgentRequest(__user_prompt_func__().format(variables))
         ).content
     }
 
@@ -30,26 +30,26 @@ public abstract class UserDefinedAgent <: AbsAgent {
 
     public func asyncChat(variables: HashMap<String, ToString>): AsyncAgentResponse {
         return asyncChat(
-            AgentRequest(__USER_PROMPT_FUNC__().format(variables))
+            AgentRequest(__user_prompt_func__().format(variables))
         )
     }
 
     public func asyncChat(variables: Array<(String, ToString)>): AsyncAgentResponse {
         return asyncChat(
-            AgentRequest(__USER_PROMPT_FUNC__().format(variables))
+            AgentRequest(__user_prompt_func__().format(variables))
         )
     }
 
     //-----------------------------------------------------------------
     public func chatGet<T>(variables: HashMap<String, ToString>): Option<T> where T<: Jsonable<T>{
         return chatGet<T>(
-            AgentRequest(__USER_PROMPT_FUNC__().format(variables))
+            AgentRequest(__user_prompt_func__().format(variables))
         )
     }
 
     public func chatGet<T>(variables: Array<(String, ToString)>): Option<T> where T<: Jsonable<T>{
         return chatGet<T>(
-            AgentRequest(__USER_PROMPT_FUNC__().format(variables))
+            AgentRequest(__user_prompt_func__().format(variables))
         )
     }
 
@@ -75,14 +75,14 @@ public abstract class UserDefinedAgent <: AbsAgent {
     /*
      * This method will be override by @user defined in @agent
      */
-    open protected func __USER_PROMPT_FUNC__(): String {
+    open protected func __user_prompt_func__(): String {
         throw UnsupportedException("Agent does not define user prompt template")
     }
 
     /*
      * This method will be used in the future.
      */
-    open public func __CUSTOMIZED_EXECUTION_FUNC__(state: Object): Option<Object> {
+    open public func __customized_execution_func__(state: Object): Option<Object> {
         return None
     }
 }

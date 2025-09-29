@@ -106,7 +106,7 @@ public class AgentExecutionInfo <: AgentExecution {
         for ((path, content) in request.importedFiles) {
             newQuestion = newQuestion.replace("@${path}", path.toString()) // Remove the @ tag
             strBuilder.append(
-                "--- File of ${path} ---\n${content}\n--- End of File ${path} ---\n"
+                "<file-content path=${path}>\n${content}\n</file-content>\n"
             )
         }
         // Add messages in the following order:

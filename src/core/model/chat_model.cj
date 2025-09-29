@@ -13,6 +13,11 @@ public interface ChatModel <: Model {
     prop contextLength: Int64
 
     /**
+     * Control the max output tokens of the chat model
+     */
+    mut prop maxTokens: Option<Int64>
+
+    /**
      * Synchronous API of the chat model
      */
     func create(request: ChatRequest): ChatResponse

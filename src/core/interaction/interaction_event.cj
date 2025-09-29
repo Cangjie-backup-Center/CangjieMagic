@@ -12,6 +12,7 @@ import std.deriving.*
 protected enum EventKind {
     | ToolCallStart
     | ToolCallEnd
+    | ToolCallRepeat
 
     | AgentStart
     | AgentEnd

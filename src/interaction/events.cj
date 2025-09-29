@@ -9,8 +9,6 @@ import magic.core.tool.{ToolRequest, ToolResponse}
 import magic.core.model.{ChatRequest, ChatResponse}
 import magic.core.agent.AgentExecution
 
-import std.deriving.*
-
 /**
  * Triggered when before tool call
  */
@@ -33,6 +31,18 @@ public class ToolCallEndEvent <: InteractionEvent { // Return: Unit
         public let toolResponse: ToolResponse // Result of calling the tool
     ) {
         super(EventKind.ToolCallEnd)
+    }
+}
+
+/**
+ * Triggered when repeated tool call
+ */
+public class ToolCallRepeatEvent <: InteractionEvent { // Return: ToolResponse
+    public ToolCallRepeatEvent(
+        public let agent: Agent,
+        public let toolRequest: ToolRequest  // Details of the tool being invoked
+    ) {
+        super(EventKind.ToolCallRepeat)
     }
 }
 
@@ -92,8 +102,8 @@ public class AgentStartEvent <: InteractionEvent { // Return: AgentResponse
 public class AgentEndEvent <: InteractionEvent { // Return: Unit
     public AgentEndEvent(
         public let agent: Agent,
-        public let agentRequest: AgentRequest
-        // Since sync and async agent requests result in different response type,
+        public let agentRequest: AgentRequest,
+        public let agentResponse: Option<AgentResponse>
         // we do not use them
     ) {
         super(EventKind.AgentEnd)

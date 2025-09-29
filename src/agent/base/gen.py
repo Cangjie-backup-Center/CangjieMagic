@@ -10,58 +10,56 @@ from interaction.gen import extract_events
 # For event handlers: NOT returning values & Without agent request
 code_template_1_1 = '''
     static public func handle(event!: {struct_name}, forRequest!: Option<AgentRequest> = None): {return_type} {{
-        let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {{
             if (let Some(object) <- request.eventHandlerManager) {{
-                managers.add((object as EventHandlerManager).getOrThrow())
+                (object as EventHandlerManager).getOrThrow().handle(event)
             }}
         }}
-        // Then, event handlers of the agent
-        // Last, global event handlers
-        managers.add(EventHandlerManager.global)
-
-        for (manager in managers) {{
-            manager.handle(event)
+        if (let Some(object) <- event.agent.eventHandlerManager) {{
+            (object as EventHandlerManager).getOrThrow().handle(event)
         }}
+        EventHandlerManager.global.handle(event)
     }}
 '''
 
 # For event handlers: NOT returning values & With agent request
 code_template_1_2 = '''
     static public func handle(event!: {struct_name}): {return_type} {{
-        let managers = ArrayList<EventHandlerManager>()
         if (let Some(object) <- event.agentRequest.eventHandlerManager) {{
-            managers.add((object as EventHandlerManager).getOrThrow())
+            (object as EventHandlerManager).getOrThrow().handle(event)
         }}
-        // Then, event handlers of the agent
-        // Last, global event handlers
-        managers.add(EventHandlerManager.global)
-
-        for (manager in managers) {{
-            manager.handle(event)
+        if (let Some(object) <- event.agent.eventHandlerManager) {{
+            (object as EventHandlerManager).getOrThrow().handle(event)
         }}
+        EventHandlerManager.global.handle(event)
     }}
 '''
 
 # For event handlers: returning values & Without agent request
 code_template_2_1 = '''
     static public func handle(event!: {struct_name}, forRequest!: Option<AgentRequest> = None): EventResponse<{return_type}> {{
-        let managers = ArrayList<EventHandlerManager>()
         if (let Some(request) <- forRequest) {{
             if (let Some(object) <- request.eventHandlerManager) {{
-                managers.add((object as EventHandlerManager).getOrThrow())
+                match ((object as EventHandlerManager).getOrThrow().handle(event)) {{
+                    case Continue => ()
+                    case Continue(v) => return Continue(v)
+                    case Terminate(v) => return Terminate(v)
+                }}
             }}
         }}
-        // Then, event handlers of the agent
-        // Last, global event handlers
-        managers.add(EventHandlerManager.global)
 
-        for (manager in managers) {{
-            match (manager.handle(event)) {{
+        if (let Some(object) <- event.agent.eventHandlerManager) {{
+            match ((object as EventHandlerManager).getOrThrow().handle(event)) {{
                 case Continue => ()
                 case Continue(v) => return Continue(v)
                 case Terminate(v) => return Terminate(v)
             }}
+        }}
+
+        match (EventHandlerManager.global.handle(event)) {{
+            case Continue => ()
+            case Continue(v) => return Continue(v)
+            case Terminate(v) => return Terminate(v)
         }}
         return Continue
     }}
@@ -70,26 +68,30 @@ code_template_2_1 = '''
 # For event handlers: returning values & With agent request
 code_template_2_2 = '''
     static public func handle(event!: {struct_name}): EventResponse<{return_type}> {{
-        let managers = ArrayList<EventHandlerManager>()
         if (let Some(object) <- event.agentRequest.eventHandlerManager) {{
-            managers.add((object as EventHandlerManager).getOrThrow())
-        }}
-        // Then, event handlers of the agent
-        // Last, global event handlers
-        managers.add(EventHandlerManager.global)
-
-        for (manager in managers) {{
-            match (manager.handle(event)) {{
+            match ((object as EventHandlerManager).getOrThrow().handle(event)) {{
                 case Continue => ()
                 case Continue(v) => return Continue(v)
                 case Terminate(v) => return Terminate(v)
             }}
         }}
+
+        if (let Some(object) <- event.agent.eventHandlerManager) {{
+            match ((object as EventHandlerManager).getOrThrow().handle(event)) {{
+                case Continue => ()
+                case Continue(v) => return Continue(v)
+                case Terminate(v) => return Terminate(v)
+            }}
+        }}
+
+        match (EventHandlerManager.global.handle(event)) {{
+            case Continue => ()
+            case Continue(v) => return Continue(v)
+            case Terminate(v) => return Terminate(v)
+        }}
         return Continue
     }}
 '''
-
-
 
 def generate_code(events):
     """Generate the EventHandlerManager code for the given struct names.
@@ -170,9 +172,11 @@ def replace_content_between_markers(file_path, start_marker, end_marker, new_con
         return False
 
 def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     # Input and output file paths
-    input_file = "../../interaction/events.cj"
-    output_file = "./agent_op.cj"
+    input_file = os.path.join(script_dir, "../../interaction/events.cj")
+    output_file = os.path.join(script_dir, "./agent_op.cj")
 
     # Extract struct names
     events = extract_events(input_file)

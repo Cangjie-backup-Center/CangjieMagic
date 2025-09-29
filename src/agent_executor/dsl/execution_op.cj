@@ -4,6 +4,7 @@
 package magic.agent_executor.dsl
 
 import magic.agent_executor.common.{AgentTask, PromptBuilder, AnswerTool, BuiltinToolUtils}
+import magic.agent.base.AgentOp
 import magic.core.agent.*
 import magic.core.tool.{Tool, ToolRequest}
 import magic.core.message.{Message, MessageList}
@@ -113,12 +114,12 @@ public struct ExecutionOpSet {
             let chatResp = if (Config.enableModelToolCall) {
                 chatWithOperation(
                     state,
-                    ACTION_PROMPT,
+                    getActionPrompt(),
                     tools: state.task.availableTools,
                     stop: [Tag.OBSERVATION]
                 )
             } else {
-                let prompt = ACTION_PROMPT_WITH_TOOLS.format([
+                let prompt = getActionPromptWithTools().format([
                     ("tools", PromptBuilder.buildAgentToolsPrompt(state.task))
                 ])
                 chatWithOperation(
@@ -142,26 +143,18 @@ public struct ExecutionOpSet {
      * If the chat response does not contain a tool request,
      * extract the request from the message content
     */
-    private static func parseToolRequests(chatResp: ChatResponse): Array<ToolRequest> {
-        if (!chatResp.toolRequests.isEmpty()) {
-            return chatResp.toolRequests
-        }
-        // First, try to parse tool request array
-        try {
-            return ParserUtils.extractToolRequestArray(chatResp.message.content)
-        } catch (ex: ParserException) {
-            LogUtils.debug("Failed to extract tool request array")
-        }
+    private static func parseToolRequests(agent: Agent, chatResp: ChatResponse, forRequest: AgentRequest): Array<ToolRequest> {
         // Otherwise, try to parse a single tool request
         try {
-            let toolRequest = ParserUtils.extractToolRequest(chatResp.message.content)
-            return [toolRequest]
+            return AgentOp.parseToolRequests(agent, chatResp, forRequest: forRequest)
         } catch (ex: ParserException) {
-            LogUtils.debug("Failed to extract tool request")
-            // If function call is enabled and failing to extract the tool request,
+            LogUtils.debug("Failed to extract tool requests")
+            // If function call is enabled,
+            // and there is no Json string || Json repair is disable,
             // treat the content as the final answer
-            if (Config.enableModelToolCall) {
-                LogUtils.info("Failed to extract tool request. Treat the content as the final answer.")
+            if (Config.enableModelToolCall &&
+                (ex.reason.contains("NO JSON") || !Config.enableJsonRepair)) {
+                LogUtils.info("Failed to extract tool requests. Treat the content as the final answer.")
                 return [
                     ToolRequest(
                         name: AnswerTool.NAME,
@@ -170,22 +163,50 @@ public struct ExecutionOpSet {
                         ])
                     )
                 ]
+            }
+            throw ex // Throw the exception again
+        }
+    }
+
+    private static func repairJsonOutput(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
+        let guideline = "The Json object of tool call is invalid. Please revise it and try again."
+        if (Config.enableModelToolCall) {
+            state.execution.addMessage( // Not add as a step message
+                Message.assistant("${chatResp.message.content}\n")
+            )
+            state.execution.addMessage(Message.user(guideline))
+        } else {
+            state.execution.addMessage(
+                Message.assistant("```json\n${chatResp.message.content}\n```".withTag(Tag.ACTION)),
+            )
+            state.execution.addMessage(Message.user(guideline.withTag(Tag.OBSERVATION)))
+        }
+        return state
+    }
+
+    private static func doInvokeTool(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
+        LogUtils.debug(state.task.agent.name, "To invoke tool: ${chatResp}")
+        var toolRequests = try {
+            ExecutionOpSet.parseToolRequests(state.task.agent, chatResp, state.task.request)
+        } catch (ex: ParserException) {
+            LogUtils.error(state.task.agent.name, "Failed to parse tool request: ${ex.message}")
+            if (Config.enableJsonRepair) {
+                return repairJsonOutput(state, chatResp)
             } else {
                 throw ex
             }
         }
-    }
-
-    private static func doInvokeTool(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
-        LogUtils.debug(state.task.agent.name, "Action: ${chatResp}")
-        let toolRequests = parseToolRequests(chatResp)
         // We also add reasoning content to the step messages
         if (let Some(reason) <- chatResp.message.reason) {
             Message.assistant(reason) // Without tag?
         }
         // LLM may generate parallel tools to run, but we run them sequentially currently
         // Execute each tool
-        LogUtils.info(state.task.agent.name, "Action: ${toolRequests.toJsonValue().toJsonString()}")
+        LogUtils.info(state.task.agent.name, "Tool call: ${toolRequests.toJsonValue().toJsonString()}")
+        // If parallel tool call is disabled, we only run the first tool request
+        if (!Config.enableParallelToolCall && toolRequests.size > 1) {
+            toolRequests = [toolRequests[0]]
+        }
         for (toolRequest in toolRequests) {
             // Add action to the message list
             // If function call is not enabled, we wrap the messages with tags

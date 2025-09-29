@@ -34,7 +34,7 @@ public enum TypeSchema <: ToJsonValue & ToString {
             case Boolean => jo.put("type", JsonString("boolean"))
             case Arr(ts) =>
                 jo.put("type", JsonString("array"))
-                jo.put("arrayItem", ts.toJsonValue())
+                jo.put("items", ts.toJsonValue())
             case Enum(values) =>
                 jo.put("type", JsonString("string"))
                 jo.put("enum", JsonUtils.buildJsonArray(values))

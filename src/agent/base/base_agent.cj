@@ -6,6 +6,8 @@ package magic.agent.base
 import magic.core.*
 import magic.tool.SimpleToolManager
 import magic.core.model.ChatModel
+import magic.interaction.EventHandlerManager
+
 import std.collection.{HashMap, map, collectArray, ArrayList}
 
 /**
@@ -22,6 +24,7 @@ open public class BaseAgent <: AbsAgent {
     protected var _retriever: Option<Retriever> = None
     protected var _memory: Option<Memory> = None
     protected var _interceptor: Option<Interceptor> = None
+    protected var _eventHandlerManager: Option<EventHandlerManager> = None
 
     public init(
         model!: ChatModel,
@@ -33,7 +36,8 @@ open public class BaseAgent <: AbsAgent {
         executor!: Option<AgentExecutor> = None,
         retriever!: Option<Retriever> = None,
         memory!: Option<Memory> = None,
-        interceptor!: Option<Interceptor> = None
+        interceptor!: Option<Interceptor> = None,
+        eventHandlerManager!: Option<EventHandlerManager> = None
     ) {
         this._name = name
         this._description = description
@@ -45,6 +49,7 @@ open public class BaseAgent <: AbsAgent {
         this._retriever = retriever
         this._memory = memory
         this._interceptor = interceptor
+        this._eventHandlerManager = eventHandlerManager
     }
 
     override public prop name: String { get() { _name } }
@@ -77,5 +82,13 @@ open public class BaseAgent <: AbsAgent {
     override public mut prop interceptor: Option<Interceptor> {
         get() { _interceptor }
         set(v) { _interceptor = v }
+    }
+    override public prop eventHandlerManager: Option<Object> {
+        get() {
+            if (let Some(o) <- _eventHandlerManager) {
+                return o
+            }
+            return None
+        }
     }
 }
