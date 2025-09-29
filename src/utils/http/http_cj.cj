@@ -31,9 +31,9 @@ private func buildHttpClient(url: String, verify: Bool): Client {
     }
     let TcpSocketConnector = { sa: SocketAddress =>
         let socket = TcpSocket(sa)
-        socket.readTimeout = Duration.second * 60
-        socket.writeTimeout = Duration.second * 60
-        socket.connect(timeout: Duration.second * 60)
+        socket.readTimeout = Duration.second * 6000
+        socket.writeTimeout = Duration.second * 6000
+        socket.connect(timeout: Duration.second * 6000)
         return socket
     }
     cb.connector(TcpSocketConnector)
