@@ -37,30 +37,43 @@ private func buildSimpleLogger(output: OutputStream): SimpleLogger {
 @When[ohos != "true"]
 struct LogUtilsImpl {
     private static var _LOGGER: Option<SimpleLogger> = None
+    private static var CURR_LOG_FILE: String = Config.logFile
 
     private static prop LOGGER: SimpleLogger {
         get() {
+            // Log file is changed
+            if (Config.logFile != CURR_LOG_FILE) {
+                let logger = buildLogger()
+                _LOGGER = logger
+                return logger
+            }
             match (_LOGGER) {
                 case Some(logger) =>
                     return logger
                 case None =>
-                    let logger = if (Config.logFile == "stdout") {
-                        buildSimpleLogger(Console.stdOut)
-                    } else if (Config.logFile == "stderr") {
-                        buildSimpleLogger(Console.stdErr)
-                    } else {
-                        let path = Path(Config.logFile)
-                        if (!exists(path.parent)) {
-                            Directory.create(path.parent, recursive: true)
-                        }
-                        let file = File(path, OpenMode.Write)
-                        buildSimpleLogger(file)
-                    }
+                    let logger = buildLogger()
                     _LOGGER = logger
                     return logger
             }
         }
     }
+
+    private static func buildLogger(): SimpleLogger {
+        let logger = if (Config.logFile == "stdout") {
+            buildSimpleLogger(Console.stdOut)
+        } else if (Config.logFile == "stderr") {
+            buildSimpleLogger(Console.stdErr)
+        } else {
+            let path = Path(Config.logFile)
+            if (!exists(path.parent)) {
+                Directory.create(path.parent, recursive: true)
+            }
+            let file = File(path, OpenMode.Write)
+            buildSimpleLogger(file)
+        }
+        return logger
+    }
+
 
     private static let NAMED_LOGGERS = HashMap<String, SimpleLogger>()
 
