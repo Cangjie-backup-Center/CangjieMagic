@@ -71,6 +71,7 @@ struct LogUtilsImpl {
             let file = File(path, OpenMode.Write)
             buildSimpleLogger(file)
         }
+        CURR_LOG_FILE = Config.logFile
         return logger
     }
 
