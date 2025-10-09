@@ -111,19 +111,23 @@ public struct AgentOp {
         return AgentOp.parseToolRequests(agent, chatResp.message.content, forRequest: forRequest)
     }
 
-    private static func parseToolRequests(agent: Agent, content: String, forRequest!: AgentRequest): Array<ToolRequest> {
+    protected static func parseToolRequests(agent: Agent, content: String, forRequest!: AgentRequest): Array<ToolRequest> {
         // First, try to parse tool request array
         try {
-            return ParserUtils.extractToolRequestArray(content)
+            let toolRequests = ParserUtils.extractToolRequestArray(content)
+            if (!toolRequests.isEmpty()) {
+                return toolRequests
+            }
         } catch (ex: ParserException) {
-            LogUtils.debug("Failed to extract tool request array")
+            // Skip the exception
         }
+        LogUtils.trace("Failed to extract tool request array")
         // Otherwise, try to parse a single tool request
         try {
             let toolRequest = ParserUtils.extractToolRequest(content)
             return [toolRequest]
         } catch (ex: ParserException) {
-            LogUtils.debug("Failed to extract tool request")
+            LogUtils.trace("Failed to extract tool request")
             // If there is a invalid JSON object, repair it
             if (!ex.reason.contains("NO JSON") && Config.enableJsonRepair) {
                 if (let Some(repairedJsonStr) <- AgentOp.repairJson(agent, content, forRequest: forRequest)) {
