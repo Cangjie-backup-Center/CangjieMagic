@@ -65,9 +65,7 @@ public class Importer {
 
         // Process queue until empty
         while (let Some(currentRef) <- queue.remove()) {
-            println("current ref: ${currentRef}")
             if (let Some((filePath, fileContent)) <- importSingleFile(currentRef)) {
-                println("load file content: ${fileContent}")
                 // Add the result to our results
                 results.add((Path(currentRef.referencePath), fileContent))
 
