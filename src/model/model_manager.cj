@@ -198,7 +198,7 @@ public struct ModelManager {
         match (modelConfig.provider) {
             case "openai" | "dashscope" | "ark" | "deepseek" |
                  "siliconflow" | "zhipuai" | "maas" | "google" | "moonshot" | "openrouter" =>
-                return OpenAIChatModel(modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
+                return OpenAIChatModel(modelConfig.provider, modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
             case "ollama" =>
                 return OllamaChatModel(modelConfig.name, baseURL: modelConfig.baseURL)
             case _ =>

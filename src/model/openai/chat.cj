@@ -219,6 +219,7 @@ private class AsyncChatChunkStream <: Iterator<AsyncChatChunk> {
 }
 
 public class OpenAIChatModel <: ChatModel {
+    private let _provider: String
     private let model: String
     private let baseURL: String
     private let apiKey: String
@@ -226,11 +227,13 @@ public class OpenAIChatModel <: ChatModel {
     private var _maxTokens: Option<Int64> = None
 
     public init(
+        _provider: String,
         model: String,
         apiKey!: String,
         baseURL!: String,
         temperature!: Option<Float64> = None,
         contextLength!: Int64 = Config.defaultContextLen) {
+        this._provider = _provider
         this.model = model
         this.baseURL = baseURL
         this.apiKey = apiKey
@@ -238,7 +241,7 @@ public class OpenAIChatModel <: ChatModel {
     }
 
     override public prop provider: String {
-        get() { "openai" }
+        get() { _provider }
     }
 
     override public prop name: String {
