@@ -111,7 +111,12 @@ protected struct HttpUtilsImpl {
             LogUtils.trace("Raw http response: ${out}")
 
             if (status != "200" && status != "202") {
-                let msg = "Http status: ${status}.\nHttp response: ${resp}"
+                let content = resp.trimAscii()
+                let msg = if (content.isEmpty()) {
+                    "Http status: ${status}"
+                } else {
+                    "Http status: ${status}\nHttp response: ${content}"
+                }
                 LogUtils.error("curl failed")
                 LogUtils.error(msg)
                 throw HttpException(msg)

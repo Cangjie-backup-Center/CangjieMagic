@@ -14,6 +14,7 @@ import std.deriving.Derive
 public enum AgentResponseStatus {
     | Success // The execution is successful
     | Cancelled  // The execution is canceled by user
+    | Failed // The execution is failed
 }
 
 /**

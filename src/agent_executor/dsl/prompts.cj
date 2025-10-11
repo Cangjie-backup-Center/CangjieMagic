@@ -22,7 +22,7 @@ ${EXECUTION_DEFINITION}
 """
 
 // Prompts of parallel tool call is copied from https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use
-private func getToolCallParallelDescription(): String {
+func getActionPrompt(): String {
     if (Config.enableParallelToolCall) {
 """
 Decide which tools to use next based on the current execution state.
@@ -31,12 +31,9 @@ For maximum efficiency, whenever you need to perform multiple independent operat
     } else {
 """
 Decide which tool to use next based on the current execution state. ONLY one tool can be used.
+NEVER output raw string, you MUST select a tool as JSON string.
 """
     }
-}
-
-func getActionPrompt(): String {
-    getToolCallParallelDescription()
 }
 
 private func getToolCallExample(): String {
@@ -97,8 +94,7 @@ For example,
 
 func getActionPromptWithTools(): String {
 """
-Decide which tool to use next based on the user question and the current execution state.
-${getToolCallParallelDescription()}
+${getActionPrompt()}
 ${EXECUTION_DEFINITION}
 
 All available tools are listed:

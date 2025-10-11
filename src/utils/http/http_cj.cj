@@ -77,7 +77,12 @@ private func sendHttp(method: String,
         let response = client.send(req)
         if (response.status != HttpStatusCode.STATUS_OK &&
             response.status != HttpStatusCode.STATUS_ACCEPTED) {
-            let msg = "Http status: ${response.status}.\nHttp response: ${readHttpBody(response)}"
+            let content = readHttpBody(response).trimAscii()
+            let msg = if (content.isEmpty()) {
+                "Http status: ${response.status}"
+            } else {
+                "Http status: ${response.status}\nHttp response: ${content}"
+            }
             LogUtils.error("Http ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
             LogUtils.error(msg)
             throw HttpException(msg)
