@@ -269,10 +269,10 @@ public class OpenAIChatModel <: ChatModel {
                     } else {
                         return this.parseResponse(body, DateTime.now() - start)
                     }
-                case None => throw ModelException("Fail to get chat http response")
+                case None => throw ModelException("Http response body is None")
             }
         } catch (ex: HttpException) {
-            throw ModelException("Fail to get chat http response.\n${ex.error}")
+            throw ModelException(ex.error)
         }
     }
 

@@ -7,6 +7,8 @@ import magic.core.message.Message
 import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
 
+import std.collection.ArrayList
+
 /**
  * The asynchronous execution response from an agent executor
  */
@@ -29,10 +31,10 @@ public class AsyncAgentResponse <: AgentResponse {
     private var finished = false
 
     /**
-     * Callback function when the execution is finished
+     * Callback functions when the execution is finished
      * The first parameter is the whether the response is okay
      */
-    private var finishFn: Option<(Bool) -> Unit> = None
+    private let finishFnList = ArrayList<(Bool) -> Unit>()
 
     public init(chunks: Iterator<String>) {
         super(AgentResponseStatus.Success, "")
@@ -70,8 +72,12 @@ public class AsyncAgentResponse <: AgentResponse {
         }
     }
 
-    protected func setFinishFn(fn: (Bool) -> Unit) {
-        this.finishFn = fn
+    /**
+     * Set the callback function when the execution is finished
+     * The first parameter is the whether the response succeeded
+     */
+    public func addFinishFn(fn: (Bool) -> Unit) {
+        this.finishFnList.add(fn)
     }
 
     /**
@@ -101,7 +107,7 @@ public class AsyncAgentResponse <: AgentResponse {
                     }
                     this._status = AgentResponseStatus.Success
                     this.finished = true
-                    if (let Some(fn) <- this.finishFn) {
+                    for (fn in this.finishFnList) {
                         fn(true)
                     }
                     return None
@@ -114,12 +120,18 @@ public class AsyncAgentResponse <: AgentResponse {
             this._status = AgentResponseStatus.Cancelled
             this.buffer.append(ex.reason)
             this.finished = true
-            if (let Some(fn) <- this.finishFn) {
+            for (fn in this.finishFnList) {
                 fn(true)
             }
             return None
         } catch (ex: Exception) {
-            if (let Some(fn) <- this.finishFn) {
+            // Clear the result buffer
+            this.buffer.reset()
+            // Set the status to failed
+            this._status = AgentResponseStatus.Failed
+            this.buffer.append(ex.message)
+            this.finished = true
+            for (fn in this.finishFnList) {
                 fn(false)
             }
             throw ex
@@ -130,9 +142,11 @@ public class AsyncAgentResponse <: AgentResponse {
      * Cancelled the agent execution
      * Wait until the execution is stopped.
      */
-    public func cancel(): Unit {
+    public func cancel(blocking!: Bool): Unit {
         this.execution.markCancellation()
-        // Consume all chunks
-        for (_ in this) { }
+        if (blocking) {
+            // Consume all chunks
+            for (_ in this) { }
+        }
     }
 }

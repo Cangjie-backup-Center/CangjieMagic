@@ -30,6 +30,10 @@ public abstract class AbsAgent <: Agent {
     */
     static init() {
         Thread.handleUncaughtExceptionBy { thread: Thread, ex: Exception =>
+            // Ignore cancelled exception
+            if (ex is AgentCancelException) {
+                return
+            }
             let strBuilder = StringBuilder()
             strBuilder.append("Uncaught exception in thread ${thread.name}: ${ex}")
             for (ste in ex.getStackTrace()) {
@@ -69,7 +73,7 @@ public abstract class AbsAgent <: Agent {
                     if (let Some(memory) <- this.memory) {
                         memory.update(resp.execution.chatRound.toString())
                     }
-                case AgentResponseStatus.Cancelled => ()
+                case _ => ()
             }
             AgentOp.handle(event: AgentEndEvent(this, request, resp))
             return resp
@@ -78,7 +82,7 @@ public abstract class AbsAgent <: Agent {
             return AgentResponse(AgentResponseStatus.Cancelled, ex.reason)
         } catch (ex: Exception) {
             AgentOp.handle(event: AgentEndEvent(this, request, None))
-            throw ex
+            return AgentResponse(AgentResponseStatus.Failed, ex.message)
         }
     }
 
@@ -91,7 +95,7 @@ public abstract class AbsAgent <: Agent {
         let processedRequest = AgentOp.preprocessRequest(request)
         AgentOp.handle(event: AgentStartEvent(this, request))
         let asyncResp = this.executor.asyncRun(this, processedRequest)
-        asyncResp.setFinishFn({ okay =>
+        asyncResp.addFinishFn({ okay =>
             if (okay) {
                 AgentOp.handle(event: AgentEndEvent(this, request, asyncResp))
             } else {

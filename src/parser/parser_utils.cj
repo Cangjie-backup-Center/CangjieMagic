@@ -79,7 +79,14 @@ public struct ParserUtils {
                 numberOfBraces -= 1
                 // Found the end of the JSON object
                 if (numberOfBraces == 0) {
-                    return str[start..(idx+1)].trimAscii()
+                    let jsonStr = str[start..(idx+1)].trimAscii()
+                    // Test whether it's a valid JSON string
+                    try {
+                        let _ = JsonValue.fromStr(jsonStr)
+                        return jsonStr
+                    } catch (ex: JsonException) {
+                        return None
+                    }
                 }
             } else if (ch == b'"' && !escaped) {
                 inString = !inString
