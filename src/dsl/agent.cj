@@ -389,6 +389,7 @@ private func transformAgentClass(classDecl: ClassDecl, agentAttr: AgentAttr): To
     return quote(
         $modifier class $classNameToken $genericTypeParamTokens $genericConstraintTokens <: UserDefinedAgent {
             $classDeclBody
+            public static let typeName = $( newLiteralToken(classDecl.identifier.value) )
             $( buildAgentSystemPromptProp(classDecl, agentAttr) )
             $( buildAgentModelProp(agentAttr) )
             $( buildAgentExecutorProp(agentAttr) )

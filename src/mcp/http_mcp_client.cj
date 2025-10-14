@@ -13,13 +13,18 @@ import std.collection.ArrayList
 import std.time.DateTime
 import stdx.encoding.json.*
 
+@jsonable
+public class HttpMCPInitParams {
+    public let url: String
+    public let header: HashMap<String, String>  // Additional headers
+}
+
 /**
  * MCP client using the Streamable HTTP transport
  * Implements the MCP 2025-03-26 Streamable HTTP specification
  */
 public class HttpMCPClient <: AbsMCPClient {
-    private let endpoint: String
-    public let headers: HashMap<String, String>  // Additional headers
+    private let _initParams: HttpMCPInitParams
 
     // Session management
     private var sessionId: Option<String> = None
@@ -38,13 +43,12 @@ public class HttpMCPClient <: AbsMCPClient {
     private var messageQueue: ArrayList<String> = ArrayList()
 
     public init(endpoint: String, headers!: Array<(String, String)> = []) {
+        this._initParams = HttpMCPInitParams(url: endpoint, header: HashMap(headers))
         // Validate endpoint URL
         if (!HttpMCPClientUtils.validateEndpoint(endpoint)) {
             throw MCPException("Invalid endpoint URL: ${endpoint}. Must start with http:// or https://")
         }
 
-        this.endpoint = endpoint
-        this.headers = HashMap(headers)
         this.lastActivity = DateTime.now()
         // Initialize HTTP-specific session after parent initialization
         this.initializeHttpSession()
@@ -52,9 +56,7 @@ public class HttpMCPClient <: AbsMCPClient {
 
     override public prop initParams: JsonObject {
         get() {
-            let jo = JsonObject()
-            jo.put("url", JsonString(this.endpoint))
-            return jo
+            return this._initParams.toJsonValue().asObject()
         }
     }
 
@@ -102,7 +104,7 @@ public class HttpMCPClient <: AbsMCPClient {
     // Private implementation methods
     private func sendRequest(req: JsonObject): HttpResult {
         let headers = this.buildHeaders()
-        return HttpUtils.hybridPost(this.endpoint, headers, req)
+        return HttpUtils.hybridPost(this._initParams.url, headers, req)
     }
 
     private func handleSessionError(error: Exception): Unit {
@@ -129,7 +131,7 @@ public class HttpMCPClient <: AbsMCPClient {
         }
 
         // Add custom headers from initParams
-        for ((key, value) in this.headers) {
+        for ((key, value) in this._initParams.header) {
             headers.add(key, value)
         }
 
@@ -175,7 +177,7 @@ public class HttpMCPClient <: AbsMCPClient {
 
     // HTTP-specific session initialization
     private func initializeHttpSession(): Unit {
-        LogUtils.info("Initializing HTTP MCP client session for endpoint: ${this.endpoint}")
+        LogUtils.info("Initializing HTTP MCP client session for endpoint: ${this._initParams.url}")
 
         // Simulate session creation
         this.sessionId = Some("http-session-${DateTime.now().nanosecond}")
