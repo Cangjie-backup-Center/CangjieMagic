@@ -67,6 +67,8 @@ public macro toolset(attrTokens: Tokens, input: Tokens): Tokens {
  *      [<tool-names>]
  *   }
  *   ...
+ *   public static let <xxx-tool>Id = "<xxx-tool>"
+ *   ...
  * }
  */
 private func transformToolset(input: Tokens, attr: ToolsetAttr): Tokens {
@@ -113,6 +115,13 @@ private func transformToolsetType(typeDecl: Decl, superTypes: ArrayList<TypeNode
         Token(TokenKind.COMMA)
     )
 
+    let toolIdTokens = Tokens()
+    for (name in attr.internalTools) {
+        toolIdTokens.append(quote(
+            public static let $( newIdentifierToken("_${name}") ) = $( newLiteralToken(name) )
+        ))
+    }
+
     // Compose all `Tokens`
     return quote(
         $(typeDecl.modifiers) $classOrStruct $name $genericTypeParamTokens <: $allSuperTypes $genericConstraintTokens {
@@ -122,6 +131,7 @@ private func transformToolsetType(typeDecl: Decl, superTypes: ArrayList<TypeNode
                     [ $toolNames ]
                 }
             }
+            $toolIdTokens
         }
     )
 }
