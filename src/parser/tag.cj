@@ -20,6 +20,8 @@ protected struct Tag {
 
     protected static let INFO = "${OPEN_TAG_SYMBOL}info${CLOSE_TAG_SYMBOL}" // Not in react
 
+    protected static let SUMMARY = "${OPEN_TAG_SYMBOL}summary${CLOSE_TAG_SYMBOL}" // Not in react
+
     protected static let PLAN = "${OPEN_TAG_SYMBOL}plan${CLOSE_TAG_SYMBOL}" // Not in react
 
     protected static let FAIL = "${OPEN_TAG_SYMBOL}fail${CLOSE_TAG_SYMBOL}" // Not in react
@@ -30,6 +32,7 @@ protected struct Tag {
         Tag.OBSERVATION,
         Tag.ANSWER,
         Tag.INFO,
+        Tag.SUMMARY,
         Tag.PLAN,
         Tag.FAIL
     ]

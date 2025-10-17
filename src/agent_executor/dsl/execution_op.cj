@@ -75,12 +75,13 @@ public struct ExecutionOpSet {
             return state
         }
         let msg = chatWithOperation(state, PLAN_PROMPT, stop: [])
+        let plan = Tag.extract(msg.content, Tag.PLAN) ?? msg.content
         // Parse the response and add the message to the state
-        LogUtils.info(state.task.agent.name, "Plan: ${msg.content}")
+        LogUtils.info(state.task.agent.name, "Plan: ${plan}")
         state.execution.addStepMessage(
-            Message.assistant(msg.content.withTag(Tag.THOUGHT)), // Add plan as a thought
+            Message.assistant(plan.withTag(Tag.PLAN)), // Add plan as a thought
         )
-        state.task.notify(Tag.PLAN, msg.content)
+        state.task.notify(Tag.PLAN, plan)
         return state
     }
 
@@ -89,12 +90,13 @@ public struct ExecutionOpSet {
             return state
         }
         let msg = chatWithOperation(state, THINK_PROMPT, stop: [Tag.ACTION, Tag.THOUGHT.close])
+        let thought = Tag.extract(msg.content, Tag.THOUGHT) ?? msg.content
         // Parse the response and add the message to the state
-        LogUtils.info(state.task.agent.name, "Thought: ${msg.content}")
+        LogUtils.info(state.task.agent.name, "Thought: ${thought}")
         state.execution.addStepMessage(
-            Message.assistant(msg.content.withTag(Tag.THOUGHT)),
+            Message.assistant(thought.withTag(Tag.THOUGHT)),
         )
-        state.task.notify(Tag.THOUGHT, msg.content)
+        state.task.notify(Tag.THOUGHT, thought)
         return state
     }
 
@@ -266,18 +268,19 @@ public struct ExecutionOpSet {
             }
             .getOrDefault({ => ANSWER_PROMPT})
         let msg = chatWithOperation(state, prompt, stop: [])
+        let answer = Tag.extract(msg.content, Tag.ANSWER) ?? msg.content
         // Parse the response
-        LogUtils.info(state.task.agent.name, "ANSWER: ${msg.content}")
+        LogUtils.info(state.task.agent.name, "Answer: ${answer}")
         // state.task.execution.addStepMessage(Message.assistant(msg.content.withTag(Tag.ANSWER)))
         if (state.task.request.verbose) {
             if (let Some(subtask) <- state.subtask) {
-                let answer = "Solve the subtask ${subtask.description}\nAnswer: ${msg.content.withoutTag(Tag.ANSWER)}"
+                let answer = "Solve the subtask ${subtask.description}\nAnswer: ${answer}"
                 state.task.notify(Tag.OBSERVATION, answer)
             } else {
-                state.task.notify(Tag.OBSERVATION, msg.content)
+                state.task.notify(Tag.OBSERVATION, answer)
             }
         }
-        state.answer = msg.content.withoutTag(Tag.ANSWER)
+        state.answer = answer
         return state
     }
 
@@ -399,10 +402,11 @@ public struct ExecutionOpSet {
             ("subtasks", subtaskDesc)
         )
         let msg = chatWithOperation(state, prompt, stop: [])
-        LogUtils.info(state.task.agent.name, "Subtask Summary: ${msg.content}")
-        state.task.notify(Tag.OBSERVATION, msg.content)
+        let summary = Tag.extract(msg.content, Tag.SUMMARY) ?? msg.content
+        LogUtils.info(state.task.agent.name, "Subtask Summary: ${summary}")
+        state.task.notify(Tag.SUMMARY, summary)
         state.execution.addStepMessage(
-            Message.assistant(msg.content.withTag(Tag.OBSERVATION)),
+            Message.assistant(summary.withTag(Tag.SUMMARY)),
         )
 
         return state
@@ -422,9 +426,11 @@ public struct ExecutionOpSet {
                     ("condition", c.condition)
                 ])
                 let msg = chatWithOperation(state, prompt, stop: [])
+                // Extract the conclusion from the response
+                let conclusion = Tag.extract(msg.content, Tag.ANSWER) ?? msg.content
                 // Parse the response
-                LogUtils.info(state.task.agent.name, "CHECK-CONDITION: ${c.condition} -> ${msg.content}")
-                if (msg.content.contains("Conclusion: True")) {
+                LogUtils.info(state.task.agent.name, "CHECK-CONDITION: ${c.condition} -> ${conclusion}")
+                if (conclusion.contains("Conclusion: True")) {
                     return c.op(state)
                 }
             }
