@@ -7,9 +7,7 @@ import magic.parser.{Tag, WithTag}
 import magic.config.Config
 
 let EXECUTION_DEFINITION = """
-The execution is a chronological event stream containing the following types of events:
-    - A tool has been used, which is function call comprising the tool name and arguments
-    - ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.close}
+The execution is a chronological event stream containing the different types of events, wrapped by xml tags, like ${Tag.OBSERVATION}, ${Tag.PLAN}, etc.
 """
     //-----------------------------------------------------------------
     // The thought message is not described in the execution definition
@@ -17,8 +15,9 @@ The execution is a chronological event stream containing the following types of 
     // - ${Tag.THOUGHT} a wait moment that contains reflection on execution and thoughts on subsequent execution ${Tag.THOUGHT.close}
 
 let PLAN_PROMPT = """
-Based on the execution, make a plan about how to solve the user question next.
 ${EXECUTION_DEFINITION}
+Based on the execution, make a plan about how to solve the user question next.
+Wrap your output by ${Tag.PLAN} and ${Tag.PLAN.close}.
 """
 
 // Prompts of parallel tool call is copied from https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use
@@ -106,10 +105,10 @@ Now, make the tool decision and output the result with required format.
 }
 
 let ANSWER_PROMPT = """
-Based on the execution, answer the user question now.
 ${EXECUTION_DEFINITION}
+Based on the execution, answer the user question now.
 
-Wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.close}.
+Wrap your output by ${Tag.ANSWER} and ${Tag.ANSWER.close}.
 """
 
 let ANSWER_WITH_STRUCTURE_OUTPUT_PROMPT = """
@@ -129,9 +128,10 @@ ${Tag.ANSWER} ```json ["abc", "xyz"] ``` ${Tag.ANSWER.close}
 """
 
 let THINK_PROMPT = """
+${EXECUTION_DEFINITION}
 Based on the execution, make a reflection on the previous execution and think about the next steps you should do.
 Just make high-level thoughts, NEVER use tools.
-${EXECUTION_DEFINITION}
+Wrap your output by ${Tag.THOUGHT} and ${Tag.THOUGHT.close}.
 """
 
 let TOOL_PROMPT = """
@@ -184,8 +184,8 @@ Now, generate the arguments for {tool_name}:
 """
 
 let CHECK_CONDITION_PROMPT = """
-You are required to evaluate whether a current condition is valid based on the user question and historical execution data.
 ${EXECUTION_DEFINITION}
+You are required to evaluate whether a current condition is valid based on the user question and historical execution data.
 
 Follow these steps:
 
@@ -194,12 +194,16 @@ Follow these steps:
 - Justify Conclusion: Clearly state whether the condition holds (True/False) and explain your reasoning with references to specific historical data.
 
 Format your response as:
+${Tag.ANSWER}
 - Conclusion: [True/False]
 - Reasoning: [Concise explanation to the condition]
+${Tag.ANSWER.close}
 
 Example Output:
+${Tag.ANSWER}
 - Conclusion: True
 - Reasoning: Q2 had the highest sales ($120K) in the recorded history, confirming the peak.
+${Tag.ANSWER.close}
 
 Now, check whether the condition "{condition}":
 """
@@ -302,10 +306,12 @@ Subtasks: [
 
 Output Requirements:
 - Use bullet points or numbered lists for clarity.
-- Avoid jargon unless it’s defined earlier.
+- Avoid jargon unless it's defined earlier.
 - Prioritize accuracy and brevity.
 
+Wrap your output with ${Tag.SUMMARY} and ${Tag.SUMMARY.close} tags.
 Now, generate the summary of the following subtasks:
+
 ```
 {subtasks}
 ```
