@@ -10,10 +10,10 @@
 ```
 override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 ```
-- Description: Executes the agent's task in an asynchronous manner.
+- Description: Executes the agent's task asynchronously.
 - Parameters:
-  - `agent`: `Agent`, The agent to be executed.
-  - `request`: `AgentRequest`, The request containing the task details.
+  - `agent`: `Agent`, The agent to execute.
+  - `request`: `AgentRequest`, The request to process.
 
 #### prop name
 ```
@@ -25,9 +25,9 @@ override public prop name: String
 ```
 override public func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
-- Description: Executes the agent's task in a synchronous manner.
+- Description: Executes the agent's task synchronously.
 - Parameters:
-  - `agent`: `Agent`, The agent to be executed.
-  - `request`: `AgentRequest`, The request containing the task details.
+  - `agent`: `Agent`, The agent to execute.
+  - `request`: `AgentRequest`, The request to process.
 
 

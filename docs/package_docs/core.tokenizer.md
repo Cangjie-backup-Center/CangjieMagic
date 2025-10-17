@@ -10,9 +10,9 @@
 ```
 func countToken(input: String): Int64
 ```
-- Description: Counts the number of tokens in the given input string.
+- Description: Counts the number of tokens in the input string.
 - Parameters:
-  - `input`: `String`, The input string whose tokens are to be counted.
+  - `input`: `String`, The input string for which to count tokens.
 
 #### func decode
 ```
@@ -26,7 +26,7 @@ func decode(tokens: Array<UInt32>): String
 ```
 func encode(input: String): Array<UInt32>
 ```
-- Description: Encodes a given input string into an array of unsigned 32-bit integers.
+- Description: Encodes the input string into an array of unsigned 32-bit integers.
 - Parameters:
   - `input`: `String`, The input string to be encoded.
 

@@ -99,13 +99,13 @@ func clear(): Unit
 ```
 func getAllNodes(): Array<NodeContainer<V, E>>
 ```
-- Description: Gets all node containers
+- Description: Gets all node containers in the graph
 
 #### func getEdges
 ```
 func getEdges(srcId: String, tgtId: String): Array<Edge<E>>
 ```
-- Description: Gets edges between two vertices
+- Description: Gets all edges between two vertices
 - Parameters:
   - `srcId`: `String`, The source vertex ID
   - `tgtId`: `String`, The target vertex ID
@@ -114,37 +114,37 @@ func getEdges(srcId: String, tgtId: String): Array<Edge<E>>
 ```
 func getIncomingEdgesOf(id: String): Array<Edge<E>>
 ```
-- Description: Gets incoming edges of a vertex
+- Description: Gets all incoming edges of a vertex
 - Parameters:
-  - `id`: `String`, The vertex ID
+  - `id`: `String`, The ID of the vertex
 
 #### func getOutgoingEdgesOf
 ```
 func getOutgoingEdgesOf(id: String): Array<Edge<E>>
 ```
-- Description: Gets outgoing edges of a vertex
+- Description: Gets all outgoing edges of a vertex
 - Parameters:
-  - `id`: `String`, The vertex ID
+  - `id`: `String`, The ID of the vertex
 
 #### func getVertex
 ```
 func getVertex(id: String): ?Vertex<V>
 ```
-- Description: Gets a vertex by ID
+- Description: Gets a vertex by its ID
 - Parameters:
-  - `id`: `String`, The vertex ID
+  - `id`: `String`, The ID of the vertex
 
 #### func getVertexTypes
 ```
 func getVertexTypes(): Set<String>
 ```
-- Description: Gets all vertex types
+- Description: Gets all vertex types in the graph
 
 #### func getVertices
 ```
 func getVertices(): Array<Vertex<V>>
 ```
-- Description: Gets all vertices
+- Description: Gets all vertices in the graph
 
 #### func hasEdge
 ```
@@ -159,15 +159,15 @@ func hasEdge(srcId: String, tgtId: String): Bool
 ```
 func hasVertex(id: String): Bool
 ```
-- Description: Checks if a vertex exists
+- Description: Checks if a vertex exists in the graph
 - Parameters:
-  - `id`: `String`, The vertex ID
+  - `id`: `String`, The ID of the vertex
 
 #### func removeEdge
 ```
 func removeEdge(e: Edge<E>): Unit
 ```
-- Description: Removes an edge
+- Description: Removes an edge from the graph
 - Parameters:
   - `e`: `Edge<E>`, The edge to remove
 
@@ -175,15 +175,15 @@ func removeEdge(e: Edge<E>): Unit
 ```
 func removeVertex(id: String): Unit
 ```
-- Description: Removes a vertex by ID
+- Description: Removes a vertex from the graph
 - Parameters:
-  - `id`: `String`, The vertex ID
+  - `id`: `String`, The ID of the vertex to remove
 
 #### func upsertEdge
 ```
 func upsertEdge(e: Edge<E>): Unit
 ```
-- Description: Updates or inserts an edge
+- Description: Updates or inserts an edge into the graph
 - Parameters:
   - `e`: `Edge<E>`, The edge to upsert
 
@@ -191,7 +191,7 @@ func upsertEdge(e: Edge<E>): Unit
 ```
 func upsertVertex(v: Vertex<V>): Unit
 ```
-- Description: Updates or inserts a vertex
+- Description: Updates or inserts a vertex into the graph
 - Parameters:
   - `v`: `Vertex<V>`, The vertex to upsert
 
@@ -201,144 +201,144 @@ func upsertVertex(v: Vertex<V>): Unit
 ```
 public func close(): Unit
 ```
-- Description: Closes the graph storage.
+- Description: 关闭存储
 
 #### prop collection
 ```
 public prop collection: String
 ```
-- Description: Gets the collection name of the graph storage.
+- Description: 获取存储的集合名称
 
 #### func commit
 ```
 public func commit(): Unit
 ```
-- Description: Commits all changes to the graph storage.
+- Description: 提交所有更改到存储
 
 #### func getAllVertices
 ```
 public func getAllVertices(): Array<Vertex<V>>
 ```
-- Description: Retrieves all vertices in the graph.
+- Description: 获取图中所有的顶点
 
 #### func getEdge
 ```
 public func getEdge(srcId: String, tgtId: String, eType: String): Option<Edge<E>>
 ```
-- Description: Retrieves an edge between the source and target vertices with the specified type.
+- Description: 获取从源顶点到目标顶点且具有指定类型的边
 - Parameters:
-  - `srcId`: `String`, The ID of the source vertex.
-  - `tgtId`: `String`, The ID of the target vertex.
-  - `eType`: `String`, The type of the edge to retrieve.
+  - `srcId`: `String`, 源顶点的唯一标识符
+  - `tgtId`: `String`, 目标顶点的唯一标识符
+  - `eType`: `String`, 边的类型
 
 #### func getEdges
 ```
 public func getEdges(srcId: String, tgtId: String): Array<Edge<E>>
 ```
-- Description: Retrieves all edges between the source and target vertices.
+- Description: 获取从源顶点到目标顶点的所有边
 - Parameters:
-  - `srcId`: `String`, The ID of the source vertex.
-  - `tgtId`: `String`, The ID of the target vertex.
+  - `srcId`: `String`, 源顶点的唯一标识符
+  - `tgtId`: `String`, 目标顶点的唯一标识符
 
 #### func getIncomingEdgesOf
 ```
 public func getIncomingEdgesOf(id: String): Array<Edge<E>>
 ```
-- Description: Retrieves all incoming edges of a vertex.
+- Description: 获取指向指定顶点的所有边
 - Parameters:
-  - `id`: `String`, The ID of the vertex.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func getOutgoingEdgesOf
 ```
 public func getOutgoingEdgesOf(id: String): Array<Edge<E>>
 ```
-- Description: Retrieves all outgoing edges of a vertex.
+- Description: 获取从指定顶点出发的所有边
 - Parameters:
-  - `id`: `String`, The ID of the vertex.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func getVertex
 ```
 public func getVertex(id: String): Option<Vertex<V>>
 ```
-- Description: Retrieves a vertex by its ID.
+- Description: 获取指定ID的顶点
 - Parameters:
-  - `id`: `String`, The ID of the vertex to retrieve.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func getVertexTypes
 ```
 public func getVertexTypes(): Set<String>
 ```
-- Description: Retrieves all vertex types in the graph.
+- Description: 获取图中所有顶点的类型
 
 #### func hasEdge
 ```
 public func hasEdge(srcId: String, tgtId: String): Bool
 ```
-- Description: Checks if an edge exists between the source and target vertices.
+- Description: 检查图中是否存在从源顶点到目标顶点的边
 - Parameters:
-  - `srcId`: `String`, The ID of the source vertex.
-  - `tgtId`: `String`, The ID of the target vertex.
+  - `srcId`: `String`, 源顶点的唯一标识符
+  - `tgtId`: `String`, 目标顶点的唯一标识符
 
 #### func hasVertex
 ```
 public func hasVertex(id: String): Bool
 ```
-- Description: Checks if a vertex with the given ID exists in the graph.
+- Description: 检查图中是否存在指定ID的顶点
 - Parameters:
-  - `id`: `String`, The ID of the vertex to check.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func init
 ```
 public init(workspace!: String = ".storage", collection!: String = "default")
 ```
-- Description: Initializes the graph storage with the specified workspace and collection.
+- Description: 初始化本地图存储
 - Parameters:
-  - `workspace`: `String`, The workspace directory for storage.
-  - `collection`: `String`, The collection name for the graph.
+  - `workspace`: `String`, 存储的工作目录
+  - `collection`: `String`, 存储的集合名称
 
 #### func removeEdge
 ```
 public func removeEdge(e: Edge<E>): Unit
 ```
-- Description: Removes an edge from the graph.
+- Description: 移除指定的边
 - Parameters:
-  - `e`: `Edge<E>`, The edge to remove.
+  - `e`: `Edge<E>`, 要移除的边
 
 #### func removeVertex
 ```
 public func removeVertex(id: String): Unit
 ```
-- Description: Removes a vertex from the graph.
+- Description: 移除指定ID的顶点
 - Parameters:
-  - `id`: `String`, The ID of the vertex to remove.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func reset
 ```
 public func reset(): Unit
 ```
-- Description: Resets the graph storage by clearing all data.
+- Description: 重置存储
 
 #### func upsertEdge
 ```
 public func upsertEdge(edge: Edge<E>): Unit
 ```
-- Description: Inserts or updates an edge in the graph.
+- Description: 插入或更新边
 - Parameters:
-  - `edge`: `Edge<E>`, The edge to insert or update.
+  - `edge`: `Edge<E>`, 要插入或更新的边
 
 #### func upsertVertex
 ```
 public func upsertVertex(vertex: Vertex<V>): Unit
 ```
-- Description: Inserts or updates a vertex in the graph.
+- Description: 插入或更新顶点
 - Parameters:
-  - `vertex`: `Vertex<V>`, The vertex to insert or update.
+  - `vertex`: `Vertex<V>`, 要插入或更新的顶点
 
 #### prop workspace
 ```
 public prop workspace: String
 ```
-- Description: Gets the workspace directory of the graph storage.
+- Description: 获取存储的工作目录
 
 
 ### class Edge<E>
@@ -346,29 +346,29 @@ public prop workspace: String
 ```
 operator func !=(other: Edge<E>): Bool
 ```
-- Description: Checks if two edges are not equal
+- Description: Checks if two edges are not equal based on their properties
 - Parameters:
-  - `other`: `Edge<E>`, The other edge to compare
+  - `other`: `Edge<E>`, The other edge to compare with
 
 #### func operator ==
 ```
 operator func ==(other: Edge<E>): Bool
 ```
-- Description: Checks if two edges are equal
+- Description: Checks if two edges are equal based on their properties
 - Parameters:
-  - `other`: `Edge<E>`, The other edge to compare
+  - `other`: `Edge<E>`, The other edge to compare with
 
 #### prop data
 ```
 prop data: Option<E>
 ```
-- Description: Gets the edge data
+- Description: Gets the optional data associated with the edge
 
 #### func deserialize
 ```
 static func deserialize(dm: DataModel)
 ```
-- Description: Deserializes a DataModel to an Edge
+- Description: Deserializes a DataModel into an Edge
 - Parameters:
   - `dm`: `DataModel`, The DataModel to deserialize
 
@@ -376,39 +376,39 @@ static func deserialize(dm: DataModel)
 ```
 prop eType: String
 ```
-- Description: Gets the edge type
+- Description: Gets the type of the edge
 
 #### func fromJson
 ```
 static func fromJson(str: String): Edge<E>
 ```
-- Description: Creates an edge from a JSON string
+- Description: Creates an Edge from a JSON string
 - Parameters:
-  - `str`: `String`, The JSON string
+  - `str`: `String`, The JSON string to parse
 
 #### func hashCode
 ```
 func hashCode(): Int64
 ```
-- Description: Computes the hash code of the edge
+- Description: Generates a hash code for the edge
 
 #### func init
 ```
-init(srcId: String, tgtId: String, eType!: String = "DEFAULT", weight!: Float64 = 1.0, data!: Option<E> = None)
+init(srcId: String, tgtId: String, eType: String = "DEFAULT", weight: Float64 = 1.0, data: Option<E> = None)
 ```
 - Description: Constructor for Edge
 - Parameters:
   - `srcId`: `String`, The source vertex ID
   - `tgtId`: `String`, The target vertex ID
-  - `eType`: `String`, The edge type
-  - `weight`: `Float64`, The edge weight
-  - `data`: `Option<E>`, The edge data
+  - `eType`: `String`, The type of the edge
+  - `weight`: `Float64`, The weight of the edge
+  - `data`: `Option<E>`, Optional data associated with the edge
 
 #### func serialize
 ```
 func serialize(): DataModel
 ```
-- Description: Serializes the edge to a DataModel
+- Description: Serializes the edge into a DataModel
 
 #### prop srcId
 ```
@@ -432,13 +432,13 @@ func toJsonString(): String
 ```
 prop uniqueId: String
 ```
-- Description: Gets the unique ID of the edge
+- Description: Gets a unique identifier for the edge
 
 #### prop weight
 ```
 mut prop weight: Float64
 ```
-- Description: Gets or sets the edge weight
+- Description: Gets or sets the weight of the edge
 
 
 ### interface GraphStorage<V, E>
@@ -446,105 +446,105 @@ mut prop weight: Float64
 ```
 func getAllVertices(): Array<Vertex<V>>
 ```
-- Description: Retrieves all vertices in the graph.
+- Description: 获取图中所有的顶点
 
 #### func getEdge
 ```
 func getEdge(srcId: String, tgtId: String, eType: String): Option<Edge<E>>
 ```
-- Description: Retrieves an edge between the source and target vertices with the specified type.
+- Description: 获取从源顶点到目标顶点且具有指定类型的边
 - Parameters:
-  - `srcId`: `String`, The ID of the source vertex.
-  - `tgtId`: `String`, The ID of the target vertex.
-  - `eType`: `String`, The type of the edge to retrieve.
+  - `srcId`: `String`, 源顶点的唯一标识符
+  - `tgtId`: `String`, 目标顶点的唯一标识符
+  - `eType`: `String`, 边的类型
 
 #### func getEdges
 ```
 func getEdges(srcId: String, tgtId: String): Array<Edge<E>>
 ```
-- Description: Retrieves all edges between the source and target vertices.
+- Description: 获取从源顶点到目标顶点的所有边
 - Parameters:
-  - `srcId`: `String`, The ID of the source vertex.
-  - `tgtId`: `String`, The ID of the target vertex.
+  - `srcId`: `String`, 源顶点的唯一标识符
+  - `tgtId`: `String`, 目标顶点的唯一标识符
 
 #### func getIncomingEdgesOf
 ```
 func getIncomingEdgesOf(id: String): Array<Edge<E>>
 ```
-- Description: Retrieves all incoming edges of a vertex.
+- Description: 获取指向指定顶点的所有边
 - Parameters:
-  - `id`: `String`, The ID of the vertex.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func getOutgoingEdgesOf
 ```
 func getOutgoingEdgesOf(id: String): Array<Edge<E>>
 ```
-- Description: Retrieves all outgoing edges of a vertex.
+- Description: 获取从指定顶点出发的所有边
 - Parameters:
-  - `id`: `String`, The ID of the vertex.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func getVertex
 ```
 func getVertex(id: String): Option<Vertex<V>>
 ```
-- Description: Retrieves a vertex by its ID.
+- Description: 获取指定ID的顶点
 - Parameters:
-  - `id`: `String`, The ID of the vertex to retrieve.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func getVertexTypes
 ```
 func getVertexTypes(): Set<String>
 ```
-- Description: Retrieves all vertex types in the graph.
+- Description: 获取图中所有顶点的类型
 
 #### func hasEdge
 ```
 func hasEdge(srcId: String, tgtId: String): Bool
 ```
-- Description: Checks if an edge exists between the source and target vertices.
+- Description: 检查图中是否存在从源顶点到目标顶点的边
 - Parameters:
-  - `srcId`: `String`, The ID of the source vertex.
-  - `tgtId`: `String`, The ID of the target vertex.
+  - `srcId`: `String`, 源顶点的唯一标识符
+  - `tgtId`: `String`, 目标顶点的唯一标识符
 
 #### func hasVertex
 ```
 func hasVertex(id: String): Bool
 ```
-- Description: Checks if a vertex with the given ID exists in the graph.
+- Description: 检查图中是否存在指定ID的顶点
 - Parameters:
-  - `id`: `String`, The ID of the vertex to check.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func removeEdge
 ```
 func removeEdge(e: Edge<E>): Unit
 ```
-- Description: Removes an edge from the graph.
+- Description: 移除指定的边
 - Parameters:
-  - `e`: `Edge<E>`, The edge to remove.
+  - `e`: `Edge<E>`, 要移除的边
 
 #### func removeVertex
 ```
 func removeVertex(id: String): Unit
 ```
-- Description: Removes a vertex from the graph.
+- Description: 移除指定ID的顶点
 - Parameters:
-  - `id`: `String`, The ID of the vertex to remove.
+  - `id`: `String`, 顶点的唯一标识符
 
 #### func upsertEdge
 ```
 func upsertEdge(edge: Edge<E>): Unit
 ```
-- Description: Inserts or updates an edge in the graph.
+- Description: 插入或更新边
 - Parameters:
-  - `edge`: `Edge<E>`, The edge to insert or update.
+  - `edge`: `Edge<E>`, 要插入或更新的边
 
 #### func upsertVertex
 ```
 func upsertVertex(vertex: Vertex<V>): Unit
 ```
-- Description: Inserts or updates a vertex in the graph.
+- Description: 插入或更新顶点
 - Parameters:
-  - `vertex`: `Vertex<V>`, The vertex to insert or update.
+  - `vertex`: `Vertex<V>`, 要插入或更新的顶点
 
 
 ### class IllegalEdgeException
@@ -616,29 +616,29 @@ mut prop vertex: Vertex<V>
 ```
 operator func !=(other: Vertex<V>): Bool
 ```
-- Description: Checks if two vertices are not equal
+- Description: Checks if two vertices are not equal based on their IDs
 - Parameters:
-  - `other`: `Vertex<V>`, The other vertex to compare
+  - `other`: `Vertex<V>`, The other vertex to compare with
 
 #### func operator ==
 ```
 operator func ==(other: Vertex<V>): Bool
 ```
-- Description: Checks if two vertices are equal
+- Description: Checks if two vertices are equal based on their IDs
 - Parameters:
-  - `other`: `Vertex<V>`, The other vertex to compare
+  - `other`: `Vertex<V>`, The other vertex to compare with
 
 #### prop data
 ```
 prop data: Option<V>
 ```
-- Description: Gets the vertex data
+- Description: Gets the optional data associated with the vertex
 
 #### func deserialize
 ```
 static func deserialize(dm: DataModel): Vertex<V>
 ```
-- Description: Deserializes a DataModel to a Vertex
+- Description: Deserializes a DataModel into a Vertex
 - Parameters:
   - `dm`: `DataModel`, The DataModel to deserialize
 
@@ -646,37 +646,37 @@ static func deserialize(dm: DataModel): Vertex<V>
 ```
 static func fromJsonString(str: String): Vertex<V>
 ```
-- Description: Creates a vertex from a JSON string
+- Description: Creates a Vertex from a JSON string
 - Parameters:
-  - `str`: `String`, The JSON string
+  - `str`: `String`, The JSON string to parse
 
 #### func hashCode
 ```
 func hashCode(): Int64
 ```
-- Description: Computes the hash code of the vertex
+- Description: Generates a hash code for the vertex
 
 #### prop id
 ```
 prop id: String
 ```
-- Description: Gets the vertex ID
+- Description: Gets the unique identifier of the vertex
 
 #### func init
 ```
-init(id: String, vType!: String = "DEFAULT", data!: Option<V> = None)
+init(id: String, vType: String = "DEFAULT", data: Option<V> = None)
 ```
 - Description: Constructor for Vertex
 - Parameters:
-  - `id`: `String`, The vertex ID
-  - `vType`: `String`, The vertex type
-  - `data`: `Option<V>`, The vertex data
+  - `id`: `String`, The unique identifier of the vertex
+  - `vType`: `String`, The type of the vertex
+  - `data`: `Option<V>`, Optional data associated with the vertex
 
 #### func serialize
 ```
 func serialize(): DataModel
 ```
-- Description: Serializes the vertex to a DataModel
+- Description: Serializes the vertex into a DataModel
 
 #### func toJsonString
 ```
@@ -688,6 +688,6 @@ func toJsonString(): String
 ```
 prop vType: String
 ```
-- Description: Gets the vertex type
+- Description: Gets the type of the vertex
 
 

@@ -1,27 +1,40 @@
 ## Package core.message
 - [Package core.message](#package-core.message)
-  - [struct ChatRound](#struct-chatround)
+  - [class ChatRound](#class-chatround)
+    - [func fromJsonValue](#func-fromjsonvalue)
+    - [func toJsonValue](#func-tojsonvalue)
     - [func toString](#func-tostring)
+  - [class CompactedConversation](#class-compactedconversation)
+    - [func fromJsonValue](#func-fromjsonvalue-1)
+    - [func toJsonValue](#func-tojsonvalue-1)
   - [class Conversation](#class-conversation)
-    - [func []](#func-[])
     - [func addChatRound](#func-addchatround)
     - [func addChatRound](#func-addchatround-1)
     - [func clear](#func-clear)
-    - [func init](#func-init)
-    - [func init](#func-init-1)
+    - [func clone](#func-clone)
+    - [func compactBy](#func-compactby)
+    - [prop compacts](#prop-compacts)
+    - [func fromJsonValue](#func-fromjsonvalue-1)
     - [func isEmpty](#func-isempty)
     - [func iterator](#func-iterator)
+    - [func load](#func-load)
+    - [func operator []](#func-operator-[])
+    - [func save](#func-save)
     - [prop size](#prop-size)
+    - [func toJsonValue](#func-tojsonvalue-1)
+  - [interface ConversationCompactor](#interface-conversationcompactor)
+    - [func compact](#func-compact)
   - [class Message](#class-message)
     - [func assistant](#func-assistant)
     - [let content](#let-content)
+    - [func fromJsonValue](#func-fromjsonvalue-1)
     - [let image](#let-image)
-    - [func init](#func-init-1)
+    - [func init](#func-init)
     - [let name](#let-name)
     - [let reason](#let-reason)
     - [let role](#let-role)
     - [func system](#func-system)
-    - [func toLogString](#func-tologstring)
+    - [func toJsonValue](#func-tojsonvalue-1)
     - [func toString](#func-tostring-1)
     - [func user](#func-user)
   - [enum MessageRole](#enum-messagerole)
@@ -34,7 +47,21 @@
     - [func fromStr](#func-fromstr)
     - [func toString](#func-tostring-1)
 
-### struct ChatRound
+### class ChatRound
+#### func fromJsonValue
+```
+redef static public func fromJsonValue(json: JsonValue): ChatRound
+```
+- Description: Creates a ChatRound object from a JsonValue.
+- Parameters:
+  - `json`: `JsonValue`, The JsonValue to convert from.
+
+#### func toJsonValue
+```
+override public func toJsonValue(): JsonValue
+```
+- Description: Converts the ChatRound object to a JsonValue.
+
 #### func toString
 ```
 override public func toString(): String
@@ -42,70 +69,134 @@ override public func toString(): String
 - Description: Converts the ChatRound object to a string representation.
 
 
-### class Conversation
-#### func operator []
+### class CompactedConversation
+#### func fromJsonValue
 ```
-public operator func [](index: Int64): ChatRound
+redef static public func fromJsonValue(json: JsonValue): CompactedConversation
 ```
-- Description: Retrieves the ChatRound at the specified index.
+- Description: Creates a CompactedConversation object from a JsonValue.
 - Parameters:
-  - `index`: `Int64`, The index of the ChatRound to retrieve.
+  - `json`: `JsonValue`, The JsonValue to convert from.
 
+#### func toJsonValue
+```
+override public func toJsonValue(): JsonValue
+```
+- Description: Converts the CompactedConversation object to a JsonValue.
+
+
+### class Conversation
 #### func addChatRound
 ```
 public func addChatRound(round: ChatRound): Unit
 ```
-- Description: Adds a ChatRound to the Conversation.
+- Description: Adds a ChatRound to the conversation.
 - Parameters:
   - `round`: `ChatRound`, The ChatRound to add.
 
 #### func addChatRound
 ```
-public func addChatRound(question: String, answer: String, steps!: MessageList = MessageList()): Unit
+public func addChatRound(question: Message, answer: Message, steps!: MessageList = MessageList()): Unit
 ```
-- Description: Creates and adds a ChatRound to the Conversation with the given question, answer, and optional steps.
+- Description: Adds a ChatRound to the conversation with specified question, answer, and optional steps.
 - Parameters:
-  - `question`: `String`, The question part of the ChatRound.
-  - `answer`: `String`, The answer part of the ChatRound.
+  - `question`: `Message`, The question message.
+  - `answer`: `Message`, The answer message.
   - `steps`: `MessageList`, Optional execution step messages.
 
 #### func clear
 ```
 public func clear(): Unit
 ```
-- Description: Removes all ChatRounds from the Conversation.
+- Description: Clears all ChatRounds from the conversation.
 
-#### func init
+#### func clone
 ```
-public init()
+public func clone(): Conversation
 ```
-- Description: Initializes an empty Conversation.
+- Description: Creates a clone of the conversation.
 
-#### func init
+#### func compactBy
 ```
-public init(round: ChatRound)
+public func compactBy(compactor: ConversationCompactor, firstN!: Option<Int64> = None, keepOrigin!: Bool = true): String
 ```
-- Description: Initializes a Conversation with a single ChatRound.
+- Description: Compacts the conversation and saves the summary.
 - Parameters:
-  - `round`: `ChatRound`, The initial ChatRound to add to the Conversation.
+  - `compactor`: `ConversationCompactor`, The compactor to use.
+  - `firstN`: `Option<Int64>`, The first N chat rounds to compact.
+  - `keepOrigin`: `Bool`, Whether to save the original conversation messages.
+
+#### prop compacts
+```
+public prop compacts: Array<CompactedConversation>
+```
+- Description: Gets the array of compacted conversations.
+
+#### func fromJsonValue
+```
+redef static public func fromJsonValue(json: JsonValue): Conversation
+```
+- Description: Creates a Conversation object from a JsonValue.
+- Parameters:
+  - `json`: `JsonValue`, The JsonValue to convert from.
 
 #### func isEmpty
 ```
 public func isEmpty(): Bool
 ```
-- Description: Checks if the Conversation is empty.
+- Description: Checks if the conversation is empty.
 
 #### func iterator
 ```
 override public func iterator(): Iterator<ChatRound>
 ```
-- Description: Returns an iterator over the ChatRounds in the Conversation.
+- Description: Returns an iterator over the ChatRounds in the conversation.
+
+#### func load
+```
+public static func load(path: Path): Conversation
+```
+- Description: Loads a conversation from a file.
+- Parameters:
+  - `path`: `Path`, The file path to load from.
+
+#### func operator operator []
+```
+public operator func [](index: Int64): ChatRound
+```
+- Description: Gets the ChatRound at the specified index.
+- Parameters:
+  - `index`: `Int64`, The index of the ChatRound to retrieve.
+
+#### func save
+```
+public func save(path: Path): Unit
+```
+- Description: Saves the conversation to a file.
+- Parameters:
+  - `path`: `Path`, The file path to save to.
 
 #### prop size
 ```
 public prop size: Int64
 ```
-- Description: Gets the number of ChatRounds in the Conversation.
+- Description: Gets the number of ChatRounds in the conversation.
+
+#### func toJsonValue
+```
+override public func toJsonValue(): JsonValue
+```
+- Description: Converts the Conversation object to a JsonValue.
+
+
+### interface ConversationCompactor
+#### func compact
+```
+func compact(conversation: Conversation): String
+```
+- Description: Compact the conversation a list of messages
+- Parameters:
+  - `conversation`: `Conversation`, The conversation to be compacted
 
 
 ### class Message
@@ -116,7 +207,7 @@ public static func assistant(content: String, name!: String = ""): Message
 - Description: Creates an assistant message
 - Parameters:
   - `content`: `String`, Content of the assistant message
-  - `name`: `String`, Name of the assistant
+  - `name`: `String`, Name of the assistant (default: empty string)
 
 #### let content
 ```
@@ -124,41 +215,49 @@ public let content: String
 ```
 - Description: Content of the message
 
+#### func fromJsonValue
+```
+redef public static func fromJsonValue(json: JsonValue): Message
+```
+- Description: Creates a Message from a JsonValue
+- Parameters:
+  - `json`: `JsonValue`, JsonValue to convert to Message
+
 #### let image
 ```
 public let image: Option<String>
 ```
-- Description: URL or base64 encoded image
+- Description: Optional image of the message (url or base64)
 
 #### func init
 ```
 public init(role: MessageRole, content: String, name!: String = "", image!: Option<String> = None, reason!: Option<String> = None)
 ```
-- Description: Initializes a new Message instance
+- Description: Constructor for Message class
 - Parameters:
-  - `role`: `MessageRole`, Role of the sender
+  - `role`: `MessageRole`, Role of the message sender
   - `content`: `String`, Content of the message
-  - `name`: `String`, Name of the sender
-  - `image`: `Option<String>`, URL or base64 encoded image
-  - `reason`: `Option<String>`, Reasoning content generated by a model
+  - `name`: `String`, Name of the message sender (default: empty string)
+  - `image`: `Option<String>`, Optional image of the message (default: None)
+  - `reason`: `Option<String>`, Optional reasoning content (default: None)
 
 #### let name
 ```
 public let name: String
 ```
-- Description: Name of the sender
+- Description: Name of the message sender
 
 #### let reason
 ```
 public let reason: Option<String>
 ```
-- Description: Reasoning content generated by a model
+- Description: The reasoning content. A reason model, like deepseek-r1, may generate reasoning content
 
 #### let role
 ```
 public let role: MessageRole
 ```
-- Description: Role of the sender
+- Description: Role of the message sender
 
 #### func system
 ```
@@ -168,15 +267,15 @@ public static func system(content: String): Message
 - Parameters:
   - `content`: `String`, Content of the system message
 
-#### func toLogString
+#### func toJsonValue
 ```
-public func toLogString(): String
+override public func toJsonValue(): JsonValue
 ```
-- Description: Converts the message to a log-friendly string representation
+- Description: Converts the message to a JsonValue
 
 #### func toString
 ```
-public func toString(): String
+override public func toString(): String
 ```
 - Description: Converts the message to a string representation
 
@@ -187,62 +286,62 @@ public static func user(content: String, image!: Option<String> = None): Message
 - Description: Creates a user message
 - Parameters:
   - `content`: `String`, Content of the user message
-  - `image`: `Option<String>`, URL or base64 encoded image
+  - `image`: `Option<String>`, Optional image of the message (default: None)
 
 
 ### enum MessageRole
 #### func operator !=
 ```
-public operator func !=(other: MessageRole): Bool
+operator func !=(other: MessageRole): Bool
 ```
-- Description: Compares two MessageRole instances for inequality
+- Description: Checks if two MessageRole instances are not equal.
 - Parameters:
-  - `other`: `MessageRole`, The other MessageRole to compare with
+  - `other`: `MessageRole`, The other MessageRole to compare with.
 
 #### func operator ==
 ```
-public operator func ==(other: MessageRole): Bool
+operator func ==(other: MessageRole): Bool
 ```
-- Description: Compares two MessageRole instances for equality
+- Description: Checks if two MessageRole instances are equal.
 - Parameters:
-  - `other`: `MessageRole`, The other MessageRole to compare with
+  - `other`: `MessageRole`, The other MessageRole to compare with.
 
 ####  Assistant
 ```
 Assistant
 ```
-- Description: Represents an assistant message role
+- Description: Represents the assistant role in a message.
 
 ####  System
 ```
 System
 ```
-- Description: Represents a system message role
+- Description: Represents the system role in a message.
 
 ####  Unknown
 ```
 Unknown
 ```
-- Description: Represents an unknown message role
+- Description: Represents an unknown role in a message.
 
 ####  User
 ```
 User
 ```
-- Description: Represents a user message role
+- Description: Represents the user role in a message.
 
 #### func fromStr
 ```
-public static func fromStr(str: String): MessageRole
+static func fromStr(str: String): MessageRole
 ```
-- Description: Converts a string to the corresponding MessageRole
+- Description: Converts a string to the corresponding MessageRole.
 - Parameters:
-  - `str`: `String`, The string representation of the message role
+  - `str`: `String`, The string to convert to a MessageRole.
 
 #### func toString
 ```
 func toString(): String
 ```
-- Description: Converts the MessageRole to its string representation
+- Description: Converts the MessageRole to its string representation.
 
 

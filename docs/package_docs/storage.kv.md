@@ -20,25 +20,25 @@
 ### class JsonKVStorage<T>
 #### func close
 ```
-public func close(): Unit
+func close(): Unit
 ```
-- Description: Closes the storage.
+- Description: Closes the storage and releases any resources.
 
 #### prop collection
 ```
-public prop collection: String
+prop collection: String
 ```
 - Description: Gets the name of the collection.
 
 #### func commit
 ```
-public func commit(): Unit
+func commit(): Unit
 ```
-- Description: Commits all changes to the storage.
+- Description: Commits all pending changes to the storage.
 
 #### func get
 ```
-public func get(id: String): Option<T>
+func get(id: String): Option<T>
 ```
 - Description: Retrieves the value associated with the specified ID.
 - Parameters:
@@ -46,16 +46,16 @@ public func get(id: String): Option<T>
 
 #### func init
 ```
-public init(workspace!: String = ".storage", collection!: String = "default")
+init(workspace!: String = ".storage", collection!: String = "default")
 ```
-- Description: Initializes a new instance of JsonKVStorage with specified workspace and collection.
+- Description: Initializes a new instance of JsonKVStorage with the specified workspace and collection.
 - Parameters:
   - `workspace`: `String`, The directory path where the storage files will be kept. Defaults to '.storage'.
   - `collection`: `String`, The name of the collection. Defaults to 'default'.
 
 #### func insertInc
 ```
-public func insertInc(value: T): String
+func insertInc(value: T): String
 ```
 - Description: Inserts a value with an auto-incremented ID.
 - Parameters:
@@ -63,7 +63,7 @@ public func insertInc(value: T): String
 
 #### func remove
 ```
-public func remove(id: String): Option<T>
+func remove(id: String): Option<T>
 ```
 - Description: Removes the value associated with the specified ID.
 - Parameters:
@@ -71,13 +71,13 @@ public func remove(id: String): Option<T>
 
 #### func reset
 ```
-public func reset(): Unit
+func reset(): Unit
 ```
 - Description: Clears all data in the storage and commits the changes.
 
 #### func upsert
 ```
-public func upsert(id: String, value: T): Unit
+func upsert(id: String, value: T): Unit
 ```
 - Description: Updates or inserts a value with the specified ID.
 - Parameters:
@@ -86,7 +86,7 @@ public func upsert(id: String, value: T): Unit
 
 #### prop workspace
 ```
-public prop workspace: String
+prop workspace: String
 ```
 - Description: Gets the workspace directory path.
 
@@ -98,15 +98,15 @@ func get(id: String): Option<T>
 ```
 - Description: Retrieves a value associated with the given ID.
 - Parameters:
-  - `id`: `String`, The identifier of the value to retrieve.
+  - `id`: `String`, The identifier for the value to retrieve.
 
 #### func remove
 ```
 func remove(id: String): Option<T>
 ```
-- Description: Removes a value associated with the given ID.
+- Description: Removes a value associated with the given ID and returns it.
 - Parameters:
-  - `id`: `String`, The identifier of the value to remove.
+  - `id`: `String`, The identifier for the value to remove.
 
 #### func upsert
 ```
@@ -114,7 +114,7 @@ func upsert(id: String, value: T): Unit
 ```
 - Description: Updates or inserts a value associated with the given ID.
 - Parameters:
-  - `id`: `String`, The identifier of the value to update or insert.
+  - `id`: `String`, The identifier for the value to update or insert.
   - `value`: `T`, The value to be updated or inserted.
 
 

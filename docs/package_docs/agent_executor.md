@@ -10,7 +10,7 @@
 ```
 public static func create(name: String): AgentExecutor
 ```
-- Description: Creates an agent executor based on the provided name.
+- Description: Creates an AgentExecutor based on the provided name.
 - Parameters:
   - `name`: `String`, The name of the executor to create.
 
@@ -18,18 +18,18 @@ public static func create(name: String): AgentExecutor
 ```
 public static func register(name: String, buildFn: () -> AgentExecutor): Unit
 ```
-- Description: Registers a new agent executor builder with a specific name and a build function.
+- Description: Registers a new AgentExecutor builder with a specific name and a build function.
 - Parameters:
   - `name`: `String`, The name of the executor to register.
-  - `buildFn`: `() -> AgentExecutor`, A function that builds the executor.
+  - `buildFn`: `() -> AgentExecutor`, A function that builds the AgentExecutor.
 
 #### func register
 ```
 public static func register(checkFn: (String) -> Bool, buildFn: (String) -> AgentExecutor): Unit
 ```
-- Description: Registers a new agent executor builder with a check function and a build function.
+- Description: Registers a new AgentExecutor builder with a check function and a build function.
 - Parameters:
   - `checkFn`: `(String) -> Bool`, A function that checks if the executor name matches.
-  - `buildFn`: `(String) -> AgentExecutor`, A function that builds the executor.
+  - `buildFn`: `(String) -> AgentExecutor`, A function that builds the AgentExecutor.
 
 

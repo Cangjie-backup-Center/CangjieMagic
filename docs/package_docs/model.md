@@ -16,45 +16,42 @@
     - [func agentMakeChat](#func-agentmakechat)
     - [func makeChat](#func-makechat)
     - [func makeChat](#func-makechat-1)
-    - [func makeChatGet](#func-makechatget)
 
 ### class ModelConfig
 #### func init
 ```
-public init(provider: String, kind: String, name: String, apiKey: String = "", baseURL: String = "", contextLength: ?Int64 = None)
+init(provider!: String, kind!: String, name!: String, apiKey!: String = "", baseURL!: String = "", contextLength!: ?Int64 = None)
 ```
 - Description: Initializes a new ModelConfig instance with the specified parameters. If apiKey or baseURL are not provided, default values will be used.
 - Parameters:
-  - `provider`: `String`, The provider name for the model.
+  - `provider`: `String`, The provider of the model.
   - `kind`: `String`, The kind of the model.
   - `name`: `String`, The name of the model.
-  - `apiKey`: `String`, The API key for the model. If not specified, a default key will be used.
-  - `baseURL`: `String`, The base URL for the model. If not specified, a default URL will be used.
-  - `contextLength`: `?Int64`, The context length for the model. If not specified, a default length will be used.
+  - `apiKey`: `String`, The API key for the model. If not specified, a default API key will be used.
+  - `baseURL`: `String`, The base URL for the model. If not specified, a default base URL will be used.
+  - `contextLength`: `?Int64`, The context length for the model. If not specified, a default context length will be used.
 
 
 ### struct ModelManager
 #### func createChatModel
 ```
-public static func createChatModel(modelName: String, temperature: Option<Float64> = None): ChatModel
+static func createChatModel(modelName: String): ChatModel
 ```
-- Description: Creates a chat model with the specified name and optional temperature.
+- Description: Creates a chat model with the specified name.
 - Parameters:
   - `modelName`: `String`, The name of the chat model to create.
-  - `temperature`: `Option<Float64>`, The temperature parameter for the chat model. If not specified, a default value will be used.
 
 #### func createChatModel
 ```
-public static func createChatModel(modelConfig: ModelConfig, temperature: Option<Float64> = None): ChatModel
+static func createChatModel(modelConfig: ModelConfig): ChatModel
 ```
-- Description: Creates a chat model with the specified model configuration and optional temperature.
+- Description: Creates a chat model with the specified model configuration.
 - Parameters:
   - `modelConfig`: `ModelConfig`, The configuration for the chat model.
-  - `temperature`: `Option<Float64>`, The temperature parameter for the chat model. If not specified, a default value will be used.
 
 #### func createEmbeddingModel
 ```
-public static func createEmbeddingModel(modelName: String): EmbeddingModel
+static func createEmbeddingModel(modelName: String): EmbeddingModel
 ```
 - Description: Creates an embedding model with the specified name.
 - Parameters:
@@ -62,7 +59,7 @@ public static func createEmbeddingModel(modelName: String): EmbeddingModel
 
 #### func createEmbeddingModel
 ```
-public static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel
+static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingModel
 ```
 - Description: Creates an embedding model with the specified model configuration.
 - Parameters:
@@ -70,7 +67,7 @@ public static func createEmbeddingModel(modelConfig: ModelConfig): EmbeddingMode
 
 #### func createImageModel
 ```
-public static func createImageModel(modelName: String): ImageModel
+static func createImageModel(modelName: String): ImageModel
 ```
 - Description: Creates an image model with the specified name.
 - Parameters:
@@ -78,7 +75,7 @@ public static func createImageModel(modelName: String): ImageModel
 
 #### func createImageModel
 ```
-public static func createImageModel(modelConfig: ModelConfig): ImageModel
+static func createImageModel(modelConfig: ModelConfig): ImageModel
 ```
 - Description: Creates an image model with the specified model configuration.
 - Parameters:
@@ -86,7 +83,7 @@ public static func createImageModel(modelConfig: ModelConfig): ImageModel
 
 #### func registerChatModel
 ```
-public static func registerChatModel(modelName: String, buildFn: () -> ChatModel): Unit
+static func registerChatModel(modelName: String, buildFn: () -> ChatModel): Unit
 ```
 - Description: Registers a chat model with the specified name and build function.
 - Parameters:
@@ -95,7 +92,7 @@ public static func registerChatModel(modelName: String, buildFn: () -> ChatModel
 
 #### func registerEmbeddingModel
 ```
-public static func registerEmbeddingModel(modelName: String, buildFn: () -> EmbeddingModel): Unit
+static func registerEmbeddingModel(modelName: String, buildFn: () -> EmbeddingModel): Unit
 ```
 - Description: Registers an embedding model with the specified name and build function.
 - Parameters:
@@ -104,59 +101,45 @@ public static func registerEmbeddingModel(modelName: String, buildFn: () -> Embe
 
 #### func registerImageModel
 ```
-public static func registerImageModel(modelName: String, buildFn: () -> ImageModel): Unit
+static func registerImageModel(modelName: String, buildFn: () -> ImageModel): Unit
 ```
 - Description: Registers an image model with the specified name and build function.
 - Parameters:
   - `modelName`: `String`, The name of the image model to register.
   - `buildFn`: `() -> ImageModel`, A function that builds the image model.
 
+
 ### struct ModelUtils
+#### func agentMakeChat
+```
+func agentMakeChat(agent: Agent, request: ChatRequest): Option<ChatResponse>
+```
+- Description: Creates a chat response using an agent and a chat request.
+- Parameters:
+  - `agent`: `Agent`, The agent responsible for generating the chat response.
+  - `request`: `ChatRequest`, The chat request containing the necessary information for generating the response.
 
 #### func makeChat
 ```
-public static func makeChat(model: ChatModel, messageList: MessageList, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<Message>
+func makeChat(name: String, model: ChatModel, messageList: MessageList, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatResponse>
 ```
-- Description: Creates a chat message using a chat model and message list with optional temperature and stop parameters.
+- Description: Creates a chat response with a specified name, model, message list, and optional parameters.
 - Parameters:
-  - `model`: `ChatModel`, The chat model to use for generating the message.
-  - `messageList`: `MessageList`, The list of messages to use as context.
-  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
-  - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
+  - `name`: `String`, The name associated with the chat.
+  - `model`: `ChatModel`, The chat model to use for generating the response.
+  - `messageList`: `MessageList`, The list of messages to process.
+  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the response.
+  - `stop`: `Option<Array<String>>`, Optional list of strings that, when encountered, will stop the generation.
 
 #### func makeChat
 ```
-public static func makeChat(name: String, model: ChatModel, messageList: MessageList, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<Message>
+func makeChat(model: ChatModel, messageList: MessageList, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<ChatResponse>
 ```
-- Description: Creates a chat message with a specified name using a chat model and message list with optional temperature and stop parameters.
+- Description: Creates a chat response based on the provided model, message list, and optional parameters.
 - Parameters:
-  - `name`: `String`, The name associated with the chat.
-  - `model`: `ChatModel`, The chat model to use for generating the message.
-  - `messageList`: `MessageList`, The list of messages to use as context.
-  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
-  - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
-
-#### func makeChat
-```
-public static func makeChat(name: String, model: ChatModel, messages: Array<Message>, temperature!: Option<Float64> = None, stop!: Option<Array<String>> = None): Option<Message>
-```
-- Description: Creates a chat message with a specified name using a chat model and array of messages with optional temperature and stop parameters.
-- Parameters:
-  - `name`: `String`, The name associated with the chat.
-  - `model`: `ChatModel`, The chat model to use for generating the message.
-  - `messages`: `Array<Message>`, The array of messages to use as context.
-  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the output.
-  - `stop`: `Option<Array<String>>`, Optional parameter to specify stop sequences for the chat.
-
-#### func makeChatGet
-```
-public static func makeChatGet<T>(name: String, model: ChatModel, messages: Array<Message>, getFn!: (Message) -> Option<T>): Option<T>
-```
-- Description: Creates a chat message and applies a get function to the result, returning an optional value of type T.
-- Parameters:
-  - `name`: `String`, The name associated with the chat.
-  - `model`: `ChatModel`, The chat model to use for generating the message.
-  - `messages`: `Array<Message>`, The array of messages to use as context.
-  - `getFn`: `(Message) -> Option<T>`, The function to apply to the generated message.
+  - `model`: `ChatModel`, The chat model to use for generating the response.
+  - `messageList`: `MessageList`, The list of messages to process.
+  - `temperature`: `Option<Float64>`, Optional parameter to control the randomness of the response.
+  - `stop`: `Option<Array<String>>`, Optional list of strings that, when encountered, will stop the generation.
 
 

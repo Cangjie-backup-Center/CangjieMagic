@@ -78,7 +78,7 @@ let blacklist = [
 ]
 
 private func getFilesImpl(dirPath: Path, ext: String, result: ArrayList<Path>): Unit  {
-    Directory.walk(dirPath) { fileInfo => 
+    Directory.walk(dirPath) { fileInfo =>
         let filePath = canonicalize(fileInfo.path)
         println(filePath)
         if (blacklist.contains(fileNameWithoutExt(filePath))) {
@@ -122,14 +122,18 @@ func buildFileDocs(files: ArrayList<Path>, outDir: Path): ArrayList<Doc> {
     let docs = ArrayList<Doc>()
     let agent = DocAgent()
     for (path in files) {
-        let pkgName = getPackageName(path)
-        println(path.toString())
         // println(pkgName)
+        let pkgName = getPackageName(path)
+        let docPath = outDir.join("${pkgName}.${path.fileNameWithoutExtension}.json")
+        println(path.toString())
+        if (exists(docPath)) {
+            println("Skip ${docPath}. Already exists.")
+            continue
+        }
         let content = readAndFilterCJFile(path)
         let result = agent.chatGet<Doc>(("code", content))
         if (let Some(doc) <- result) {
             doc.packageName = pkgName
-            let docPath = outDir.join("${pkgName}.${path.fileNameWithoutExtension}.json")
             writeFile(docPath, doc.toJsonValue().toJsonString())
             println(doc.toJsonValue().toJsonString())
             docs.add(doc)
@@ -236,15 +240,15 @@ func mergeFileDocs(outDir: Path, docs!: Option<ArrayList<Doc>>): Unit  {
 }
 
 main() {
-    Config.logLevel = "INFO"
+    Config.logLevel = "DEBUG"
     Config.logFile = "./logs/abc.log"
 
     if (!exists(OUT_DIR)) {
         Directory.create(OUT_DIR, recursive: true)
     }
 
-    // let files = getCJFiles(Path(SRC_DIR))
-    // let docs = buildFileDocs(files, Path(OUT_DIR))
-    // mergeFileDocs(Path(OUT_DIR), docs: docs)
-    mergeFileDocs(Path(OUT_DIR), docs: None)
+    let files = getCJFiles(Path(SRC_DIR))
+    let docs = buildFileDocs(files, Path(OUT_DIR))
+    mergeFileDocs(Path(OUT_DIR), docs: docs)
+    // mergeFileDocs(Path(OUT_DIR), docs: None)
 }

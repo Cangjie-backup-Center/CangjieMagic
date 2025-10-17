@@ -8,26 +8,26 @@
 ### class NaiveExecutor
 #### func asyncRun
 ```
-public override func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
+func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 ```
-- Description: Executes the agent's task asynchronously.
+- Description: Executes the agent task asynchronously.
 - Parameters:
-  - `agent`: `Agent`, The agent to be executed.
-  - `request`: `AgentRequest`, The request containing the task details.
+  - `agent`: `Agent`, The agent to execute.
+  - `request`: `AgentRequest`, The request to process.
 
 #### prop name
 ```
-override public prop name: String
+prop name: String
 ```
 - Description: Gets the name of the executor.
 
 #### func run
 ```
-public override func run(agent: Agent, request: AgentRequest): AgentResponse
+func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
-- Description: Executes the agent's task synchronously.
+- Description: Executes the agent task synchronously.
 - Parameters:
-  - `agent`: `Agent`, The agent to be executed.
-  - `request`: `AgentRequest`, The request containing the task details.
+  - `agent`: `Agent`, The agent to execute.
+  - `request`: `AgentRequest`, The request to process.
 
 

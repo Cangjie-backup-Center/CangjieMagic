@@ -36,45 +36,45 @@
 ```
 public operator func !=(other: Document): Bool
 ```
-- Description: Checks if two documents are not equal
+- Description: Compares two documents for inequality based on id, content, and metadata
 - Parameters:
-  - `other`: `Document`, Document to compare with
+  - `other`: `Document`, The other document to compare with
 
 #### func operator ==
 ```
 public operator func ==(other: Document): Bool
 ```
-- Description: Checks if two documents are equal
+- Description: Compares two documents for equality based on id, content, and metadata
 - Parameters:
-  - `other`: `Document`, Document to compare with
+  - `other`: `Document`, The other document to compare with
 
 #### let content
 ```
 public let content: String
 ```
-- Description: Content of the document
+- Description: The main content of the document
 
 #### func deserialize
 ```
 public static func deserialize(dm: DataModel)
 ```
-- Description: Deserializes a document from a data model
+- Description: Deserializes a Document from a DataModel
 - Parameters:
-  - `dm`: `DataModel`, Data model to deserialize
+  - `dm`: `DataModel`, The DataModel to deserialize from
 
 #### func fromJsonValue
 ```
 public static func fromJsonValue(json: JsonValue): Document
 ```
-- Description: Creates a document from a JSON value
+- Description: Deserializes a Document from a JsonValue
 - Parameters:
-  - `json`: `JsonValue`, JSON value to deserialize
+  - `json`: `JsonValue`, The JsonValue to deserialize from
 
 #### func getTypeSchema
 ```
 public static func getTypeSchema(): TypeSchema
 ```
-- Description: Returns the type schema of the document
+- Description: Returns the type schema for the Document class
 
 #### let id
 ```
@@ -86,56 +86,56 @@ public let id: String
 ```
 public init(content: String, metadata!: HashMap<String, String> = HashMap())
 ```
-- Description: Initializes a document with content and optional metadata
+- Description: Initializes a new document with the given content and optional metadata
 - Parameters:
-  - `content`: `String`, Content of the document
-  - `metadata`: `HashMap<String, String>`, Metadata associated with the document
+  - `content`: `String`, The main content of the document
+  - `metadata`: `HashMap<String, String>`, Additional metadata for the document, defaults to an empty HashMap
 
 #### func init
 ```
 public init(id: String, content: String, metadata!: HashMap<String, String>)
 ```
-- Description: Initializes a document with id, content, and metadata
+- Description: Initializes a new document with the specified id, content, and metadata
 - Parameters:
   - `id`: `String`, Unique identifier for the document
-  - `content`: `String`, Content of the document
-  - `metadata`: `HashMap<String, String>`, Metadata associated with the document
+  - `content`: `String`, The main content of the document
+  - `metadata`: `HashMap<String, String>`, Additional metadata for the document
 
 #### let metadata
 ```
 public let metadata: HashMap<String, String>
 ```
-- Description: Metadata associated with the document
+- Description: Additional metadata associated with the document
 
 #### func serialize
 ```
 public func serialize(): DataModel
 ```
-- Description: Serializes the document to a data model
+- Description: Serializes the Document to a DataModel
 
 #### func toJsonString
 ```
 public func toJsonString(): String
 ```
-- Description: Converts the document to a JSON string
+- Description: Converts the Document to a JSON string
 
 #### func toJsonValue
 ```
 public func toJsonValue(): JsonValue
 ```
-- Description: Converts the document to a JSON value
+- Description: Serializes the Document to a JsonValue
 
 #### func toPrompt
 ```
 public override func toPrompt(): String
 ```
-- Description: Converts the document to a prompt string
+- Description: Returns the content of the document as a prompt string
 
 #### func toString
 ```
 public override func toString(): String
 ```
-- Description: Converts the document to a string representation
+- Description: Converts the document to a string representation including id, metadata, and content
 
 
 ### interface Retrieval
@@ -143,7 +143,7 @@ public override func toString(): String
 ```
 prop sources: Array<Document>
 ```
-- Description: Result of the retriever
+- Description: Sources of the retrieval result
 
 
 ### struct RetrievalInfo
@@ -165,9 +165,9 @@ mut prop mode: RetrieverMode
 ```
 func search(query: String): Retrieval
 ```
-- Description: Search for a query.
+- Description: Searches for the given query.
 - Parameters:
-  - `query`: `String`, The query to search for.
+  - `query`: `String`, The query string to search for.
 
 
 ### class RetrieverException
@@ -177,7 +177,7 @@ init(msg: String)
 ```
 - Description: Constructor for RetrieverException
 - Parameters:
-  - `msg`: `String`, The error message for the exception
+  - `msg`: `String`, The exception message
 
 
 ### enum RetrieverMode

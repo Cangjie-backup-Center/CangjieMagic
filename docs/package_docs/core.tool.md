@@ -8,9 +8,13 @@
     - [prop name](#prop-name)
     - [prop parameters](#prop-parameters)
     - [prop retType](#prop-rettype)
+  - [interface ToolCompactor](#interface-toolcompactor)
+    - [func compact](#func-compact)
   - [class ToolException](#class-toolexception)
     - [func init](#func-init)
     - [let reason](#let-reason)
+  - [interface ToolFilter](#interface-toolfilter)
+    - [func filter](#func-filter)
   - [interface ToolManager](#interface-toolmanager)
     - [func addTool](#func-addtool)
     - [func addTools](#func-addtools)
@@ -19,19 +23,24 @@
     - [prop enableFilter](#prop-enablefilter)
     - [func filterTool](#func-filtertool)
     - [func findTool](#func-findtool)
-    - [func getTools](#func-gettools)
   - [struct ToolParameter](#struct-toolparameter)
     - [let description](#let-description)
     - [func init](#func-init-1)
     - [let name](#let-name)
     - [let typeSchema](#let-typeschema)
   - [struct ToolRequest](#struct-toolrequest)
+    - [let args](#let-args)
+    - [func init](#func-init-1)
+    - [func init](#func-init-1)
+    - [let name](#let-name-1)
+    - [func toJsonValue](#func-tojsonvalue)
     - [func toString](#func-tostring)
   - [struct ToolResponse](#struct-toolresponse)
     - [let content](#let-content)
     - [func init](#func-init-1)
     - [let isError](#let-iserror)
-  - [struct ToolSearchConfig](#struct-toolsearchconfig)
+  - [interface Toolset](#interface-toolset)
+    - [prop tools](#prop-tools)
 
 ### interface Tool
 #### prop description
@@ -44,13 +53,13 @@ prop description: String
 ```
 prop examples: Array<String>
 ```
-- Description: Examples of how to call the tool. Optional.
+- Description: Examples of how to call the tool. Optional
 
 #### prop extra
 ```
 prop extra: HashMap<String, String>
 ```
-- Description: Extra customized attributes
+- Description: Extra customized attributes. Available attributes include 'filterable', 'terminal', and 'compactable'
 
 #### func invoke
 ```
@@ -58,7 +67,7 @@ func invoke(args: HashMap<String, JsonValue>): ToolResponse
 ```
 - Description: Arguments and their values are grouped in a hash map
 - Parameters:
-  - `args`: `HashMap<String, JsonValue>`, Arguments and their values
+  - `args`: `HashMap<String, JsonValue>`, Arguments and their values grouped in a hash map
 
 #### prop name
 ```
@@ -76,7 +85,18 @@ prop parameters: Array<ToolParameter>
 ```
 prop retType: TypeSchema
 ```
-- Description: Return type of the tool. Not used currently.
+- Description: Return type of the tool. Not used currently
+
+
+### interface ToolCompactor
+#### func compact
+```
+func compact(toolRequest: ToolRequest, toolResponse: ToolResponse): String
+```
+- Description: Compact the tool invocation
+- Parameters:
+  - `toolRequest`: `ToolRequest`, The request to the tool
+  - `toolResponse`: `ToolResponse`, The response from the tool
 
 
 ### class ToolException
@@ -84,7 +104,7 @@ prop retType: TypeSchema
 ```
 init(reason: String)
 ```
-- Description: Initializes a new instance of ToolException with the specified reason
+- Description: Initializes the ToolException with a reason
 - Parameters:
   - `reason`: `String`, The reason for the exception
 
@@ -93,6 +113,17 @@ init(reason: String)
 let reason: String
 ```
 - Description: The reason for the exception
+
+
+### interface ToolFilter
+#### func filter
+```
+func filter(question: String, tools: Collection<Tool>): Array<Tool>
+```
+- Description: Filters a collection of tools based on a given question.
+- Parameters:
+  - `question`: `String`, The question used to filter the tools.
+  - `tools`: `Collection<Tool>`, The collection of tools to be filtered.
 
 
 ### interface ToolManager
@@ -106,11 +137,11 @@ func addTool(tool: Tool): Unit
 
 #### func addTools
 ```
-func addTools(tools: Array<Tool>): Unit
+func addTools(tools: Collection<Tool>): Unit
 ```
 - Description: Add new tools
 - Parameters:
-  - `tools`: `Array<Tool>`, The tools to be added
+  - `tools`: `Collection<Tool>`, The collection of tools to be added
 
 #### func clear
 ```
@@ -134,12 +165,12 @@ prop enableFilter: Bool
 
 #### func filterTool
 ```
-func filterTool(question: String, config: ToolSearchConfig): Array<Tool>
+func filterTool(question: String, filter: ToolFilter): Array<Tool>
 ```
 - Description: Filter related tools to the question
 - Parameters:
-  - `question`: `String`, The question to filter tools
-  - `config`: `ToolSearchConfig`, The configuration for tool search
+  - `question`: `String`, The question to filter tools against
+  - `filter`: `ToolFilter`, The filter to apply
 
 #### func findTool
 ```
@@ -148,12 +179,6 @@ func findTool(name: String): Option<Tool>
 - Description: Find a tool according to its name
 - Parameters:
   - `name`: `String`, The name of the tool to find
-
-#### func getTools
-```
-func getTools(): Array<Tool>
-```
-- Description: Get all tools
 
 
 ### struct ToolParameter
@@ -165,7 +190,7 @@ let description: String
 
 #### func init
 ```
-public init(name: String, description: String, typeSchema: TypeSchema)
+init(name: String, description: String, typeSchema: TypeSchema)
 ```
 - Description: Initializes a new ToolParameter with the specified name, description, and type schema.
 - Parameters:
@@ -187,11 +212,47 @@ let typeSchema: TypeSchema
 
 
 ### struct ToolRequest
+#### let args
+```
+let args: HashMap<String, JsonValue>
+```
+- Description: Tool arguments
+
+#### func init
+```
+init(name: String, args: HashMap<String, JsonValue>)
+```
+- Description: Constructor for ToolRequest
+- Parameters:
+  - `name`: `String`, Tool name
+  - `args`: `HashMap<String, JsonValue>`, Tool arguments
+
+#### func init
+```
+init(name: String, args: JsonObject)
+```
+- Description: Constructor for ToolRequest
+- Parameters:
+  - `name`: `String`, Tool name
+  - `args`: `JsonObject`, Tool arguments
+
+#### let name
+```
+let name: String
+```
+- Description: Tool name
+
+#### func toJsonValue
+```
+func toJsonValue(): JsonValue
+```
+- Description: Converts the ToolRequest to a JsonValue
+
 #### func toString
 ```
-override public func toString(): String
+func toString(): String
 ```
-- Description: Converts the ToolRequest object to a string representation.
+- Description: Converts the ToolRequest to a string representation
 
 
 ### struct ToolResponse
@@ -208,7 +269,7 @@ init(content: String, isError: Bool = false)
 - Description: Initializes a ToolResponse with content and error status
 - Parameters:
   - `content`: `String`, Content of the tool response
-  - `isError`: `Bool`, Indicates if the tool response is an error, defaults to false
+  - `isError`: `Bool`, Indicates if the tool response is an error
 
 #### let isError
 ```
@@ -217,5 +278,11 @@ let isError: Bool
 - Description: Indicates if the tool response is an error
 
 
-### struct ToolSearchConfig
+### interface Toolset
+#### prop tools
+```
+prop tools: Array<Tool>
+```
+- Description: Get all tools
+
 

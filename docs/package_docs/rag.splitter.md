@@ -17,9 +17,9 @@
 ### class CharacterTextSplitter
 #### func split
 ```
-public override func split(text: String): Array<Document>
+func split(text: String): Array<Document>
 ```
-- Description: Splits the input text into an array of Document objects based on the specified chunk size and separator.
+- Description: Splits the input text into an array of Document objects based on the chunk size and separator.
 - Parameters:
   - `text`: `String`, The input text to be split into documents.
 
@@ -29,35 +29,35 @@ public override func split(text: String): Array<Document>
 ```
 func load(): Array<Document>
 ```
-- Description: Loads documents from a file path and returns them as an array.
+- Description: Loads documents from a file path specified in the class instance.
 
 #### func loadSplit
 ```
 func loadSplit(splitter: Splitter): Array<Document>
 ```
-- Description: Loads documents from a file path, splits them using the provided splitter, and returns them as an array.
+- Description: Loads documents from a file and splits them using the provided splitter.
 - Parameters:
-  - `splitter`: `Splitter`, The splitter used to divide the document content.
+  - `splitter`: `Splitter`, The splitter used to divide the document content into parts.
 
 
 ### class MarkdownSplitter
 #### func init
 ```
-public init(headersToSplit: Array<(String, String)> = DEFAULT_HEADERS_TO_SPLIT, returnEachLine: Bool = false, stripHeader: Bool = true)
+init(headersToSplit!: Array<(String, String)>, returnEachLine!: Bool, stripHeader!: Bool)
 ```
-- Description: Initializes the MarkdownSplitter with specified headers to split, whether to return each line with associated headers, and whether to strip split headers from the content.
+- Description: Initializes the MarkdownSplitter with specified headers to split, whether to return each line, and whether to strip headers.
 - Parameters:
   - `headersToSplit`: `Array<(String, String)>`, Headers we want to track.
-  - `returnEachLine`: `Bool`, Whether to return each line with associated headers.
-  - `stripHeader`: `Bool`, Whether to strip split headers from the content of the chunk.
+  - `returnEachLine`: `Bool`, Return each line with associated headers.
+  - `stripHeader`: `Bool`, Strip split headers from the content of the chunk.
 
 #### func split
 ```
-override public func split(text: String): Array<Document>
+func split(text: String): Array<Document>
 ```
-- Description: Splits the markdown file into an array of documents based on the specified headers.
+- Description: Splits a markdown file into documents based on specified headers.
 - Parameters:
-  - `text`: `String`, The markdown file to split.
+  - `text`: `String`, Markdown file to be split.
 
 
 ### class RecursiveCharacterTextSplitter
@@ -70,11 +70,11 @@ init(separators!: Array<String> = ["\n\n", "\n", " ", ""], chunkSize!: Int64 = 1
   - `separators`: `Array<String>`, An array of strings used as separators for splitting text. Defaults to ["\n\n", "\n", " ", ""].
   - `chunkSize`: `Int64`, The maximum size of each chunk. Defaults to 1024.
   - `chunkOverlap`: `Int64`, The number of characters that chunks should overlap. Defaults to 256.
-  - `keepSeparator`: `Bool`, A flag indicating whether to keep the separator in the split chunks. Defaults to false.
+  - `keepSeparator`: `Bool`, A flag indicating whether to keep the separator in the chunks. Defaults to false.
 
 #### func split
 ```
-split(text: String): Array<Document>
+func split(text: String): Array<Document>
 ```
 - Description: Splits the input text into an array of Document objects using the specified separators.
 - Parameters:
@@ -86,8 +86,8 @@ split(text: String): Array<Document>
 ```
 func split(text: String): Array<Document>
 ```
-- Description: Splits the input text into an array of documents.
+- Description: Splits the given text into an array of documents.
 - Parameters:
-  - `text`: `String`, The text to be split.
+  - `text`: `String`, The text to be split into documents.
 
 

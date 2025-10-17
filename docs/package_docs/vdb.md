@@ -18,7 +18,7 @@
     - [func get](#func-get)
     - [func load](#func-load-1)
     - [func save](#func-save-1)
-  - [class JsonlIndexMap](#class-jsonlindexmap)
+  - [class JsonlIndexMap<T>](#class-jsonlindexmap<t>)
     - [func add](#func-add-1)
     - [func get](#func-get-1)
     - [func init](#func-init-1)
@@ -78,11 +78,11 @@ func addVector(vector: Vector): Unit
 ```
 func close(): Unit
 ```
-- Description: Closes the database and releases all allocated resources.
+- Description: Closes the database and releases all associated resources.
 
 #### func init
 ```
-init(dimension: Int64 = 1536)
+init(dimension!: Int64 = 1536)
 ```
 - Description: Initializes a new FaissVectorDatabase with the specified dimension.
 - Parameters:
@@ -94,7 +94,7 @@ static func load(filePath: String): FaissVectorDatabase
 ```
 - Description: Loads a FaissVectorDatabase from the specified file path.
 - Parameters:
-  - `filePath`: `String`, The path from which the database will be loaded.
+  - `filePath`: `String`, The path to the file from which the database will be loaded.
 
 #### func save
 ```
@@ -102,17 +102,17 @@ func save(filePath: String): Unit
 ```
 - Description: Saves the database to the specified file path.
 - Parameters:
-  - `filePath`: `String`, The path where the database will be saved.
+  - `filePath`: `String`, The path to the file where the database will be saved.
 
 #### func search
 ```
-func search(queryVec: Vector, number: Int64 = 5, minDistance: Float64 = 0.6): Array<SearchResult>
+func search(queryVec: Vector, number!: Int64 = 5, minDistance!: Float64 = 0.6): Array<SearchResult>
 ```
 - Description: Searches the database for vectors similar to the query vector.
 - Parameters:
   - `queryVec`: `Vector`, The query vector for which similar vectors are to be found.
-  - `number`: `Int64`, The maximum number of results to return. Defaults to 5.
-  - `minDistance`: `Float64`, The minimum distance threshold for results. Defaults to 0.6.
+  - `number`: `Int64`, The maximum number of similar vectors to return. Defaults to 5.
+  - `minDistance`: `Float64`, The minimum distance threshold for vectors to be considered similar. Defaults to 0.6.
 
 
 ### class InMemoryVectorDatabase
@@ -120,7 +120,7 @@ func search(queryVec: Vector, number: Int64 = 5, minDistance: Float64 = 0.6): Ar
 ```
 func addVector(vector: Vector): Unit
 ```
-- Description: Adds a vector to the vector buffer and returns the index where it was stored.
+- Description: Adds a vector to the vector buffer and assigns it an index.
 - Parameters:
   - `vector`: `Vector`, The vector to be added.
 
@@ -128,17 +128,17 @@ func addVector(vector: Vector): Unit
 ```
 static func load(filePath: String): InMemoryVectorDatabase
 ```
-- Description: Attempts to load the vector database from a file, but currently throws an UnsupportedException.
+- Description: Throws an UnsupportedException as loading is not supported for this in-memory database.
 - Parameters:
-  - `filePath`: `String`, The file path from which the vector database should be loaded.
+  - `filePath`: `String`, The file path from which the database would be loaded.
 
 #### func save
 ```
 func save(filePath: String): Unit
 ```
-- Description: Attempts to save the vector database to a file, but currently throws an UnsupportedException.
+- Description: Throws an UnsupportedException as saving is not supported for this in-memory database.
 - Parameters:
-  - `filePath`: `String`, The file path where the vector database should be saved.
+  - `filePath`: `String`, The file path where the database would be saved.
 
 #### func search
 ```
@@ -147,8 +147,8 @@ func search(queryVec: Vector, number: Int64 = 5, minDistance: Float64 = 0.6): Ar
 - Description: Searches for the most similar vectors to the query vector based on cosine similarity.
 - Parameters:
   - `queryVec`: `Vector`, The query vector for which similar vectors are to be found.
-  - `number`: `Int64`, The number of most similar vectors to return.
-  - `minDistance`: `Float64`, The minimum cosine similarity threshold for vectors to be considered similar.
+  - `number`: `Int64`, The number of most similar vectors to return. Default is 5.
+  - `minDistance`: `Float64`, The minimum cosine similarity threshold for vectors to be included in the results. Default is 0.6.
 
 #### func setVector
 ```
@@ -194,7 +194,7 @@ func save(filePath: String): Unit
   - `filePath`: `String`, The file path where the index map will be saved.
 
 
-### class JsonlIndexMap
+### class JsonlIndexMap<T>
 #### func add
 ```
 override public func add(content: T): Unit
@@ -215,13 +215,13 @@ override public func get(index: Int64): T
 ```
 public init()
 ```
-- Description: Initializes a new JsonlIndexMap with an empty ArrayList.
+- Description: Initializes a new instance of JsonlIndexMap with an empty ArrayList.
 
 #### func load
 ```
 redef public static func load(filePath: String): JsonlIndexMap<T>
 ```
-- Description: Loads a JsonlIndexMap from a file containing JSONL formatted data.
+- Description: Loads a JsonlIndexMap from a file at the specified path.
 - Parameters:
   - `filePath`: `String`, The path of the file to load the JsonlIndexMap from.
 
@@ -229,7 +229,7 @@ redef public static func load(filePath: String): JsonlIndexMap<T>
 ```
 override public func save(filePath: String): Unit
 ```
-- Description: Saves the contents of the JsonlIndexMap to a file in JSONL format.
+- Description: Saves the contents of the JsonlIndexMap to a file at the specified path.
 - Parameters:
   - `filePath`: `String`, The path of the file where the contents will be saved.
 
@@ -262,13 +262,13 @@ init(index: Int64, dist: Float64)
 ```
 public func asRetriever(): Retriever
 ```
-- Description: Converts the semantic map to a retriever
+- Description: Converts the semantic map into a retriever
 
 #### prop embeddingModel
 ```
 public mut prop embeddingModel: EmbeddingModel
 ```
-- Description: Embedding model property with getter and setter
+- Description: Gets or sets the embedding model
 
 #### let indexMap
 ```
@@ -278,9 +278,9 @@ public let indexMap: IMAP
 
 #### func init
 ```
-public init(vectorDB: VDB, indexMap: IMAP, embeddingModel: Option<EmbeddingModel> = None)
+public init(vectorDB!: VDB, indexMap!: IMAP, embeddingModel!: Option<EmbeddingModel> = None)
 ```
-- Description: Constructor for SemanticMap
+- Description: Initializes a new SemanticMap instance with the given vector database, index map, and optional embedding model
 - Parameters:
   - `vectorDB`: `VDB`, Vector database instance
   - `indexMap`: `IMAP`, Index map instance
@@ -290,9 +290,9 @@ public init(vectorDB: VDB, indexMap: IMAP, embeddingModel: Option<EmbeddingModel
 ```
 public static func load(dirPath: String): SemanticMap<VDB, IMAP, T>
 ```
-- Description: Loads a semantic map from disk
+- Description: Loads a semantic map from the specified directory
 - Parameters:
-  - `dirPath`: `String`, Directory path to load from
+  - `dirPath`: `String`, Directory path to load the semantic map from
 
 #### func put
 ```
@@ -300,22 +300,22 @@ public func put(key: String, value: T): Unit
 ```
 - Description: Adds a key-value pair to the semantic map
 - Parameters:
-  - `key`: `String`, Key string
-  - `value`: `T`, Value to be stored
+  - `key`: `String`, Key to be added
+  - `value`: `T`, Value to be added
 
 #### func save
 ```
 public func save(dirPath: String): Unit
 ```
-- Description: Saves the semantic map to disk
+- Description: Saves the semantic map to the specified directory
 - Parameters:
-  - `dirPath`: `String`, Directory path to save to
+  - `dirPath`: `String`, Directory path to save the semantic map
 
 #### func search
 ```
-public func search(query: String, number: Int64 = 5, minDistance: Float64 = 0.3): Array<T>
+public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T>
 ```
-- Description: Find similar data
+- Description: Finds similar data based on the query
 - Parameters:
   - `query`: `String`, Query string
   - `number`: `Int64`, Number of results to return
@@ -331,55 +331,55 @@ public let vectorDB: VDB
 ### class SemanticSet
 #### func asRetriever
 ```
-public func asRetriever(): Retriever
+func asRetriever(): Retriever
 ```
-- Description: Converts the SemanticSet into a Retriever.
+- Description: Converts the SemanticSet into a Retriever object for semantic retrieval operations.
 
 #### prop embeddingModel
 ```
-public mut prop embeddingModel: EmbeddingModel
+mut prop embeddingModel: EmbeddingModel
 ```
-- Description: Gets or sets the embedding model used by the SemanticSet.
+- Description: Gets or sets the embedding model used for semantic operations.
 
 #### func init
 ```
-public init(vectorDB!: VDB, indexMap!: IMAP, embeddingModel!: Option<EmbeddingModel> = None)
+init(vectorDB!: VDB, indexMap!: IMAP, embeddingModel!: Option<EmbeddingModel> = None)
 ```
-- Description: Initializes a new instance of SemanticSet with the specified vector database, index map, and optional embedding model.
+- Description: Initializes a new SemanticSet with the given vector database, index map, and optional embedding model.
 - Parameters:
-  - `vectorDB`: `VDB`, The vector database to be used.
-  - `indexMap`: `IMAP`, The index map to be used.
-  - `embeddingModel`: `Option<EmbeddingModel>`, The optional embedding model to be used.
+  - `vectorDB`: `VDB`, The vector database to be used for semantic operations.
+  - `indexMap`: `IMAP`, The index map to be used for semantic operations.
+  - `embeddingModel`: `Option<EmbeddingModel>`, An optional embedding model to be used for semantic operations.
 
 #### func load
 ```
-public static func load(dirPath: String): SemanticSet<VDB, IMAP, T>
+static func load(dirPath: String): SemanticSet<VDB, IMAP, T>
 ```
-- Description: Loads a SemanticSet from the specified directory.
+- Description: Loads a SemanticSet from the specified directory path.
 - Parameters:
   - `dirPath`: `String`, The directory path from which the SemanticSet will be loaded.
 
 #### func put
 ```
-public func put(value: T): Unit
+func put(value: T): Unit
 ```
-- Description: Adds a value to the SemanticSet.
+- Description: Adds a value to the SemanticSet by converting it to a string and using it as both key and value.
 - Parameters:
-  - `value`: `T`, The value to be added.
+  - `value`: `T`, The value to be added to the SemanticSet.
 
 #### func save
 ```
-public func save(dirPath: String): Unit
+func save(dirPath: String): Unit
 ```
-- Description: Saves the SemanticSet to the specified directory.
+- Description: Saves the SemanticSet to the specified directory path.
 - Parameters:
   - `dirPath`: `String`, The directory path where the SemanticSet will be saved.
 
 #### func search
 ```
-public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T>
+func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T>
 ```
-- Description: Searches the SemanticSet for values matching the query.
+- Description: Searches the SemanticSet for values similar to the query string, returning up to the specified number of results with a minimum distance threshold.
 - Parameters:
   - `query`: `String`, The query string to search for.
   - `number`: `Int64`, The maximum number of results to return.
@@ -389,58 +389,58 @@ public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.
 ### class SimpleIndexMap
 #### func add
 ```
-func add(content: String): Unit
+override public func add(content: String): Unit
 ```
-- Description: Adds content to the next available index.
+- Description: Adds content to the map at the next available index.
 - Parameters:
-  - `content`: `String`, The content to be added.
+  - `content`: `String`, The content to be added to the map.
 
 #### func deserialize
 ```
-static func deserialize(dm: DataModel): SimpleIndexMap
+public static func deserialize(dm: DataModel): SimpleIndexMap
 ```
 - Description: Deserializes a DataModel into a SimpleIndexMap.
 - Parameters:
-  - `dm`: `DataModel`, The DataModel to be deserialized.
+  - `dm`: `DataModel`, The DataModel to deserialize.
 
 #### func get
 ```
-func get(index: Int64): String
+override public func get(index: Int64): String
 ```
-- Description: Retrieves the content at the specified index.
+- Description: Retrieves the content stored at a given index.
 - Parameters:
-  - `index`: `Int64`, The index from which the content will be retrieved.
+  - `index`: `Int64`, The index to retrieve content from.
 
 #### func load
 ```
-static func load(filePath: String): SimpleIndexMap
+redef public static func load(filePath: String): SimpleIndexMap
 ```
 - Description: Loads a SimpleIndexMap from a file.
 - Parameters:
-  - `filePath`: `String`, The path of the file from which the SimpleIndexMap will be loaded.
+  - `filePath`: `String`, The path of the file to load the map from.
 
 #### func save
 ```
-func save(filePath: String): Unit
+override public func save(filePath: String): Unit
 ```
-- Description: Saves the SimpleIndexMap to a file.
+- Description: Saves the serialized map to a file.
 - Parameters:
-  - `filePath`: `String`, The path of the file where the SimpleIndexMap will be saved.
+  - `filePath`: `String`, The path of the file to save the map to.
 
 #### func serialize
 ```
-func serialize(): DataModel
+public func serialize(): DataModel
 ```
-- Description: Serializes the SimpleIndexMap into a DataModel.
+- Description: Serializes the map into a DataModel.
 
 #### func set
 ```
 func set(index: Int64, content: String): Unit
 ```
-- Description: Sets the content at the specified index.
+- Description: Sets the content for a given index in the map.
 - Parameters:
-  - `index`: `Int64`, The index where the content will be set.
-  - `content`: `String`, The content to be set at the specified index.
+  - `index`: `Int64`, The index to set the content for.
+  - `content`: `String`, The content to be stored at the specified index.
 
 
 ### class Vector
@@ -448,15 +448,15 @@ func set(index: Int64, content: String): Unit
 ```
 init(vec: Array<Float64>)
 ```
-- Description: Initializes a new Vector instance with the given array of Float64 values
+- Description: Initializes a new Vector instance with the provided array of Float64 values.
 - Parameters:
-  - `vec`: `Array<Float64>`, An array of Float64 values used to initialize the vector
+  - `vec`: `Array<Float64>`, An array of Float64 values to initialize the vector.
 
 #### let vector
 ```
 let vector: Array<Float64>
 ```
-- Description: A constant array of Float64 values representing the vector components
+- Description: A constant array of Float64 values representing the vector.
 
 
 ### class VectorBuilder
@@ -466,7 +466,7 @@ func createEmbeddingVector(content: String): Vector
 ```
 - Description: Creates an embedding vector from the given content.
 - Parameters:
-  - `content`: `String`, The input content to create the embedding vector from.
+  - `content`: `String`, The content to create the embedding vector from.
 
 
 ### interface VectorDatabase
@@ -474,7 +474,7 @@ func createEmbeddingVector(content: String): Vector
 ```
 func addVector(vector: Vector): Unit
 ```
-- Description: Add the vector to the database
+- Description: Add the vector to the database. ATTENTION: index must start from 0
 - Parameters:
   - `vector`: `Vector`, The vector to be added to the database
 
