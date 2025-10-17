@@ -3,7 +3,13 @@
   - [struct LogUtils](#struct-logutils)
     - [func debug](#func-debug)
     - [func debug](#func-debug-1)
+    - [func debug](#func-debug-1)
+    - [func debug](#func-debug-1)
+    - [func debug](#func-debug-1)
+    - [func debug](#func-debug-1)
+    - [func debug](#func-debug-1)
     - [func error](#func-error)
+    - [func error](#func-error-1)
     - [func error](#func-error-1)
     - [func info](#func-info)
     - [func info](#func-info-1)
@@ -13,234 +19,204 @@
     - [func info](#func-info-1)
     - [func info](#func-info-1)
     - [func info](#func-info-1)
-  - [struct LogUtils](#struct-logutils-1)
-    - [func debug](#func-debug-1)
-    - [func debug](#func-debug-1)
-    - [func debug](#func-debug-1)
-    - [func error](#func-error-1)
-    - [func error](#func-error-1)
     - [func info](#func-info-1)
-    - [func info](#func-info-1)
-    - [func info](#func-info-1)
-    - [func info](#func-info-1)
-    - [func info](#func-info-1)
-    - [func info](#func-info-1)
-    - [func info](#func-info-1)
-    - [func info](#func-info-1)
+    - [func trace](#func-trace)
+    - [func trace](#func-trace-1)
+    - [func trace](#func-trace-1)
+    - [func trace](#func-trace-1)
 
 ### struct LogUtils
 #### func debug
 ```
-public static func debug(msg: String): Unit
+static func debug(ex: Exception): Unit
 ```
-- Description: Logs a debug message.
+- Description: Logs a debug level message from an Exception object.
 - Parameters:
-  - `msg`: `String`, The debug message to log.
+  - `ex`: `Exception`, The Exception object containing the message to be logged.
 
 #### func debug
 ```
-public static func debug(name: String, msg: String): Unit
+static func debug(msg: String): Unit
 ```
-- Description: Logs a debug message with a name prefix.
+- Description: Logs a debug level message.
 - Parameters:
-  - `name`: `String`, The name prefix for the debug message.
-  - `msg`: `String`, The debug message to log.
-
-#### func error
-```
-public static func error(msg: String): Unit
-```
-- Description: Logs an error message.
-- Parameters:
-  - `msg`: `String`, The error message to log.
-
-#### func error
-```
-public static func error(name: String, msg: String): Unit
-```
-- Description: Logs an error message with a name prefix.
-- Parameters:
-  - `name`: `String`, The name prefix for the error message.
-  - `msg`: `String`, The error message to log.
-
-#### func info
-```
-public static func info(msg: String): Unit
-```
-- Description: Logs an info message.
-- Parameters:
-  - `msg`: `String`, The info message to log.
-
-#### func info
-```
-public static func info(name: String, msg: String): Unit
-```
-- Description: Logs an info message with a name prefix.
-- Parameters:
-  - `name`: `String`, The name prefix for the info message.
-  - `msg`: `String`, The info message to log.
-
-#### func info
-```
-public static func info(msg: Message): Unit
-```
-- Description: Logs an info message for a chat message.
-- Parameters:
-  - `msg`: `Message`, The chat message to log.
-
-#### func info
-```
-public static func info(name: String, msg: Message): Unit
-```
-- Description: Logs an info message for a chat message with a name prefix.
-- Parameters:
-  - `name`: `String`, The name prefix for the info message.
-  - `msg`: `Message`, The chat message to log.
-
-#### func info
-```
-public static func info(history: MessageList): Unit
-```
-- Description: Logs info messages for a list of chat messages.
-- Parameters:
-  - `history`: `MessageList`, The list of chat messages to log.
-
-#### func info
-```
-public static func info(name: String, history: MessageList): Unit
-```
-- Description: Logs info messages for a list of chat messages with a name prefix.
-- Parameters:
-  - `name`: `String`, The name prefix for the info messages.
-  - `history`: `MessageList`, The list of chat messages to log.
-
-#### func info
-```
-public static func info(messages: Array<Message>): Unit
-```
-- Description: Logs info messages for an array of chat messages.
-- Parameters:
-  - `messages`: `Array<Message>`, The array of chat messages to log.
-
-#### func info
-```
-public static func info(name: String, messages: Array<Message>): Unit
-```
-- Description: Logs info messages for an array of chat messages with a name prefix.
-- Parameters:
-  - `name`: `String`, The name prefix for the info messages.
-  - `messages`: `Array<Message>`, The array of chat messages to log.
-
-
-### struct LogUtils
-#### func debug
-```
-public static func debug(msg: String): Unit
-```
-- Description: Logs a debug message.
-- Parameters:
-  - `msg`: `String`, The debug message to log.
+  - `msg`: `String`, The message to be logged.
 
 #### func debug
 ```
-public static func debug(name: String, msg: String): Unit
+static func debug(msg: Message): Unit
 ```
-- Description: Logs a debug message with a name prefix.
+- Description: Logs a debug level message from a Message object.
 - Parameters:
-  - `name`: `String`, The name prefix for the debug message.
-  - `msg`: `String`, The debug message to log.
+  - `msg`: `Message`, The Message object containing the message to be logged.
 
 #### func debug
 ```
-public static func debug(ex: Exception): Unit
+static func debug(messages: MessageList): Unit
 ```
-- Description: Logs the stack trace of an exception as debug messages.
+- Description: Logs multiple debug level messages from a MessageList.
 - Parameters:
-  - `ex`: `Exception`, The exception whose stack trace is to be logged.
+  - `messages`: `MessageList`, The list of messages to be logged.
+
+#### func debug
+```
+static func debug(name: String, msg: String): Unit
+```
+- Description: Logs a debug level message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the message.
+  - `msg`: `String`, The message to be logged.
+
+#### func debug
+```
+static func debug(name: String, msg: Message): Unit
+```
+- Description: Logs a debug level message with a name prefix from a Message object.
+- Parameters:
+  - `name`: `String`, The name prefix for the message.
+  - `msg`: `Message`, The Message object containing the message to be logged.
+
+#### func debug
+```
+static func debug(name: String, messages: MessageList): Unit
+```
+- Description: Logs multiple debug level messages with a name prefix from a MessageList.
+- Parameters:
+  - `name`: `String`, The name prefix for the messages.
+  - `messages`: `MessageList`, The list of messages to be logged.
 
 #### func error
 ```
-public static func error(msg: String): Unit
+static func error(ex: Exception): Unit
 ```
-- Description: Logs an error message.
+- Description: Logs an error level message from an Exception object.
 - Parameters:
-  - `msg`: `String`, The error message to log.
+  - `ex`: `Exception`, The Exception object containing the message to be logged.
 
 #### func error
 ```
-public static func error(name: String, msg: String): Unit
+static func error(msg: String): Unit
 ```
-- Description: Logs an error message with a name prefix.
+- Description: Logs an error level message.
 - Parameters:
-  - `name`: `String`, The name prefix for the error message.
-  - `msg`: `String`, The error message to log.
+  - `msg`: `String`, The message to be logged.
+
+#### func error
+```
+static func error(name: String, msg: String): Unit
+```
+- Description: Logs an error level message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the message.
+  - `msg`: `String`, The message to be logged.
 
 #### func info
 ```
-public static func info(msg: String): Unit
+static func info(msg: String): Unit
 ```
-- Description: Logs an informational message.
+- Description: Logs an info level message.
 - Parameters:
-  - `msg`: `String`, The informational message to log.
+  - `msg`: `String`, The message to be logged.
 
 #### func info
 ```
-public static func info(name: String, msg: String): Unit
+static func info(ex: Exception): Unit
 ```
-- Description: Logs an informational message with a name prefix.
+- Description: Logs an info level message from an Exception object.
 - Parameters:
-  - `name`: `String`, The name prefix for the informational message.
-  - `msg`: `String`, The informational message to log.
+  - `ex`: `Exception`, The Exception object containing the message to be logged.
 
 #### func info
 ```
-public static func info(msg: Message): Unit
+static func info(msg: Message): Unit
 ```
-- Description: Logs a chat message as an informational message.
+- Description: Logs an info level message from a Message object.
 - Parameters:
-  - `msg`: `Message`, The chat message to log.
+  - `msg`: `Message`, The Message object containing the message to be logged.
 
 #### func info
 ```
-public static func info(name: String, msg: Message): Unit
+static func info(name: String, msg: Message): Unit
 ```
-- Description: Logs a chat message with a name prefix as an informational message.
+- Description: Logs an info level message with a name prefix from a Message object.
 - Parameters:
-  - `name`: `String`, The name prefix for the chat message.
-  - `msg`: `Message`, The chat message to log.
+  - `name`: `String`, The name prefix for the message.
+  - `msg`: `Message`, The Message object containing the message to be logged.
 
 #### func info
 ```
-public static func info(history: MessageList): Unit
+static func info(messages: MessageList): Unit
 ```
-- Description: Logs a list of chat messages as informational messages.
+- Description: Logs multiple info level messages from a MessageList.
 - Parameters:
-  - `history`: `MessageList`, The list of chat messages to log.
+  - `messages`: `MessageList`, The list of messages to be logged.
 
 #### func info
 ```
-public static func info(name: String, history: MessageList): Unit
+static func info(name: String, history: MessageList): Unit
 ```
-- Description: Logs a list of chat messages with a name prefix as informational messages.
+- Description: Logs multiple info level messages with a name prefix from a MessageList.
 - Parameters:
-  - `name`: `String`, The name prefix for the chat messages.
-  - `history`: `MessageList`, The list of chat messages to log.
+  - `name`: `String`, The name prefix for the messages.
+  - `history`: `MessageList`, The list of messages to be logged.
 
 #### func info
 ```
-public static func info(messages: Array<Message>): Unit
+static func info(messages: Array<Message>): Unit
 ```
-- Description: Logs an array of chat messages as informational messages.
+- Description: Logs multiple info level messages from an array of Message objects.
 - Parameters:
-  - `messages`: `Array<Message>`, The array of chat messages to log.
+  - `messages`: `Array<Message>`, The array of messages to be logged.
 
 #### func info
 ```
-public static func info(name: String, messages: Array<Message>): Unit
+static func info(name: String, messages: Array<Message>): Unit
 ```
-- Description: Logs an array of chat messages with a name prefix as informational messages.
+- Description: Logs multiple info level messages with a name prefix from an array of Message objects.
 - Parameters:
-  - `name`: `String`, The name prefix for the chat messages.
-  - `messages`: `Array<Message>`, The array of chat messages to log.
+  - `name`: `String`, The name prefix for the messages.
+  - `messages`: `Array<Message>`, The array of messages to be logged.
+
+#### func info
+```
+static func info(name: String, msg: String): Unit
+```
+- Description: Logs an info level message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the message.
+  - `msg`: `String`, The message to be logged.
+
+#### func trace
+```
+static func trace(messages: MessageList): Unit
+```
+- Description: Logs multiple trace level messages from a MessageList.
+- Parameters:
+  - `messages`: `MessageList`, The list of messages to be logged.
+
+#### func trace
+```
+static func trace(msg: Message): Unit
+```
+- Description: Logs a trace level message from a Message object.
+- Parameters:
+  - `msg`: `Message`, The Message object containing the message to be logged.
+
+#### func trace
+```
+static func trace(name: String, msg: String): Unit
+```
+- Description: Logs a trace level message with a name prefix.
+- Parameters:
+  - `name`: `String`, The name prefix for the message.
+  - `msg`: `String`, The message to be logged.
+
+#### func trace
+```
+static func trace(msg: String): Unit
+```
+- Description: Logs a trace level message.
+- Parameters:
+  - `msg`: `String`, The message to be logged.
 
 

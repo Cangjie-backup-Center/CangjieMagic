@@ -1,7 +1,6 @@
 ## Package tool
 - [Package tool](#package-tool)
-  - [class NativeFuncTool](#class-nativefunctool)
-    - [func addExamples](#func-addexamples)
+  - [class AgentAsTool](#class-agentastool)
     - [prop description](#prop-description)
     - [prop examples](#prop-examples)
     - [func init](#func-init)
@@ -9,7 +8,7 @@
     - [prop name](#prop-name)
     - [prop parameters](#prop-parameters)
     - [prop retType](#prop-rettype)
-  - [class RetrieverTool](#class-retrievertool)
+  - [class NativeFuncTool](#class-nativefunctool)
     - [prop description](#prop-description-1)
     - [prop examples](#prop-examples-1)
     - [func init](#func-init-1)
@@ -25,119 +24,114 @@
     - [prop enableFilter](#prop-enablefilter)
     - [func filterTool](#func-filtertool)
     - [func findTool](#func-findtool)
-    - [func getTools](#func-gettools)
     - [func init](#func-init-1)
     - [func init](#func-init-1)
+    - [prop tools](#prop-tools)
+  - [enum SubAgentMode](#enum-subagentmode)
+    - [enumeration Isolated](#enumeration-isolated)
+    - [enumeration WithContext](#enumeration-withcontext)
 
-### class NativeFuncTool
-#### func addExamples
-```
-public func addExamples(examples: Array<String>): Unit
-```
-- Description: Adds examples to the tool.
-- Parameters:
-  - `examples`: `Array<String>`, An array of example strings to add.
-
-#### prop description
-```
-public prop description: String
-```
-- Description: Gets the description of the tool.
-
-#### prop examples
-```
-public prop examples: Array<String>
-```
-- Description: Gets the examples of the tool.
-
-#### func init
-```
-public init(name!: String, description!: String, parameters!: Array<(String, String, TypeSchema)> = [], retType!: TypeSchema = TypeSchema.Str, examples!: Array<String> = [], filterable!: Bool = true, terminal!: Bool = false, execFn!: Option<ExecFn> = None)
-```
-- Description: Initializes a new instance of NativeFuncTool with the specified parameters.
-- Parameters:
-  - `name`: `String`, The name of the tool.
-  - `description`: `String`, A description of the tool.
-  - `parameters`: `Array<(String, String, TypeSchema)>`, An array of tuples representing the parameters of the tool.
-  - `retType`: `TypeSchema`, The return type schema of the tool.
-  - `examples`: `Array<String>`, An array of example strings.
-  - `filterable`: `Bool`, Indicates whether the tool is filterable.
-  - `terminal`: `Bool`, Indicates whether the tool is terminal.
-  - `execFn`: `Option<ExecFn>`, An optional execution function.
-
-#### func invoke
-```
-override public func invoke(args: HashMap<String, JsonValue>): ToolResponse
-```
-- Description: Invokes the native function with the specified arguments.
-- Parameters:
-  - `args`: `HashMap<String, JsonValue>`, A map of arguments represented as JSON values.
-
-#### prop name
-```
-public prop name: String
-```
-- Description: Gets the name of the tool.
-
-#### prop parameters
-```
-public prop parameters: Array<ToolParameter>
-```
-- Description: Gets the parameters of the tool.
-
-#### prop retType
-```
-public prop retType: TypeSchema
-```
-- Description: Gets the return type schema of the tool.
-
-
-### class RetrieverTool
+### class AgentAsTool
 #### prop description
 ```
 prop description: String
 ```
-- Description: Returns the description of the tool. If the retriever's description is empty, it returns a default description.
+- Description: Gets the description of the agent, defaults to the agent's name if description is empty
 
 #### prop examples
 ```
 prop examples: Array<String>
 ```
-- Description: Returns examples of tool usage.
+- Description: Gets the examples for the tool, returns an empty array
 
 #### func init
 ```
-init(retriever: Retriever)
+init(agent: Agent, mode!: SubAgentMode = SubAgentMode.Isolated)
 ```
-- Description: Initializes the RetrieverTool with a retriever instance.
+- Description: Initializes the AgentAsTool with an agent and a mode
 - Parameters:
-  - `retriever`: `Retriever`, The retriever instance to be used for searching.
+  - `agent`: `Agent`, The agent to be used as a tool
+  - `mode!`: `SubAgentMode`, The execution mode for the sub-agent, defaults to Isolated
 
 #### func invoke
 ```
 func invoke(args: HashMap<String, JsonValue>): ToolResponse
 ```
-- Description: Invokes the tool with the provided arguments and returns a response.
+- Description: Invokes the tool with the provided arguments
 - Parameters:
-  - `args`: `HashMap<String, JsonValue>`, The arguments for the tool, including the query to search.
+  - `args`: `HashMap<String, JsonValue>`, The arguments for the tool invocation
 
 #### prop name
 ```
 prop name: String
 ```
-- Description: Returns the name of the tool.
+- Description: Gets the name of the agent
 
 #### prop parameters
 ```
 prop parameters: Array<ToolParameter>
 ```
-- Description: Returns the parameters required by the tool.
+- Description: Gets the parameters required by the tool based on the sub-agent mode
 
 #### prop retType
 ```
 prop retType: TypeSchema
 ```
-- Description: Returns the return type schema of the tool.
+- Description: Gets the return type schema of the tool
+
+
+### class NativeFuncTool
+#### prop description
+```
+prop description: String
+```
+- Description: Gets the description of the tool.
+
+#### prop examples
+```
+prop examples: Array<String>
+```
+- Description: Gets the examples of the tool.
+
+#### func init
+```
+init(name: String, description: String, parameters: Array<(String, String, TypeSchema)>, retType: TypeSchema, examples: Array<String>, extra: HashMap<String, String>, execFn: Option<ExecFn>)
+```
+- Description: Constructor for NativeFuncTool class.
+- Parameters:
+  - `name`: `String`, Name of the tool.
+  - `description`: `String`, Description of the tool.
+  - `parameters`: `Array<(String, String, TypeSchema)>`, List of parameters for the tool.
+  - `retType`: `TypeSchema`, Return type schema of the tool.
+  - `examples`: `Array<String>`, List of examples for the tool.
+  - `extra`: `HashMap<String, String>`, Extra information for the tool.
+  - `execFn`: `Option<ExecFn>`, Optional execution function for the tool.
+
+#### func invoke
+```
+func invoke(args: HashMap<String, JsonValue>): ToolResponse
+```
+- Description: Invokes the tool with the given arguments.
+- Parameters:
+  - `args`: `HashMap<String, JsonValue>`, Arguments for the tool invocation.
+
+#### prop name
+```
+prop name: String
+```
+- Description: Gets the name of the tool.
+
+#### prop parameters
+```
+prop parameters: Array<ToolParameter>
+```
+- Description: Gets the parameters of the tool.
+
+#### prop retType
+```
+prop retType: TypeSchema
+```
+- Description: Gets the return type schema of the tool.
 
 
 ### class SimpleToolManager
@@ -151,17 +145,17 @@ override public func addTool(tool: Tool): Unit
 
 #### func addTools
 ```
-override public func addTools(tools: Array<Tool>): Unit
+override public func addTools(tools: Collection<Tool>): Unit
 ```
 - Description: Adds multiple tools to the manager.
 - Parameters:
-  - `tools`: `Array<Tool>`, An array of tools to be added.
+  - `tools`: `Collection<Tool>`, A collection of tools to be added.
 
 #### func clear
 ```
 override public func clear(): Unit
 ```
-- Description: Clears all tools from the manager.
+- Description: Removes all tools from the manager.
 
 #### func delTool
 ```
@@ -175,16 +169,16 @@ override public func delTool(tool: Tool): Unit
 ```
 override public prop enableFilter: Bool
 ```
-- Description: Gets the current filter status.
+- Description: Gets a value indicating whether tool filtering is enabled.
 
 #### func filterTool
 ```
-override public func filterTool(question: String, config: ToolSearchConfig): Array<Tool>
+override public func filterTool(question: String, filter: ToolFilter): Array<Tool>
 ```
-- Description: Filters tools based on a question and configuration.
+- Description: Filters tools based on a question and a filter.
 - Parameters:
-  - `question`: `String`, The question used for filtering tools.
-  - `config`: `ToolSearchConfig`, The configuration for tool search.
+  - `question`: `String`, The question used for filtering.
+  - `filter`: `ToolFilter`, The filter to apply to the tools.
 
 #### func findTool
 ```
@@ -194,17 +188,11 @@ override public func findTool(name: String): Option<Tool>
 - Parameters:
   - `name`: `String`, The name of the tool to find.
 
-#### func getTools
-```
-override public func getTools(): Array<Tool>
-```
-- Description: Retrieves all tools in the manager.
-
 #### func init
 ```
 public init()
 ```
-- Description: Initializes a SimpleToolManager with filter disabled by default.
+- Description: Initializes a SimpleToolManager with default settings.
 
 #### func init
 ```
@@ -213,6 +201,26 @@ public init(tools: Collection<Tool>, enableFilter: Bool = false)
 - Description: Initializes a SimpleToolManager with a collection of tools and an optional filter setting.
 - Parameters:
   - `tools`: `Collection<Tool>`, A collection of tools to be managed.
-  - `enableFilter`: `Bool`, A boolean flag to enable or disable tool filtering.
+  - `enableFilter`: `Bool`, A flag to enable or disable tool filtering. Defaults to false.
+
+#### prop tools
+```
+override public prop tools: Array<Tool>
+```
+- Description: Gets an array of all tools managed by this SimpleToolManager.
+
+
+### enum SubAgentMode
+####  Isolated
+```
+Isolated
+```
+- Description: Sub-agent executes independently without any context from the main agent
+
+####  WithContext
+```
+WithContext
+```
+- Description: Sub-agent inherits the full context (state, history, data, etc.) from the main agent
 
 

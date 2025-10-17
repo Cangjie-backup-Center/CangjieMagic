@@ -1,8 +1,9 @@
 ## Package jsonable
 - [Package jsonable](#package-jsonable)
   - [struct FieldSchema](#struct-fieldschema)
-  - [interface Jsonable](#interface-jsonable)
+  - [interface FromJsonValue<T>](#interface-fromjsonvalue<t>)
     - [func fromJsonValue](#func-fromjsonvalue)
+  - [interface Jsonable<T>](#interface-jsonable<t>)
     - [func getTypeSchema](#func-gettypeschema)
   - [class JsonableException](#class-jsonableexception)
     - [func init](#func-init)
@@ -11,6 +12,7 @@
   - [enum TypeSchema](#enum-typeschema)
     - [enumeration Arr](#enumeration-arr)
     - [enumeration Boolean](#enumeration-boolean)
+    - [enumeration Enum](#enumeration-enum)
     - [enumeration Float](#enumeration-float)
     - [enumeration Int](#enumeration-int)
     - [enumeration Obj](#enumeration-obj)
@@ -20,20 +22,22 @@
 
 ### struct FieldSchema
 
-### interface Jsonable
+### interface FromJsonValue<T>
 #### func fromJsonValue
 ```
 static func fromJsonValue(json: JsonValue): T
 ```
-- Description: Deserializes an object of type T from a JsonValue.
+- Description: Deserialize from a Json value.
 - Parameters:
-  - `json`: `JsonValue`, The JsonValue to deserialize from.
+  - `json`: `JsonValue`, The Json value to deserialize from.
 
+
+### interface Jsonable<T>
 #### func getTypeSchema
 ```
 static func getTypeSchema(): TypeSchema
 ```
-- Description: Retrieves the type schema of the generic type T.
+- Description: Get the type schema of T.
 
 
 ### class JsonableException
@@ -41,9 +45,9 @@ static func getTypeSchema(): TypeSchema
 ```
 public init(msg: String)
 ```
-- Description: Constructs a JsonableException with the specified error message.
+- Description: Initializes a new instance of JsonableException with a specified error message.
 - Parameters:
-  - `msg`: `String`, The error message describing the exception.
+  - `msg`: `String`, The error message that explains the reason for the exception.
 
 
 ### interface ToJsonValue
@@ -51,7 +55,7 @@ public init(msg: String)
 ```
 func toJsonValue(): JsonValue
 ```
-- Description: Converts the implementing object to a JsonValue.
+- Description: Converts the implementing type to a JsonValue.
 
 
 ### enum TypeSchema
@@ -61,7 +65,7 @@ Arr(TypeSchema)
 ```
 - Description: Represents an array type with elements of the specified TypeSchema.
 - Parameters:
-  - `TypeSchema`: `TypeSchema`, The type schema of the array elements.
+  - `TypeSchema`: `TypeSchema`, The schema of the array elements.
 
 ####  Boolean
 ```
@@ -69,11 +73,19 @@ Boolean
 ```
 - Description: Represents a boolean type.
 
+####  Enum
+```
+Enum(Array<String>)
+```
+- Description: Represents an enumeration type with the specified possible values.
+- Parameters:
+  - `Array<String>`: `Array<String>`, The list of possible string values for the enumeration.
+
 ####  Float
 ```
 Float
 ```
-- Description: Represents a floating-point type.
+- Description: Represents a floating-point number type.
 
 ####  Int
 ```
@@ -85,9 +97,9 @@ Int
 ```
 Obj(Array<FieldSchema>)
 ```
-- Description: Represents an object type with fields specified by an array of FieldSchema.
+- Description: Represents an object type with the specified fields.
 - Parameters:
-  - `Array<FieldSchema>`: `Array<FieldSchema>`, An array of FieldSchema defining the object's fields.
+  - `Array<FieldSchema>`: `Array<FieldSchema>`, The list of fields in the object.
 
 ####  Str
 ```
@@ -97,14 +109,14 @@ Str
 
 #### func toJsonValue
 ```
-func toJsonValue(): JsonValue
+override public func toJsonValue(): JsonValue
 ```
-- Description: Converts the TypeSchema to a JsonValue representation.
+- Description: Converts the TypeSchema to a JsonValue.
 
 #### func toString
 ```
-func toString(): String
+override public func toString(): String
 ```
-- Description: Converts the TypeSchema to a string representation.
+- Description: Converts the TypeSchema to a JSON string.
 
 

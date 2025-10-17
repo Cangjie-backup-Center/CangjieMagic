@@ -8,26 +8,26 @@
 ### class ToolLoopExecutor
 #### func asyncRun
 ```
-func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
+override public func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 ```
-- Description: Executes the agent's task asynchronously and returns a future response.
+- Description: Executes the agent task asynchronously and returns a future iterator of the response.
 - Parameters:
-  - `agent`: `Agent`, The agent to be executed.
-  - `request`: `AgentRequest`, The request containing the task details.
+  - `agent`: `Agent`, The agent to be executed asynchronously.
+  - `request`: `AgentRequest`, The request containing the details for the agent execution.
 
 #### prop name
 ```
-prop name: String
+override public prop name: String
 ```
 - Description: Returns the name of the executor as 'tool-loop'.
 
 #### func run
 ```
-func run(agent: Agent, request: AgentRequest): AgentResponse
+override public func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
-- Description: Executes the agent's task synchronously and returns the response.
+- Description: Executes the agent task synchronously and returns the response.
 - Parameters:
   - `agent`: `Agent`, The agent to be executed.
-  - `request`: `AgentRequest`, The request containing the task details.
+  - `request`: `AgentRequest`, The request containing the details for the agent execution.
 
 

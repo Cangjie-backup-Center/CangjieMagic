@@ -12,9 +12,13 @@ import std.fs.Path
 
 @agent[
     model: "ark:deepseek-v3-250324",
-    executor: "naive",
+    executor: "naive"
 ]
 class DocAgent {
+    init() {
+        this.model.maxTokens = 8192
+    }
+
     @prompt(
         """
         # Background

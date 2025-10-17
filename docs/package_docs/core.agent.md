@@ -4,6 +4,7 @@
     - [func asyncChat](#func-asyncchat)
     - [func chat](#func-chat)
     - [prop description](#prop-description)
+    - [prop eventHandlerManager](#prop-eventhandlermanager)
     - [prop executor](#prop-executor)
     - [prop interceptor](#prop-interceptor)
     - [prop memory](#prop-memory)
@@ -13,14 +14,17 @@
     - [prop systemPrompt](#prop-systemprompt)
     - [prop temperature](#prop-temperature)
     - [prop toolManager](#prop-toolmanager)
+  - [class AgentCancelException](#class-agentcancelexception)
+    - [func init](#func-init)
   - [interface AgentExecution](#interface-agentexecution)
     - [prop chatRound](#prop-chatround)
+    - [prop events](#prop-events)
+    - [func markCancellation](#func-markcancellation)
     - [prop messages](#prop-messages)
     - [prop retrievalInfo](#prop-retrievalinfo)
     - [func setAnswer](#func-setanswer)
-    - [prop verboseInfo](#prop-verboseinfo)
   - [class AgentExecutionException](#class-agentexecutionexception)
-    - [func init](#func-init)
+    - [func init](#func-init-1)
   - [interface AgentExecutor](#interface-agentexecutor)
     - [func asyncRun](#func-asyncrun)
     - [prop name](#prop-name-1)
@@ -32,21 +36,26 @@
     - [func operator []](#func-operator-[])
   - [class AgentRequest](#class-agentrequest)
     - [let conversation](#let-conversation)
+    - [let image](#let-image)
     - [func init](#func-init-1)
     - [let maxTool](#let-maxtool)
     - [let question](#let-question)
     - [let verbose](#let-verbose)
-  - [struct AgentResponse](#struct-agentresponse)
-    - [let content](#let-content)
+  - [class AgentResponse](#class-agentresponse)
+    - [prop content](#prop-content)
     - [prop execution](#prop-execution)
     - [func init](#func-init-1)
     - [func init](#func-init-1)
-  - [class AsyncAgentResponse](#class-asyncagentresponse)
-    - [prop content](#prop-content)
-    - [prop execution](#prop-execution-1)
-    - [func init](#func-init-1)
-    - [func init](#func-init-1)
     - [func next](#func-next)
+    - [prop status](#prop-status)
+  - [class AsyncAgentResponse](#class-asyncagentresponse)
+    - [func addFinishFn](#func-addfinishfn)
+    - [func cancel](#func-cancel)
+    - [prop content](#prop-content-1)
+    - [func init](#func-init-1)
+    - [func init](#func-init-1)
+    - [func next](#func-next-1)
+    - [prop status](#prop-status-1)
   - [class Interceptor](#class-interceptor)
     - [func init](#func-init-1)
   - [enum InterceptorMode](#enum-interceptormode)
@@ -59,7 +68,7 @@
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- Description: Query the agent and get the answer. It returns the agent reply in stream
+- Description: Query the agent and get the answer. It returns the agent reply in stream.
 - Parameters:
   - `request`: `AgentRequest`, The request to the agent
 
@@ -67,7 +76,7 @@ func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- Description: Query the agent and get the answer. It may throw AgentExecutionException
+- Description: Query the agent and get the answer. It may throw AgentExecutionException.
 - Parameters:
   - `request`: `AgentRequest`, The request to the agent
 
@@ -76,6 +85,12 @@ func chat(request: AgentRequest): AgentResponse
 prop description: String
 ```
 - Description: Functionality description of the agent
+
+#### prop eventHandlerManager
+```
+prop eventHandlerManager: Option<Object>
+```
+- Description: The agent event handler manager, since there is cycle dependency between agent and event handler manager, we use Object instead of EventHandlerManager.
 
 #### prop executor
 ```
@@ -132,12 +147,34 @@ prop toolManager: ToolManager
 - Description: Tools the agent can use
 
 
+### class AgentCancelException
+#### func init
+```
+init(reason!: String = "Cancelled by user")
+```
+- Description: Initializes a new instance of AgentCancelException with the specified reason.
+- Parameters:
+  - `reason`: `String`, The reason for the cancellation, defaults to "Cancelled by user".
+
+
 ### interface AgentExecution
 #### prop chatRound
 ```
 prop chatRound: ChatRound
 ```
 - Description: The current chat round, including the question, internal assistant execution messages, and the answer
+
+#### prop events
+```
+prop events: EventStream
+```
+- Description: Only access this field when setting `verbose: true` in AgentRequest
+
+#### func markCancellation
+```
+func markCancellation(): Unit
+```
+- Description: Set the cancellation mark
 
 #### prop messages
 ```
@@ -159,21 +196,15 @@ func setAnswer(answer: String): Unit
 - Parameters:
   - `answer`: `String`, The answer to set
 
-#### prop verboseInfo
-```
-prop verboseInfo: Iterator<String>
-```
-- Description: Only access this field when setting verbose: true in AgentRequest
-
 
 ### class AgentExecutionException
 #### func init
 ```
 init(msg: String)
 ```
-- Description: Initializes a new instance of the AgentExecutionException class with a specified error message.
+- Description: Constructor for AgentExecutionException
 - Parameters:
-  - `msg`: `String`, The error message that explains the reason for the exception.
+  - `msg`: `String`, Exception message
 
 
 ### interface AgentExecutor
@@ -181,25 +212,25 @@ init(msg: String)
 ```
 func asyncRun(agent: Agent, request: AgentRequest): AsyncAgentResponse
 ```
-- Description: Runs the agent asynchronously with the given request and returns a response
+- Description: Executes the agent asynchronously with the given request.
 - Parameters:
-  - `agent`: `Agent`, The agent to be executed
-  - `request`: `AgentRequest`, The request to be processed by the agent
+  - `agent`: `Agent`, The agent to be executed.
+  - `request`: `AgentRequest`, The request to be processed by the agent.
 
 #### prop name
 ```
 prop name: String
 ```
-- Description: Name of the executor
+- Description: The name of the agent executor.
 
 #### func run
 ```
 func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
-- Description: Runs the agent with the given request and returns a response
+- Description: Executes the agent synchronously with the given request.
 - Parameters:
-  - `agent`: `Agent`, The agent to be executed
-  - `request`: `AgentRequest`, The request to be processed by the agent
+  - `agent`: `Agent`, The agent to be executed.
+  - `request`: `AgentRequest`, The request to be processed by the agent.
 
 
 ### interface AgentGroup
@@ -207,34 +238,34 @@ func run(agent: Agent, request: AgentRequest): AgentResponse
 ```
 func asyncChat(request: AgentRequest): AsyncAgentResponse
 ```
-- Description: Asynchronously chat with the agent group using a request
+- Description: Processes a chat request asynchronously and returns an async agent response.
 - Parameters:
-  - `request`: `AgentRequest`, The request to send to the agent group
+  - `request`: `AgentRequest`, The chat request to be processed asynchronously.
 
 #### func chat
 ```
 func chat(request: AgentRequest): AgentResponse
 ```
-- Description: Chat with the agent group using a request
+- Description: Processes a chat request and returns an agent response.
 - Parameters:
-  - `request`: `AgentRequest`, The request to send to the agent group
+  - `request`: `AgentRequest`, The chat request to be processed.
 
 #### func chat
 ```
 func chat(request: AgentRequest, maxRound!: Int64): AgentResponse
 ```
-- Description: Chat with the agent group using a request and a maximum number of rounds
+- Description: Processes a chat request with a specified maximum number of rounds and returns an agent response.
 - Parameters:
-  - `request`: `AgentRequest`, The request to send to the agent group
-  - `maxRound!`: `Int64`, The maximum number of rounds for the chat
+  - `request`: `AgentRequest`, The chat request to be processed.
+  - `maxRound!`: `Int64`, The maximum number of rounds for the chat.
 
 #### func operator operator []
 ```
 operator func [](memberName: String): Agent
 ```
-- Description: Find the agent according to its name
+- Description: Finds the agent according to its name.
 - Parameters:
-  - `memberName`: `String`, The name of the agent to find
+  - `memberName`: `String`, The name of the agent to find.
 
 
 ### class AgentRequest
@@ -244,13 +275,20 @@ let conversation: Option<Conversation>
 ```
 - Description: Conversation between the user and agent
 
+#### let image
+```
+let image: Option<String>
+```
+- Description: The user input question for using VLM
+
 #### func init
 ```
-public init(question: String, conversation!: Option<Conversation> = None, verbose!: Bool = false, maxTool!: Int64 = 10)
+public init(question: String, image!: Option<String> = None, conversation!: Option<Conversation> = None, verbose!: Bool = false, maxTool!: Int64 = 10)
 ```
 - Description: Constructor for AgentRequest
 - Parameters:
   - `question`: `String`, The current user question
+  - `image`: `Option<String>`, The user input question for using VLM
   - `conversation`: `Option<Conversation>`, Conversation between the user and agent
   - `verbose`: `Bool`, Dump internal execution information
   - `maxTool`: `Int64`, The maximum number of tools that can be used when enable tool filter
@@ -274,83 +312,113 @@ let verbose: Bool
 - Description: Dump internal execution information
 
 
-### struct AgentResponse
-#### let content
+### class AgentResponse
+#### prop content
 ```
-let content: String
+open public prop content: String
 ```
-- Description: The execution result
+- Description: The content of the agent response
 
 #### prop execution
 ```
-prop execution: AgentExecution
+public prop execution: AgentExecution
 ```
-- Description: Gets the execution details
+- Description: The execution details of the agent
 
 #### func init
 ```
-public init(content: String)
+public init(status: AgentResponseStatus, content: String)
 ```
-- Description: Initializes the AgentResponse with content
+- Description: Initializes the agent response with status and content
 - Parameters:
-  - `content`: `String`, The execution result
+  - `status`: `AgentResponseStatus`, The status of the agent response
+  - `content`: `String`, The content of the agent response
 
 #### func init
 ```
-public init(content: String, execution!: AgentExecution)
+public init(status: AgentResponseStatus, content: String, execution: AgentExecution)
 ```
-- Description: Initializes the AgentResponse with content and execution details
+- Description: Initializes the agent response with status, content, and execution details
 - Parameters:
-  - `content`: `String`, The execution result
-  - `execution`: `AgentExecution`, The execution details
+  - `status`: `AgentResponseStatus`, The status of the agent response
+  - `content`: `String`, The content of the agent response
+  - `execution`: `AgentExecution`, The execution details of the agent
+
+#### func next
+```
+open override public func next(): Option<String>
+```
+- Description: Returns the next item in the iterator, which is None by default
+
+#### prop status
+```
+open public prop status: AgentResponseStatus
+```
+- Description: The status of the agent response
 
 
 ### class AsyncAgentResponse
+#### func addFinishFn
+```
+public func addFinishFn(fn: (Bool) -> Unit)
+```
+- Description: Sets the callback function to be called when the execution is finished.
+- Parameters:
+  - `fn`: `(Bool) -> Unit`, A function that takes a boolean indicating whether the response succeeded.
+
+#### func cancel
+```
+public func cancel(blocking: Bool): Unit
+```
+- Description: Cancels the agent execution. If blocking is true, waits until the execution is stopped.
+- Parameters:
+  - `blocking`: `Bool`, If true, waits until the execution is stopped.
+
 #### prop content
 ```
-public prop content: String
+override public prop content: String
 ```
-- Description: The execution result. This is a synchronous method, which will wait until the executor completes
-
-#### prop execution
-```
-prop execution: AgentExecution
-```
-- Description: The asynchronous execution response from an agent executor
+- Description: The final result of the agent execution. This is a synchronous method that waits until the executor completes.
 
 #### func init
 ```
-public init(chunks: Iterator<String>)
+init(chunks: Iterator<String>)
 ```
-- Description: Constructor for AsyncAgentResponse with chunks
+- Description: Initializes the AsyncAgentResponse with the given chunks.
 - Parameters:
-  - `chunks`: `Iterator<String>`, Iterator of strings representing chunks of data
+  - `chunks`: `Iterator<String>`, An iterator of strings representing the chunks of the response.
 
 #### func init
 ```
-public init(chunks: Iterator<String>, execution: AgentExecution)
+init(chunks: Iterator<String>, execution: AgentExecution)
 ```
-- Description: Constructor for AsyncAgentResponse with chunks and execution
+- Description: Initializes the AsyncAgentResponse with the given chunks and execution.
 - Parameters:
-  - `chunks`: `Iterator<String>`, Iterator of strings representing chunks of data
-  - `execution`: `AgentExecution`, Agent execution context
+  - `chunks`: `Iterator<String>`, An iterator of strings representing the chunks of the response.
+  - `execution`: `AgentExecution`, The agent execution associated with the response.
 
 #### func next
 ```
 override public func next(): Option<String>
 ```
-- Description: Gets the next chunk of data
+- Description: Retrieves the next chunk of the response. If the execution is finished, returns None.
+
+#### prop status
+```
+override public prop status: AgentResponseStatus
+```
+- Description: The status of the response. This is a synchronous method that waits until the executor completes.
 
 
 ### class Interceptor
 #### func init
 ```
-init(agent: Agent, mode: InterceptorMode = InterceptorMode.Always)
+init(agent: Agent, mode!: InterceptorMode = InterceptorMode.Always)
 ```
 - Description: Initializes a new Interceptor instance with the specified agent and mode.
 - Parameters:
-  - `agent`: `Agent`, The agent to be used by the interceptor.
-  - `mode`: `InterceptorMode`, The mode in which the interceptor operates. Defaults to InterceptorMode.Always.
+  - `agent`: `Agent`, The agent to be intercepted.
+  - `mode`: `InterceptorMode`, The interception mode, defaults to InterceptorMode.Always.
 
 
 ### enum InterceptorMode
@@ -366,7 +434,8 @@ Conditional((AgentRequest) -> Bool)
 ```
 - Description: Intercept the request when the condition is true
 - Parameters:
-  - `condition`: `(AgentRequest) -> Bool`, The condition function to determine interception
+  - `AgentRequest`: `AgentRequest`, Request to evaluate
+  - `Bool`: `Bool`, Condition result
 
 ####  Periodic
 ```
@@ -374,6 +443,6 @@ Periodic(Int64)
 ```
 - Description: Intercept the request periodically
 - Parameters:
-  - `period`: `Int64`, The interval period for interception
+  - `Int64`: `Int64`, Period interval
 
 

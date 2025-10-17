@@ -12,30 +12,30 @@
 ```
 func close(): Unit
 ```
-- Description: Closes the storage connection
+- Description: Closes the LocalStorage interface.
 
 #### prop collection
 ```
 prop collection: String
 ```
-- Description: Represents the collection name
+- Description: Represents the collection property of the LocalStorage interface.
 
 #### func commit
 ```
 func commit(): Unit
 ```
-- Description: Commits changes to the storage
+- Description: Commits the current state of the LocalStorage.
 
 #### func reset
 ```
 func reset(): Unit
 ```
-- Description: Resets the storage to its initial state
+- Description: Resets the LocalStorage interface to its initial state.
 
 #### prop workspace
 ```
 prop workspace: String
 ```
-- Description: Represents the workspace path
+- Description: Represents the workspace property of the LocalStorage interface.
 
 
