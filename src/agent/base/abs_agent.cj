@@ -78,7 +78,7 @@ public abstract class AbsAgent <: Agent {
             AgentOp.handle(event: AgentEndEvent(this, request, resp))
             return resp
         } catch (ex: AgentCancelException) {
-            LogUtils.info("Agent execution cancelled by user")
+            LogUtils.info("Agent execution cancelled by user. ${ex.reason}")
             return AgentResponse(AgentResponseStatus.Cancelled, ex.reason)
         } catch (ex: Exception) {
             AgentOp.handle(event: AgentEndEvent(this, request, None))

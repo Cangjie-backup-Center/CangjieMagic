@@ -121,6 +121,9 @@ private class Transformer <: Visitor {
                     throw DslException("Invalid token ${token.value} in the execution tool operation.")
                 }
             }
+            if (toolIds.isEmpty()) {
+                throw DslException("No tool ids are provided in the execution tool operation.")
+            }
             callExpr.arguments[0].expr = ArrayLiteral(quote([$(joinTokens(toolIds, Token(TokenKind.COMMA)))]))
             breakTraverse()
         }
