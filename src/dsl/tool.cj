@@ -106,6 +106,21 @@ public macro tool(attrTokens: Tokens, input: Tokens): Tokens {
     return content
 }
 
+public macro tool(input: Tokens): Tokens {
+    let attr = ToolAttr()
+    if (insideParentContext("agent")) {
+        attr.insideAgent = true
+    }
+    if (insideParentContext("toolset")) {
+        attr.insideToolset = true
+    }
+    let content = transformTool(input, attr)
+    if (attr.dump) {
+        printTokens(content)
+    }
+    return content
+}
+
 private func transformTool(input: Tokens, attr: ToolAttr): Tokens {
     let funcDecl: FuncDecl = parseFuncDecl(input)
     let funcName = funcDecl.identifier.value
@@ -119,6 +134,9 @@ private func transformTool(input: Tokens, attr: ToolAttr): Tokens {
     let toolImplFuncName = newIdentifierToken("${TOOL_IMPL_PREFIX}${funcName}")
     // If `@tool` defines an internal tool, we transform it as a prop
     if (attr.insideAgent || attr.insideToolset) {
+        if (isStaticFunc(funcDecl)) {
+            throw DslException("Static function is not allowed as a tool.")
+        }
         // If the tool is defined inside an agent or toolset, its modifier is always `public`
         let modifiers = if (attr.insideToolset) {
              modifiersWithPublic(funcDecl)
@@ -252,4 +270,13 @@ private func modifiersWithPublic(decl: Decl): ArrayList<Modifier> {
         modifiers.add(Modifier(Token(TokenKind.PUBLIC)))
     }
     return modifiers
+}
+
+private func isStaticFunc(funcDecl: FuncDecl): Bool {
+    for (modifier in funcDecl.modifiers) {
+        if (modifier.keyword.kind == TokenKind.STATIC) {
+            return true
+        }
+    }
+    return false
 }

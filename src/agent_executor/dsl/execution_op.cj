@@ -417,6 +417,9 @@ public struct ExecutionOpSet {
             if (state.done) {
                 return state
             }
+            if (onCases.isEmpty()) {
+                throw AgentExecutionException("No cases are provided")
+            }
             for (c in onCases) {
                 if (c.default == true) {
                     LogUtils.info(state.task.agent.name, "DEFAULT CASE")
