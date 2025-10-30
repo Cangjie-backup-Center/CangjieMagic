@@ -94,14 +94,21 @@ foreign {
 unsafe func convertToUtf8(wideStr: CPointer<UInt16>): String {
     let NULL = CPointer<Unit>()
     let CP_UTF8: UIntNative = 65001
-    // Compute the length of UTF8 bytes
-    let len = WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, CPointer<Byte>(), 0, NULL, NULL)
+    // Compute the length of UTF8 bytes (including null terminator)
+    let lenWithNull = WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, CPointer<Byte>(), 0, NULL, NULL)
+    // The actual string length without null terminator
+    let len = lenWithNull - 1
+
+    if (len <= 0) {
+        return ""
+    }
+
     // Allocate memory
-    let utf8bytes = LibC.malloc<Byte>(count: Int64(len + 1))
+    let utf8bytes = LibC.malloc<Byte>(count: Int64(lenWithNull))
     try {
         // Convert to UTF8 bytes
-        WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, utf8bytes, len, NULL, NULL)
-        // Convert to String
+        WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, utf8bytes, lenWithNull, NULL, NULL)
+        // Convert to String, excluding the null terminator
         return String.fromUtf8(
             Array<Byte>(Int64(len), { i => utf8bytes.read(i) })
         )
