@@ -8,6 +8,7 @@ import std.ast.*
 
 private class ToolsetAttr <: Attr {
     private static let ATTR_NAMES = [
+        "tools",
         "dump"
     ]
 
@@ -19,6 +20,22 @@ private class ToolsetAttr <: Attr {
     var isClass = false
 
     let internalTools = ArrayList<String>()
+
+    private var _tools: Option<Array<AgentToolAttr>> = None
+    prop externalTools: Array<AgentToolAttr> {
+        get() {
+            if (let Some(tokens) <- getTokens("tools")) {
+                let result = ArrayList<AgentToolAttr>()
+                for (toolTokens in ArrayParser(tokens).parseArrayOfTokens()) {
+                    result.add(AgentToolAttr.parse(toolTokens))
+                }
+                _tools = result.toArray()
+                return _tools.getOrThrow()
+            } else {
+                return []
+            }
+        }
+    }
 
     static func parse(attrTokens: Tokens): ToolsetAttr {
         let map = AttrParser(attrTokens).parseAttr(
@@ -108,12 +125,16 @@ private func transformToolsetType(typeDecl: Decl, superTypes: ArrayList<TypeNode
         Token(TokenKind.STRUCT)
     }
 
-    let toolNames = joinTokens(
-        attr.internalTools |>
-            map { name: String => newIdentifierToken(name) } |>
-            collectArray,
-        Token(TokenKind.COMMA)
-    )
+    let toolNames = ArrayList<Token>(attr.internalTools.size, { i =>
+        newIdentifierToken(attr.internalTools[i])
+    })
+    for (toolAttr in attr.externalTools) {
+        match (toolAttr) {
+            case AgentToolAttr.NativeFuncTool(token) =>
+                toolNames.add(token)
+            case _ => throw DslException("Invalid tool for @toolset. Only native func tool is supported.")
+        }
+    }
 
     let toolIdTokens = Tokens()
     for (name in attr.internalTools) {
@@ -128,7 +149,7 @@ private func transformToolsetType(typeDecl: Decl, superTypes: ArrayList<TypeNode
             $(body.decls)
             public override prop tools: Array<Tool> {
                 get() {
-                    [ $toolNames ]
+                    [ $( joinTokens(toolNames, Token(TokenKind.COMMA)) ) ]
                 }
             }
             $toolIdTokens
