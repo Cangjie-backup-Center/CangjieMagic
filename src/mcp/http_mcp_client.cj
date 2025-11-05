@@ -28,7 +28,6 @@ public class HttpMCPClient <: AbsMCPClient {
 
     // Session management
     private var sessionId: Option<String> = None
-    private var sessionCreatedAt: Option<DateTime> = None
     private var lastActivity: DateTime
 
     // Request management
@@ -64,6 +63,15 @@ public class HttpMCPClient <: AbsMCPClient {
         let result = this.sendRequest(req)
         if (!result.isSuccess()) {
             return false
+        }
+
+        // If session ID not set, extract from response header
+        if (this.sessionId.isNone()) {
+            if (let Some(sessionId) <- result.header.getFirst("mcp-session-id")) {
+                this.sessionId = sessionId
+            } else if (let Some(sessionId) <- result.header.getFirst("Mcp-Session-Id")) {
+                this.sessionId = sessionId
+            }
         }
 
         // Handle responses
@@ -161,7 +169,6 @@ public class HttpMCPClient <: AbsMCPClient {
 
         // Clear session data
         this.sessionId = None
-        this.sessionCreatedAt = None
         this.messageQueue.clear()
     }
 
@@ -178,10 +185,6 @@ public class HttpMCPClient <: AbsMCPClient {
     // HTTP-specific session initialization
     private func initializeHttpSession(): Unit {
         LogUtils.info("Initializing HTTP MCP client session for endpoint: ${this._initParams.url}")
-
-        // Simulate session creation
-        this.sessionId = Some("http-session-${DateTime.now().nanosecond}")
-        this.sessionCreatedAt = Some(DateTime.now())
 
         let initRequest = InitialRequest(
             params: InitialParams(
@@ -216,37 +219,12 @@ public class HttpMCPClient <: AbsMCPClient {
 /**
  * Utility class for HTTP MCP operations
  */
-public class HttpMCPClientUtils {
+private class HttpMCPClientUtils {
     /**
      * Validate MCP endpoint URL format
      */
     public static func validateEndpoint(url: String): Bool {
         return url.startsWith("http://") || url.startsWith("https://")
-    }
-
-    /**
-     * Generate secure session ID for HTTP MCP client
-     */
-    public static func generateSessionId(): String {
-        let timestamp = DateTime.now().nanosecond
-        let random = (timestamp * 7) % 1000000
-        return "http-mcp-${timestamp}-${random}"
-    }
-
-    /**
-     * Create default headers for HTTP MCP requests
-     */
-    public static func createDefaultHeaders(sessionId: Option<String>): HashMap<String, String> {
-        let headers = HashMap<String, String>()
-        headers.add("Content-Type", "application/json")
-        headers.add("Accept", "application/json, text/event-stream")
-        headers.add("User-Agent", "Cangjie-Magic-HTTP-MCP-Client/1.0")
-
-        if (let Some(sid) <- sessionId) {
-            headers.add("Mcp-Session-Id", sid)
-        }
-
-        return headers
     }
 
     /**
