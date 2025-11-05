@@ -233,7 +233,7 @@ protected struct HttpUtilsImpl {
         // And required headers
         var status = 200
         let header = HttpHeaders()
-        let requiredHeaders = HashSet(["content-type"])
+        let requiredHeaders = HashSet(["content-type", "mcp-session-id"])
 
         while (let Some(line) <- errReader.readln()) {
             if (line.startsWith("< HTTP/")) {
