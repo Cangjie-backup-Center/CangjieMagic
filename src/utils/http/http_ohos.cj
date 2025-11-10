@@ -23,7 +23,7 @@ private func buildRequestOptions(method: String, header: HashMap<String, String>
             extraData: HttpData.STRING_DATA(b.toJsonString()),
             expectDataType: HttpDataType.STRING,
             header: header,
-            readTimeout: UInt32(Config.httpReadTimeout),
+            readTimeout: UInt32(Config.httpReadWriteTimeout),
             connectTimeout: UInt32(Config.httpConnectTimeout),
         )
     } else {
@@ -31,7 +31,7 @@ private func buildRequestOptions(method: String, header: HashMap<String, String>
             method: m,
             expectDataType: HttpDataType.STRING,
             header: header,
-            readTimeout: UInt32(Config.httpReadTimeout),
+            readTimeout: UInt32(Config.httpReadWriteTimeout),
             connectTimeout: UInt32(Config.httpConnectTimeout),
         )
     }
@@ -60,6 +60,7 @@ protected struct HttpUtilsImpl {
                         match (r.result) {
                             case STRING_DATA(value) => queue.enqueue(value)
                             case ARRAY_DATA(value) => queue.enqueue(String.fromUtf8(value))
+                            case _ => throw UnsupportedException("Unsupported http response type")
                         }
                     }
                     httpRequest.destroy()

@@ -128,21 +128,21 @@ extend<T> Array<T> <: Jsonable<Array<T>> where T <: Jsonable<T> {
     }
 }
 
-extend<T> ArrayList<T> <: Jsonable<ArrayList<T>> where T <: Jsonable<T> {
-    public static func getTypeSchema(): TypeSchema {
-        return TypeSchema.Arr(T.getTypeSchema())
-    }
+//------------------------------------------------------------------------
 
+extend<T> ArrayList<T> <: FromJsonValue<ArrayList<T>> where T <: FromJsonValue<T> {
     public static func fromJsonValue(json: JsonValue): ArrayList<T> {
         let jsArr = JsonUtils.asJsonArray(json).getOrThrow({
-                => JsonableException("Convert to Array error. Value: ${json.toJsonString()}")
+                => JsonableException("Convert to ArrayList error. Value: ${json.toJsonString()}")
         })
         let arr = jsArr.getItems() |>
                   map { item: JsonValue => T.fromJsonValue(item) } |>
                   collectArray
         return ArrayList<T>(arr)
     }
+}
 
+extend<T> ArrayList<T> <: ToJsonValue where T <: ToJsonValue {
     public func toJsonValue(): JsonValue {
         return JsonArray(
             this.iterator() |>
@@ -151,6 +151,14 @@ extend<T> ArrayList<T> <: Jsonable<ArrayList<T>> where T <: Jsonable<T> {
         )
     }
 }
+
+extend<T> ArrayList<T> <: Jsonable<ArrayList<T>> where T <: Jsonable<T> {
+    public static func getTypeSchema(): TypeSchema {
+        return TypeSchema.Arr(T.getTypeSchema())
+    }
+}
+
+//------------------------------------------------------------------------
 
 extend<T> Option<T> <: Jsonable<Option<T>> where T <: Jsonable<T> {
     public static func getTypeSchema(): TypeSchema {

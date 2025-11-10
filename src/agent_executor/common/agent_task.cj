@@ -437,7 +437,7 @@ public open class AgentTask {
             case SubAgentMode.WithContext =>
                 // The sub-agent inherits the full context from the parent agent
                 //    conversation: None, // Conversation is not inherited?
-                subRequest.parentContext = this.execution.stepMessages.clone()
+                subRequest.parentContext = this.execution.steps
             case SubAgentMode.Isolated =>
                 () // The sub-agent executes independently without any context from the main agent
         }
@@ -469,9 +469,16 @@ public open class AgentTask {
     /**
      * Call the notify event handler
      */
-    protected func notify(tag: String, content: String): Unit {
+    protected func notify(tag: Tag, content: String): Unit {
         if (this.request.verbose) {
             AgentOp.handle(event: NotifyEvent(this.agent, tag, content), forRequest: this.request)
         }
+    }
+
+    /**
+     * Handle the agent step event
+     */
+    protected func handleAgentStepEvent(): Unit {
+        AgentOp.handle(event: AgentStepEvent(this.agent, this.request, this.execution.stepMessages))
     }
 }

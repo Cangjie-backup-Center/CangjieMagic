@@ -3,12 +3,12 @@
  */
 package magic.agent_executor.react
 
+import magic.agent_executor.common.*
 import magic.core.agent.*
 import magic.core.rag.RetrieverMode
-import magic.log.LogUtils
+import magic.core.message.WithTag
 import magic.config.Config
-import magic.parser.WithTag
-import magic.agent_executor.common.*
+import magic.log.LogUtils
 
 public class ReactExecutor <: AgentExecutor {
     public ReactExecutor(private let loop!: Int64 = Config.maxReactNumber) {}
@@ -28,6 +28,7 @@ public class ReactExecutor <: AgentExecutor {
                     LogUtils.info("Task stopped: ${stopInfo.reason}")
                     return AgentResponse(AgentResponseStatus.Success, stopInfo.result, execution: task.execution)
                 }
+                task.handleAgentStepEvent()
             }
             let answer = task.summarize()
             return AgentResponse(AgentResponseStatus.Success, answer, execution: task.execution)
@@ -50,6 +51,7 @@ public class ReactExecutor <: AgentExecutor {
                         LogUtils.info("Task stopped: ${stopInfo.reason}")
                         return AsyncAgentResponse([stopInfo.result].iterator(), execution: task.execution)
                     }
+                    task.handleAgentStepEvent()
                 }
                 LogUtils.info("Exceed the max react loop")
                 return task.asyncSummarize()

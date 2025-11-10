@@ -127,13 +127,13 @@ public abstract class AbsAgent <: Agent {
                 let schema = T.getTypeSchema()
                 let userMsg = Message.user("Output does not follow the type schema: ${schema}")
                 LogUtils.info(this.name, userMsg)
-                messageList.addMessage(userMsg)
+                messageList.add(userMsg)
                 // Continue to let the model repair the output
                 let msg = AgentOp.chatLLM(this, messageList, forRequest: request).getOrThrow({ =>
                     AgentExecutionException("Fail to get chat model response")
                 }).message
                 LogUtils.info(this.name, msg)
-                messageList.addMessage(msg)
+                messageList.add(msg)
                 answer = msg.content
                 resp.execution.setAnswer(answer)
             }

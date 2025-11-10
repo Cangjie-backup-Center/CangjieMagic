@@ -4,7 +4,7 @@
 package magic.agent_executor.tool_loop
 
 import magic.core.agent.*
-import magic.core.message.{Message, MessageList}
+import magic.core.message.{Message, MessageList, Tag, WithTag}
 import magic.core.model.{ChatRequest}
 import magic.config.Config
 import magic.agent.base.AgentOp
@@ -12,7 +12,6 @@ import magic.agent_executor.common.{AgentTask, PromptBuilder, FutureIteratorWrap
 import magic.agent_executor.dsl.{ExecutionOpSet, ExecutionState}
 import magic.log.LogUtils
 import magic.model.ModelUtils
-import magic.parser.{Tag, WithTag}
 import magic.prompt.Template
 import magic.tool.NativeFuncTool
 import magic.interaction.{AgentStartEvent, AgentEndEvent}
@@ -56,6 +55,7 @@ public class ToolLoopExecutor <: AgentExecutor {
                     LogUtils.info("Task stopped: ${stopInfo.reason}")
                     return stopInfo.result
                 }
+                task.handleAgentStepEvent()
             }
             LogUtils.info("Exceed the max loop")
             state = ExecutionOpSet.answer(state)

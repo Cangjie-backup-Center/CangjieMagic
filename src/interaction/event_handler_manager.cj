@@ -24,6 +24,7 @@ public type ChatModelEndEventHandler = (ChatModelEndEvent) -> Unit
 public type ChatModelFailureEventHandler = (ChatModelFailureEvent) -> EventResponse<ChatResponse>
 public type AgentStartEventHandler = (AgentStartEvent) -> EventResponse<AgentResponse>
 public type AgentEndEventHandler = (AgentEndEvent) -> Unit
+public type AgentStepEventHandler = (AgentStepEvent) -> Unit
 public type SubAgentStartEventHandler = (SubAgentStartEvent) -> EventResponse<AgentResponse>
 public type SubAgentEndEventHandler = (SubAgentEndEvent) -> Unit
 public type AgentTimeoutEventHandler = (AgentTimeoutEvent) -> Unit
@@ -205,6 +206,22 @@ public class EventHandlerManager {
     }
 
 
+    // Handler for AgentStepEvent events
+    private let agentStepEventHandlers = ArrayList<AgentStepEventHandler>()
+
+    // Add addHandler method
+    public func addHandler(handler: AgentStepEventHandler): Unit {
+        this.agentStepEventHandlers.add(handler)
+    }
+
+    // Add handle method
+    protected func handle(evt: AgentStepEvent): Unit {
+        for (handler in this.agentStepEventHandlers) {
+           handler(evt)
+       }
+    }
+
+
     // Handler for SubAgentStartEvent events
     private let subAgentStartEventHandlers = ArrayList<SubAgentStartEventHandler>()
 
@@ -303,6 +320,7 @@ public class EventHandlerManager {
         this.chatModelFailureEventHandlers.add(all: another.chatModelFailureEventHandlers)
         this.agentStartEventHandlers.add(all: another.agentStartEventHandlers)
         this.agentEndEventHandlers.add(all: another.agentEndEventHandlers)
+        this.agentStepEventHandlers.add(all: another.agentStepEventHandlers)
         this.subAgentStartEventHandlers.add(all: another.subAgentStartEventHandlers)
         this.subAgentEndEventHandlers.add(all: another.subAgentEndEventHandlers)
         this.agentTimeoutEventHandlers.add(all: another.agentTimeoutEventHandlers)

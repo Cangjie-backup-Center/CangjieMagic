@@ -4,6 +4,7 @@
 package magic.parser
 
 import magic.log.LogUtils
+import magic.core.message.{Tag, WithTag}
 
 import std.collection.concurrent.LinkedBlockingQueue
 
@@ -37,7 +38,7 @@ protected class TagChannel <: Iterator<String> {
         this.queue.add("")
     }
 
-    protected func put(msg: String, tag: String): Unit {
+    protected func put(msg: String, tag: Tag): Unit {
         this.put(msg.withTag(tag))
     }
 

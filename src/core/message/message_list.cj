@@ -5,7 +5,7 @@ package magic.core.message
 
 import magic.jsonable.{FromJsonValue, ToJsonValue, JsonUtils}
 
-import std.collection.{ArrayList, map, collectArray}
+import std.collection.{ArrayList, LinkedList, map, collectArray}
 import stdx.encoding.json.*
 
 /**
@@ -13,7 +13,7 @@ import stdx.encoding.json.*
  */
 public open class MessageList <: ToString & Iterable<Message> &
                                  FromJsonValue<MessageList> & ToJsonValue {
-    protected let messages: ArrayList<Message>
+    private let messages: ArrayList<Message>
 
     public init() {
         this.messages = ArrayList<Message>()
@@ -27,20 +27,27 @@ public open class MessageList <: ToString & Iterable<Message> &
         MessageList(this.messages.clone())
     }
 
-    public open func addMessage(msg: Message): Unit {
+    public open func add(msg: Message): Unit {
         messages.add(msg)
     }
 
     public open func removeLast(): Message {
         if (messages.isEmpty()) {
-            throw Exception("Remove the last message from an empty history")
+            throw Exception("Remove the last message from an empty list")
         }
         return messages.remove(at: messages.size - 1)
     }
 
-    public func addMessages(messages: Array<Message>): Unit {
+    public func remove(at!: Int64): Message {
+        if (messages.isEmpty()) {
+            throw Exception("Remove message at index $at from an empty list")
+        }
+        return messages.remove(at: at)
+    }
+
+    public func add(messages!: Array<Message>): Unit {
         for (msg in messages) {
-            this.addMessage(msg)
+            this.add(msg)
         }
     }
 

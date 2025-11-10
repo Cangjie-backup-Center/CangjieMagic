@@ -3,8 +3,7 @@
  */
 package magic.core.agent
 
-import magic.core.message.Message
-import magic.parser.{Tag, WithTag}
+import magic.core.message.{Message, Tag, WithTag}
 import magic.log.LogUtils
 
 import std.collection.ArrayList

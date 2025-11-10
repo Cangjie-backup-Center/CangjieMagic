@@ -7,12 +7,12 @@ import magic.agent_executor.common.{AgentTask, PromptBuilder, AnswerTool, Builti
 import magic.agent.base.AgentOp
 import magic.core.agent.*
 import magic.core.tool.{Tool, ToolRequest}
-import magic.core.message.{Message, MessageList}
+import magic.core.message.{Message, MessageList, MessageRole, Tag, WithTag}
 import magic.core.model.ChatResponse
 import magic.config.Config
 import magic.model.ModelUtils
 import magic.prompt.Template
-import magic.parser.{Tag, WithTag, ParserUtils, ParserException}
+import magic.parser.{ParserUtils, ParserException}
 import magic.log.LogUtils
 import magic.jsonable.{Jsonable, TypeSchema, JsonUtils, FromJsonValue, ToJsonValue}
 
@@ -75,13 +75,12 @@ public struct ExecutionOpSet {
             return state
         }
         let msg = chatWithOperation(state, PLAN_PROMPT, stop: [])
-        let plan = Tag.extract(msg.content, Tag.PLAN) ?? msg.content
+        let plan = Tag.extract(msg.content, Tag.Plan) ?? msg.content
         // Parse the response and add the message to the state
         LogUtils.info(state.task.agent.name, "Plan: ${plan}")
-        state.execution.addStepMessage(
-            Message.assistant(plan.withTag(Tag.PLAN)), // Add plan as a thought
-        )
-        state.task.notify(Tag.PLAN, plan)
+        // Add plan as a thought
+        state.execution.addStep(MessageRole.Assistant, plan, Tag.Plan )
+        state.task.notify(Tag.Plan, plan)
         return state
     }
 
@@ -89,14 +88,14 @@ public struct ExecutionOpSet {
         if (state.done) {
             return state
         }
-        let msg = chatWithOperation(state, THINK_PROMPT, stop: [Tag.ACTION, Tag.THOUGHT.close])
-        let thought = Tag.extract(msg.content, Tag.THOUGHT) ?? msg.content
+        let msg = chatWithOperation(state, THINK_PROMPT, stop: [Tag.Action.open, Tag.Thought.close])
+        let thought = Tag.extract(msg.content, Tag.Thought) ?? msg.content
         // Parse the response and add the message to the state
         LogUtils.info(state.task.agent.name, "Thought: ${thought}")
-        state.execution.addStepMessage(
-            Message.assistant(thought.withTag(Tag.THOUGHT)),
+        state.execution.addStep(
+            MessageRole.Assistant, thought, Tag.Thought
         )
-        state.task.notify(Tag.THOUGHT, thought)
+        state.task.notify(Tag.Thought, thought)
         return state
     }
 
@@ -118,7 +117,7 @@ public struct ExecutionOpSet {
                     state,
                     getActionPrompt(),
                     tools: state.task.availableTools,
-                    stop: [Tag.OBSERVATION]
+                    stop: [Tag.Observation.open]
                 )
             } else {
                 let prompt = getActionPromptWithTools().format([
@@ -128,7 +127,7 @@ public struct ExecutionOpSet {
                     state,
                     prompt,
                     tools: [],
-                    stop: [Tag.OBSERVATION]
+                    stop: [Tag.Observation.open]
                 )
             }
             return doInvokeTool(state, chatResp)
@@ -179,9 +178,11 @@ public struct ExecutionOpSet {
             state.execution.addMessage(Message.user(guideline))
         } else {
             state.execution.addMessage(
-                Message.assistant("```json\n${chatResp.message.content}\n```".withTag(Tag.ACTION)),
+                Message.assistant("```json\n${chatResp.message.content}\n```".withTag(Tag.Action))
             )
-            state.execution.addMessage(Message.user(guideline.withTag(Tag.OBSERVATION)))
+            state.execution.addMessage(
+                Message.user(guideline.withTag(Tag.Observation))
+            )
         }
         return state
     }
@@ -214,12 +215,20 @@ public struct ExecutionOpSet {
             // If function call is not enabled, we wrap the messages with tags
             // to guide the LLM generating formatted response
             if (Config.enableModelToolCall) {
-                state.execution.addStepMessage(
-                    Message.assistant("${toolRequest.toJsonValue().toJsonString()}\n")
+                state.execution.addStep(
+                    MessageRole.Assistant,
+                    toolRequest.toJsonValue().toJsonString(),
+                    Tag.Action,
+                    wrapTag: false,
+                    toolRequest: toolRequest
                 )
             } else {
-                state.execution.addStepMessage(
-                    Message.assistant("```json\n${toolRequest.toJsonValue().toJsonString()}\n```".withTag(Tag.ACTION)),
+                state.execution.addStep(
+                    MessageRole.Assistant,
+                    "```json\n${toolRequest.toJsonValue().toJsonString()}\n```",
+                    Tag.Action,
+                    wrapTag: false,
+                    toolRequest: toolRequest
                 )
             }
 
@@ -227,23 +236,27 @@ public struct ExecutionOpSet {
             let observation = state.task.invokeTool(toolRequest)
             // Special terminal tools may stop the execution
             if (let Some(stopInfo) <- state.task.stopInfo) {
-                // state.task.execution.addStepMessage(Message.assistant(stopInfo.result.withTag(Tag.ANSWER)))
-                state.task.notify(Tag.ANSWER, stopInfo.result)
+                state.task.notify(Tag.Answer, stopInfo.result)
                 return state
             }
 
             // Add tool call result to the message list
             if (Config.enableModelToolCall) {
-                state.execution.addStepMessage(
-                    Message.user(observation),
+                state.execution.addStep(
+                    MessageRole.User,
+                    observation,
+                    Tag.Observation,
+                    wrapTag: false
                 )
             } else {
-                state.execution.addStepMessage(
-                    Message.user(observation.withTag(Tag.OBSERVATION)),
+                state.execution.addStep(
+                    MessageRole.User,
+                    observation,
+                    Tag.Observation,
                 )
             }
             LogUtils.info(state.task.agent.name, "Observation: ${observation}")
-            state.task.notify(Tag.OBSERVATION, observation)
+            state.task.notify(Tag.Observation, observation)
         }
         return state
     }
@@ -268,16 +281,16 @@ public struct ExecutionOpSet {
             }
             .getOrDefault({ => ANSWER_PROMPT})
         let msg = chatWithOperation(state, prompt, stop: [])
-        let answer = Tag.extract(msg.content, Tag.ANSWER) ?? msg.content
+        let answer = Tag.extract(msg.content, Tag.Answer) ?? msg.content
         // Parse the response
         LogUtils.info(state.task.agent.name, "Answer: ${answer}")
-        // state.task.execution.addStepMessage(Message.assistant(msg.content.withTag(Tag.ANSWER)))
+        state.task.notify(Tag.Answer, answer)
         if (state.task.request.verbose) {
             if (let Some(subtask) <- state.subtask) {
                 let answer = "Solve the subtask ${subtask.description}\nAnswer: ${answer}"
-                state.task.notify(Tag.OBSERVATION, answer)
+                state.task.notify(Tag.Observation, answer)
             } else {
-                state.task.notify(Tag.OBSERVATION, answer)
+                state.task.notify(Tag.Observation, answer)
             }
         }
         state.answer = answer
@@ -335,7 +348,7 @@ public struct ExecutionOpSet {
         return subtasks |> map { subtask: Subtask =>
             if (state.task.request.verbose) {
                 let info = "Generate subtask:\n${subtask.toJsonValue().toJsonString()}"
-                state.task.notify(Tag.THOUGHT, info)
+                state.task.notify(Tag.Thought, info)
             }
 
             // Build the system prompt to solve the subtask
@@ -373,7 +386,7 @@ public struct ExecutionOpSet {
                 if (let Some(subtask) <- state.subtask) {
                     if (state.task.request.verbose) {
                         let info = "To solve the subtask: ${subtask.description}"
-                        state.task.notify(Tag.THOUGHT, info)
+                        state.task.notify(Tag.Thought, info)
                     }
                 }
                 op(state)
@@ -394,19 +407,23 @@ public struct ExecutionOpSet {
         let state = states[0].parent.getOrThrow()
         // Build prompt of subtasks
         let subtaskDesc = ExecutionOpSet.buildSubtaskDesc(states)
-        state.execution.addStepMessage(
-            Message.assistant("Multiple subtasks are generated and executed:\n${subtaskDesc}".withTag(Tag.THOUGHT)),
+        state.execution.addStep(
+            MessageRole.Assistant,
+            "Multiple subtasks are generated and executed:\n${subtaskDesc}",
+            Tag.Thought
         )
 
         let prompt = SUMMARY_PROMPT.format(
             ("subtasks", subtaskDesc)
         )
         let msg = chatWithOperation(state, prompt, stop: [])
-        let summary = Tag.extract(msg.content, Tag.SUMMARY) ?? msg.content
+        let summary = Tag.extract(msg.content, Tag.Summary) ?? msg.content
         LogUtils.info(state.task.agent.name, "Subtask Summary: ${summary}")
-        state.task.notify(Tag.SUMMARY, summary)
-        state.execution.addStepMessage(
-            Message.assistant(summary.withTag(Tag.SUMMARY)),
+        state.task.notify(Tag.Summary, summary)
+        state.execution.addStep(
+            MessageRole.Assistant,
+            summary,
+            Tag.Summary
         )
 
         return state
@@ -430,7 +447,7 @@ public struct ExecutionOpSet {
                 ])
                 let msg = chatWithOperation(state, prompt, stop: [])
                 // Extract the conclusion from the response
-                let conclusion = Tag.extract(msg.content, Tag.ANSWER) ?? msg.content
+                let conclusion = Tag.extract(msg.content, Tag.Answer) ?? msg.content
                 // Parse the response
                 LogUtils.info(state.task.agent.name, "CHECK-CONDITION: ${c.condition} -> ${conclusion}")
                 if (conclusion.contains("Conclusion: True")) {

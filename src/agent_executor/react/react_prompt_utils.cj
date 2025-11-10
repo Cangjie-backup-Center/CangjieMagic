@@ -5,12 +5,11 @@ package magic.agent_executor.react
 
 import magic.core.*
 import magic.agent_executor.common.AgentTask
-import magic.core.message.{Message, Conversation}
+import magic.core.message.{Message, Conversation, Tag, WithTag, OPEN_TAG_SYMBOL}
 import magic.agent_executor.common.PromptBuilder
 import magic.log.LogUtils
 import magic.config.Config
 import magic.prompt.Template
-import magic.parser.{Tag, WithTag}
 import magic.jsonable.TypeSchema
 
 import stdx.encoding.json.JsonObject
@@ -81,26 +80,26 @@ private func getReactSystemPromptPrefix(): String {
 """
 # Guidelines
 Use the following format to accomplish user's request:
-${Tag.THOUGHT} think about what to do next to solve the question ${Tag.THOUGHT.close}
-${Tag.ACTION} ${getActionDescription()}
-${Tag.ACTION.close}
-${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.close}
+${Tag.Thought} think about what to do next to solve the question ${Tag.Thought.close}
+${Tag.Action} ${getActionDescription()}
+${Tag.Action.close}
+${Tag.Observation} the result of the action ${Tag.Observation.close}
 ... (Thought/Action/Observation may repeat N times to accomplish user's request)
-${Tag.ANSWER} the final answer to the original input question ${Tag.ANSWER.close}
+${Tag.Answer} the final answer to the original input question ${Tag.Answer.close}
 
-NEVER generate ${Tag.OBSERVATION} yourself. This is an important requirement.
+NEVER generate ${Tag.Observation} yourself. This is an important requirement.
 If there are no available tools, generate final answer directly.
 
-You must generate either a pair of ${Tag.THOUGHT} and ${Tag.ACTION} or a single ${Tag.ANSWER}.
+You must generate either a pair of ${Tag.Thought} and ${Tag.Action} or a single ${Tag.Answer}.
 """
 }
 
 private func getActionExample() {
 """
-${Tag.THOUGHT} I need to search the web to get related knowledge ${Tag.THOUGHT.close}
-${Tag.ACTION}
+${Tag.Thought} I need to search the web to get related knowledge ${Tag.Thought.close}
+${Tag.Action}
 ${getToolCallExample()}
-${Tag.ACTION.close}
+${Tag.Action.close}
 """
 }
 
@@ -116,7 +115,7 @@ ${getReactSystemPromptPrefix()}
 Output-1:
 ${getActionExample()}
 Output-2:
-${Tag.ANSWER} the final answer you generate ${Tag.ANSWER.close}
+${Tag.Answer} the final answer you generate ${Tag.Answer.close}
 """
 }
 
@@ -132,7 +131,7 @@ The schema to follow:
 Output-1:
 ${getActionExample()}
 Output-2:
-${Tag.ANSWER} ```json <output a JSON value here as the answer> ``` ${Tag.ANSWER.close}
+${Tag.Answer} ```json <output a JSON value here as the answer> ``` ${Tag.Answer.close}
 """
 }
 
@@ -140,15 +139,15 @@ private let REACT_SUMMARIZE_SYSTEM_PROMPT = """
 # Instruction
 Given a question and a solving procedure for it, you should summarize an answer from them.
 The solving procedure consists of:
-  - ${Tag.THOUGHT} think about what to do next to solve the task ${Tag.THOUGHT.close}
-  - ${Tag.ACTION} use a tool, which is a function call ${Tag.ACTION.close}
-  - ${Tag.OBSERVATION} the result of the action ${Tag.OBSERVATION.close}
+  - ${Tag.Thought} think about what to do next to solve the task ${Tag.Thought.close}
+  - ${Tag.Action} use a tool, which is a function call ${Tag.Action.close}
+  - ${Tag.Observation} the result of the action ${Tag.Observation.close}
   - ... (Thought/Action/Observation may repeat N times)
 
-The answer should be wrapped by ${Tag.ANSWER} and ${Tag.ANSWER.close} like
-${Tag.ANSWER}
+The answer should be wrapped by ${Tag.Answer} and ${Tag.Answer.close} like
+${Tag.Answer}
 Cat is the answer, and ...
-${Tag.ANSWER.close}
+${Tag.Answer.close}
 
 # Question
 {question}
@@ -167,12 +166,12 @@ ${Tag.ANSWER.close}
 """
 
 private let REACT_SUMMARIZE_USER_PROMPT = """
-Now, summarize the answer. Remember you should wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.close}
+Now, summarize the answer. Remember you should wrap the output by ${Tag.Answer} and ${Tag.Answer.close}
 """
 
 let REACT_STEP_PROMPT = """
 Decide what to do next.
-Output either a pair of ${Tag.THOUGHT} and ${Tag.ACTION}, or a single ${Tag.ANSWER}.
+Output either a pair of ${Tag.Thought} and ${Tag.Action}, or a single ${Tag.Answer}.
 """
 
 protected struct ReactPromptUtils {
@@ -188,9 +187,9 @@ protected struct ReactPromptUtils {
 
     static func buildReactSummarizePrompt(task: AgentTask): Array<Message> {
         let strBuilder = StringBuilder()
-        for (msg in task.execution.stepMessages) {
+        for (msg in task.execution.steps) {
             // Only add messages with tags, like [Action]
-            if (msg.content.startsWith("[")) {
+            if (msg.content.startsWith(OPEN_TAG_SYMBOL)) {
                 strBuilder.append("${msg.content}\n")
             }
         }

@@ -4,10 +4,10 @@
 package magic.agent_executor.react
 
 import magic.config.Config
-import magic.parser.{ParserUtils, ParserException}
 import magic.core.tool.ToolRequest
+import magic.core.message.{WithTag, Tag}
 import magic.log.LogUtils
-import magic.parser.{WithTag, Tag}
+import magic.parser.{ParserUtils, ParserException}
 
 protected enum FailureLevel {
     | Repairable
@@ -73,22 +73,22 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
 
     public func toString(): String {
         return match (this) {
-            case ReactStep.Action(tc) => "${Tag.THOUGHT} ${tc.thought} ${Tag.THOUGHT.close}; ${Tag.ACTION} ${tc.text} ${Tag.ACTION.close}"
-            case ReactStep.Thought(t) => "${Tag.THOUGHT} ${t} ${Tag.THOUGHT.close}"
-            case ReactStep.Answer(a) => "${Tag.THOUGHT} ${a.thought} ${Tag.THOUGHT.close}; ${Tag.ANSWER} ${a.content} ${Tag.ANSWER.close}"
-            case ReactStep.Failure(f) => "${Tag.FAIL} Original message: ${f.message}; \n Reason: ${f.reason} ${Tag.FAIL.close}"
+            case ReactStep.Action(tc) => "${Tag.Thought} ${tc.thought} ${Tag.Thought.close}; ${Tag.Action} ${tc.text} ${Tag.Action.close}"
+            case ReactStep.Thought(t) => "${Tag.Thought} ${t} ${Tag.Thought.close}"
+            case ReactStep.Answer(a) => "${Tag.Thought} ${a.thought} ${Tag.Thought.close}; ${Tag.Answer} ${a.content} ${Tag.Answer.close}"
+            case ReactStep.Failure(f) => "${Tag.Fail} Original message: ${f.message}; \n Reason: ${f.reason} ${Tag.Fail.close}"
         }
     }
 
     static func fromStr(content: String): ReactStep {
-        let thought = Tag.extract(content, Tag.THOUGHT)
-        if (let Some(answer) <- Tag.extract(content, Tag.ANSWER)) {
+        let thought = Tag.extract(content, Tag.Thought)
+        if (let Some(answer) <- Tag.extract(content, Tag.Answer)) {
             return ReactStep.Answer(
                 FinalAnswer(thought: thought ?? "",
                             content: answer)
             )
         }
-        match ((thought, Tag.extract(content, Tag.ACTION))) {
+        match ((thought, Tag.extract(content, Tag.Action))) {
             case (_, Some(action)) =>
                 try {
                     let toolCalls = if (Config.enableParallelToolCall) {
@@ -120,7 +120,7 @@ protected enum ReactStep <: Hashable & Equatable<ReactStep> & ToString {
                         FailureLevel.Repairable,
                         message: content,
                         reason: "Output format is invalid.",
-                        suggestion: "You should generate ${Tag.ACTION} or ${Tag.ANSWER}"
+                        suggestion: "You should generate ${Tag.Action} or ${Tag.Answer}"
                     )
                 )
         }

@@ -6,12 +6,13 @@
 
 - [Install Cangjie Magic](#install-cangjie-magic)
   - [Cangjie 通用版/General Edition](#cangjie-通用版general-edition)
-    - [下载/Download Cangjie Magic ](#下载download-cangjie-magic)
+    - [下载/Download Cangjie Magic](#下载download-cangjie-magic)
     - [引用/Import Cangjie Magic](#引用import-cangjie-magic)
     - [Quick Start](#quick-start)
   - [Cangjie 鸿蒙版/HarmonyOS Edition](#cangjie-鸿蒙版harmonyos-edition)
   - [Other build configuration](#other-build-configuration)
     - [Options](#options)
+    - [鸿蒙交叉编译](#鸿蒙交叉编译)
 
 <!-- /code_chunk_output -->
 
@@ -19,12 +20,12 @@
 **⚠️注意**
 目前代码仅在 [Cangjie LTS 通用版](https://cangjie-lang.cn/download/1.0.0)（即 1.0.0）和 鸿蒙外发版（即 0.53.18）上能够正确编译执行。如果使用了其他版本的 Cangjie SDK，可能需要直接修改 Cangjie Magic 源代码进行适配。
 
-**⚠️ Note**  
-The code currently compiles and runs correctly only on [Cangjie LTS General Edition](https://cangjie-lang.cn/download/1.0.0) (v1.0.0) and **HarmonyOS Release Edition (v0.53.18)**. If you use other versions of the Cangjie SDK, you may need to modify the Cangjie Magic source code directly to adapt.  
+**⚠️ Note**
+The code currently compiles and runs correctly only on [Cangjie LTS General Edition](https://cangjie-lang.cn/download/1.0.0) (v1.0.0) and **HarmonyOS Release Edition (v0.53.18)**. If you use other versions of the Cangjie SDK, you may need to modify the Cangjie Magic source code directly to adapt.
 
 ## Cangjie 通用版/General Edition
 
-### 下载/Download Cangjie Magic 
+### 下载/Download Cangjie Magic
 
 下载仓颉 Magic 源代码。使用 Git 运行以下命令：
 
@@ -47,7 +48,7 @@ magic = { path = "<local-path-to-Cangjie-Magic>" }  # 请注意路径字符串�
 
 注意：如果你开发了命令行程序，必须通过 `cjpm run --name <your-package-name>` 运行你所编写的程序
 
-NOTE: For CLI tools, you **must** execute your program using `cjpm run --name <your-package-name>`.  
+NOTE: For CLI tools, you **must** execute your program using `cjpm run --name <your-package-name>`.
 
 📝 在使用本项目时，一般使用如下的 `import` 规则:
 
@@ -115,7 +116,7 @@ sudo xattr -rd com.apple.quarantine /path/to/stdx/dylib
 ```toml
 [dependencies]
     magic = {
-        git = "https://gitcode.com/Cangjie-TPC/CangjieMagic.git", 
+        git = "https://gitcode.com/Cangjie-TPC/CangjieMagic.git",
         tag = "harmony_os_edition"
     }
 ```
@@ -147,7 +148,7 @@ git clone https://gitcode.com/Cangjie-TPC/CangjieMagic.git -b harmony_os_edition
 
 在本项目的 `cjpm.toml` 中提供如下的条件编译选项
 
-The `cjpm.toml` of Cangjie Magic provides the following conditional compilation options:  
+The `cjpm.toml` of Cangjie Magic provides the following conditional compilation options:
 
 | 选项  | 可选值  | 说明 |
 |---|---|---|
@@ -160,7 +161,7 @@ The `cjpm.toml` of Cangjie Magic provides the following conditional compilation 
 
 - 如果构建 `faiss`、`sqlite` 或是 `llamacpp`，需要构建对应的二进制库（详见 [third_party_libs.md](./docs/third_party_libs.md)），添加到目录（例如 `./libs`）并修改 `cjpm.toml`:
 
-  If building `faiss`, `sqlite`, or `llamacpp`, you need to compile the corresponding binary libraries (see [third_party_libs.md](../docs/third_party_libs.md)), place them in a directory (e.g., `./libs`), and modify `cjpm.toml`:  
+  If building `faiss`, `sqlite`, or `llamacpp`, you need to compile the corresponding binary libraries (see [third_party_libs.md](../docs/third_party_libs.md)), place them in a directory (e.g., `./libs`), and modify `cjpm.toml`:
 
     ```toml
     [ffi.c]
@@ -172,3 +173,37 @@ The `cjpm.toml` of Cangjie Magic provides the following conditional compilation 
 
   If using `curl` for HTTP requests, install it separately
 
+### 鸿蒙交叉编译
+
+以 MacOS 上为例，假设 DevEco Studio 已安装。
+
+修改 `cjpm.toml`：
+
+```toml
+[target.aarch64-linux-ohos]
+  compile-option = "-B \"${DEVECO_DIR}/plugins/cangjie/sdk/cangjie/compiler/third_party/llvm/bin\" -B \"${DEVECO_DIR}/sdk/default/openharmony/native/sysroot/usr/lib/aarch64-linux-ohos\" -L \"${DEVECO_DIR}/sdk/default/openharmony/native/sysroot/usr/lib/aarch64-linux-ohos\" --cfg \"ohos=false\""
+
+[target.aarch64-linux-ohos.bin-dependencies]
+    path-option = [ "./libs/cangjie-stdx-ohos-aarch64-1.0.0.1/linux_ohos_aarch64_llvm/static/stdx" ]
+```
+
+执行以下命令：
+
+```bash
+export DEVECO_DIR="/Applications/DevEco-Studio.app/Contents"
+
+cjpm build --target aarch64-linux-ohos
+```
+
+执行前需要将相关动态库发送至鸿蒙设备上：
+
+```bash
+HDC="${DEVECO_DIR}/sdk/default/openharmony/toolchains/hdc"
+SOURCE="${DEVECO_DIR}/plugins/cangjie/sdk/cangjie/build/linux_ohos_aarch64_llvm/ohos/"
+
+for so_file in "$SOURCE"*.so; do
+    filename=$(basename "$so_file")
+    echo "Send: $filename"
+    $HDC file send "$so_file" "/system/lib64/$filename"
+done
+```
