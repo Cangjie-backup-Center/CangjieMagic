@@ -4,7 +4,7 @@
 package magic.agent_executor.common
 
 import magic.core.agent.Agent
-import magic.parser.{Tag, WithTag}
+import magic.core.message.{Tag, WithTag}
 import magic.log.LogUtils
 
 protected class FutureIteratorWrapper <: Iterator<String> {
@@ -25,7 +25,7 @@ protected class FutureIteratorWrapper <: Iterator<String> {
             case Some(v) => buffer.append(v)
             case None =>
                 let answer = buffer.toString()
-                LogUtils.info(task.agent.name, answer.withTag(Tag.ANSWER))
+                LogUtils.info(task.agent.name, answer.withTag(Tag.Answer))
         }
         return data
     }

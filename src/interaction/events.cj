@@ -8,6 +8,9 @@ import magic.core.agent.{Agent, AgentRequest, AgentResponse}
 import magic.core.tool.{ToolRequest, ToolResponse}
 import magic.core.model.{ChatRequest, ChatResponse}
 import magic.core.agent.AgentExecution
+import magic.core.message.{Tag, MessageList, StepMessage}
+
+import std.collection.ArrayList
 
 /**
  * Triggered when before tool call
@@ -104,9 +107,21 @@ public class AgentEndEvent <: InteractionEvent { // Return: Unit
         public let agent: Agent,
         public let agentRequest: AgentRequest,
         public let agentResponse: Option<AgentResponse>
-        // we do not use them
     ) {
         super(EventKind.AgentEnd)
+    }
+}
+
+/**
+ * Triggered after agent execution
+ */
+public class AgentStepEvent <: InteractionEvent { // Return: Unit
+    public AgentStepEvent(
+        public let agent: Agent,
+        public let agentRequest: AgentRequest,
+        public let steps: ArrayList<StepMessage>
+    ) {
+        super(EventKind.AgentStep)
     }
 }
 
@@ -165,7 +180,7 @@ public class UserInputEvent <: InteractionEvent { // Return: String
 public class NotifyEvent <: InteractionEvent { // Return: Unit
     public NotifyEvent(
         public let agent: Agent,
-        public let tag: String, // The tag like [Info], [Action], etc.
+        public let tag: Tag, // The tag like [Info], [Action], etc.
         public let content: String // The tagged content
     ) {
         super(EventKind.Notify)

@@ -3,12 +3,11 @@
  */
 package magic.agent_group
 
-import magic.prompt.Template
+import magic.agent.base.AgentOp
 import magic.log.LogUtils
 import magic.core.agent.*
-import magic.core.message.{Message, MessageRole, MessageList}
-import magic.agent.base.AgentOp
-import magic.parser.{Tag, WithTag}
+import magic.core.message.{Message, MessageRole, MessageList, Tag, WithTag}
+import magic.prompt.Template
 
 import std.collection.ArrayList
 
@@ -32,8 +31,8 @@ The following are agent involved in the discussion.
 
 ## Output Format
 1. If the problem is solved, there is no need to select the agent and return the final answer.
-   The output should be formatted as ${Tag.ANSWER} ... ${Tag.ANSWER.close}
-1. If an agent select, The output should be formatted as [Selection] <agent-name> [/Selection]
+   The output should be formatted as ${Tag.Answer} ... ${Tag.Answer.close}
+1. If an agent select, The output should be formatted as ${Tag.Info} <agent-name> ${Tag.Info.close}
 
 ## Discussion
 The discussion is split as speeches, and each speech is wrapped by the pair of [Speech] and [/Speech].
@@ -68,7 +67,7 @@ class AutoDiscussGroup <: DiscussGroup {
             Message.system(sysPrompt)
         ])
         LogUtils.info(this.host.name, sysPrompt)
-        messageList.addMessage(
+        messageList.add(
             Message.user("Now, select the next speaker or make the final answer")
         )
 
@@ -77,11 +76,11 @@ class AutoDiscussGroup <: DiscussGroup {
             case None => return Selection.Failure("LLM response error")
         }
         LogUtils.info(this.host.name, msg)
-        if (let Some(answer) <- Tag.extract(msg.content, Tag.ANSWER)) {
+        if (let Some(answer) <- Tag.extract(msg.content, Tag.Answer)) {
             return Selection.Summary(answer)
         }
 
-        if (let Some(name) <- Tag.extract(msg.content, "[Selection]")) {
+        if (let Some(name) <- Tag.extract(msg.content, Tag.Info)) {
             if (let Some(idx) <- findAgent(name)) {
                 currSpeakerIndex = idx
                 return Selection.Speaker(members[idx])

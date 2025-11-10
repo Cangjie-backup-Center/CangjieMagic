@@ -22,10 +22,10 @@ struct LogUtilsImpl {
         let SIZE = 1500
         while (true) {
             if (start + SIZE <= runes.size) {
-                result.append(String(runes[start..(start + SIZE)]))
+                result.add(String(runes[start..(start + SIZE)]))
                 start += SIZE
             } else {
-                result.append(String(runes[start..]))
+                result.add(String(runes[start..]))
                 break
             }
         }
@@ -44,7 +44,7 @@ struct LogUtilsImpl {
     //------------------------------------------------------------
 
     public static func trace(msg: String): Unit {
-        info(line)  // AppLog.debug has no effects?
+        info(msg)  // AppLog.debug has no effects?
     }
 
     public static func agentTrace(name: String, msg: String): Unit {
@@ -53,7 +53,7 @@ struct LogUtilsImpl {
     //------------------------------------------------------------
 
     public static func debug(msg: String): Unit {
-        info(line)  // AppLog.debug has no effects?
+        info(msg)  // AppLog.debug has no effects?
     }
 
     public static func agentDebug(name: String, msg: String): Unit {

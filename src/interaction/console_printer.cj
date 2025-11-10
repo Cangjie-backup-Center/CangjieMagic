@@ -6,6 +6,7 @@ package magic.interaction
 import magic.parser.*
 import magic.core.agent.*
 import magic.core.interaction.*
+import magic.core.message.{Tag, WithTag}
 import magic.utils.{Color, Colorful}
 
 import std.env.getStdOut
@@ -18,10 +19,10 @@ public class ConsolePrinter <: EventStreamVisitor {
         super(asyncResponse.execution.events)
     }
 
-    private func getTagColor(tag: String): Color {
-        if (tag == Tag.PLAN) {
+    private func getTagColor(tag: Tag): Color {
+        if (tag == Tag.Plan) {
             return Color.Red
-        } else if (tag == Tag.INFO || tag == Tag.ACTION) {
+        } else if (tag == Tag.Info || tag == Tag.Action) {
             return Color.Green
         } else {
             return Color.Blue
@@ -31,8 +32,8 @@ public class ConsolePrinter <: EventStreamVisitor {
     override public func on(event: NotifyEvent): Unit {
         let tag = event.tag
         let tagColor = getTagColor(tag)
-        getStdOut().writeln(tag.withColor(tagColor))
-        if (tag != Tag.ANSWER) {
+        getStdOut().writeln(tag.open.withColor(tagColor))
+        if (tag != Tag.Answer) {
             getStdOut().writeln(event.content.trimAscii())
         } else {
             // getStdOut().writeln("...")
@@ -42,9 +43,9 @@ public class ConsolePrinter <: EventStreamVisitor {
     }
 
     override public func on(event: ToolCallStartEvent): Unit {
-        let tag = Tag.ACTION
+        let tag = Tag.Action
         let tagColor = getTagColor(tag)
-            getStdOut().writeln(tag.withColor(tagColor))
+            getStdOut().writeln(tag.open.withColor(tagColor))
             getStdOut().writeln(event.toolRequest)
             getStdOut().writeln(tag.close.withColor(tagColor))
     }

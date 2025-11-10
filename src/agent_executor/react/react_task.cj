@@ -3,13 +3,13 @@
  */
 package magic.agent_executor.react
 
-import magic.core.*
 import magic.agent_executor.common.{AgentTask, PromptBuilder}
-import magic.core.message.{Message, MessageList}
+import magic.core.*
+import magic.core.message.{Message, MessageList, MessageRole, WithTag, Tag}
 import magic.log.LogUtils
 import magic.model.ModelUtils
+import magic.parser.{TagStreamParser, ParserException}
 import magic.utils.sleep2
-import magic.parser.{TagStreamParser, ParserException, WithTag, Tag}
 
 protected class ReactTask <: AgentTask {
     protected init(agent: Agent, request: AgentRequest) {
@@ -27,39 +27,28 @@ protected class ReactTask <: AgentTask {
     }
 
     /**
-     * Internal auxiliary method
-     */
-    private func addAndLogMessage(msg: Message, step!: Bool = true): Unit {
-        if (step) {
-            this.execution.addStepMessage(msg)
-        } else {
-            this.execution.addMessage(msg)
-        }
-        LogUtils.info(this.agent.name, msg)
-    }
-
-    /**
      * If the answer is generated, return its value;
      * otherwise, just add messages to the messageList
      */
     private func handleStep(step: ReactStep): Option<String> {
+        LogUtils.info(this.agent.name, step.toString())
         match (step) {
             case ReactStep.Thought(thought) =>
-                this.addAndLogMessage(Message.assistant(thought.withTag(Tag.THOUGHT)))
+                this.execution.addStep(MessageRole.Assistant, thought, Tag.Thought)
             case ReactStep.Action(tc) =>
                 if (tc.thought != "") {
-                    this.addAndLogMessage(Message.assistant(tc.thought.withTag(Tag.THOUGHT)))
+                    this.execution.addStep(MessageRole.Assistant, tc.thought, Tag.Thought)
                 }
                 // LLM may generate parallel tools to run, but we run them sequentially currently
-                this.addAndLogMessage(Message.assistant(tc.text.withTag(Tag.ACTION)))
                 for (toolRequest in tc.requests) {
+                    this.execution.addStep(MessageRole.Assistant, toolRequest.toJsonValue().toJsonString(), Tag.Action, toolRequest: toolRequest)
                     let observation = this.invokeTool(toolRequest)
-                    this.addAndLogMessage(Message.assistant(observation.withTag(Tag.OBSERVATION)))
-                    this.notify(Tag.OBSERVATION, observation)
+                    this.execution.addStep(MessageRole.User, observation, Tag.Observation)
+                    this.notify(Tag.Observation, observation)
                 }
             case ReactStep.Answer(answer) =>
                 if (answer.thought != "") {
-                    addAndLogMessage(Message.assistant(answer.thought.withTag(Tag.THOUGHT)))
+                    this.execution.addStep(MessageRole.Assistant, answer.thought, Tag.Thought)
                 }
                 return answer.content
             case ReactStep.Failure(failureInfo) =>
@@ -69,10 +58,9 @@ protected class ReactTask <: AgentTask {
                         // else, add hint messages to fix.
                         if (!failureInfo.message.isEmpty()) {
                             // Add the reply message to the messageList and fix the failure
-                            addAndLogMessage(Message.assistant(failureInfo.message), step: false)
-                            addAndLogMessage( // and add the repair message
-                                Message.user("Output is invalid because ${failureInfo.reason}. ${failureInfo.suggestion}"),
-                                step: false
+                            this.execution.addMessage(Message.assistant(failureInfo.message))
+                            this.execution.addMessage( // and add the repair message
+                                Message.user("Output is invalid because ${failureInfo.reason}. ${failureInfo.suggestion}")
                             )
                         } else {
                             LogUtils.info(this.agent.name, "React backoff")
@@ -89,16 +77,16 @@ protected class ReactTask <: AgentTask {
         match (step) {
             case Action(toolCall) =>
                 if (!toolCall.thought.isEmpty()) {
-                    this.notify(Tag.THOUGHT, toolCall.thought)
+                    this.notify(Tag.Thought, toolCall.thought)
                 }
                 // tool call is notified in its own event handler
             case Thought(thought) =>
-                this.notify(Tag.THOUGHT, thought)
+                this.notify(Tag.Thought, thought)
             case Answer(answer) =>
                 if (!answer.thought.isEmpty()) {
-                    this.notify(Tag.THOUGHT, answer.thought)
+                    this.notify(Tag.Thought, answer.thought)
                 }
-                this.notify(Tag.ANSWER, answer.content)
+                this.notify(Tag.Answer, answer.content)
             case Failure(_) => ()
         }
     }
@@ -133,7 +121,7 @@ protected class ReactTask <: AgentTask {
         // [Observation] ... [Observation],
         // so we truncate it with `stop` words.
         try {
-            let msg = this.chatLLM(this.execution.messages, stop: [Tag.OBSERVATION]).message
+            let msg = this.chatLLM(this.execution.messages, stop: [Tag.Observation.open]).message
             return ReactStep.fromStr(msg.content)
         } catch (ex: Exception) {
             LogUtils.error(this.agent.name, ex.toString())
@@ -156,7 +144,7 @@ protected class ReactTask <: AgentTask {
             ReactPromptUtils.buildReactSummarizePrompt(this)
         )
         let msg = this.chatLLM(messages).message
-        return Tag.extract(msg.content, Tag.ANSWER).getOrThrow({ =>
+        return Tag.extract(msg.content, Tag.Answer).getOrThrow({ =>
             AgentExecutionException("Chat model response has no answers")
         })
     }
@@ -176,15 +164,15 @@ protected class ReactTask <: AgentTask {
         this.execution.removeLastMessage()
         try {
             let tag = asyncReactStep.peekTag()
-            if (tag == Tag.THOUGHT || tag == Tag.ACTION) {
+            if (tag == Tag.Thought || tag == Tag.Action) {
                 let step = asyncReactStep.getStepOf(tag)
                 this.handleStep(step)
                 this.notifyStep(step)
                 return None
-            } else if (tag == Tag.ANSWER) {
+            } else if (tag == Tag.Answer) {
                 let (thought, asyncAnswer) = asyncReactStep.getAsyncAnswer()
                 if (!thought.trimAscii().isEmpty()) {
-                    this.addAndLogMessage(Message.assistant(thought))
+                    this.execution.addStep(MessageRole.Assistant, thought, Tag.Thought)
                 }
                 return asyncAnswer
             } else {
@@ -207,7 +195,7 @@ protected class ReactTask <: AgentTask {
         // [Observation} ... [/Observation],
         // so we truncate it with `stop` words.
         let asyncChatResp = agent.model.asyncCreate(
-            ChatRequest(this.execution.messages, stop: [Tag.OBSERVATION])
+            ChatRequest(this.execution.messages, stop: [Tag.Observation.open])
         )
         let parser = TagStreamParser(asyncChatResp.iter(withReason: false))
         return AsyncReactStep(parser)

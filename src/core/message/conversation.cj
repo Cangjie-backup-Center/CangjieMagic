@@ -9,38 +9,6 @@ import std.collection.{ArrayList}
 import std.fs.{Path, File}
 import stdx.encoding.json.*
 
-/**
- * A single chat round in a conversation, consisting of a question and an answer
- * along with the optional execution step messages.
- */
-public class ChatRound <: ToString & FromJsonValue<ChatRound> & ToJsonValue {
-    public ChatRound(
-        public let question: Message, // The question message from the user
-        public let answer: Message, // The answer message from the assistant
-        public let steps: MessageList) {// Optional execution step messages, if any
-    }
-
-    override public func toJsonValue(): JsonValue {
-        let jo = JsonObject()
-        jo.put("question", this.question.toJsonValue())
-        jo.put("answer", this.answer.toJsonValue())
-        jo.put("steps", this.steps.toJsonValue())
-        return jo
-    }
-
-    redef static public func fromJsonValue(json: JsonValue): ChatRound {
-        return ChatRound(
-            Message.fromJsonValue(JsonUtils.getJsonValue(json, "question").getOrThrow()),
-            Message.fromJsonValue(JsonUtils.getJsonValue(json, "answer").getOrThrow()),
-            MessageList.fromJsonValue(JsonUtils.getJsonValue(json, "steps").getOrThrow())
-        )
-    }
-
-    override public func toString(): String {
-        return "Question: ${question}\nSteps:\n${steps}\nAnswer: ${answer}"
-    }
-}
-
 public class CompactedConversation <: FromJsonValue<CompactedConversation> & ToJsonValue {
     public CompactedConversation(
         /**

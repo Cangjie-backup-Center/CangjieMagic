@@ -15,6 +15,7 @@ protected enum EventKind {
     | ToolCallRepeat
 
     | AgentStart
+    | AgentStep
     | AgentEnd
     | AgentTimeout
 

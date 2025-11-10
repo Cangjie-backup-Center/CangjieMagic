@@ -6,10 +6,10 @@ package magic.agent
 import magic.agent.base.BaseAgent
 import magic.core.agent.*
 import magic.core.interaction.EventStream
+import magic.core.message.{Tag, WithTag}
 import magic.interaction.NotifyEvent
 import magic.log.LogUtils
 import magic.model.ModelManager
-import magic.parser.{Tag, WithTag}
 import magic.tool.AgentAsTool
 
 /**
@@ -34,7 +34,7 @@ public class DispatchAgent <: BaseAgent {
         if (let Some(agent) <- this.doSelect(request)) {
             if (request.verbose) {
                 let eventStream = EventStream()
-                eventStream.put(NotifyEvent(this, Tag.INFO, "Dispatch to the agent: ${agent.name}"))
+                eventStream.put(NotifyEvent(this, Tag.Info, "Dispatch to the agent: ${agent.name}"))
                 // Let the selected agent know the previous execution
                 request.eventStream = eventStream
             }

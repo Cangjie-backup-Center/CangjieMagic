@@ -4,11 +4,10 @@
 package magic.agent_executor.dsl
 
 import magic.core.agent.{Agent, AgentRequest, AgentExecutionException}
-import magic.core.message.MessageRole
+import magic.core.message.{MessageRole, WithTag}
 import magic.agent_executor.common.{AgentTask, AgentExecutionInfo}
 import magic.dsl.jsonable
 import magic.jsonable.{Jsonable, JsonableException, FieldSchema, TypeSchema}
-import magic.parser.WithTag
 
 import std.collection.{ArrayList, HashMap, map, collectArray}
 import stdx.encoding.json.*
@@ -85,7 +84,7 @@ public class ExecutionState {
     private func extractExecutionProcess(): String {
         // All assistant messages comprise the execution process
         let strArr = ArrayList<String>()
-        for (msg in this.task.execution.stepMessages) {
+        for (msg in this.task.execution.steps) {
             if (msg.role == MessageRole.Assistant) {
                 strArr.add(msg.content.withoutTag())
             }

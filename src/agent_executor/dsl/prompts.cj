@@ -3,11 +3,11 @@
  */
 package magic.agent_executor.dsl
 
-import magic.parser.{Tag, WithTag}
+import magic.core.message.{Tag, WithTag}
 import magic.config.Config
 
 let EXECUTION_DEFINITION = """
-The execution is a chronological event stream containing the different types of events, wrapped by xml tags, like ${Tag.OBSERVATION}, ${Tag.PLAN}, etc.
+The execution is a chronological event stream containing the different types of events, wrapped by xml tags, like ${Tag.Observation}, ${Tag.Plan}, etc.
 """
     //-----------------------------------------------------------------
     // The thought message is not described in the execution definition
@@ -17,7 +17,7 @@ The execution is a chronological event stream containing the different types of 
 let PLAN_PROMPT = """
 ${EXECUTION_DEFINITION}
 Based on the execution, make a plan about how to solve the user question next.
-Wrap your output by ${Tag.PLAN} and ${Tag.PLAN.close}.
+Wrap your output by ${Tag.Plan} and ${Tag.Plan.close}.
 """
 
 // Prompts of parallel tool call is copied from https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use
@@ -108,30 +108,30 @@ let ANSWER_PROMPT = """
 ${EXECUTION_DEFINITION}
 Based on the execution, answer the user question now.
 
-Wrap your output by ${Tag.ANSWER} and ${Tag.ANSWER.close}.
+Wrap your output by ${Tag.Answer} and ${Tag.Answer.close}.
 """
 
 let ANSWER_WITH_STRUCTURE_OUTPUT_PROMPT = """
 Based on the execution, answer the user question now.
 ${EXECUTION_DEFINITION}
 
-Wrap the output by ${Tag.ANSWER} and ${Tag.ANSWER.close}.
+Wrap the output by ${Tag.Answer} and ${Tag.Answer.close}.
 
 You MUST output a JSON value obey the schema as the answer. The schema to follow:
 {output_schema}
 
 Examples:
 Output:
-${Tag.ANSWER} ```json 1 ``` ${Tag.ANSWER.close}
-${Tag.ANSWER} ```json "result" ``` ${Tag.ANSWER.close}
-${Tag.ANSWER} ```json ["abc", "xyz"] ``` ${Tag.ANSWER.close}
+${Tag.Answer} ```json 1 ``` ${Tag.Answer.close}
+${Tag.Answer} ```json "result" ``` ${Tag.Answer.close}
+${Tag.Answer} ```json ["abc", "xyz"] ``` ${Tag.Answer.close}
 """
 
 let THINK_PROMPT = """
 ${EXECUTION_DEFINITION}
 Based on the execution, make a reflection on the previous execution and think about the next steps you should do.
 Just make high-level thoughts, NEVER use tools.
-Wrap your output by ${Tag.THOUGHT} and ${Tag.THOUGHT.close}.
+Wrap your output by ${Tag.Thought} and ${Tag.Thought.close}.
 """
 
 let TOOL_PROMPT = """
@@ -194,16 +194,16 @@ Follow these steps:
 - Justify Conclusion: Clearly state whether the condition holds (True/False) and explain your reasoning with references to specific historical data.
 
 Format your response as:
-${Tag.ANSWER}
+${Tag.Answer}
 - Conclusion: [True/False]
 - Reasoning: [Concise explanation to the condition]
-${Tag.ANSWER.close}
+${Tag.Answer.close}
 
 Example Output:
-${Tag.ANSWER}
+${Tag.Answer}
 - Conclusion: True
 - Reasoning: Q2 had the highest sales ($120K) in the recorded history, confirming the peak.
-${Tag.ANSWER.close}
+${Tag.Answer.close}
 
 Now, check whether the condition "{condition}":
 """
@@ -309,7 +309,7 @@ Output Requirements:
 - Avoid jargon unless it's defined earlier.
 - Prioritize accuracy and brevity.
 
-Wrap your output with ${Tag.SUMMARY} and ${Tag.SUMMARY.close} tags.
+Wrap your output with ${Tag.Summary} and ${Tag.Summary.close} tags.
 Now, generate the summary of the following subtasks:
 
 ```

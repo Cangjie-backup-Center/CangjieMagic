@@ -326,6 +326,16 @@ public struct AgentOp {
         EventHandlerManager.global.handle(event)
     }
 
+    static public func handle(event!: AgentStepEvent): Unit {
+        if (let Some(object) <- event.agentRequest.eventHandlerManager) {
+            (object as EventHandlerManager).getOrThrow().handle(event)
+        }
+        if (let Some(object) <- event.agent.eventHandlerManager) {
+            (object as EventHandlerManager).getOrThrow().handle(event)
+        }
+        EventHandlerManager.global.handle(event)
+    }
+
     static public func handle(event!: SubAgentStartEvent): EventResponse<AgentResponse> {
         if (let Some(object) <- event.agentRequest.eventHandlerManager) {
             match ((object as EventHandlerManager).getOrThrow().handle(event)) {

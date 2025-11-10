@@ -4,6 +4,7 @@
 package magic.parser
 
 import magic.utils.{Color, Colorful}
+import magic.core.message.Tag
 
 /**
  * Visitor of a tag stream
@@ -15,14 +16,14 @@ public abstract class TagStreamVisitor {
         this.parser = TagStreamParser(chunks)
     }
 
-    protected func onTag(tag: String): Unit
+    protected func onOpen(tag: Tag): Unit
 
-    protected func onCloseTag(tag: String): Unit
+    protected func onClose(tag: Tag): Unit
 
     protected func onChunk(chunk: String): Unit
 
-    private var _currTag: String = ""
-    protected prop currTag: String {
+    private var _currTag: Tag = Tag.Fail
+    protected prop currTag: Tag {
         get() {
             this._currTag
         }
@@ -31,13 +32,13 @@ public abstract class TagStreamVisitor {
     public func start(): Unit {
         while (let Some(tag) <- this.parser.currTag) {
             _currTag = tag
-            this.onTag(tag)
+            this.onOpen(tag)
             this.parser.removeTag(tag)
             while (let Some((content, isClosed)) <- this.parser.readContentUntilClosed(tag)) {
                 this.onChunk(content)
                 if (isClosed) { break }
             }
-            this.onCloseTag(tag)
+            this.onClose(tag)
         }
     }
 }

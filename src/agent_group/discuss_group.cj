@@ -57,7 +57,7 @@ abstract class DiscussGroup {
 
     public func discuss(initiator: String, speech: String, maxRound!: Int64): AgentResponse {
         if (let Some(idx) <- findAgent(initiator)) {
-            discussion.addMessage(Message.assistant(speech, name: members[idx].name))
+            discussion.add(Message.assistant(speech, name: members[idx].name))
             currSpeakerIndex = idx + 1 // For round robin, we should adjust the index
         } else {
             throw AgentExecutionException("Initiator agent is not existed.")
@@ -84,7 +84,7 @@ abstract class DiscussGroup {
                     throw AgentExecutionException("The speaker agent failed to make speech")
             }
             LogUtils.info(this.host.name, "The speaker says: ${speech}")
-            discussion.addMessage(Message.assistant(speech, name: speaker.name))
+            discussion.add(Message.assistant(speech, name: speaker.name))
             // LogUtils.info(this.name, assistantMsg)
         }
         throw AgentExecutionException("Exceed the max discussion round")

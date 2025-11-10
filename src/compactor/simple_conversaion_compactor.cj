@@ -28,13 +28,13 @@ public class SimpleConversationCompactor <: ConversationCompactor {
         ])
         // Compose messages of all chat rounds
         for (chatRound in conversation) {
-            messages.addMessage(chatRound.question)
-            for (m in chatRound.steps) {
-                messages.addMessage(m)
+            messages.add(chatRound.question)
+            for (step in chatRound.steps) {
+                messages.add(step)
             }
-            messages.addMessage(chatRound.answer)
+            messages.add(chatRound.answer)
         }
-        messages.addMessage(
+        messages.add(
             Message.system("Now, summarize the conversation.")
         )
         let summary = this.model.create(ChatRequest(messages)).message.content

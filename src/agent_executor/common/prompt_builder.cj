@@ -6,9 +6,8 @@ package magic.agent_executor.common
 import magic.core.agent.{AgentRequest, AgentExecutor, AgentExecutionException}
 import magic.core.tool.Tool
 import magic.core.rag.RetrieverMode
-import magic.core.message.{Message, Conversation, MessageList}
+import magic.core.message.{Message, Conversation, MessageList, Tag, WithTag}
 import magic.tokenizer.{TokenizerLoader, TokenizerType}
-import magic.parser.{Tag, WithTag}
 import magic.log.LogUtils
 
 import std.collection.{ArrayList, forEach, map, filter, collectArray, enumerate}
@@ -137,7 +136,7 @@ protected class PromptBuilder {
                 // to guide the LLM to generate correct final answers
                 if(forExecutor.name == "react" ||
                    forExecutor.name == "plan-react") {
-                    execution.addMessage(Message.assistant(chatRound.answer.content.withTag(Tag.ANSWER)))
+                    execution.addMessage(Message.assistant(chatRound.answer.content.withTag(Tag.Answer)))
                 } else {
                     execution.addMessage(Message.assistant(chatRound.answer.content))
                 }

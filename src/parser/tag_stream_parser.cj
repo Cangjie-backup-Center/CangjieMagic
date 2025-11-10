@@ -4,6 +4,7 @@
 package magic.parser
 
 import magic.log.LogUtils
+import magic.core.message.{Tag, WithTag, OPEN_TAG_SYMBOL, CLOSE_TAG_SYMBOL}
 
 import std.collection.ArrayList
 import std.regex.Regex
@@ -68,15 +69,15 @@ protected class TagStreamParser {
         }
     }
 
-    protected prop currTag: Option<String> {
+    protected prop currTag: Option<Tag> {
         get() {
-            while (this.currContent.trimAscii().size < Tag.longestTag.size) {
+            while (this.currContent.trimAscii().size < Tag.longestTagSize) {
                 if (!this.readChunk()) { break }
             }
             // Check whether the current content starts with a tag
             let content = this.currContent.trimAscii()
-            for (tag in Tag.ALL_TAGS) {
-                if (Tag.startsWith(content, tag)) {
+            for (tag in Tag.allTags) {
+                if (content.startsWithTag(tag)) {
                     return tag
                 }
             }
@@ -87,24 +88,24 @@ protected class TagStreamParser {
         }
     }
 
-    protected func readTagAndContent(tag: String): String {
+    protected func readTagAndContent(tag: Tag): String {
         let strBuilder = StringBuilder()
         while (let Some((content, isClosed)) <- this.readContentUntilClosed(tag)) {
             strBuilder.append(content)
             if (isClosed) { break }
         }
-        let content = Tag.trimTag(strBuilder.toString(), tag)
+        let content = strBuilder.toString().trimTag(tag)
         return content.withTag(tag)
     }
 
-    protected func removeTag(tag: String): Unit {
-        this.resetBuffer(Tag.trimTag(this.currContent, tag).trimAsciiStart())
+    protected func removeTag(tag: Tag): Unit {
+        this.resetBuffer(this.currContent.trimAsciiStart().trimTag(tag))
     }
 
     /**
      * Return part content and whether the close tag is read
      */
-    protected func readContentUntilClosed(tag: String): Option<(String, Bool)> {
+    protected func readContentUntilClosed(tag: Tag): Option<(String, Bool)> {
         if (finished) {
             if (this.readChunk()) {
                 LogUtils.debug("Tag stream is finished but the stream is not finished")
@@ -115,7 +116,7 @@ protected class TagStreamParser {
         let exhausted = !this.readChunk()
         let (left, closeTag, right) = this.splitByCloseTag(tag)
         if (exhausted) {
-            if (tag == Tag.ANSWER) {
+            if (tag == Tag.Answer) {
                 // Case 1: The answer tag is special, we always treat the stream is over
                 finished = true
                 this.resetBuffer("")
@@ -141,8 +142,8 @@ protected class TagStreamParser {
         }
     }
 
-    private func splitByCloseTag(tag: String): (String, ?String, String) {
-        let tagName = tag[1..tag.size-1]
+    private func splitByCloseTag(tag: Tag): (String, ?String, String) {
+        let tagName = tag.name
         let content = this.currContent
         // The current content contains the full close tag
         let regex = Regex("\\${OPEN_TAG_SYMBOL}\\s*/\\s*${tagName}\\s*\\${CLOSE_TAG_SYMBOL}")

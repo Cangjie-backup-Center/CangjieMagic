@@ -22,14 +22,14 @@ protected class BoundedMessageList <: MessageList {
         this.computeFn = computeFn
     }
 
-    public override func addMessage(msg: Message): Unit {
+    public override func add(msg: Message): Unit {
         if (posOfSystemMessage.isNone() && msg.role == MessageRole.System) {
             if (!this.isEmpty()) {
                 eprintln("System message should be the first message in the messageList.")
             }
-            posOfSystemMessage = Some(this.messages.size)
+            posOfSystemMessage = super.size
         }
-        this.messages.add(msg)
+        super.add(msg)
         let msgLen = this.computeFn(msg.content)
         this.currTotalLength += msgLen
         this.messageLengthMap.add(msgLen)
@@ -47,8 +47,8 @@ protected class BoundedMessageList <: MessageList {
     private func removeExcessMessages(): Unit {
         let posToRemove = (this.posOfSystemMessage ?? -1) + 1
         while (this.currTotalLength > this.contextLength &&
-               messages.size > posToRemove) {
-            this.messages.remove(at: posToRemove)
+               super.size > posToRemove) {
+            super.remove(at: posToRemove)
             this.currTotalLength -= messageLengthMap.remove(at: posToRemove)
         }
     }

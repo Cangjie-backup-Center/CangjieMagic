@@ -3,10 +3,9 @@
  */
 package magic.agent_group
 
-import magic.core.message.MessageList
+import magic.core.message.{MessageList, Tag, WithTag}
 import magic.agent.base.AgentOp
 import magic.log.LogUtils
-import magic.parser.{Tag, WithTag}
 
 import std.collection.ArrayList
 
@@ -26,7 +25,7 @@ The following is the discussion content.
 {discussion}
 
 ## Output Format
-1. If the problem is solved, the output should be formatted as ${Tag.ANSWER} ... ${Tag.ANSWER.close}
+1. If the problem is solved, the output should be formatted as ${Tag.Answer} ... ${Tag.Answer.close}
 2. Otherwise, output NO-ANSWER
 """
 
@@ -49,9 +48,9 @@ class RoundRobinDiscussGroup <: DiscussGroup {
         ])
         LogUtils.info(this.host.name, sysPrompt)
         for (msg in discussion) {
-            messageList.addMessage(Message.assistant("${msg.name} says: ${msg.content}"))
+            messageList.add(Message.assistant("${msg.name} says: ${msg.content}"))
         }
-        messageList.addMessage(
+        messageList.add(
             Message.user("Select the next speaker now")
         )
 
@@ -60,7 +59,7 @@ class RoundRobinDiscussGroup <: DiscussGroup {
             case None => return Selection.Failure("LLM model failed")
         }
         LogUtils.info(this.host.name, msg)
-        let answer = Tag.extract(msg.content, Tag.ANSWER) ?? "NO-ANSWER"
+        let answer = Tag.extract(msg.content, Tag.Answer) ?? "NO-ANSWER"
         if (answer.contains("NO-ANSWER")) {
             let selection = Selection.Speaker(members[currSpeakerIndex % members.size])
             currSpeakerIndex += 1

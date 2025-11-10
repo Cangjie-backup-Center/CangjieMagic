@@ -3,7 +3,7 @@
  */
 package magic.core.agent
 
-import magic.core.message.{ChatRound, MessageList}
+import magic.core.message.{ChatRound, Message, MessageList}
 import magic.core.rag.RetrievalInfo
 import magic.core.interaction.EventStream
 
@@ -18,6 +18,11 @@ public interface AgentExecution {
      * Internally used thought it's public
      */
     prop messages: MessageList
+
+    /**
+     * Step messages, including user questions, internal assistant messages
+     */
+    prop steps: MessageList
 
     /**
      * Only access this field when setting `verbose: true` in AgentRequest

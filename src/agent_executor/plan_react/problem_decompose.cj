@@ -3,14 +3,14 @@
  */
 package magic.agent_executor.plan_react
 
-import magic.core.agent.*
-import magic.core.message.{Message, MessageList}
 import magic.agent_executor.react.ReactPromptUtils
-import magic.prompt.Template
-import magic.log.LogUtils
-import magic.parser.{Tag, ParserUtils}
+import magic.core.agent.*
+import magic.core.message.{Message, MessageList, Tag}
 import magic.jsonable.Jsonable
+import magic.log.LogUtils
 import magic.model.ModelUtils
+import magic.parser.ParserUtils
+import magic.prompt.Template
 
 // The following prompt modified from [XAgent](https://github.com/OpenBMB/XAgent/blob/main/XAgent/agent/plan_generate_agent/prompt.py)
 private let PROBLEM_DECOMPOSE_SYSTEM_PROMPT = """
