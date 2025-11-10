@@ -6,6 +6,7 @@ package magic.core.agent
 import magic.core.message.{Conversation, MessageList}
 import magic.core.interaction.EventStream
 import magic.jsonable.TypeSchema
+import magic.utils.ImportedFile
 
 import std.collection.{ArrayList, HashMap}
 import std.fs.Path
@@ -80,7 +81,7 @@ public class AgentRequest {
      * Imported files from the request question
      * Processed by the importer utility
      */
-    protected var importedFiles = ArrayList<(Path, String)>()
+    protected var importedFiles = ArrayList<ImportedFile>()
 
     /**
      * Whether the request has been dispatched to a subagent
