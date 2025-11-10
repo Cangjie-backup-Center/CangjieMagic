@@ -19,6 +19,15 @@ private struct Ref {
     ) { }
 }
 
+public struct ImportedFile {
+    ImportedFile(
+        public let referencePath: String,
+        public let filePath: Path,
+        public let content: String,
+        public let truncated: Bool
+    ) { }
+}
+
 /**
  * File importer utility for processing file references in strings
  */
@@ -50,11 +59,11 @@ public class Importer {
      * Parse string and import all referenced files using queue-based approach
      * Returns array of (filePath, content) tuples
      */
-    public func importFiles(str: String): Array<(Path, String)> {
+    public func importFiles(str: String, lineLimit!: Int64 = 100): Array<ImportedFile> {
         // Clear processed files record (start fresh for each call)
         processedFiles.clear()
 
-        let results = ArrayList<(Path, String)>()
+        let results = ArrayList<ImportedFile>()
         let queue = ArrayQueue<Ref>()
 
         // Add initial references from the input string
@@ -65,14 +74,14 @@ public class Importer {
 
         // Process queue until empty
         while (let Some(currentRef) <- queue.remove()) {
-            if (let Some((filePath, fileContent)) <- importSingleFile(currentRef)) {
+            if (let Some(importedFile) <- importSingleFile(currentRef, lineLimit)) {
                 // Add the result to our results
-                results.add((Path(currentRef.referencePath), fileContent))
+                results.add(importedFile)
 
                 // Extract references from the file content and add to queue
-                let newReferences = extractReferences(fileContent)
+                let newReferences = extractReferences(importedFile.content)
                 for (newRef in newReferences) {
-                    queue.add(Ref(newRef, filePath))
+                    queue.add(Ref(newRef, importedFile.filePath))
                 }
             }
         }
@@ -133,7 +142,7 @@ public class Importer {
     /**
      * Import a single file and return (Path, content) tuple
      */
-    private func importSingleFile(ref: Ref): Option<(Path, String)> {
+    private func importSingleFile(ref: Ref, lineLimit: Int64): Option<ImportedFile> {
         let filePath = ref.referencePath
 
         // Check if it's an absolute path (not allowed)
@@ -176,8 +185,13 @@ public class Importer {
                 processedFiles[canonicalPath] = true
 
                 // Read file content
-                let content = readFile(fullPath, withLineNumber: this.withLineNumber)
-                return (fullPath, content)
+                let (isTruncated, content) = readFileWithTruncateInfo(
+                    fullPath,
+                    startLine: 1,
+                    endLine: lineLimit,
+                    withLineNumber: this.withLineNumber
+                )
+                return ImportedFile(ref.referencePath, fullPath, content, isTruncated)
             }
         }
 

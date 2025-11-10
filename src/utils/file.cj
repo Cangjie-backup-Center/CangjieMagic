@@ -126,6 +126,20 @@ public func readFile(path: Path,
                      withLineNumber!: Bool = false,
                      startLine!: Int64 = 1,
                      endLine!: Int64 = Int64.Max): String {
+    let (_, content) = readFileWithTruncateInfo(
+        path, withLineNumber: withLineNumber, startLine: startLine, endLine: endLine
+    )
+    return content
+}
+
+/**
+ * Read a file with line number and truncate info
+ */
+func readFileWithTruncateInfo(
+        path: Path,
+        withLineNumber!: Bool ,
+        startLine!: Int64,
+        endLine!: Int64): (Bool, String) {
     var currentLine = 1
     let lines = ArrayList<String>()
 
@@ -147,19 +161,25 @@ public func readFile(path: Path,
     if (withLineNumber) {
         // Format with line number (right-aligned)
         let width = countDigits(currentLine)
-        return String.join(
-            lines.toArray() |>
-                enumerate |>
-                map { tuple =>
-                    let lineNo = tuple[0] + startLine
-                    let line = tuple[1]
-                    return "${lineNo.toString().padStart(width)}  ${line}"
-                } |>
-                collectArray,
-            delimiter: "\n"
+        return (
+            currentLine > endLine,
+            String.join(
+                lines.toArray() |>
+                    enumerate |>
+                    map { tuple =>
+                        let lineNo = tuple[0] + startLine
+                        let line = tuple[1]
+                        return "${lineNo.toString().padStart(width)}  ${line}"
+                    } |>
+                    collectArray,
+                delimiter: "\n"
+            )
         )
     } else {
-        return String.join(lines.toArray(), delimiter: "\n")
+        return (
+            currentLine > endLine,
+            String.join(lines.toArray(), delimiter: "\n")
+        )
     }
 }
 

@@ -158,11 +158,22 @@ public class AgentExecutionInfo <: AgentExecution {
         var newQuestion = request.question
         // Merge all imported files
         let strBuilder = StringBuilder()
-        for ((path, content) in request.importedFiles) {
-            newQuestion = newQuestion.replace("@${path}", path.toString()) // Remove the @ tag
-            strBuilder.append(
-                "<file-content path=${path}>\n${content}\n</file-content>\n"
-            )
+        for (importedFile in request.importedFiles) {
+            let path = importedFile.referencePath
+            // Remove the @ tag
+            newQuestion = newQuestion.replace("@${path}", path.toString())
+            // Append the file content
+            if (importedFile.truncated) {
+                strBuilder.append("The following is PART of file ${path}. You should use tool to read the full content.\n")
+                strBuilder.append(
+                    "<file-content path=${path} truncated=true>\n${importedFile.content}\n...\n</file-content>\n"
+                )
+            } else {
+                strBuilder.append("The following is FULL content of file ${path}.\n")
+                strBuilder.append(
+                    "<file-content path=${path}>\n${importedFile.content}\n</file-content>\n"
+                )
+            }
         }
         // Add messages in the following order:
         // 1. Add the user question as the first user message
