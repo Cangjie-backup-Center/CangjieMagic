@@ -22,6 +22,8 @@ private class JsonableAttr <: Attr {
 
     var variableDescriptions = HashMap<String, String>()
 
+    var variableJsonnames = HashMap<String, String>()
+
     static func parse(attrTokens: Tokens): JsonableAttr {
         let map = AttrParser(attrTokens).parseAttr(
             macroName: "jsonable",
@@ -40,6 +42,13 @@ public macro jsonable(input: Tokens): Tokens {
             attr.variableDescriptions.add(items[0], items[1])
         }
     }
+    for (m in getChildMessages("jsonname")) {
+        if (m.hasItem("jsonname")) {
+            let s = m.getString("jsonname")
+            let items = s.split(":", 2) // Format: ${varName}:${jsonName}
+            attr.variableJsonnames.add(items[0], items[1])
+        }
+    }
     return transformJsonable(input, attr)
 }
 
@@ -51,6 +60,13 @@ public macro jsonable(attrTokens: Tokens, input: Tokens): Tokens {
             let s = m.getString("fieldDesc")
             let items = s.split(":", 2) // Format: ${name}:${desc}
             attr.variableDescriptions.add(items[0], items[1])
+        }
+    }
+    for (m in getChildMessages("jsonname")) {
+        if (m.hasItem("jsonname")) {
+            let s = m.getString("jsonname")
+            let items = s.split(":", 2) // Format: ${varName}:${jsonName}
+            attr.variableJsonnames.add(items[0], items[1])
         }
     }
 
@@ -193,7 +209,6 @@ private func buildGetTypeSchemaMethod(attr: JsonableAttr): Tokens {
     let body = Tokens()
     for (varDecl in attr.variables) {
         let varName = varDecl.identifier.value
-        let varNameToken = newLiteralToken(varName)
         let tyName = varDecl.declType.toTokens()
 
         let desc = attr.variableDescriptions.get(varName) ?? ""
@@ -203,9 +218,12 @@ private func buildGetTypeSchemaMethod(attr: JsonableAttr): Tokens {
             newLiteralToken(desc)
         }
 
+        let jsonName = attr.variableJsonnames.get(varName) ?? varName
+        let jsonNameToken = newLiteralToken(jsonName)
+
         let required = newLiteralToken(!isOption(varDecl.declType))
         body.append(quote(
-            fields.add(FieldSchema($varNameToken, $descToken, $tyName.getTypeSchema(), required: $required))
+            fields.add(FieldSchema($jsonNameToken, $descToken, $tyName.getTypeSchema(), required: $required))
         ))
     }
     return quote(
@@ -258,17 +276,19 @@ private func buildFromJsonMethod(attr: JsonableAttr): Tokens {
                 let fieldName = newIdentifierToken(varName)
                 // Special identifier like `type`
                 let fieldNameStr = if (varName.startsWith("`")) {
-                    newLiteralToken(varName[1..(varName.size - 1)])
+                    varName[1..(varName.size - 1)]
                 } else {
-                    newLiteralToken(varName)
+                    varName
                 }
+                let fieldJsonname = attr.variableJsonnames.get(varName) ?? fieldNameStr
+                let fieldJsonStr = newLiteralToken(fieldJsonname)
                 let varType = varDecl.declType
 
                 // Case 1: field has default value
                 try {
                     let initExpr = varDecl.expr
                     return quote(
-                        $fieldName: jo.get($fieldNameStr).map({ v => $varType.fromJsonValue(v) }).getOrDefault({ => $initExpr })
+                        $fieldName: jo.get($fieldJsonStr).map({ v => $varType.fromJsonValue(v) }).getOrDefault({ => $initExpr })
                     )
                 } catch (_: ASTException) {
                     // Skip the exception
@@ -276,11 +296,11 @@ private func buildFromJsonMethod(attr: JsonableAttr): Tokens {
                 // Case 2: field type has default value
                 if (let Some(defaultValue) <- getDefaultValueOfType(varType)) {
                     return quote(
-                        $fieldName: $varType.fromJsonValue(jo.get($fieldNameStr).getOrDefault({ => $defaultValue }))
+                        $fieldName: $varType.fromJsonValue(jo.get($fieldJsonStr).getOrDefault({ => $defaultValue }))
                     )
                 } else{ // Case 3: field has no default value
                     return quote(
-                        $fieldName: $varType.fromJsonValue(jo.get($fieldNameStr).getOrThrow({ => throw JsonableException("Get JSON object field error")}))
+                        $fieldName: $varType.fromJsonValue(jo.get($fieldJsonStr).getOrThrow({ => throw JsonableException("Get JSON object field error")}))
                     )
                 }
 
@@ -312,6 +332,7 @@ private func buildToJsonMethod(attr: JsonableAttr): Tokens {
             varName
         }
         let tempVar = newIdentifierToken("__TEMP_OF__${fieldName}")
+        let fieldJsonname = attr.variableJsonnames.get(varName) ?? fieldName
         // A field of type Option means it's a non-required fields,
         // so, if its value is JsonNull, skip it.
         if (isOption(varDecl.declType)) {
@@ -319,12 +340,12 @@ private func buildToJsonMethod(attr: JsonableAttr): Tokens {
                 let $tempVar = $(newIdentifierToken(varName)).toJsonValue()
                 match ($tempVar.kind()) {
                     case JsonKind.JsNull => ()
-                    case _ => map.add($(newLiteralToken(fieldName)), $tempVar)
+                    case _ => map.add($(newLiteralToken(fieldJsonname)), $tempVar)
                 }
             ))
         } else {
             body.append(quote(
-                map.add($(newLiteralToken(fieldName)), $(newIdentifierToken(varName)).toJsonValue())
+                map.add($(newLiteralToken(fieldJsonname)), $(newIdentifierToken(varName)).toJsonValue())
             ))
         }
     }
