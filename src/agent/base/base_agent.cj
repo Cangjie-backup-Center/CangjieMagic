@@ -52,7 +52,10 @@ open public class BaseAgent <: AbsAgent {
         this._eventHandlerManager = eventHandlerManager
     }
 
-    override public prop name: String { get() { _name } }
+    override public mut prop name: String {
+        get() { _name }
+        set(v) { _name = v }
+    }
     override public prop description: String { get() { _description } }
     override public mut prop temperature: Option<Float64> {
         get() { _temperature }

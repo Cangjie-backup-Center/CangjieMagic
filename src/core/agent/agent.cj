@@ -12,7 +12,7 @@ public interface Agent {
     /**
      * Name of the agent
      */
-    prop name: String
+    mut prop name: String
 
     /**
      * Functionality description of the agent
