@@ -443,8 +443,10 @@ private func buildAgentSystemPromptProp(classDecl: ClassDecl, agentAttr: AgentAt
 private func buildAgentNameProp(classDecl: ClassDecl) {
     let tokens = newLiteralToken(classDecl.identifier.value)
     return quote(
-        public override prop name: String {
-            get() { $tokens }
+        private var __NAME__: String = $tokens
+        public override mut prop name: String {
+            get() { __NAME__ }
+            set(v) { __NAME__ = v }
         }
     )
 }

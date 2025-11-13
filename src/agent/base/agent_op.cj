@@ -57,7 +57,7 @@ public struct AgentOp {
     public static func preprocessRequest(request: AgentRequest): AgentRequest {
         // Create importer with configured import paths
         let importer = Importer(Config.importPaths)
-        let importedFiles = importer.importFiles(request.question)
+        let importedFiles = importer.importFiles(request.question, lineLimit: 200)
         request.importedFiles.add(all: importedFiles)
         return request
     }
