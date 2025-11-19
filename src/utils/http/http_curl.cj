@@ -261,6 +261,7 @@ protected struct HttpUtilsImpl {
                             header.add(key, value.trimAscii())
                             LogUtils.trace("Got Http header: ${key}: ${value}")
                         }
+                    }
                 }
                 hasCollected = true
             } else {
