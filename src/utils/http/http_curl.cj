@@ -226,15 +226,21 @@ protected struct HttpUtilsImpl {
 
     /**
      * Parse the curl output to get the status code and headers.
+     *
+     * < HTTP/1.1 200 OK
+     * < Content-Type: application/json
+     * < Transfer-Encoding: chunked 
+     * <
      */
     protected static func parseCurlVerboseOutput(subProcess: SubProcess): (Int64, HttpHeaders) {
         let errReader = StringReader<InputStream>(subProcess.stdErr)
         // Extract status line (e.g., "< HTTP/1.1 200 OK")
-        // And required headers
+        // And all headers
         var status = 200
         let header = HttpHeaders()
         let requiredHeaders = HashSet(["content-type", "mcp-session-id"])
 
+        var hasCollected = false  // if either status or header is collected
         while (let Some(line) <- errReader.readln()) {
             if (line.startsWith("< HTTP/")) {
                 LogUtils.trace("Raw http response header line: ${line}")
@@ -243,6 +249,7 @@ protected struct HttpUtilsImpl {
                     status = Int64.parse(md.matchString(2))
                     LogUtils.trace("Got Http status: ${status}")
                 }
+                hasCollected = true
             } else if (line.startsWith("< ")) {
                 let regex = Regex("^< ([^:]+): (.+)$")
                 if (let Some(md) <- regex.find(line, group: true)) {
@@ -254,11 +261,11 @@ protected struct HttpUtilsImpl {
                             header.add(key, value.trimAscii())
                             LogUtils.trace("Got Http header: ${key}: ${value}")
                         }
-                        requiredHeaders.remove(key)
-                    }
                 }
-                // All required headers are set
-                if (requiredHeaders.isEmpty()) {
+                hasCollected = true
+            } else {
+                // Non-header line (not starting with "< "), headers likely ended
+                if (hasCollected) {
                     break
                 }
             }
