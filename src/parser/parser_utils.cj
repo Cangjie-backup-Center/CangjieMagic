@@ -111,11 +111,27 @@ public struct ParserUtils {
     }
 
     private static func parseToolRequest(json: JsonValue): ToolRequest {
-        let name = JsonUtils.getString(json, "name").getOrThrow({
-            => ParserException("Failed to parse tool request: tool name is missing")
-        })
-        let args = JsonUtils.getJsonObject(json, "arguments") ?? JsonObject()
-        return ToolRequest(name: name, args: args)
+        // LLM may return tool name as "name", "function", or "tool" because of hallucination
+        // Heuristic: use a loop to try "name", "function", and "tool" in order
+        var name = ""
+        for (key in ["name", "function", "tool"]) {
+            name = JsonUtils.getString(json, key) ?? ""
+            if (!name.isEmpty()) {
+                break
+            }
+        }
+        if (name.isEmpty()) {
+            throw ParserException("Failed to parse tool request: tool name is missing")
+        }
+        // Heuristic: use a loop to try "arguments", "parameters", "argument", "parameter", and "args" in order
+        var args: Option<JsonObject> = None
+        for (key in ["arguments", "parameters", "argument", "parameter", "args"]) {
+            args = JsonUtils.getJsonObject(json, key)
+            if (args.isSome()) {
+                return ToolRequest(name: name, args: args.getOrThrow())
+            }
+        }
+        throw ParserException("Failed to parse tool request: arguments are missing")
     }
 
     public static func extractToolRequest(str: String): ToolRequest {
