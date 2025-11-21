@@ -169,8 +169,16 @@ public struct ExecutionOpSet {
         }
     }
 
+    private static func buildToolCallSchemaGuideline(): String {
+        return if (Config.enableParallelToolCall) {
+"The Json object of tool call is invalid. Please output a JSON array like [{\"name\": \"tool_name\", \"arguments\": {...}}], where each element follows the {name, arguments} schema."
+        } else {
+"The Json object of tool call is invalid. Please output a JSON object like {\"name\": \"tool_name\", \"arguments\": {...}}, following the {name, arguments} schema."
+        }
+    }
+
     private static func repairJsonOutput(state: ExecutionState, chatResp: ChatResponse): ExecutionState {
-        let guideline = "The Json object of tool call is invalid. Please revise it and try again."
+        let guideline = buildToolCallSchemaGuideline()
         if (Config.enableModelToolCall) {
             state.execution.addMessage( // Not add as a step message
                 Message.assistant("${chatResp.message.content}\n")
