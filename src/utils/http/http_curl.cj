@@ -29,8 +29,6 @@ private func prepareCurlArgs(method: String, url: String, header: HashMap<String
     args.add("-X")
     args.add(method)
     args.add("-v") // Get response headers
-    args.add("--write-out")  // Defines a custom output format
-    args.add("\n%{http_code}")
     args.add("--no-buffer")  // Disable output buffering
     args.add("--silent")     // Disables curl's default progress
     args.add("--show-error") // Show error messages (but keeps other output silent)
@@ -94,23 +92,22 @@ protected struct HttpUtilsImpl {
                                body: Option<JsonObject>,
                                verify!: Bool): Option<String> {
         let (subProcess, tempPath) = newCurlProcess(method, url, header, body, verify, async: false)
-        parseCurlVerboseOutput(subProcess)
-        return processJson(subProcess, tempPath)
+        let (status, respHeader) = parseCurlVerboseOutput(subProcess)
+        return processJson(subProcess, status, tempPath)
     }
 
     /**
      * Process the http response json output
      */
-    static private func processJson(subProcess: SubProcess, tempPath: Option<String>): String {
+    static private func processJson(subProcess: SubProcess, status: Int64, tempPath: Option<String>): String {
         try {
             let outReader = StringReader<InputStream>(subProcess.stdOut)
-            let out = outReader.readToEnd()
+            let resp = outReader.readToEnd()
             subProcess.wait(timeout: Duration.millisecond * Config.httpReadWriteTimeout)
 
-            let (resp, status) = HttpUtilsImpl.parseCurlOutput(out)
-            LogUtils.trace("Raw http response: ${out}")
+            LogUtils.trace("Raw http response: ${resp}")
 
-            if (status != "200" && status != "202") {
+            if (status != 200 && status != 202) {
                 let content = resp.trimAscii()
                 let msg = if (content.isEmpty()) {
                     "Http status: ${status}"
@@ -197,31 +194,9 @@ protected struct HttpUtilsImpl {
             return HttpResult(
                 status: status,
                 header: respHeader,
-                value: HttpResultOption.Json(processJson(subProcess, tempPath))
+                value: HttpResultOption.Json(processJson(subProcess, status, tempPath))
             )
         }
-    }
-
-    /**
-     * Parse the curl output to get the response body and status code.
-     */
-    static private func parseCurlOutput(output: String): (String, String) {
-        // Split the last line (status code) from the rest (response body)
-        let lines = output.trimAscii().split("\n")
-
-        // Handle empty output case
-        if (lines.size == 0) {
-            throw HttpException("Empty response from curl command")
-        }
-
-        // Handle case with only status code
-        if (lines.size == 1) {
-            return ("", lines[0].trimAscii())
-        }
-
-        let response = String.join(lines[0..(lines.size-1)], delimiter: "\n") // All lines except last
-        let status = lines[lines.size-1].trimAscii()  // Last line is the status code
-        return (response, status)
     }
 
     /**
@@ -229,7 +204,7 @@ protected struct HttpUtilsImpl {
      *
      * < HTTP/1.1 200 OK
      * < Content-Type: application/json
-     * < Transfer-Encoding: chunked 
+     * < Transfer-Encoding: chunked
      * <
      */
     protected static func parseCurlVerboseOutput(subProcess: SubProcess): (Int64, HttpHeaders) {
