@@ -141,22 +141,17 @@ protected struct HttpUtilsImpl {
     }
 
     static private func processStream(subProcess: SubProcess, httpStream: HttpStream, tempPath: Option<String>): Unit {
+        let (status, respHeader) = parseCurlVerboseOutput(subProcess)
         try {
             let outReader = StringReader<InputStream>(subProcess.stdOut)
             // Each line is a chunk response from chat models
-            // The last line is the status code
-            var prevLine: Option<String> = None
             while (let Some(line) <- outReader.readln()) {
                 // LogUtils.debug("Receive http stream: `${line}`")
-                if (let Some(l) <- prevLine) {
-                    httpStream.put("${l}\n".toArray())
-                }
-                prevLine = line
+                httpStream.put("${line}\n".toArray())
             }
             subProcess.wait(timeout: Duration.minute * 1)
 
-            let status = prevLine.getOrThrow() // The last line is the status code
-            if (status.trimAscii() != "200" && status.trimAscii() != "202") {
+            if (status != 200 && status != 202) {
                 LogUtils.error("curl failed")
                 httpStream.markError()
             } else {
