@@ -56,6 +56,12 @@ public abstract class AbsMCPClient <: MCPClient {
         return resp.result
     }
 
+    private func listUI(): ListUIResult {
+        this.send(ListUIRequest())
+        let resp = this.recvResponse<ListUIResponse>()
+        return resp.result
+    }
+
     override public prop tools: Array<Tool> {
         get() {
             this.doBeforeRequest()
@@ -64,6 +70,67 @@ public abstract class AbsMCPClient <: MCPClient {
                 result.add(MCPToolWrapper(this, t))
             }
             return result.toArray()
+        }
+    }
+
+    public prop ui: Array<Tool> {
+        get() {
+            this.doBeforeRequest()
+            let result = ArrayList<Tool>()
+            for (u in this.listUI().ui) {
+                result.add(MCPUIWrapper(this, u))
+            }
+            return result.toArray()
+        }
+    }
+
+    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>): ToolResponse {
+        let argsArr = ArrayList<Array<(String, JsonValue)>>()
+        // var index = 0
+        for (argArr in args) {
+            let arguments = ArrayList<(String, JsonValue)>()
+            for (arg in argArr) {
+                arguments.add((arg[0], arg[1].toJsonValue()))
+            }
+            argsArr.add(arguments.toArray())
+            // index++
+        }
+        return this.callUI(names, argsArr.toArray())
+    }
+
+    override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>): ToolResponse {
+        this.doBeforeRequest()
+        // Prepare the request
+        let argsArr = ArrayList<JsonObject>()
+        for (arg in args) {
+            let arguments = HashMap<String, JsonValue>(arg)
+            argsArr.add(JsonObject(arguments))
+        }
+        let req = CallUIRequest(
+            params: CallUIParams(
+                names: names,
+                title: '',
+                combMode: 'Column',
+                arguments: if (args.isEmpty()) { None } else { argsArr.toArray() }
+            )
+        )
+        // Send the request and receive its response
+        this.send(req)
+        let resp = this.recvResponse<CallUIResponse>()
+        if (req.id != resp.id) {
+            LogUtils.error("Received invalid response with mismatched id: ${resp.toJsonValue().toJsonString()}")
+        }
+        // Merge all result content
+        let result = resp.result
+        let strBuilder = StringBuilder()
+        for (content in result.content) {
+            strBuilder.append(content.getValue())
+            strBuilder.append("\n")
+        }
+        if ((result.isError ?? false)) {
+            return ToolResponse(strBuilder.toString(), isError: true)
+        } else {
+            return ToolResponse(strBuilder.toString(), isError: false)
         }
     }
 

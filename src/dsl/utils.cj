@@ -157,6 +157,27 @@ protected func getGenericConstraintsTokens(decl: Decl): Tokens {
     return tokens
 }
 
+/**
+ * Check whether the return type of a function is String.
+ */
+func checkFuncRetString(funcDecl: FuncDecl): Token {
+    try {
+        let ty = funcDecl.declType
+        if (!ty.isRefType()) {
+            eprintln("Function ${funcDecl.identifier.value} should return String")
+            return Token(TokenKind.IDENTIFIER, "String")
+        }
+        let refTy: RefType = ty.asRefType()
+        let id = refTy.identifier
+        if (!(id.kind == TokenKind.IDENTIFIER && id.value == "String")) {
+            eprintln("Function ${funcDecl.identifier.value} should return String")
+        }
+        return Token(TokenKind.IDENTIFIER, "String")
+    } catch (_: ASTException) {
+        return Token(TokenKind.IDENTIFIER, "String")
+    }
+}
+
 //=====================================================================
 // Auxiliary protected functions to help modify protected function decls
 //=====================================================================

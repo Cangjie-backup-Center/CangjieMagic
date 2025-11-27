@@ -18,16 +18,11 @@ import std.time.DateTime
 import stdx.encoding.url.URL
 import stdx.encoding.json.*
 
-@jsonable
-public class SseMCPInitParams {
-    public let url: String
-}
-
 /**
  * MCP client via the stdio transport
  */
-public class SseMCPClient <: AbsMCPClient {
-    public let userURL: String // The input URL specified by the user
+public class UIMCPClient <: AbsMCPClient {
+    private let userURL: String // The input URL specified by the user
     private var baseURL: String
 
     private var _sseStream: Option<SSEventStream> = None

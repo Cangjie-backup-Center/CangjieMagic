@@ -30,10 +30,10 @@ class Calculator {
     )
 }
 
-main() {
-    Config.logLevel = "INFO"
-    Config.logFile = "./logs/mcp-server.log"
-
-    let agent = Calculator()
-    StdioMCPServer.startWith([agent])
-}
+//main() {
+//    Config.logLevel = "INFO"
+//    Config.logFile = "./logs/mcp-server.log"
+//
+//    let agent = Calculator()
+//    StdioMCPServer.startWith([agent])
+//}

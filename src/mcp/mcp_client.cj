@@ -28,4 +28,14 @@ public interface MCPClient <: Toolset {
      * Call a specified tool from the MCP server.
      */
     func callTool(name: String, args: Array<(String, JsonValue)>): ToolResponse
+
+    /**
+     * Call a specified ui from the MCP server.
+     */
+    func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>): ToolResponse
+
+    /**
+     * Call a specified ui from the MCP server.
+     */
+    func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>): ToolResponse
 }

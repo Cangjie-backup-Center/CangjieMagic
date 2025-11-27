@@ -103,6 +103,13 @@ public class ImageContent {
     let mimeType: String
 }
 
+@jsonable
+public class BinaryContent {
+    var annotations: Option<Annotation> = None
+    var `type`: String = "binary"
+    let data: String
+}
+
 //-----------------------------------------------------------------
 
 @jsonable
@@ -298,6 +305,100 @@ public enum ToolCallContent <: Jsonable<ToolCallContent> {
         match (this) {
             case ToolCallContent.Text(text) => text.text
             case ToolCallContent.Image(image) => image.data
+        }
+    }
+}
+
+//-----------------------------------------------------------------
+
+@jsonable
+class ListUIRequest {
+    var jsonrpc: String = JSONRPC_VERSION
+    var id: Int64 = getRequestID()
+    var method: String = "ui/list"
+    var params: PaginatedParams = PaginatedParams()
+}
+
+@jsonable
+class ListUIResponse {
+    var jsonrpc: String = JSONRPC_VERSION
+    let id: Int64
+    let result: ListUIResult
+}
+
+@jsonable
+public class ListUIResult {
+    let ui: Array<MCPUI>
+    var nextCursor: Option<String> = None
+}
+
+@jsonable
+public class MCPUI {
+    let name: String
+    let description: Option<String>
+    let inputSchema: JsonObject
+}
+
+//-----------------------------------------------------------------
+
+@jsonable
+class CallUIRequest {
+    var jsonrpc: String = JSONRPC_VERSION
+    var id: Int64 = getRequestID()
+    var method: String = "ui/call"
+    let params: CallUIParams
+}
+
+@jsonable
+class CallUIParams1 {
+    let name: String
+    let arguments: Option<JsonObject>
+}
+
+@jsonable
+class CallUIParams {
+    let names: Array<String>
+    let title: String
+    let combMode: String
+    let arguments: Option<Array<JsonObject>>
+}
+
+@jsonable
+class CallUIResponse {
+    var jsonrpc: String = JSONRPC_VERSION
+    let id: Int64
+    let result: CallUIResult
+}
+
+@jsonable
+public class CallUIResult {
+    let content: Array<UICallContent>
+    let isError: Option<Bool>
+}
+
+public enum UICallContent <: Jsonable<UICallContent> {
+    | Binary(BinaryContent)
+
+    public static func getTypeSchema(): TypeSchema {
+        throw JsonableException("Unsupported method")
+    }
+
+    public static func fromJsonValue(json: JsonValue): UICallContent {
+        match (JsonUtils.getString(json, "type") ?? "") {
+            case "binary" => return UICallContent.Binary(BinaryContent.fromJsonValue(json))
+            case _ => throw MCPException("Unsupported tool call result `${json.toString()}`")
+        }
+    }
+
+    public func toJsonValue(): JsonValue {
+        match (this) {
+            case UICallContent.Binary(content) => content.toJsonValue()
+        }
+    }
+
+    public func getValue(): String {
+        match (this) {
+            case UICallContent.Binary(binary) => binary.data
         }
     }
 }

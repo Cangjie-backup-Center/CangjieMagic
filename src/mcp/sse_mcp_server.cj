@@ -24,14 +24,14 @@ extend HttpContext {
     }
 }
 
-public class SseMCPServer <: AbsMCPServer {
+open public class SseMCPServer <: AbsMCPServer {
     var client_map = ConcurrentHashMap<String, HttpResponseWriter>()
 
     public init(tools: Array<Tool>) {
         super(tools)
     }
 
-    public func start(host: String, port: UInt16): Unit {
+    open public func start(host: String, port: UInt16): Unit {
         let http_server = ServerBuilder().addr(host).port(port).build()
 
         let sseHandler: HttpRequestHandler = FuncHandler({ httpContext =>
