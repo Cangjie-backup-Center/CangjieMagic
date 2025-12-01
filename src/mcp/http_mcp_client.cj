@@ -203,11 +203,15 @@ public class HttpMCPClient <: AbsMCPClient {
             throw MCPException("ProtocolVersion of the client and server mismatches")
         }
         this.send(InitializedNotification().toJsonValue().asObject())
-        if (this.recv() != "202 Accepted") {
-            throw MCPException("Fail to initialize HTTP MCP client session")
+        let result = this.recv()
+        // MCP requires the server to return 202 Accepted for the notification
+        // however, if proxy is set, the server response may be replaced as 200 with an empty string?
+        if (result == "202 Accepted" || result.isEmpty()) {
+            LogUtils.info("HTTP MCP client session initialized successfully")
+        } else {
+            LogUtils.error("Fail to initialize HTTP MCP client session. Received: ${result}")
+            throw MCPException("Fail to initialize HTTP MCP client session. Received: ${result}")
         }
-
-        LogUtils.info("HTTP MCP client session initialized successfully")
     }
 
     public func close(): Unit {
