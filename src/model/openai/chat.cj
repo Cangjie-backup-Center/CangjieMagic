@@ -11,10 +11,12 @@ import magic.dsl.jsonable
 import magic.jsonable.*
 import magic.config.Config
 import magic.log.LogUtils
+import magic.utils.sleep2
 
 import std.collection.{ArrayList, map, collectArray}
 import std.collection.HashMap
 import std.time.DateTime
+import std.math.pow
 import stdx.encoding.json.*
 
 @When[cjc_version < "1.0.0"]
@@ -261,19 +263,86 @@ public class OpenAIChatModel <: ChatModel {
         let (header, req) = prepareHeaderAndRequest(chatReq, stream: false)
         let start = DateTime.now()
 
-        try {
-            match (HttpUtils.post("${this.baseURL}/chat/completions", header, req)) {
-                case Some(body) =>
-                    if (body.isEmpty()) {
-                        throw ModelException("Http response body is empty")
-                    } else {
-                        return this.parseResponse(body, DateTime.now() - start)
+        // Get retry configuration from Config
+        let maxRetries = if (Config.retryOn429) { Config.max429Retries } else { 1 }
+        let initialDelayMs = Config.initial429DelayMs
+        let maxDelayMs = Config.max429DelayMs
+        let multiplier = Config.retryMultiplier
+        
+        var lastException: Option<Exception> = None
+        
+        // Retry loop with exponential backoff
+        for (attempt in 0..maxRetries) {
+            try {
+                match (HttpUtils.post("${this.baseURL}/chat/completions", header, req)) {
+                    case Some(body) =>
+                        if (body.isEmpty()) {
+                            throw ModelException("Http response body is empty")
+                        } else {
+                            // Success! Return response
+                            if (attempt > 0) {
+                                LogUtils.info("OpenAI", "Request succeeded on attempt ${attempt + 1} after retries")
+                            }
+                            return this.parseResponse(body, DateTime.now() - start)
+                        }
+                    case None => 
+                        throw ModelException("Http response body is None")
+                }
+            } catch (ex: HttpException) {
+                lastException = ex
+                
+                // Check if this is a rate limit error (429)
+                let errorMsg = ex.error.toAsciiLower()
+                let isRateLimitError = errorMsg.contains("429") || 
+                                       errorMsg.contains("rate limit") || 
+                                       errorMsg.contains("quota") ||
+                                       errorMsg.contains("too many requests")
+                
+                if (isRateLimitError && attempt < maxRetries - 1) {
+                    // Calculate exponential backoff delay
+                    let delayMs = calculateBackoffDelay(attempt, initialDelayMs, maxDelayMs, multiplier)
+                    
+                    LogUtils.debug(
+                        "Rate limit hit (HTTP 429) on attempt ${attempt + 1}/${maxRetries}. " +
+                        "Retrying after ${delayMs}ms..."
+                    )
+                    
+                    // Wait before retry
+                    sleep2(delayMs)
+                    continue  // Continue to next retry attempt
+                } else {
+                    // Either not a rate limit error, or we've exhausted retries
+                    if (isRateLimitError) {
+                        LogUtils.error(
+                            "Rate limit exceeded after ${maxRetries} attempts. Giving up."
+                        )
                     }
-                case None => throw ModelException("Http response body is None")
+                    throw ModelException(ex.error)
+                }
             }
-        } catch (ex: HttpException) {
-            throw ModelException(ex.error)
         }
+        
+        // This should not be reached, but handle it for type safety
+        if (let Some(ex) <- lastException) {
+            throw ModelException(ex.message)
+        } else {
+            throw ModelException("Unknown error in retry logic")
+        }
+    }
+    
+    /**
+     * Calculate exponential backoff delay
+     * Formula: min(initialDelay * (multiplier ^ attempt), maxDelay)
+     */
+    private func calculateBackoffDelay(
+        attempt: Int64, 
+        initialDelayMs: Int64, 
+        maxDelayMs: Int64, 
+        multiplier: Float64
+    ): Int64 {
+        let delay = Float64(initialDelayMs) * pow(multiplier, Float64(attempt))
+        let delayInt = Int64(delay)
+        return if (delayInt < maxDelayMs) { delayInt } else { maxDelayMs }
     }
 
     private func prepareHeaderAndRequest(chatReq: ChatRequest, stream!: Bool): (HashMap<String, String>, JsonObject) {
