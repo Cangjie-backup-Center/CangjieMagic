@@ -17,7 +17,7 @@ public interface Agent {
     /**
      * Functionality description of the agent
      */
-    prop description: String
+    mut prop description: String
 
     /**
      * Temperature the agent will pass to the LLM
