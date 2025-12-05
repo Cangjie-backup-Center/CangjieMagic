@@ -17,6 +17,8 @@ import std.collection.{ArrayList, map, collectArray}
 import std.collection.HashMap
 import std.time.DateTime
 import std.math.pow
+import std.convert.Parsable
+import std.regex.Regex
 import stdx.encoding.json.*
 
 @When[cjc_version < "1.0.0"]
@@ -292,11 +294,8 @@ public class OpenAIChatModel <: ChatModel {
                 lastException = ex
                 
                 // Check if this is a rate limit error (429)
-                let errorMsg = ex.error.toAsciiLower()
-                let isRateLimitError = errorMsg.contains("429") || 
-                                       errorMsg.contains("rate limit") || 
-                                       errorMsg.contains("quota") ||
-                                       errorMsg.contains("too many requests")
+                // First try to parse HTTP status code from error message
+                let isRateLimitError = isRateLimitError(ex.error)
                 
                 if (isRateLimitError && attempt < maxRetries - 1) {
                     // Calculate exponential backoff delay
@@ -330,6 +329,35 @@ public class OpenAIChatModel <: ChatModel {
         }
     }
     
+    /**
+     * Check if the error is a rate limit error (429)
+     * Parse HTTP status code from error message for accurate detection
+     */
+    private func isRateLimitError(errorMsg: String): Bool {
+        let lowerMsg = errorMsg.toAsciiLower()
+        
+        // Method 1: Parse HTTP status code from "Http status: XXX" format using regex
+        // This is the most reliable method
+        let statusRegex = Regex("http status:\\s*(\\d+)")
+        if (let Some(md) <- statusRegex.find(lowerMsg, group: true)) {
+            try {
+                let statusStr = md.matchString(1)
+                let status = Int64.parse(statusStr)
+                return status == 429  // Exact match!
+            } catch (_: Exception) {
+                // Parse failed, fall through to keyword matching
+            }
+        }
+        
+        // Method 2: Fallback to keyword matching (less reliable)
+        // Only match specific phrases to reduce false positives
+        return lowerMsg.contains("rate limit") || 
+               lowerMsg.contains("rate_limit") ||
+               lowerMsg.contains("ratelimit") ||
+               lowerMsg.contains("quota exceeded") ||
+               lowerMsg.contains("too many requests")
+    }
+
     /**
      * Calculate exponential backoff delay
      * Formula: min(initialDelay * (multiplier ^ attempt), maxDelay)
