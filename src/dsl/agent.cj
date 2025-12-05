@@ -506,8 +506,10 @@ private func buildAgentExecutorProp(agentAttr: AgentAttr): Tokens {
 private func buildAgentDescriptionProp(agentAttr: AgentAttr): Tokens {
     let tokens = newLiteralToken(agentAttr.description)
     return quote(
-        public override prop description: String {
-            get() { $tokens }
+        private var __DESCRIPTION__: String = $tokens
+        public override mut prop description: String {
+            get() { __DESCRIPTION__ }
+            set(v) { __DESCRIPTION__ = v }
         }
     )
 }
