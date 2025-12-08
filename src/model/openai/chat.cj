@@ -11,14 +11,10 @@ import magic.dsl.jsonable
 import magic.jsonable.*
 import magic.config.Config
 import magic.log.LogUtils
-import magic.utils.sleep2
 
 import std.collection.{ArrayList, map, collectArray}
 import std.collection.HashMap
 import std.time.DateTime
-import std.math.pow
-import std.convert.Parsable
-import std.regex.Regex
 import stdx.encoding.json.*
 
 @When[cjc_version < "1.0.0"]
@@ -265,112 +261,19 @@ public class OpenAIChatModel <: ChatModel {
         let (header, req) = prepareHeaderAndRequest(chatReq, stream: false)
         let start = DateTime.now()
 
-        // Get retry configuration from Config
-        let maxRetries = if (Config.retryOn429) { Config.max429Retries } else { 1 }
-        let initialDelayMs = Config.initial429DelayMs
-        let maxDelayMs = Config.max429DelayMs
-        let multiplier = Config.retryMultiplier
-        
-        var lastException: Option<Exception> = None
-        
-        // Retry loop with exponential backoff
-        for (attempt in 0..maxRetries) {
-            try {
-                match (HttpUtils.post("${this.baseURL}/chat/completions", header, req)) {
-                    case Some(body) =>
-                        if (body.isEmpty()) {
-                            throw ModelException("Http response body is empty")
-                        } else {
-                            // Success! Return response
-                            if (attempt > 0) {
-                                LogUtils.info("OpenAI", "Request succeeded on attempt ${attempt + 1} after retries")
-                            }
-                            return this.parseResponse(body, DateTime.now() - start)
-                        }
-                    case None => 
-                        throw ModelException("Http response body is None")
-                }
-            } catch (ex: HttpException) {
-                lastException = ex
-                
-                // Check if this is a rate limit error (429)
-                // First try to parse HTTP status code from error message
-                let isRateLimitError = isRateLimitError(ex.error)
-                
-                if (isRateLimitError && attempt < maxRetries - 1) {
-                    // Calculate exponential backoff delay
-                    let delayMs = calculateBackoffDelay(attempt, initialDelayMs, maxDelayMs, multiplier)
-                    
-                    LogUtils.debug(
-                        "Rate limit hit (HTTP 429) on attempt ${attempt + 1}/${maxRetries}. " +
-                        "Retrying after ${delayMs}ms..."
-                    )
-                    
-                    // Wait before retry
-                    sleep2(delayMs)
-                    continue  // Continue to next retry attempt
-                } else {
-                    // Either not a rate limit error, or we've exhausted retries
-                    if (isRateLimitError) {
-                        LogUtils.error(
-                            "Rate limit exceeded after ${maxRetries} attempts. Giving up."
-                        )
+        try {
+            match (HttpUtils.post("${this.baseURL}/chat/completions", header, req)) {
+                case Some(body) =>
+                    if (body.isEmpty()) {
+                        throw ModelException("Http response body is empty")
+                    } else {
+                        return this.parseResponse(body, DateTime.now() - start)
                     }
-                    throw ModelException(ex.error)
-                }
+                case None => throw ModelException("Http response body is None")
             }
+        } catch (ex: HttpException) {
+            throw ModelException(ex.error)
         }
-        
-        // This should not be reached, but handle it for type safety
-        if (let Some(ex) <- lastException) {
-            throw ModelException(ex.message)
-        } else {
-            throw ModelException("Unknown error in retry logic")
-        }
-    }
-    
-    /**
-     * Check if the error is a rate limit error (429)
-     * Parse HTTP status code from error message for accurate detection
-     */
-    private func isRateLimitError(errorMsg: String): Bool {
-        let lowerMsg = errorMsg.toAsciiLower()
-        
-        // Method 1: Parse HTTP status code from "Http status: XXX" format using regex
-        // This is the most reliable method
-        let statusRegex = Regex("http status:\\s*(\\d+)")
-        if (let Some(md) <- statusRegex.find(lowerMsg, group: true)) {
-            try {
-                let statusStr = md.matchString(1)
-                let status = Int64.parse(statusStr)
-                return status == 429  // Exact match!
-            } catch (_: Exception) {
-                // Parse failed, fall through to keyword matching
-            }
-        }
-        
-        // Method 2: Fallback to keyword matching (less reliable)
-        // Only match specific phrases to reduce false positives
-        return lowerMsg.contains("rate limit") || 
-               lowerMsg.contains("rate_limit") ||
-               lowerMsg.contains("ratelimit") ||
-               lowerMsg.contains("quota exceeded") ||
-               lowerMsg.contains("too many requests")
-    }
-
-    /**
-     * Calculate exponential backoff delay
-     * Formula: min(initialDelay * (multiplier ^ attempt), maxDelay)
-     */
-    private func calculateBackoffDelay(
-        attempt: Int64, 
-        initialDelayMs: Int64, 
-        maxDelayMs: Int64, 
-        multiplier: Float64
-    ): Int64 {
-        let delay = Float64(initialDelayMs) * pow(multiplier, Float64(attempt))
-        let delayInt = Int64(delay)
-        return if (delayInt < maxDelayMs) { delayInt } else { maxDelayMs }
     }
 
     private func prepareHeaderAndRequest(chatReq: ChatRequest, stream!: Bool): (HashMap<String, String>, JsonObject) {

@@ -223,23 +223,8 @@ public class Config {
      */
     public static var importPaths = ["."]
 
-    /**
-     * 429 Rate Limit Retry Configuration
-     */
-    // Enable automatic retry on 429 errors
-    public static var retryOn429: Bool = true
-    
-    // Maximum number of retry attempts (including the first attempt)
-    public static var max429Retries: Int64 = 4
-    
-    // Initial delay in milliseconds before first retry
-    public static var initial429DelayMs: Int64 = 1000
-    
-    // Maximum delay in milliseconds (caps exponential backoff)
-    public static var max429DelayMs: Int64 = 32000
-    
-    // Exponential backoff multiplier
-    public static var retryMultiplier: Float64 = 2.0
+    // Enable automatic retry on API errors
+    public static var retry: Bool = true
     
 
     /**
