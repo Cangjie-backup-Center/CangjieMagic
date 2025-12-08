@@ -223,8 +223,8 @@ public class Config {
      */
     public static var importPaths = ["."]
 
-    // Enable automatic retry on API errors
-    public static var retry: Bool = true
+    // Enable automatic enableHttpRetry on API errors
+    public static var enableHttpRetry: Bool = true
     
 
     /**

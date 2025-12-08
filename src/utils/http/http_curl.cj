@@ -145,8 +145,8 @@ protected struct HttpUtilsImpl {
                                header: HashMap<String, String>,
                                body: Option<JsonObject>,
                                verify!: Bool): Option<String> {
-        // If retry is disabled, execute once and return
-        if (!Config.retry) {
+        // If enableHttpRetry is disabled, execute once and return
+        if (!Config.enableHttpRetry) {
             let (subProcess, tempPath) = newCurlProcess(method, url, header, body, verify, async: false)
             let (status, respHeader) = parseCurlVerboseOutput(subProcess)
             return processJson(subProcess, status, tempPath)

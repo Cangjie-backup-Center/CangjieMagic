@@ -4,7 +4,7 @@
 package magic.utils.http
 
 import magic.log.LogUtils
-import magic.utils.getEnv
+import magic.utils.{getEnv, sleep2}
 import magic.config.Config
 
 import std.collection.{HashMap, contains}
@@ -95,6 +95,28 @@ private func sendHttp(method: String,
     }
 }
 
+/**
+ * Send HTTP request and return response with status code (without throwing exception)
+ */
+private func sendHttpWithStatus(method: String,
+                                url: String,
+                                header: HashMap<String, String>,
+                                body: Option<JsonObject>,
+                                verify: Bool): (Client, HttpResponse, Int64) {
+    let client = buildHttpClient(url, verify)
+    let req = prepareHttpRequest(method, url, header, body)
+    try {
+        let response = client.send(req)
+        let status = Int64(response.status)
+        return (client, response, status)
+    } catch (ex: Exception) {
+        client.close()
+        LogUtils.error("Http ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
+        LogUtils.debug(ex)
+        throw HttpException(ex.message)
+    }
+}
+
 private func readHttpBody(resp: HttpResponse): String {
     let reader = StringReader(resp.body)
     return reader.readToEnd()
@@ -104,6 +126,82 @@ private func readHttpBody(resp: HttpResponse): String {
 
 @When[ohos != "true" && http != "curl"]
 protected struct HttpUtilsImpl {
+    /**
+     * Check if the HTTP status code is retryable (429, 500, 503, 502, 504, 408)
+     */
+    static private func isRetryableStatus(status: Int64): Bool {
+        return status == 429 || status == 500 || status == 503 || 
+            status == 502 || status == 504 || status == 408
+    }
+
+    /**
+     * Send HTTP request with exponential backoff retry for retryable status codes
+     */
+    static private func sendWithRetry(method: String,
+                                      url: String,
+                                      header: HashMap<String, String>,
+                                      body: Option<JsonObject>,
+                                      verify: Bool): Option<String> {
+        let maxRetries: Int64 = 4
+        let initialDelayMs: Int64 = 1000
+        let multiplier: Int64 = 2
+        for (attempt in 0..maxRetries) {
+            let (client, resp, status) = sendHttpWithStatus(method, url, header, body, verify)
+            // Check if status is retryable
+            if (isRetryableStatus(status)) {
+                if (attempt < maxRetries - 1) {
+                    // Clean up current client
+                    client.close()
+                    // Calculate exponential backoff delay: initialDelayMs * (multiplier ^ attempt)
+                    let delayMs = initialDelayMs * (multiplier ** UInt64(attempt))
+                    LogUtils.debug(
+                        "HttpUtilsImpl",
+                        "Retryable status ${status} on attempt ${attempt + 1}/${maxRetries}. Retrying after ${delayMs}ms..."
+                    )
+                    sleep2(delayMs)
+                    continue
+                } else {
+                    // Last attempt, log error and process (will throw exception)
+                    LogUtils.error(
+                        "HttpUtilsImpl",
+                        "Retryable status ${status} exceeded after ${maxRetries} attempts. Giving up."
+                    )
+                    // Process response which will throw exception for non-200 status
+                    let content = readHttpBody(resp).trimAscii()
+                    let msg = if (content.isEmpty()) {
+                        "Http status: ${status}"
+                    } else {
+                        "Http status: ${status}\nHttp response: ${content}"
+                    }
+                    client.close()
+                    LogUtils.error("Http ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
+                    LogUtils.error(msg)
+                    throw HttpException(msg)
+                }
+            } else {
+                // Not retryable, process the response
+                if (status != 200 && status != 202) {
+                    // Non-retryable error, throw exception
+                    let content = readHttpBody(resp).trimAscii()
+                    let msg = if (content.isEmpty()) {
+                        "Http status: ${status}"
+                    } else {
+                        "Http status: ${status}\nHttp response: ${content}"
+                    }
+                    client.close()
+                    LogUtils.error("Http ${url} with data: ${(body ?? JsonObject()).toJsonString()} failed")
+                    LogUtils.error(msg)
+                    throw HttpException(msg)
+                } else {
+                    // Success, return response body
+                    return processJson(client, resp)
+                }
+            }
+        }
+        // Should not reach here, but return None as fallback
+        return None
+    }
+
     static protected func send(method: String,
                                url: String,
                                header: HashMap<String, String>,
@@ -111,8 +209,13 @@ protected struct HttpUtilsImpl {
                                verify!: Bool): Option<String> {
         // header.put("Accept", "application/json")
         logHttpInfo(method, url, header, body, async: false)
-        let (client, resp) = sendHttp(method, url, header, body, verify)
-        return processJson(client, resp)
+        // If retry is disabled, execute once and return
+        if (!Config.enableHttpRetry) {
+            let (client, resp) = sendHttp(method, url, header, body, verify)
+            return processJson(client, resp)
+        }
+        // Retry logic enabled
+        return sendWithRetry(method, url, header, body, verify)
     }
 
     static private func processJson(client: Client, response: HttpResponse): String {
