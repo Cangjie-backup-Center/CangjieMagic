@@ -363,9 +363,9 @@ public class OpenAIChatModel <: ChatModel {
         let resp = OpenAIChatResponse.fromJsonValue(JsonValue.fromStr(body))
         let messageList = MessageList()
         if (resp.choices.size > 1) {
-            LogUtils.error("The chat model replied multiple messages")
+            LogUtils.error("Model replied multiple messages?\n${body}")
         } else if (resp.choices.isEmpty()) {
-            let msg = "The chat model did not reply a message"
+            let msg = "Model replied an invalid message:\n ${body}"
             LogUtils.error(msg)
             throw ModelException(msg)
         }
