@@ -166,14 +166,18 @@ extend<T> Option<T> <: Jsonable<Option<T>> where T <: Jsonable<T> {
         // However, Option<T> is not required
         return T.getTypeSchema()
     }
+}
 
+extend<T> Option<T> <: FromJsonValue<Option<T>> where T <: FromJsonValue<T> {
     public static func fromJsonValue(json: JsonValue): Option<T> {
         if (let JsonKind.JsNull <- json.kind()) {
             return None
         }
         return Some(T.fromJsonValue(json))
     }
+}
 
+extend<T> Option<T> <: ToJsonValue where T <: ToJsonValue {
     public func toJsonValue(): JsonValue {
         if (let Some(value) <- this) {
             return value.toJsonValue()
