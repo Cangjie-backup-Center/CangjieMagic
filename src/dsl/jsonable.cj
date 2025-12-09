@@ -109,7 +109,7 @@ private func transformJsonableStruct(structDecl: StructDecl, attr: JsonableAttr)
  *   ...
  * }
  * as
- * class F {
+ * class F <: Jsonable<F> {
  *   let a: String
  *   let b: String
  *
