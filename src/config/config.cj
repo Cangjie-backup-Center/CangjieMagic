@@ -223,6 +223,10 @@ public class Config {
      */
     public static var importPaths = ["."]
 
+    // Enable automatic enableHttpRetry on API errors
+    public static var enableHttpRetry: Bool = true
+    
+
     /**
      * Register uncaught exception handler for threads spawn by `Agent.asyncChat`
      * A bug in Cangjie std.core.Thread?

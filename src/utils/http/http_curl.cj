@@ -5,7 +5,7 @@ package magic.utils.http
 
 import magic.log.LogUtils
 import magic.config.Config
-import magic.utils.{saveTempFile, newProcess, removeIfExists}
+import magic.utils.{saveTempFile, newProcess, removeIfExists, sleep2}
 
 import std.io.InputStream
 import std.io.StringReader
@@ -86,14 +86,73 @@ protected struct HttpUtilsImpl {
         return (subProcess, tempPath)
     }
 
+    /**
+     * Send HTTP request with exponential backoff retry for retryable status codes
+     */
+    static private func sendWithRetry(method: String,
+                                      url: String,
+                                      header: HashMap<String, String>,
+                                      body: Option<JsonObject>,
+                                      verify: Bool): Option<String> {
+        let maxRetries: Int64 = 4
+        let initialDelayMs: Int64 = 1000
+        let multiplier: Int64 = 2
+        for (attempt in 0..maxRetries) {
+            let (subProcess, tempPath) = newCurlProcess(method, url, header, body, verify, async: false)
+            let (status, respHeader) = parseCurlVerboseOutput(subProcess)
+            // Check if status is retryable
+            if (isRetryableStatus(status)) {
+                if (attempt < maxRetries - 1) {
+                    // Clean up current process
+                    if (let Some(path) <- tempPath) {
+                        removeIfExists(path)
+                    }
+                    // Calculate exponential backoff delay: initialDelayMs * (multiplier ^ attempt)
+                    let delayMs = initialDelayMs * (multiplier ** UInt64(attempt))
+                    LogUtils.debug(
+                        "HttpUtilsImpl",
+                        "Retryable status ${status} on attempt ${attempt + 1}/${maxRetries}. Retrying after ${delayMs}ms..."
+                    )
+                    sleep2(delayMs)
+                    continue
+                } else {
+                    // Last attempt, log error and process (will throw exception)
+                    LogUtils.error(
+                        "HttpUtilsImpl",
+                        "Retryable status ${status} exceeded after ${maxRetries} attempts. Giving up."
+                    )
+                    return processJson(subProcess, status, tempPath)
+                }
+            } else {
+                // Not retryable, process the response
+                return processJson(subProcess, status, tempPath)
+            }
+        }
+        // Should not reach here, but return None as fallback
+        return None
+    }
+    
+    /**
+    * Check if the HTTP status code is retryable (429, 500, 503, 502, 504, 408)
+    */
+    static private func isRetryableStatus(status: Int64): Bool {
+        return status == 429 || status == 500 || status == 503 || 
+            status == 502 || status == 504 || status == 408
+    }
+
     static protected func send(method: String,
                                url: String,
                                header: HashMap<String, String>,
                                body: Option<JsonObject>,
                                verify!: Bool): Option<String> {
-        let (subProcess, tempPath) = newCurlProcess(method, url, header, body, verify, async: false)
-        let (status, respHeader) = parseCurlVerboseOutput(subProcess)
-        return processJson(subProcess, status, tempPath)
+        // If enableHttpRetry is disabled, execute once and return
+        if (!Config.enableHttpRetry) {
+            let (subProcess, tempPath) = newCurlProcess(method, url, header, body, verify, async: false)
+            let (status, respHeader) = parseCurlVerboseOutput(subProcess)
+            return processJson(subProcess, status, tempPath)
+        }
+        // Retry logic enabled
+        return sendWithRetry(method, url, header, body, verify)
     }
 
     /**
