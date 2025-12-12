@@ -245,6 +245,7 @@ public class ListToolsResult {
 @jsonable
 public class MCPTool {
     let name: String
+    let kind: String
     let description: Option<String>
     let inputSchema: JsonObject
 }
@@ -312,15 +313,30 @@ public enum ToolCallContent <: Jsonable<ToolCallContent> {
 //-----------------------------------------------------------------
 
 @jsonable
-class ListUIRequest {
+class ListInputUIRequest {
     var jsonrpc: String = JSONRPC_VERSION
     var id: Int64 = getRequestID()
-    var method: String = "ui/list"
+    var method: String = "ui/input/list"
     var params: PaginatedParams = PaginatedParams()
 }
 
 @jsonable
-class ListUIResponse {
+class ListDisplayUIRequest {
+    var jsonrpc: String = JSONRPC_VERSION
+    var id: Int64 = getRequestID()
+    var method: String = "ui/display/list"
+    var params: PaginatedParams = PaginatedParams()
+}
+
+@jsonable
+class ListInputUIResponse {
+    var jsonrpc: String = JSONRPC_VERSION
+    let id: Int64
+    let result: ListUIResult
+}
+
+@jsonable
+class ListDisplayUIResponse {
     var jsonrpc: String = JSONRPC_VERSION
     let id: Int64
     let result: ListUIResult
@@ -335,6 +351,7 @@ public class ListUIResult {
 @jsonable
 public class MCPUI {
     let name: String
+    let kind: String
     let description: Option<String>
     let inputSchema: JsonObject
 }
@@ -342,17 +359,19 @@ public class MCPUI {
 //-----------------------------------------------------------------
 
 @jsonable
-class CallUIRequest {
+class CallArkUIRequest {
     var jsonrpc: String = JSONRPC_VERSION
     var id: Int64 = getRequestID()
-    var method: String = "ui/call"
+    var method: String = "arkui/call"
     let params: CallUIParams
 }
 
 @jsonable
-class CallUIParams1 {
-    let name: String
-    let arguments: Option<JsonObject>
+class CallHTMLUIRequest {
+    var jsonrpc: String = JSONRPC_VERSION
+    var id: Int64 = getRequestID()
+    var method: String = "htmlui/call"
+    let params: CallUIParams
 }
 
 @jsonable
@@ -371,12 +390,13 @@ class CallUIResponse {
 }
 
 @jsonable
-public class CallUIResult {
-    let content: Array<UICallContent>
-    let isError: Option<Bool>
+class CallUIResult {
+    public let content: Array<UICallContent>
+    public let isError: Option<Bool>
 }
 
 public enum UICallContent <: Jsonable<UICallContent> {
+    | Text(TextContent)
     | Binary(BinaryContent)
 
     public static func getTypeSchema(): TypeSchema {
@@ -385,6 +405,7 @@ public enum UICallContent <: Jsonable<UICallContent> {
 
     public static func fromJsonValue(json: JsonValue): UICallContent {
         match (JsonUtils.getString(json, "type") ?? "") {
+            case "text" => return UICallContent.Text(TextContent.fromJsonValue(json))
             case "binary" => return UICallContent.Binary(BinaryContent.fromJsonValue(json))
             case _ => throw MCPException("Unsupported tool call result `${json.toString()}`")
         }
@@ -392,12 +413,14 @@ public enum UICallContent <: Jsonable<UICallContent> {
 
     public func toJsonValue(): JsonValue {
         match (this) {
+            case UICallContent.Text(content) => content.toJsonValue()
             case UICallContent.Binary(content) => content.toJsonValue()
         }
     }
 
     public func getValue(): String {
         match (this) {
+            case UICallContent.Text(text) => text.text
             case UICallContent.Binary(binary) => binary.data
         }
     }

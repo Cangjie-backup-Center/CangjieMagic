@@ -461,3 +461,357 @@ extend Node <: NodeExt {
         (this as TrailingClosureExpr).getOrThrow()
     }
 }
+
+
+protected const moreResumeButtonCss = '''
+		.custom-dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .custom-dialog-overlay.active {
+            display: flex; /* 关键：添加flex显示 */
+            opacity: 1;
+            visibility: visible;
+        }
+
+		.custom-dialog {
+            background-color: hsl(0, 0%, 100%);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 12px hsl(0, 0%, 0%, 0.15);
+        }
+
+        .dialog-message {
+            margin-bottom: 1.5rem;
+            color: hsl(0, 0%, 20%);
+            line-height: 1.5;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .dialog-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
+        }
+
+        .dialog-cancel {
+            background-color: hsl(0, 0%, 90%);
+            color: hsl(0, 0%, 20%);
+        }
+
+        .dialog-cancel:hover {
+            background-color: hsl(0, 0%, 80%);
+        }
+
+        .dialog-confirm {
+            background-color: hsl(0, 100%, 60%);
+            color: hsl(0, 0%, 100%);
+        }
+
+        .dialog-confirm:hover {
+            background-color: hsl(0, 100%, 50%);
+        }
+
+        /* 更多模板按钮样式 */
+        .more-templates {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: hsl(217, 91%, 60%);
+            color: white;
+            border: none;
+            font-size: 1.25rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, transform 0.2s;
+            z-index: 900;
+        }
+
+        .more-templates:hover {
+            background-color: hsl(221, 70%, 33%);
+            transform: scale(1.05);
+        }
+
+        /* 更多模板按钮样式 */
+        .more-templates {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: hsl(217, 91%, 60%);
+            color: white;
+            border: none;
+            font-size: 1.25rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, transform 0.2s;
+            z-index: 900;
+        }
+
+        .more-templates:hover {
+            background-color: hsl(221, 70%, 33%);
+            transform: scale(1.05);
+        }
+
+        /* 模板列表对话框样式 */
+        .templates-modal .dialog-content {
+            margin-bottom: 1rem;
+        }
+
+        /* 水平滚动容器 */
+        .templates-scroll-container {
+            position: relative;
+            overflow: hidden;
+            padding: 1rem 0;
+        }
+
+        .templates-slider {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1rem 0;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: hsl(217, 91%, 60%) hsl(0, 0%, 90%);
+            padding-bottom: 2rem; /* 为滚动条预留空间 */
+        }
+
+        /* 自定义滚动条 */
+        .templates-slider::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .templates-slider::-webkit-scrollbar-track {
+            background: hsl(0, 0%, 90%);
+            border-radius: 10px;
+        }
+
+        .templates-slider::-webkit-scrollbar-thumb {
+            background-color: hsl(217, 91%, 60%);
+            border-radius: 10px;
+        }
+
+        /* 模板缩略图样式 */
+        .template-item {
+            min-width: 240px;
+            border: 1px solid hsl(0, 0%, 93%);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .template-item:hover {
+            border-color: hsl(217, 91%, 60%);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .template-thumbnail {
+            height: 200px;
+            background-color: hsl(0, 0%, 96%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .template-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .template-item:hover .template-thumbnail img {
+            transform: scale(1.05);
+        }
+
+        .template-info {
+            padding: 1rem;
+        }
+
+        .template-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: hsl(221, 70%, 33%);
+            font-size: 1rem;
+        }
+
+        .template-desc {
+            font-size: 0.875rem;
+            color: hsl(0, 0%, 50%);
+            line-height: 1.4;
+        }
+
+        /* 滚动控制按钮 */
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background-color: white;
+            border: 1px solid hsl(0, 0%, 93%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+        .scroll-btn:hover {
+            background-color: hsl(217, 91%, 60%);
+            color: white;
+        }
+
+        /* 提示文字 */
+        .scroll-hint {
+            text-align: center;
+            font-size: 0.875rem;
+            color: hsl(0, 0%, 50%);
+            margin-top: 0.5rem;
+        }'''
+protected const moreResumeButtonBody = '''
+    <button class="more-templates" id="moreTemplatesBtn">...</button>
+
+    <!-- 模板列表对话框 -->
+   <div class="custom-dialog-overlay templates-modal" id="templatesModal">
+        <div class="custom-dialog">
+            <h3 class="section-title" style="margin-bottom: 1rem;">
+                <i class="fa fa-th-large"></i>更多简历模板
+            </h3>
+            <div class="dialog-content">
+                <div class="templates-scroll-container">
+                    <div class="templates-slider">
+                        {% for metadata in thumbnails %}
+                            {% if (title != metadata.title) %}
+                            <div class="template-item" data-template="modern">
+                                <div class="template-thumbnail">
+                                    <img src={% metadata.thumbnail %}>
+                                </div>
+                                <div class="template-info">
+                                    <div class="template-title">{% metadata.title %}</div>
+                                    <div class="template-desc">{% metadata.desc %}</div>
+                                </div>
+                            </div>
+                            {% /if %}
+                        {% /for %}
+                    </div>
+                </div>
+                <p class="scroll-hint">可左右滑动查看更多模板，点击模板即可切换</p>
+            </div>
+            <div class="dialog-buttons">
+                <button class="dialog-btn dialog-cancel" id="templatesModalCancel">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通用确认对话框 -->
+    <div class="custom-dialog-overlay" id="confirmDialog">
+        <div class="custom-dialog">
+            <div class="dialog-message" id="dialogMessage"></div>
+            <div class="dialog-buttons">
+                <button class="dialog-btn dialog-cancel" id="dialogCancel">取消</button>
+                <button class="dialog-btn dialog-confirm" id="dialogConfirm">确认</button>
+            </div>
+        </div>
+    </div>
+    '''
+protected const moreResumeButtonScript = '''
+        // 获取对话框元素
+        const confirmDialog = document.getElementById('confirmDialog');
+        const dialogMessage = document.getElementById('dialogMessage');
+        const dialogCancel = document.getElementById('dialogCancel');
+        const dialogConfirmBtn = document.getElementById('dialogConfirm');
+
+        // 模板选择处理
+        const templateItems = document.querySelectorAll('.template-item');
+        const templatesModal = document.getElementById('templatesModal');
+
+        // 取消删除
+        dialogCancel.addEventListener('click', function() {
+            confirmDialog.classList.remove('active');
+            moduleToDelete = null;
+        });
+        var resumeType = ""
+        // 确认删除
+        dialogConfirmBtn.addEventListener('click', function() {
+            agentCallbackObject.sendMessageByUI("请帮我切换为"+resumeType+"，简历内容保持不变");
+        });
+
+        // 取消按钮通用处理
+        document.getElementById('dialogCancel').addEventListener('click', function() {
+            document.getElementById('confirmDialog').classList.remove('active');
+        });
+
+        // 模板选择功能
+        document.getElementById('moreTemplatesBtn').addEventListener('click', function() {
+            document.getElementById('templatesModal').classList.add('active');
+        });
+
+        document.getElementById('templatesModalCancel').addEventListener('click', function() {
+            document.getElementById('templatesModal').classList.remove('active');
+        });
+
+        templateItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const templateType = this.getAttribute('data-template');
+                const templateName = this.querySelector('.template-title').textContent;
+
+                // 设置确认对话框内容
+                dialogMessage.textContent = `您选择了"\\\${templateName}"，切换模板将保留您的内容但更改样式，是否继续？`;
+                confirmDialog.classList.add('active');
+                resumeType = templateName
+            });
+        });
+
+        // 点击对话框外部关闭
+        document.querySelectorAll('.custom-dialog-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    '''

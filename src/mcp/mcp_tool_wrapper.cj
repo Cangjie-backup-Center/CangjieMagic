@@ -26,6 +26,10 @@ protected class MCPToolWrapper <: Tool {
         get() { this.mcpTool.name }
     }
 
+    public prop kind: String {
+        get() { this.mcpTool.kind }
+    }
+
     public prop description: String {
         get() { this.mcpTool.description ?? "" }
     }

@@ -21,7 +21,7 @@ import stdx.encoding.json.*
 /**
  * MCP client via the stdio transport
  */
-public class UIMCPClient <: AbsMCPClient {
+public class ArkUIMCPClient <: AbsMCPClient {
     private let userURL: String // The input URL specified by the user
     private var baseURL: String
 

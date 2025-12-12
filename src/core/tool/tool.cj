@@ -16,6 +16,12 @@ public interface Tool <: ToJsonValue {
     prop name: String
 
     /**
+     * Only applicable to UI tools
+     * The type of UI
+     */
+    prop kind: String
+
+    /**
      * Description of the tool
      * LLM will choose the tool according to the description
      */

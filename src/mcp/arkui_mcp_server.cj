@@ -18,7 +18,7 @@ import std.regex.*
 
 import stdx.net.http.*
 
-public class UIMCPServer <: SseMCPServer {
+public class ArkUIMCPServer <: SseMCPServer {
     public init(ui: Array<Tool>) {
         super(ui)
     }

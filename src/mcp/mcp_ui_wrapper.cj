@@ -26,6 +26,10 @@ protected class MCPUIWrapper <: Tool {
         get() { this.mcpUI.name }
     }
 
+    public prop kind: String {
+        get() { this.mcpUI.kind }
+    }
+
     public prop description: String {
         get() { this.mcpUI.description ?? "" }
     }
@@ -47,7 +51,7 @@ protected class MCPUIWrapper <: Tool {
     }
 
     override public func invoke(args: HashMap<String, JsonValue>): ToolResponse {
-        let toolResponse = this.client.callUI([this.name], [args.toArray()])
+        let toolResponse = this.client.callUI([this.name], [args.toArray()], '')
         // If the content is error messages, truncate it
         let runes = toolResponse.content.toRuneArray()
         return toolResponse

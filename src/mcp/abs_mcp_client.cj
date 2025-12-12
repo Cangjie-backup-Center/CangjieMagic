@@ -56,9 +56,15 @@ public abstract class AbsMCPClient <: MCPClient {
         return resp.result
     }
 
-    private func listUI(): ListUIResult {
-        this.send(ListUIRequest())
-        let resp = this.recvResponse<ListUIResponse>()
+    private func listInputUI(): ListUIResult {
+        this.send(ListInputUIRequest())
+        let resp = this.recvResponse<ListInputUIResponse>()
+        return resp.result
+    }
+
+    private func listDisplayUI(): ListUIResult {
+        this.send(ListDisplayUIRequest())
+        let resp = this.recvResponse<ListDisplayUIResponse>()
         return resp.result
     }
 
@@ -73,18 +79,29 @@ public abstract class AbsMCPClient <: MCPClient {
         }
     }
 
-    public prop ui: Array<Tool> {
+    public prop displayUI: Array<Tool> {
         get() {
             this.doBeforeRequest()
             let result = ArrayList<Tool>()
-            for (u in this.listUI().ui) {
+            for (u in this.listDisplayUI().ui) {
                 result.add(MCPUIWrapper(this, u))
             }
             return result.toArray()
         }
     }
 
-    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>): ToolResponse {
+    public prop inputUI: Array<Tool> {
+        get() {
+            this.doBeforeRequest()
+            let result = ArrayList<Tool>()
+            for (u in this.listInputUI().ui) {
+                result.add(MCPUIWrapper(this, u))
+            }
+            return result.toArray()
+        }
+    }
+
+    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, title: String): ToolResponse {
         let argsArr = ArrayList<Array<(String, JsonValue)>>()
         // var index = 0
         for (argArr in args) {
@@ -95,10 +112,10 @@ public abstract class AbsMCPClient <: MCPClient {
             argsArr.add(arguments.toArray())
             // index++
         }
-        return this.callUI(names, argsArr.toArray())
+        return this.callUI(names, argsArr.toArray(), title)
     }
 
-    override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>): ToolResponse {
+    open override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, title: String): ToolResponse {
         this.doBeforeRequest()
         // Prepare the request
         let argsArr = ArrayList<JsonObject>()
@@ -106,10 +123,10 @@ public abstract class AbsMCPClient <: MCPClient {
             let arguments = HashMap<String, JsonValue>(arg)
             argsArr.add(JsonObject(arguments))
         }
-        let req = CallUIRequest(
+        let req = CallArkUIRequest(
             params: CallUIParams(
                 names: names,
-                title: '',
+                title: title,
                 combMode: 'Column',
                 arguments: if (args.isEmpty()) { None } else { argsArr.toArray() }
             )
@@ -172,11 +189,11 @@ public abstract class AbsMCPClient <: MCPClient {
         }
     }
 
-    private func send<T>(request: T): Unit where T <: Jsonable<T> {
+    protected func send<T>(request: T): Unit where T <: Jsonable<T> {
         this.send(request.toJsonValue().asObject())
     }
 
-    private func recvResponse<T>(): T where T <: Jsonable<T> {
+    protected func recvResponse<T>(): T where T <: Jsonable<T> {
         let msg = this.recv()
         return T.fromJsonValue(JsonValue.fromStr(msg))
     }

@@ -166,8 +166,8 @@ protected class ReactTask <: AgentTask {
             let tag = asyncReactStep.peekTag()
             if (tag == Tag.Thought || tag == Tag.Action) {
                 let step = asyncReactStep.getStepOf(tag)
-                this.handleStep(step)
                 this.notifyStep(step)
+                this.handleStep(step)
                 return None
             } else if (tag == Tag.Answer) {
                 let (thought, asyncAnswer) = asyncReactStep.getAsyncAnswer()

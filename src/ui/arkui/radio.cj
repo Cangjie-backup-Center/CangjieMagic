@@ -1,4 +1,4 @@
-package magic.ui
+package magic.ui.arkui
 
 import magic.dsl.*
 import magic.jsonable.*

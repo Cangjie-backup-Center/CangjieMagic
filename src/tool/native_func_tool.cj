@@ -14,6 +14,7 @@ private type ExecFn = (HashMap<String, JsonValue>) -> String
 
 open public class NativeFuncTool <: AbsTool {
     private let _name: String
+    private let _kind: String
     private let _description: String
     private let _parameters: ArrayList<ToolParameter>
     private var _retType: TypeSchema = TypeSchema.Str
@@ -22,12 +23,14 @@ open public class NativeFuncTool <: AbsTool {
 
     public init(name!: String,
                 description!: String,
+                kind!: String = 'tool',
                 parameters!: Array<(String, String, TypeSchema)> = [],
                 retType!: TypeSchema = TypeSchema.Str,
                 examples!: Array<String> = [],
                 extra!: HashMap<String, String> = HashMap<String, String>(),
                 execFn!: Option<ExecFn> = None) {
         _name = name
+        _kind = kind
         _description = description
         _parameters = ArrayList<ToolParameter>()
         for (item in parameters) {
@@ -42,6 +45,10 @@ open public class NativeFuncTool <: AbsTool {
 
     public prop name: String {
         get() { _name }
+    }
+
+    public prop kind: String {
+        get() { _kind }
     }
 
     public prop description: String {

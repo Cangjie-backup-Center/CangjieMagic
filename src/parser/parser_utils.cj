@@ -49,7 +49,7 @@ public struct ParserUtils {
                 currStart = posAfterEndMark
             }
         }
-        return None  // The target section is not found
+        return str  // The target section is not found
     }
 
     /**

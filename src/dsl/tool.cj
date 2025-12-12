@@ -16,6 +16,10 @@ private class ToolAttr <: Attr {
         get() { getString("description") ?? "" }
     }
 
+    prop kind: String {
+        get() { getString("kind") ?? "" }
+    }
+
     // Whether this tool is defined inside an @agent.
     var insideAgent = false
 
@@ -77,7 +81,7 @@ private class ToolAttr <: Attr {
             validKeys: [
                 "description", "parameters", "examples",
                 "filterable", "terminal", "compactable",
-                "dump"
+                "dump", "kind"
             ]
         )
         return ToolAttr(map)
@@ -173,6 +177,7 @@ private func transformTool(input: Tokens, attr: ToolAttr): Tokens {
  * <NativeFuncTool|super>(
  *   name: ...,
  *   description: ...,
+ *   kind: ...,
  *   parameters: [("paramName", "paramDesc", TypeSchema.XXX), ...],
  *   execFn: ...
  *  )
@@ -210,6 +215,7 @@ private func initNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens 
     }
     return quote($ctor(
         name: $funcName,
+        kind: $(newMultilineStringLiteralToken(toolAttr.kind)),
         description: $(newMultilineStringLiteralToken(toolAttr.description)),
         parameters: [$(joinTokens(parameters, Token(TokenKind.COMMA)))],
         // retType: $retType.getTypeSchema(),

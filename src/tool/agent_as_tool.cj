@@ -68,6 +68,10 @@ public class AgentAsTool <: AbsTool {
         get() { this.agent.name }
     }
 
+    public prop kind: String {
+        get() { 'tool' }
+    }
+
     public prop description: String {
         get() {
             return if (this.agent.description == "") {

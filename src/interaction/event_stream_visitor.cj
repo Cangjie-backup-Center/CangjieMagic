@@ -9,6 +9,7 @@
 package magic.interaction
 
 import magic.core.interaction.*
+import magic.log.LogUtils
 
 
 public abstract class EventStreamVisitor {
@@ -17,8 +18,13 @@ public abstract class EventStreamVisitor {
     ) { }
 
     public func start(): Unit {
-        for (event in this.events) {
+        try {
+          for (event in this.events) {
             this.onEvent(event)
+          }
+        } catch (e: Exception) {
+            LogUtils.debug("==>debug")
+            LogUtils.debug(e)
         }
     }
 

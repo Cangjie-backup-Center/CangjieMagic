@@ -1,4 +1,4 @@
-package magic.ui
+package magic.ui.arkui
 
 import magic.dsl.*
 import magic.jsonable.*
@@ -103,8 +103,6 @@ public func template_text_list(info: TextInfo) {
                 // 创建List组件
                 auto list = std::make_shared<ArkUIListNode>();
                 list->SetPercentWidth(1);
-
-                list->SetPercentHeight(1);
                 list->SetScrollBarState(true);
 
                 // 创建列表项

@@ -22,6 +22,10 @@ protected class ChatModelTool <: AbsTool {
         get() { "chat_model" }
     }
 
+    public prop kind: String {
+        get() { 'tool' }
+    }
+
     public prop description: String {
         get() { "This tool uses LLMs to answer questions. Any general and commonsense questions can be answered by this tool." }
     }

@@ -3,14 +3,14 @@ package magic.ui
 import std.regex.*
 import std.collection.*
 
-public class Component {
+public class ArkUIComponent {
     var code: String = ""
     var head: String = ""
     var nativeModule: String = ""
     var UINode: String = ""
     var mainFunc: String = ""
 
-    public Component(let template: String, let index: Int64) {
+    public ArkUIComponent(let template: String, let index: Int64) {
         this.nativeModule = ""
         this.UINode = ""
         this.code = template
@@ -148,7 +148,7 @@ public class Component {
     }
 }
 
-public func mergeComponents(title: String, components: ArrayList<Component>, mode!: String = 'Column'): String {
+public func mergeArkUIComponents(title: String, components: ArrayList<ArkUIComponent>, mode!: String = 'Column'): String {
     var common = '''
         #include "napi/native_api.h"
         #include <arkui/native_node.h>
@@ -406,10 +406,106 @@ public func mergeComponents(title: String, components: ArrayList<Component>, mod
                     nativeModule_->setAttribute(handle_, NODE_COLUMN_ALIGN_ITEMS, &item);
                 }
             };
+
+            class ArkUIGridNode : public ArkUINode {
+            public:
+                ArkUIGridNode()
+                    : ArkUINode((NativeModuleInstance::GetInstance()->GetNativeNodeAPI())->createNode(ARKUI_NODE_GRID)) {}
+
+                void SetColumnTemplate(const std::string& templateStr) {
+                    assert(handle_);
+                    ArkUI_AttributeItem item = {};
+                    item.string = const_cast<char*>(templateStr.c_str()); // 注意字符串生命周期
+                    nativeModule_->setAttribute(handle_, NODE_GRID_COLUMN_TEMPLATE, &item);
+                }
+                void SetRowTemplate(const std::string& templateStr) {
+                    assert(handle_);
+                    ArkUI_AttributeItem item = {};
+                    item.string = const_cast<char*>(templateStr.c_str()); // 注意字符串生命周期
+                    nativeModule_->setAttribute(handle_, NODE_GRID_ROW_TEMPLATE, &item);
+                }
+                void SetColumnGap(float gap) {
+                    assert(handle_);
+                    ArkUI_NumberValue value[] = {{.f32 = gap}};
+                    ArkUI_AttributeItem item = {value, 1};
+                    nativeModule_->setAttribute(handle_, NODE_GRID_COLUMN_GAP, &item);
+                }
+                void SetRowGap(float gap) {
+                    assert(handle_);
+                    ArkUI_NumberValue value[] = {{.f32 = gap}};
+                    ArkUI_AttributeItem item = {value, 1};
+                    nativeModule_->setAttribute(handle_, NODE_GRID_ROW_GAP, &item);
+                }
+                void SetNodeAdapter(const ArkUI_NodeAdapter& adapter) {
+                    assert(handle_);
+                    ArkUI_AttributeItem item = {};
+                    item.object = const_cast<ArkUI_NodeAdapter*>(&adapter); // 注意适配器对象生命周期
+                    nativeModule_->setAttribute(handle_, NODE_GRID_NODE_ADAPTER, &item);
+                }
+                void SetCachedCount(int32_t count) {
+                    assert(handle_);
+                    ArkUI_NumberValue value[] = {{.i32 = count}};
+                    ArkUI_AttributeItem item = {value, 1};
+                    nativeModule_->setAttribute(handle_, NODE_GRID_CACHED_COUNT, &item);
+                }
+                void SetColumns(int32_t columns) {
+                    assert(handle_);
+                    std::string templateStr = "repeat(" + std::to_string(columns) + ", 1fr)";
+                    SetColumnTemplate(templateStr);
+                }
+                void SetRowSpacing(float spacing) {
+                    SetRowGap(spacing);
+                }
+                void SetColumnSpacing(float spacing) {
+                    SetColumnGap(spacing);
+                }
+            };
+
+            class ArkUIGridItemNode : public ArkUINode {
+            public:
+                ArkUIGridItemNode()
+                    : ArkUINode((NativeModuleInstance::GetInstance()->GetNativeNodeAPI())->createNode(ARKUI_NODE_GRID_ITEM)) {}
+            };
+
+            class ArkUIFlexNode : public ArkUINode {
+            public:
+                ArkUIFlexNode()
+                    : ArkUINode((NativeModuleInstance::GetInstance()->GetNativeNodeAPI())->createNode(ARKUI_NODE_FLEX)) {}
+
+                void SetFlexGrow(float grow) {
+                    assert(handle_);
+                    if (grow < 0.0f) {
+                        grow = 0.0f;
+                    }
+                    ArkUI_NumberValue value[] = {{.f32 = grow}};
+                    ArkUI_AttributeItem item = {value, 1};
+                    nativeModule_->setAttribute(handle_, NODE_FLEX_GROW, &item);
+                }
+
+                void SetFlexShrink(float shrink) {
+                    assert(handle_);
+                    if (shrink < 0.0f) {
+                        shrink = 1.0f;
+                    }
+                    ArkUI_NumberValue value[] = {{.f32 = shrink}};
+                    ArkUI_AttributeItem item = {value, 1};
+                    nativeModule_->setAttribute(handle_, NODE_FLEX_SHRINK, &item);
+                }
+
+                void SetFlexBasis(float basis) {
+                    assert(handle_);
+                    if (basis < 0.0f) {
+                        basis = 0.0f;
+                    }
+                    ArkUI_NumberValue value[] = {{.f32 = basis}};
+                    ArkUI_AttributeItem item = {value, 1};
+                    nativeModule_->setAttribute(handle_, NODE_FLEX_BASIS, &item);
+                }
+            };
         }  // namespace NativeModule
     '''
 
-    let commonComponent = Component(common, 0)
+    let commonComponent = ArkUIComponent(common, 0)
     var head = commonComponent.getHead()
     var nativeModule = commonComponent.getNativeModule()
     var UINode = commonComponent.getUINode()
@@ -420,10 +516,32 @@ public func mergeComponents(title: String, components: ArrayList<Component>, mod
             '''
                 auto column = std::make_shared<ArkUIColumnNode>();
             '''
-        case "Flex" => ''
-        case "Grid" => ''
+        case "Flex" =>
+            returnValue = 'flex'
+            '''
+                auto flex = std::make_shared<ArkUIFlexNode>();
+            '''
+        case "Grid" =>
+            returnValue = 'grid'
+            '''
+                auto grid = std::make_shared<ArkUIGridNode>();
+                // grid->SetColumnTemplate("1fr 1fr 2fr");  // 3列，宽度占比1:1:2
+                // grid->SetRowTemplate("1fr 1fr 2fr");     // 3行，高度占比1:1:2
+            '''
         case _ => ''
     }
+
+    let titleComp = '''
+        auto title = std::make_shared<ArkUITextNode>();
+        title->SetTextContent("${title}");
+        title->SetFontSize(25);
+        title->SetPercentWidth(1);
+        title->SetPadding(15, 15, 10, 15);
+        title->SetFontWeight(ARKUI_FONT_WEIGHT_W600);
+        title->SetTextAlign(ARKUI_TEXT_ALIGNMENT_CENTER);
+    '''
+    mainCode = mainCode + '\n' + titleComp + '\n' + '${returnValue}->AddChild(title);'
+
     for ((i, comp) in enumerate(components)) {
         head = head + '\n' + comp.getHead()
         nativeModule = nativeModule + '\n' + comp.getNativeModule()

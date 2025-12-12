@@ -143,6 +143,29 @@ func transformTemplate(input: Tokens, attr: TemplateAttr): Tokens {
     // When compile is true, we compile the template into a function body
     // Otherwise, we use the TemplateEngine to render the template during execution
     if (attr.compile) {
+        if (category == "resume") {
+            var styleStr = ""
+            var bodyStr = ""
+            var scriptStr = ""
+            var endStr = ""
+            let styleArr = template.split("</style>")
+            if (styleArr.size > 1) {
+                styleStr = styleArr[0] + moreResumeButtonCss + "\n</style>\n"
+            }
+            var bodyArr = styleArr[1].split("<script>")
+            if (bodyArr.size > 1) {
+                bodyStr = bodyArr[0] + moreResumeButtonBody + "\n"
+                let scriptArr = bodyArr[1].split("</script>")
+                scriptStr = "\n<script>\n" + scriptArr[0] + moreResumeButtonScript + "\n</script>\n"
+                endStr = scriptArr[1]
+            } else {
+                bodyArr = styleArr[1].split("</body>")
+                bodyStr = bodyArr[0] + moreResumeButtonBody + "\n"
+                scriptStr = "\n<script>\n" + moreResumeButtonScript + "\n</script>\n"
+                endStr = bodyArr[1]
+            }
+            template = styleStr + bodyStr + scriptStr + endStr
+        }
         let body = TemplateCompiler().compile(prefix + template)
         if (category == "resume") {
             let base64 = "data:image/png;base64," + imgToBase64(thumbnail)
@@ -242,7 +265,6 @@ private func split(str: String): (Array<Loop>, Array<IfElse>, Array<String>, Arr
     // Or match if-else in the format "{if (cond)}...{else}...{/if}"
     // <expr> allows identifiers, member access, array access, and map access
     let startForRegex = Regex("{%\\s*for\\s+((?:\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\))|(?:\\w+))\\s+in\\s+([\\w\\d\\.\\[\\]\"'\\s\\(\\)]+?)\\s*%}")
-    // let startForRegex = Regex("{%\\s*for\\s+(\\w+)\\s+in\\s+([\\w\\d\\.\\[\\]\"']+)\\s*%}")
     let endForRegex = Regex("{%\\s*/for\\s*%}")
     let startIfRegex = Regex("{%\\s*if\\s+(\\(.*?\\))\\s*%}")
     let elseRegex = Regex("{%\\s*else\\s*%}")
