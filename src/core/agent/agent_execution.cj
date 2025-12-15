@@ -49,5 +49,10 @@ public interface AgentExecution {
      * Internally used.
      */
     func markCancellation(): Unit
+
+    /**
+     * Get a partial ChatRound with current steps, used for cancellation case
+     */
+    func getPartialChatRound(answer: String): ChatRound
 }
 

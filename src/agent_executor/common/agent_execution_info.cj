@@ -87,15 +87,17 @@ public class AgentExecutionInfo <: AgentExecution {
      */
     override public prop steps: MessageList {
         get() {
-            let steps = MessageList()
-            var node = this._messages.firstNode
-            while (let Some(currNode) <- node) {
-                if (currNode.value.isStep()) {
-                    steps.add(currNode.value.message)
+            synchronized(this.messagesMutex) {
+                let steps = MessageList()
+                var node = this._messages.firstNode
+                while (let Some(currNode) <- node) {
+                    if (currNode.value.isStep()) {
+                        steps.add(currNode.value.message)
+                    }
+                    node = currNode.next
                 }
-                node = currNode.next
+                return steps
             }
-            return steps
         }
     }
 
@@ -117,11 +119,15 @@ public class AgentExecutionInfo <: AgentExecution {
     }
 
     public func addMessage(msg: Message): Unit {
-        this._messages.addLast(ExecutionMessage(msg))
+        synchronized(this.messagesMutex) {
+            this._messages.addLast(ExecutionMessage(msg))
+        }
     }
 
     public func removeLastMessage(): Unit {
-        this._messages.removeLast()
+        synchronized(this.messagesMutex) {
+            this._messages.removeLast()
+        }
     }
 
     public func addStep(role: MessageRole,
@@ -139,7 +145,9 @@ public class AgentExecutionInfo <: AgentExecution {
             case MessageRole.User => Message.user(msgContent)
             case _ => throw IllegalArgumentException("Invalid role: ${role}")
         }
-        this._messages.addLast(ExecutionMessage(message, tag, toolRequest: toolRequest))
+        synchronized(this.messagesMutex) {
+            this._messages.addLast(ExecutionMessage(message, tag, toolRequest: toolRequest))
+        }
     }
 
     public func addRequest(request: AgentRequest): Unit {
@@ -225,6 +233,8 @@ public class AgentExecutionInfo <: AgentExecution {
     }
 
     private let mutex = Mutex()
+    private let messagesMutex = Mutex()
+
     public prop events: EventStream {
         get() {
             synchronized(this.mutex) {
@@ -236,5 +246,37 @@ public class AgentExecutionInfo <: AgentExecution {
                 return value
             }
         }
+    }
+
+    /**
+     * Thread-safe method to get current steps snapshot
+     * Used when cancellation occurs to immediately save steps without waiting
+     */
+    public func getCurrentStepsSafely(): MessageList {
+        synchronized(this.messagesMutex) {
+            let steps = MessageList()
+            var node = this._messages.firstNode
+            while (let Some(currNode) <- node) {
+                if (currNode.value.isStep()) {
+                    steps.add(currNode.value.message)
+                }
+                node = currNode.next
+            }
+            return steps
+        }
+    }
+
+    /**
+     * Get a partial ChatRound with current steps, used for cancellation case
+     * Does not require answer to be set
+     */
+    public func getPartialChatRound(answer: String): ChatRound {
+        let req = this.request.getOrThrow({ => AgentExecutionException("User request is not set") })
+        let steps = this.getCurrentStepsSafely()
+        return ChatRound(
+            Message.user(req.question, image: req.image),
+            Message.assistant(answer),
+            steps
+        )
     }
 }
