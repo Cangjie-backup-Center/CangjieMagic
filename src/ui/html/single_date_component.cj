@@ -8,8 +8,19 @@ import magic.prelude.*
 
 
 
-@template
-public func template_single_date_selection(title: String) {
+@ui[
+    description: '''
+    功能类型：选择单个日期 UI・单点筛选型,
+    使用场景：选择特定单个日期的相关操作，如日程安排日期选择、生日设置、订单创建日期查询、活动参与日期选择、预约服务日期确认，
+    交互特性：数据录入型，支持滑动选择单个日期，
+    风格属性：简约通用型
+    ''',
+    parameters: {
+        title: "描述特定选择日期事件的标题"
+     },
+    terminal: true ,
+]
+public func singleDateComponent(title: String) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -80,20 +91,4 @@ public func template_single_date_selection(title: String) {
     </body>
     </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：选择单个日期 UI・单点筛选型,
-    使用场景：选择特定单个日期的相关操作，如日程安排日期选择、生日设置、订单创建日期查询、活动参与日期选择、预约服务日期确认，
-    交互特性：数据录入型，支持滑动选择单个日期，
-    风格属性：简约通用型
-    ''',
-    parameters: {
-        title: "描述特定选择日期事件的标题"
-     },
-    terminal: true ,
-]
-public func singleDateComponent(title: String): String {
-    template_single_date_selection(title)
 }

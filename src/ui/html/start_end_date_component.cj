@@ -8,8 +8,19 @@ import magic.prelude.*
 
 
 
-@template
-public func template_start_end_date_selection(title: String) {
+@ui[
+    description: '''
+    功能类型：选择日期范围 UI・区间筛选型,
+    使用场景：筛选指定时间区间的相关数据，如订单日期筛选、报表时间范围查询、行程日期选择、活动报名时间限定、数据统计时间区间设置,
+    交互特性：数据录入型，支持点击日历面板选择起始 / 结束日期，
+    风格属性：简约通用型
+    ''',
+    parameters: {
+        title: "描述特定选择日期事件的标题"
+     },
+    terminal: true ,
+]
+public func startEndDateComponent(title: String) {
     '''
     <!DOCTYPE html>
     <html>
@@ -453,20 +464,4 @@ public func template_start_end_date_selection(title: String) {
     </body>
     </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：选择日期范围 UI・区间筛选型,
-    使用场景：筛选指定时间区间的相关数据，如订单日期筛选、报表时间范围查询、行程日期选择、活动报名时间限定、数据统计时间区间设置,
-    交互特性：数据录入型，支持点击日历面板选择起始 / 结束日期，
-    风格属性：简约通用型
-    ''',
-    parameters: {
-        title: "描述特定选择日期事件的标题"
-     },
-    terminal: true ,
-]
-public func startEndDateComponent(title: String): String {
-    template_start_end_date_selection(title)
 }

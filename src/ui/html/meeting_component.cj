@@ -26,8 +26,15 @@ public class MeetingInfo {
     let url: String
 }
 
-@template
-func template_meeting(info: MeetingInfo) {
+@ui[description: '''
+    功能类型：会议信息展示 UI,
+    使用场景：展示会议相关核心信息，如会议名称 / 时间 / 地点、参会人员名单、会议纪要摘要,
+    交互特性：信息展示型，仅用于呈现信息，无交互,
+    风格属性：简约型，仅适合特定场景
+    ''',
+ terminal: true
+]
+public func meetingUI(info: MeetingInfo) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -264,16 +271,4 @@ func template_meeting(info: MeetingInfo) {
     </body>
     </html>
     '''
-}
-
-@tool[description: '''
-    功能类型：会议信息展示 UI,
-    使用场景：展示会议相关核心信息，如会议名称 / 时间 / 地点、参会人员名单、会议纪要摘要,
-    交互特性：信息展示型，仅用于呈现信息，无交互,
-    风格属性：简约型，仅适合特定场景
-    ''',
- terminal: true
-]
-public func meetingUI(info: MeetingInfo): String {
-    template_meeting(info)
 }

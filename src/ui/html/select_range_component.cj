@@ -8,8 +8,19 @@ import magic.prelude.*
 
 
 
-@template
-public func template_select_range(nr: NumericRange) {
+@ui[
+    description: '''
+    功能类型：选择数值范围 UI・区间数值筛选型，
+    使用场景：筛选整数数值区间的相关数据，如价格范围筛选（商品 / 服务）、年龄区间选择、数量范围设置、评分区间筛选、文件大小范围限定，
+    交互特性：数据录入型，支持拖动滑块选择区间，
+    风格属性：简约通用型
+    ''',
+    parameters: {
+        nr: "数值范围区间，包括最大值和最小值"
+     },
+    terminal: true ,
+]
+public func selectRangeComponent(nr: NumericRange) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -178,20 +189,4 @@ public func template_select_range(nr: NumericRange) {
     </body>
     </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：选择数值范围 UI・区间数值筛选型，
-    使用场景：筛选整数数值区间的相关数据，如价格范围筛选（商品 / 服务）、年龄区间选择、数量范围设置、评分区间筛选、文件大小范围限定，
-    交互特性：数据录入型，支持拖动滑块选择区间，
-    风格属性：简约通用型
-    ''',
-    parameters: {
-        nr: "数值范围区间，包括最大值和最小值"
-     },
-    terminal: true ,
-]
-public func selectRangeComponent(nr: NumericRange): String {
-    template_select_range(nr)
 }

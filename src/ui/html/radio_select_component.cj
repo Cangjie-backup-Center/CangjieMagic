@@ -16,8 +16,18 @@ public class OptionInfo {
     public let arr: Array<String>
 }
 
-@template
-public func template_radio_list(info: OptionInfo) {
+@ui[description: '''
+    功能类型：单选 UI・单点选项选择型,
+    使用场景：需从多个选项中选择唯一结果，如问卷答题选择、订单支付方式选择、性别 / 身份类型选择、偏好设置单选（如口味 / 风格）.
+    交互特性：操作交互型，支持点击选中单个选项；
+    风格属性：简约通用型
+    ''',
+     parameters: {
+        info: "选项列表"
+     },
+     terminal: true
+]
+public func radioListComponent(info: OptionInfo) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -430,23 +440,4 @@ public func template_drop_list(info: OptionInfo) {
     </body>
     </html>
     '''
-}
-
-@tool[description: '''
-    功能类型：单选 UI・单点选项选择型,
-    使用场景：需从多个选项中选择唯一结果，如问卷答题选择、订单支付方式选择、性别 / 身份类型选择、偏好设置单选（如口味 / 风格）.
-    交互特性：操作交互型，支持点击选中单个选项；
-    风格属性：简约通用型
-    ''',
-     parameters: {
-        info: "选项列表"
-     },
-     terminal: true
-]
-public func radioListComponent(info: OptionInfo): String {
-    if (info.arr.size <= 5) {
-        return template_radio_list(info)
-    } else {
-        return template_drop_list(info)
-    }
 }

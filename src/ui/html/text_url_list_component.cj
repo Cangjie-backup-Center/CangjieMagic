@@ -18,8 +18,15 @@ public class TextURLItem {
     let description: String
 }
 
-@template
-func template_text_url_list(items: Array<TextURLItem>) {
+@ui[description: '''
+    功能类型：带链接列表 UI・跳转入口型，
+    使用场景：以列表形式承载含跳转需求的信息，如帮助中心 FAQ 问题列表、新闻资讯摘要列表、商品分类入口列表、文档目录索引列表、权限说明详情链接列表、活动入口聚合列表，
+    交互特性：导航跳转型，支持点击列表项 / 内置链接跳转，
+    风格属性：简约通用型
+    ''',
+ terminal: true
+]
+public func textURLListUI(items: Array<TextURLItem>) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -120,16 +127,4 @@ func template_text_url_list(items: Array<TextURLItem>) {
     </body>
     </html>
     '''
-}
-
-@tool[description: '''
-    功能类型：带链接列表 UI・跳转入口型，
-    使用场景：以列表形式承载含跳转需求的信息，如帮助中心 FAQ 问题列表、新闻资讯摘要列表、商品分类入口列表、文档目录索引列表、权限说明详情链接列表、活动入口聚合列表，
-    交互特性：导航跳转型，支持点击列表项 / 内置链接跳转，
-    风格属性：简约通用型
-    ''',
- terminal: true
-]
-public func textURLListUI(items: Array<TextURLItem>): String {
-    template_text_url_list(items)
 }

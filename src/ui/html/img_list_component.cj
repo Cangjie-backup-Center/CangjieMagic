@@ -16,8 +16,15 @@ public class ImgItem {
     let url: String
 }
 
-@template
-func template_img_list(items: Array<ImgItem>) {
+@ui[description: '''
+    功能类型：图片列表 UI,
+    使用场景：以列表形式展示图片及关联信息，如景点风光图片列表、美食菜品展示列表,
+    交互特性：信息展示型，仅用于呈现信息，无交互,
+    风格属性：简约通用型
+    ''',
+ terminal: true
+]
+public func imgListUI(items: Array<ImgItem>) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -66,16 +73,4 @@ func template_img_list(items: Array<ImgItem>) {
     </body>
     </html>
     '''
-}
-
-@tool[description: '''
-    功能类型：图片列表 UI,
-    使用场景：以列表形式展示图片及关联信息，如景点风光图片列表、美食菜品展示列表,
-    交互特性：信息展示型，仅用于呈现信息，无交互,
-    风格属性：简约通用型
-    ''',
- terminal: true
-]
-public func imgListUI(items: Array<ImgItem>): String {
-    template_img_list(items)
 }

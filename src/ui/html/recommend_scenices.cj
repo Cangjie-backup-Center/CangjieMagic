@@ -47,10 +47,15 @@ public func formatStringArray(arr: Array<String>): String {
   return res
 }
 
-@template[
-    desc: "景点/美食店等相关地点推荐",
+@ui[
+    description: '''
+    功能类型：地点推荐 UI,
+    使用场景：展示各类生活场景地点信息（含名称 / 类型 / 评分 / 地址 / 人均 / 营业时间），如旅游景点推荐、美食店推荐、民宿酒店推荐、休闲娱乐场所推荐,
+    交互特性：筛选过滤型，支持点击查看地点详情；支持按评分 / 距离筛选排序,
+    风格属性：复杂型，适合与map UI进行组合
+    ''',
 ]
-public func template_recommend_scenices(info: Array<Position>) {
+public func recommend_scenices(info: Array<Position>) {
     '''
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -841,16 +846,4 @@ public func template_recommend_scenices(info: Array<Position>) {
 </body>
 </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：地点推荐 UI,
-    使用场景：展示各类生活场景地点信息（含名称 / 类型 / 评分 / 地址 / 人均 / 营业时间），如旅游景点推荐、美食店推荐、民宿酒店推荐、休闲娱乐场所推荐,
-    交互特性：筛选过滤型，支持点击查看地点详情；支持按评分 / 距离筛选排序,
-    风格属性：复杂型，适合与map UI进行组合
-    ''',
-]
-public func recommend_scenices(info: Array<Position>): String {
-    template_recommend_scenices(info)
 }

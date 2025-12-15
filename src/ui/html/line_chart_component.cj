@@ -30,8 +30,15 @@ public class LineChartData {
     let dataArr: Array<LineItemData>
 }
 
-@template
-func template_line_chart(data: LineChartData) {
+@ui[description: '''
+    功能类型：折线图 UI・趋势数据可视化型,
+    使用场景：展示数据变化趋势信息，如天气变化趋势、景点客流量变化、美食店营收波动、用户活跃度走势、项目进度完成率趋势,
+    交互特性：数据可视化型，将抽象数据转化为可视化图表，便于理解分析,
+    风格属性：图表型
+    ''',
+ terminal: true
+]
+public func lineChartUI(data: LineChartData) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -182,16 +189,4 @@ func template_line_chart(data: LineChartData) {
     </body>
     </html>
     '''
-}
-
-@tool[description: '''
-    功能类型：折线图 UI・趋势数据可视化型,
-    使用场景：展示数据变化趋势信息，如天气变化趋势、景点客流量变化、美食店营收波动、用户活跃度走势、项目进度完成率趋势,
-    交互特性：数据可视化型，将抽象数据转化为可视化图表，便于理解分析,
-    风格属性：图表型
-    ''',
- terminal: true
-]
-public func lineChartUI(data: LineChartData): String {
-    template_line_chart(data)
 }

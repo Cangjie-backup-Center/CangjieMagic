@@ -30,10 +30,16 @@ public class MyLocation {
     let location: Array<Location>
 }
 
-@template[
-    desc: "地图",
+@ui[
+    description: '''
+    功能类型：地图 UI・地点定位展示型,
+    使用场景：展示地理相关信息，景点位置标注,
+    交互特性：数据可视化型，支持地图缩放 / 平移操作；支持定位当前位置,
+    风格属性：简约型，仅适合特定场景
+    ''',
+    terminal: true ,
 ]
-public func template_map(info: MyLocation) {
+public func amap(info: MyLocation) {
     '''
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -947,17 +953,4 @@ public func template_map(info: MyLocation) {
 </body>
 </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：地图 UI・地点定位展示型,
-    使用场景：展示地理相关信息，景点位置标注,
-    交互特性：数据可视化型，支持地图缩放 / 平移操作；支持定位当前位置,
-    风格属性：简约型，仅适合特定场景
-    ''',
-    terminal: true ,
-]
-public func amap(info: MyLocation): String {
-    template_map(info)
 }

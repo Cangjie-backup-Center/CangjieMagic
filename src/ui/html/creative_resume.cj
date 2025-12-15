@@ -6,14 +6,22 @@ package magic.ui.html
 import magic.dsl.*
 import magic.prelude.*
 
-
-@template[
+@ui[
+    description: '''
+    功能类型：创意设计简历 UI,
+    使用场景：展示艺术岗位求职相关信息，如个人技能栈、项目经验、工作履历、教育背景、证书资质、技术成果（论文 / 专利），
+    交互特性：信息展示型，仅用于呈现信息，无交互，
+    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
+    ''',
+    terminal: true ,
+    parameters: {
+        info: "个人简历需要收集的信息"
+    },
     thumbnail: "D:/Work/Cangjie/deveco5.1.1/CangjieMagic-HarmonyOS/entry/src/main/cangjie/cartoon_resume.png",
     title: "创意设计模板",
-    desc: "富有设计感的布局，适合设计、艺术等创意类岗位",
     category: "resume",
 ]
-public func template_creative_resume(info: CommonResumeInfo) {
+public func creativeResume(info: CommonResumeInfo) {
     '''
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -748,20 +756,4 @@ public func template_creative_resume(info: CommonResumeInfo) {
 </body>
 </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：创意设计简历 UI,
-    使用场景：展示艺术岗位求职相关信息，如个人技能栈、项目经验、工作履历、教育背景、证书资质、技术成果（论文 / 专利），
-    交互特性：信息展示型，仅用于呈现信息，无交互，
-    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
-    ''',
-    terminal: true ,
-    parameters: {
-        info: "个人简历需要收集的信息"
-     }
-]
-public func creativeResume(info: CommonResumeInfo): String {
-    template_creative_resume(info)
 }

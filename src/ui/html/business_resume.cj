@@ -20,13 +20,22 @@ public class ProjectInfo {
     let description: String
 }
 
-@template[
+@ui[
+    description: '''
+    功能类型：专业商务型简历 UI，
+    使用场景：展示商务岗位求职相关信息，如个人技能栈、项目经验、工作履历、教育背景、证书资质、技术成果（论文 / 专利），
+    交互特性：信息展示型，仅用于呈现信息，无交互，
+    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
+    ''',
+    terminal: true ,
+    parameters: {
+        info: "个人简历需要收集的信息"
+    },
     thumbnail: "D:/Work/Cangjie/deveco5.1.1/CangjieMagic-HarmonyOS/entry/src/main/cangjie/business_resume.png",
     title: "专业商务模板",
-    desc: "正在商务风格，适合金融、咨询等专业服务行业",
     category: "resume",
 ]
-public func template_business_resume(info: CommonResumeInfo, pi: Array<ProjectInfo>) {
+public func businessResume(info: CommonResumeInfo, pi: Array<ProjectInfo>) {
     '''
  <!DOCTYPE html>
 <html lang="zh-CN">
@@ -507,20 +516,4 @@ public func template_business_resume(info: CommonResumeInfo, pi: Array<ProjectIn
 </body>
 </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：专业商务型简历 UI，
-    使用场景：展示商务岗位求职相关信息，如个人技能栈、项目经验、工作履历、教育背景、证书资质、技术成果（论文 / 专利），
-    交互特性：信息展示型，仅用于呈现信息，无交互，
-    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
-    ''',
-    terminal: true ,
-    parameters: {
-        info: "个人简历需要收集的信息"
-     }
-]
-public func businessResume(info: CommonResumeInfo): String {
-    template_business_resume(info)
 }

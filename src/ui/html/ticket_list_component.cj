@@ -34,8 +34,15 @@ public class TicketInfo {
     //    let qrCode: String
 }
 
-@template
-func template_ticket_list(arr: Array<TicketInfo>) {
+@ui[description: '''
+    功能类型：车票展示 UI・出行凭证型，
+    使用场景：展示出行类凭证核心信息，如高铁 / 火车票信息（车次 / 时间 / 座位）、飞机登机牌信息（航班 / 航站楼 / 座位）、汽车票信息（线路 / 时间 / 座位）、地铁票信息（站点 / 票价 / 有效期）、景区接驳车票信息（线路 / 发车时间），
+    交互特性：信息展示型，不支持编辑车票信息，
+    风格属性：简约型，仅适合特定场景
+    ''',
+ terminal: true
+]
+public func ticketListUI(arr: Array<TicketInfo>) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -255,16 +262,4 @@ func template_ticket_list(arr: Array<TicketInfo>) {
     </body>
     </html>
     '''
-}
-
-@tool[description: '''
-    功能类型：车票展示 UI・出行凭证型，
-    使用场景：展示出行类凭证核心信息，如高铁 / 火车票信息（车次 / 时间 / 座位）、飞机登机牌信息（航班 / 航站楼 / 座位）、汽车票信息（线路 / 时间 / 座位）、地铁票信息（站点 / 票价 / 有效期）、景区接驳车票信息（线路 / 发车时间），
-    交互特性：信息展示型，不支持编辑车票信息，
-    风格属性：简约型，仅适合特定场景
-    ''',
- terminal: true
-]
-public func ticketListUI(arr: Array<TicketInfo>): String {
-    template_ticket_list(arr)
 }

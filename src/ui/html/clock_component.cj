@@ -8,8 +8,19 @@ import magic.prelude.*
 
 
 
-@template
-public func template_clock(title: String) {
+@ui[
+    description: '''
+    功能类型：精准时间选择 UI,
+    使用场景：需精确选择时间点的操作，如任务截止时间设定、行程出发时间确认、活动开场时间配置,
+    交互特性：滑动交互型，支持上下滚动选择时 / 分 / 秒,
+    风格属性：简约通用型
+    ''',
+    parameters: {
+        title: "描述特定选择时间点事件的标题"
+     },
+    terminal: true ,
+]
+public func clockComponent(title: String) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -332,20 +343,4 @@ public func template_clock(title: String) {
     </body>
     </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：精准时间选择 UI,
-    使用场景：需精确选择时间点的操作，如任务截止时间设定、行程出发时间确认、活动开场时间配置,
-    交互特性：滑动交互型，支持上下滚动选择时 / 分 / 秒,
-    风格属性：简约通用型
-    ''',
-    parameters: {
-        title: "描述特定选择时间点事件的标题"
-     },
-    terminal: true ,
-]
-public func clockComponent(title: String): String {
-    template_clock(title)
 }

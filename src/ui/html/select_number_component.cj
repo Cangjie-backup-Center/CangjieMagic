@@ -18,8 +18,19 @@ public class NumericRange {
     public let min: Int64
 }
 
-@template
-public func template_select_number(nr: NumericRange) {
+@ui[
+    description: '''
+    功能类型：选择单个数值 UI・单点数值筛选型，
+    使用场景：选择特定单个数值的相关操作，如商品数量选择、评分星级选择、年龄设置、音量调节数值选择、文件页码定位，
+    交互特性：数据录入型，支持点击数值选项 / 拖动滑块选择,
+    风格属性：简约通用型
+    ''',
+    parameters: {
+        nr: "数值范围区间，包括最大值和最小值"
+     },
+    terminal: true ,
+]
+public func selectNumberComponent(nr: NumericRange) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -207,20 +218,4 @@ public func template_select_number(nr: NumericRange) {
     </body>
     </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：选择单个数值 UI・单点数值筛选型，
-    使用场景：选择特定单个数值的相关操作，如商品数量选择、评分星级选择、年龄设置、音量调节数值选择、文件页码定位，
-    交互特性：数据录入型，支持点击数值选项 / 拖动滑块选择,
-    风格属性：简约通用型
-    ''',
-    parameters: {
-        nr: "数值范围区间，包括最大值和最小值"
-     },
-    terminal: true ,
-]
-public func selectNumberComponent(nr: NumericRange): String {
-    template_select_number(nr)
 }

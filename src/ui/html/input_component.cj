@@ -8,8 +8,19 @@ import magic.prelude.*
 
 
 
-@template
-public func template_input(title: String) {
+@ui[
+    description: '''
+    功能类型：文本输入框 UI・信息录入型,
+    使用场景：用于各类文本信息录入操作，如会议备注输入、用户基本信息录入,
+    交互特性：数据录入型，支持手动输入文本，
+    风格属性：简约通用型，仅当其他UI均不适合时才选用
+    ''',
+    parameters: {
+        title: "描述需要输入文本内容的标题"
+     },
+    terminal: true ,
+]
+public func inputComponent(title: String) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -56,20 +67,4 @@ public func template_input(title: String) {
     </body>
     </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：文本输入框 UI・信息录入型,
-    使用场景：用于各类文本信息录入操作，如会议备注输入、用户基本信息录入,
-    交互特性：数据录入型，支持手动输入文本，
-    风格属性：简约通用型，仅当其他UI均不适合时才选用
-    ''',
-    parameters: {
-        title: "描述需要输入文本内容的标题"
-     },
-    terminal: true ,
-]
-public func inputComponent(title: String): String {
-    template_input(title)
 }

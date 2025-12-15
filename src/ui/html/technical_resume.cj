@@ -65,13 +65,22 @@ public class TechnicalResumeInfo {
     let openSource: Array<openSourceItem>
 }
 
-@template[
+@ui[
+    description: '''
+    功能类型：学术科研型简历 UI，
+    使用场景：展示技术岗位求职相关信息，如个人技能栈、项目经验、工作履历、教育背景、证书资质、技术成果（论文 / 专利），
+    交互特性：信息展示型，仅用于呈现信息，无交互，
+    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
+    ''',
+    terminal: true ,
+    parameters: {
+        info: "个人简历需要收集的信息"
+    },
     thumbnail: "D:/Work/Cangjie/deveco5.1.1/CangjieMagic-HarmonyOS/entry/src/main/cangjie/technical_resume.png",
     title: "学术科研模板",
-    desc: "聚焦科研成果和学术经历，适合教师、科研等岗位申请",
     category: "resume",
 ]
-public func template_technical_resume(info: TechnicalResumeInfo) {
+public func technicalResume(info: TechnicalResumeInfo) {
     '''
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -805,20 +814,4 @@ public func template_technical_resume(info: TechnicalResumeInfo) {
 </body>
 </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：学术科研型简历 UI，
-    使用场景：展示技术岗位求职相关信息，如个人技能栈、项目经验、工作履历、教育背景、证书资质、技术成果（论文 / 专利），
-    交互特性：信息展示型，仅用于呈现信息，无交互，
-    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
-    ''',
-    terminal: true ,
-    parameters: {
-        info: "个人简历需要收集的信息"
-     }
-]
-public func technicalResume(info: TechnicalResumeInfo): String {
-    template_technical_resume(info)
 }

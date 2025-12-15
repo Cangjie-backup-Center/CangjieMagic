@@ -21,8 +21,16 @@ public class TimeLineItem {
     let url: String
 }
 
-@template
-func template_time_line(list: Array<TimeLineItem>) {
+@ui[
+    description: '''
+    功能类型：时间线 UI，
+    使用场景：以时间轴形式展示时序类信息，如物流轨迹跟踪、项目阶段进度、活动流程步骤、版本更新日志、用户操作历史记录、订单状态变更记录，
+    交互特性：信息展示型，支持上下滑动查看完整时序，
+    风格属性：简约通用型
+    ''',
+    terminal: true
+]
+public func timeLineUI(list: Array<TimeLineItem>) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -282,17 +290,4 @@ func template_time_line(list: Array<TimeLineItem>) {
     </script>
     </body>
     </html>'''
-}
-
-@tool[
-    description: '''
-    功能类型：时间线 UI，
-    使用场景：以时间轴形式展示时序类信息，如物流轨迹跟踪、项目阶段进度、活动流程步骤、版本更新日志、用户操作历史记录、订单状态变更记录，
-    交互特性：信息展示型，支持上下滑动查看完整时序，
-    风格属性：简约通用型
-    ''',
-    terminal: true
-]
-public func timeLineUI(list: Array<TimeLineItem>): String {
-    template_time_line(list)
 }

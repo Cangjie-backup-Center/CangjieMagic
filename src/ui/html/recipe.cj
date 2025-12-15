@@ -26,10 +26,19 @@ public class Food {
     let steps: Array<String>
 }
 
-@template[
-    desc: "食谱,展示做菜方法",
+@ui[
+    description: '''
+    功能类型：食谱 UI・烹饪步骤展示型,
+    使用场景：展示美食制作相关信息，如家常菜谱步骤、烘焙食谱教程、减脂餐制作流程、特色菜烹饪方法（含食材清单 / 步骤说明 / 烹饪时长）,
+    交互特性：信息展示及操作交互型，通过翻页展示食谱内容；附带互动小游戏,
+    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
+    ''',
+    terminal: true ,
+    parameters: {
+        info: "菜品信息列表"
+     }
 ]
-public func template_recipe(info: Array<Food>) {
+public func recipe(info: Array<Food>) {
     '''
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -1194,20 +1203,4 @@ public func template_recipe(info: Array<Food>) {
 </body>
 </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：食谱 UI・烹饪步骤展示型,
-    使用场景：展示美食制作相关信息，如家常菜谱步骤、烘焙食谱教程、减脂餐制作流程、特色菜烹饪方法（含食材清单 / 步骤说明 / 烹饪时长）,
-    交互特性：信息展示及操作交互型，通过翻页展示食谱内容；附带互动小游戏,
-    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
-    ''',
-    terminal: true ,
-    parameters: {
-        info: "菜品信息列表"
-     }
-]
-public func recipe(info: Array<Food>): String {
-    template_recipe(info)
 }

@@ -67,13 +67,22 @@ public class CommonResumeInfo {
     let certificate: Array<CertificateItem>
 }
 
-@template[
+@ui[
+    description: '''
+    功能类型：现代简约型简历 UI,
+    使用场景：展示岗位求职相关信息，如个人技能栈、项目经验、工作履历、教育背景、证书资质、技术成果（论文 / 专利），
+    交互特性：信息展示型，仅用于呈现信息，无交互，
+    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
+    ''',
+    terminal: true ,
+    parameters: {
+        info: "个人简历需要收集的信息"
+    },
     thumbnail: "D:/Work/Cangjie/deveco5.1.1/CangjieMagic-HarmonyOS/entry/src/main/cangjie/common_resume.png",
     title: "现代简约模板",
-    desc: "简洁大方的设计，突出重点内容，适合各类岗位申请",
     category: "resume",
 ]
-public func template_common_resume(info: CommonResumeInfo) {
+public func commonResume(info: CommonResumeInfo) {
     '''
  <!DOCTYPE html>
 <html lang="zh-CN">
@@ -619,20 +628,4 @@ public func template_common_resume(info: CommonResumeInfo) {
 </body>
 </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：现代简约型简历 UI,
-    使用场景：展示岗位求职相关信息，如个人技能栈、项目经验、工作履历、教育背景、证书资质、技术成果（论文 / 专利），
-    交互特性：信息展示型，仅用于呈现信息，无交互，
-    风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
-    ''',
-    terminal: true ,
-    parameters: {
-        info: "个人简历需要收集的信息"
-     }
-]
-public func commonResume(info: CommonResumeInfo): String {
-    template_common_resume(info)
 }

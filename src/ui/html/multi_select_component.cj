@@ -8,8 +8,19 @@ import magic.prelude.*
 
 
 
-@template
-public func template_multi_list(info: OptionInfo) {
+@ui[
+    description: '''
+    功能类型：多选 UI・多点选项选择型,
+    使用场景：需从多个选项中选择多个结果，如景点标签筛选（自然 / 人文 / 亲子）、美食口味选择（微辣 / 酸甜 / 清淡）、问卷多选题答题、兴趣爱好勾选,
+    交互特性：操作交互型，支持点击选中 / 取消多个选项；选中状态高亮提示；,
+    风格属性：简约通用型
+    ''',
+    parameters: {
+        info: "选项列表"
+     },
+    terminal: true ,
+]
+public func multiListComponent(info: OptionInfo) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -142,20 +153,4 @@ public func template_multi_list(info: OptionInfo) {
     </body>
     </html>
     '''
-}
-
-@tool[
-    description: '''
-    功能类型：多选 UI・多点选项选择型,
-    使用场景：需从多个选项中选择多个结果，如景点标签筛选（自然 / 人文 / 亲子）、美食口味选择（微辣 / 酸甜 / 清淡）、问卷多选题答题、兴趣爱好勾选,
-    交互特性：操作交互型，支持点击选中 / 取消多个选项；选中状态高亮提示；,
-    风格属性：简约通用型
-    ''',
-    parameters: {
-        info: "选项列表"
-     },
-    terminal: true ,
-]
-public func multiListComponent(info: OptionInfo): String {
-    template_multi_list(info)
 }
