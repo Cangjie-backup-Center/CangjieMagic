@@ -90,6 +90,14 @@ protected struct JsonUtils {
         }
     }
 
+    public static func toUInt(j: JsonValue): Option<UInt64> {
+        match (j.kind()) {
+            case JsonKind.JsInt => return UInt64(j.asInt().getValue())
+            case JsonKind.JsNull => return Some(0)
+            case _ => return None
+        }
+    }
+
     public static func toBool(j: JsonValue): Option<Bool> {
         match (j.kind()) {
             case JsonKind.JsBool => return j.asBool().getValue()
