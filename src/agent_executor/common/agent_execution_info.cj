@@ -86,18 +86,8 @@ public class AgentExecutionInfo <: AgentExecution {
      * Convert the internal execution messages to a message list
      */
     override public prop steps: MessageList {
-        get() {
-            synchronized(this.messagesMutex) {
-                let steps = MessageList()
-                var node = this._messages.firstNode
-                while (let Some(currNode) <- node) {
-                    if (currNode.value.isStep()) {
-                        steps.add(currNode.value.message)
-                    }
-                    node = currNode.next
-                }
-                return steps
-            }
+        get() { 
+            this.getCurrentStepsSafely() 
         }
     }
 
