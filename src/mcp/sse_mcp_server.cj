@@ -89,7 +89,7 @@ public class SseMCPServer <: AbsMCPServer {
         http_server.serve()
     }
 
-    public func loop(msg: String, uuid: String): Unit {
+    private func loop(msg: String, uuid: String): Unit {
         if (let Some(resp) <- this.handleRequestMessage(msg)) {
             this.send(resp, uuid)
         }
