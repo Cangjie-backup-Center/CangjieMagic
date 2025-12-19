@@ -33,7 +33,7 @@ public class StdioMCPServer <: AbsMCPServer {
         this.loop()
     }
 
-    public func loop(): Unit {
+    private func loop(): Unit {
         while (let Some(msg) <- this.recv()) {
             if (let Some(resp) <- this.handleRequestMessage(msg)) {
                 this.send(resp)
