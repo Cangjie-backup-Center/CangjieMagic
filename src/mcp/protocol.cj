@@ -378,7 +378,7 @@ class CallHTMLUIRequest {
 class CallUIParams {
     let names: Array<String>
     let title: String
-    let combMode: String
+    let layout: String
     let arguments: Option<Array<JsonObject>>
 }
 

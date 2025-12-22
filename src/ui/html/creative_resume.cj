@@ -657,7 +657,7 @@ public func creativeResume(info: CommonResumeInfo) {
                                     <h3 class="text-lg font-bold">{% workItem.positionTitle %}</h3>
                                     <span class="text-sm bg-comicYellow-50 px-2 py-1 border-comic-sm inline-block w-fit mt-1 md:mt-0">{% workItem.time %}</span>
                                 </div>
-                                <p class="text-comicBlue font-bold">{% workItem.company %</p>
+                                <p class="text-comicBlue font-bold">{% workItem.company %}</p>
                                 <ul class="mt-2 space-y-1 list-disc list-inside">
                                     {% for item in workItem.content %}
                                         <li>{% item %}</li>

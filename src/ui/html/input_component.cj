@@ -19,6 +19,7 @@ import magic.prelude.*
         title: "描述需要输入文本内容的标题"
      },
     terminal: true ,
+    dump: true,
 ]
 public func inputComponent(title: String) {
     '''

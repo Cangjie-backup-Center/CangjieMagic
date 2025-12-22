@@ -14,11 +14,12 @@ import magic.prelude.*
     交互特性：操作交互型，支持点击触发操作,
     风格属性：简约通用型，对于收集信息页面必须有且只有一个，且必须放在组件列表最后
     ''',
- terminal: true
+ terminal: true,
+ dump: true,
 ]
 public func confirmBtnUI() {
     '''
-    <!DOCTYPE html>
+     <!DOCTYPE html>
     <html lang="zh-CN">
     <head>
         <meta charset="UTF-8">
@@ -39,135 +40,142 @@ public func confirmBtnUI() {
         </style>
     </head>
     <body>
-        <button class="confirm-btn" id="confirmBtn-{ num }">确认</button>
+        <button class="confirm-btn" id="confirmBtn">确认</button>
         <script>
             // 确认按钮事件
-            document.getElementById('confirmBtn-{ num }').addEventListener('click', function() {
-                let userAnswer-{ num } = ''
-                // displayListItems
-                const selectedRadios = contents[currentIndex].querySelectorAll('.option-radio-card input[type="radio"]:checked');
-                const radioTitles = contents[currentIndex].querySelectorAll('h3.radio-title');
-                const customInputs = contents[currentIndex].querySelectorAll('.custom-radio-input');
-                if (selectedRadios.length > 0 && selectedRadios.length == radioTitles.length) {
-                    for (let i = 0; i < selectedRadios.length; i++) {
-                        const radioElement = selectedRadios[i];
-                        const titleElement = radioTitles[i];
-                        const customInput = customInputs[i]
-                        if (radioElement.value === 'custom') {
-                            if (customInput.value.trim() === '') {
-                                showToast('自定义不能为空，请输入', 'error');
+            let flag = true
+            let userAnswer = ''
+            document.getElementById('confirmBtn').addEventListener('click', function() {
+                if (flag) {
+                    // displayListItems
+                    const selectedRadios = document.querySelectorAll('.option-radio-card input[type="radio"]:checked');
+                    const radioTitles = document.querySelectorAll('h3.radio-title');
+                    const customInputs = document.querySelectorAll('.custom-radio-input');
+                    if (selectedRadios.length > 0 && selectedRadios.length == radioTitles.length) {
+                        for (let i = 0; i < selectedRadios.length; i++) {
+                            const radioElement = selectedRadios[i];
+                            const titleElement = radioTitles[i];
+                            const customInput = customInputs[i]
+                            if (radioElement.value === 'custom') {
+                                if (customInput.value.trim() === '') {
+                                    showToast('自定义不能为空，请输入', 'error');
+                                } else {
+                                    userAnswer += titleElement.textContent.trim() + ": " + customInput.value.trim() + "\\n"
+                                }
                             } else {
-                                userAnswer-{ num } += titleElement.textContent.trim() + ": " + customInput.value.trim() + "\\n"
+                                userAnswer += titleElement.textContent.trim() + ": " + radioElement.value + "\\n"
                             }
-                        } else {
-                            userAnswer-{ num } += titleElement.textContent.trim() + ": " + radioElement.value + "\\n"
                         }
                     }
-                }
 
-                const selectedDrops = contents[currentIndex].querySelectorAll('.custom-drop-input');
-                const dropTitles = contents[currentIndex].querySelectorAll('h3.drop-title');
-                if (selectedDrops.length > 0 && selectedDrops.length == dropTitles.length) {
-                    for (let i = 0; i < selectedDrops.length; i++) {
-                        const dropElement = selectedDrops[i];
-                        const titleElement = dropTitles[i];
-                        userAnswer-{ num } += titleElement.textContent.trim() + ": " + dropElement.value.trim() + "\\n"
-                    }
-                }
-
-                // multiListUI
-                const checkboxGroups = contents[currentIndex].querySelectorAll('.checkbox-multi-group');
-                const multiTitles = contents[currentIndex].querySelectorAll('h3.multi-title');
-                if (checkboxGroups.length > 0 && checkboxGroups.length == multiTitles.length) {
-                    for (let i = 0; i < checkboxGroups.length; i++) {
-                        const checkboxGroup = checkboxGroups[i];
-                        const titleElement = multiTitles[i];
-                        const selectedOptions = Array.from(checkboxGroup.querySelectorAll('input[type="checkbox"]:checked'))
-                            .map(checkbox => {
-                                // 获取对应的文本标签内容
-                                return checkbox.nextSibling.textContent.trim();
-                            });
-
-                        if (selectedOptions.length > 0) {
-                            // 添加选中的选项到结果列表
-                            let multiRes = ''
-                            selectedOptions.forEach(option => {
-                                multiRes += option + ' '
-                            });
-                            userAnswer-{ num } += titleElement.textContent.trim() + ": " + multiRes + "\\n"
+                    const selectedDrops = document.querySelectorAll('.custom-drop-input');
+                    const dropTitles = document.querySelectorAll('h3.drop-title');
+                    if (selectedDrops.length > 0 && selectedDrops.length == dropTitles.length) {
+                        for (let i = 0; i < selectedDrops.length; i++) {
+                            const dropElement = selectedDrops[i];
+                            const titleElement = dropTitles[i];
+                            userAnswer += titleElement.textContent.trim() + ": " + dropElement.value.trim() + "\\n"
                         }
                     }
-                }
 
-                // inputUI
-                const inputComments = contents[currentIndex].querySelectorAll('.input-comment');
-                const inputTitles = contents[currentIndex].querySelectorAll('h3.input-title');
-                if (inputComments.length > 0 && inputComments.length == inputTitles.length) {
-                    for (let i = 0; i < inputTitles.length; i++) {
-                        const inputComment = inputComments[i];
-                        const titleElement = inputTitles[i];
-                        userAnswer-{ num } += titleElement.textContent.trim() + ": " + inputComment.value + "\\n"
+                    // multiListUI
+                    const checkboxGroups = document.querySelectorAll('.checkbox-multi-group');
+                    const multiTitles = document.querySelectorAll('h3.multi-title');
+                    if (checkboxGroups.length > 0 && checkboxGroups.length == multiTitles.length) {
+                        for (let i = 0; i < checkboxGroups.length; i++) {
+                            const checkboxGroup = checkboxGroups[i];
+                            const titleElement = multiTitles[i];
+                            const selectedOptions = Array.from(checkboxGroup.querySelectorAll('input[type="checkbox"]:checked'))
+                                .map(checkbox => {
+                                    // 获取对应的文本标签内容
+                                    return checkbox.nextSibling.textContent.trim();
+                                });
+
+                            if (selectedOptions.length > 0) {
+                                // 添加选中的选项到结果列表
+                                let multiRes = ''
+                                selectedOptions.forEach(option => {
+                                    multiRes += option + ' '
+                                });
+
+                                userAnswer += titleElement.textContent.trim() + ": " + multiRes + "\\n"
+                            } else {
+                                alert('请至少选择一个选项!');
+                            }
+                        }
                     }
-                }
 
-                // clockUI
-                const clockRes = contents[currentIndex].querySelectorAll('.time-display');
-                const clockTitles = contents[currentIndex].querySelectorAll('h3.clock-title');
-                if (clockRes.length > 0 && clockRes.length == clockTitles.length) {
-                    for (let i = 0; i < clockRes.length; i++) {
-                        const time = clockRes[i];
-                        const titleElement = clockTitles[i];
-                        userAnswer-{ num } += titleElement.textContent.trim() + time.textContent + "\\n"
+                    // inputUI
+                    const inputComments = document.querySelectorAll('.input-comment');
+                    const inputTitles = document.querySelectorAll('h3.input-title');
+                    if (inputComments.length > 0 && inputComments.length == inputTitles.length) {
+                        for (let i = 0; i < inputTitles.length; i++) {
+                            const inputComment = inputComments[i];
+                            const titleElement = inputTitles[i];
+                            userAnswer += titleElement.textContent.trim() + ": " + inputComment.value + "\\n"
+                        }
                     }
-                }
 
-                // startEndDateUI
-                const calendarRes = contents[currentIndex].querySelectorAll('.date-selected-range');
-                const calendarTitles = contents[currentIndex].querySelectorAll('h3.date-range-title');
-                if (calendarRes.length > 0 && calendarRes.length == calendarTitles.length) {
-                    for (let i = 0; i < calendarRes.length; i++) {
-                        const selectedRangeElement = calendarRes[i];
-                        const titleElement = calendarTitles[i];
-                        userAnswer-{ num } += titleElement.textContent.trim() + ": " + selectedRangeElement.textContent + "\\n"
+                    // clockUI
+                    const clockRes = document.querySelectorAll('.time-display');
+                    const clockTitles = document.querySelectorAll('h3.clock-title');
+                    if (clockRes.length > 0 && clockRes.length == clockTitles.length) {
+                        for (let i = 0; i < clockRes.length; i++) {
+                            const time = clockRes[i];
+                            const titleElement = clockTitles[i];
+                            userAnswer += titleElement.textContent.trim() + time.textContent + "\\n"
+                        }
                     }
-                }
 
-                // singleDateUI
-                const dateRes = contents[currentIndex].querySelectorAll('.date-form-group input[type="date"]');
-                const dateTitles = contents[currentIndex].querySelectorAll('h3.date-title');
-                if (dateRes.length > 0 && dateRes.length == dateTitles.length) {
-                    for (let i = 0; i < dateTitles.length; i++) {
-                        const dateElement = dateRes[i];
-                        const titleElement = dateTitles[i];
-                        userAnswer-{ num } += titleElement.textContent.trim() + ": " + dateElement.value + "\\n"
+                    // startEndDateUI
+                    const calendarRes = document.querySelectorAll('.date-selected-range');
+                    const calendarTitles = document.querySelectorAll('h3.date-range-title');
+                    if (calendarRes.length > 0 && calendarRes.length == calendarTitles.length) {
+                        for (let i = 0; i < calendarRes.length; i++) {
+                            const selectedRangeElement = calendarRes[i];
+                            const titleElement = calendarTitles[i];
+                            userAnswer += titleElement.textContent.trim() + ": " + selectedRangeElement.textContent + "\\n"
+                        }
                     }
-                }
 
-                // selectNumberUI
-                const sliderValues = contents[currentIndex].querySelectorAll('.slider-value');
-                const numberTitles = contents[currentIndex].querySelectorAll('h3.number-title');
-                if (sliderValues.length > 0 && sliderValues.length == numberTitles.length) {
-                    for (let i = 0; i < numberTitles.length; i++) {
-                        const sliderValue = sliderValues[i];
-                        const titleElement = numberTitles[i];
-                        userAnswer-{ num } += titleElement.textContent.trim() + ": " + sliderValue.textContent + "\\n"
+                    // singleDateUI
+                    const dateRes = document.querySelectorAll('.date-form-group input[type="date"]');
+                    const dateTitles = document.querySelectorAll('h3.date-title');
+                    if (dateRes.length > 0 && dateRes.length == dateTitles.length) {
+                        for (let i = 0; i < dateTitles.length; i++) {
+                            const dateElement = dateRes[i];
+                            const titleElement = dateTitles[i];
+                            userAnswer += titleElement.textContent.trim() + ": " + dateElement.value + "\\n"
+                        }
                     }
-                }
 
-                // selectRangeUI
-                const minValues = contents[currentIndex].querySelectorAll('.range-value-min');
-                const maxValues = contents[currentIndex].querySelectorAll('.range-value-max');
-                const rangeTitles = contents[currentIndex].querySelectorAll('h3.range-title');
-                if (minValues.length > 0 && minValues.length == rangeTitles.length) {
-                    for (let i = 0; i < minValues.length; i++) {
-                        const maxValue = maxValues[i];
-                        const minValue = minValues[i];
-                        const titleElement = rangeTitles[i];
-                        userAnswer-{ num } += titleElement.textContent.trim() + ": " + minValue.textContent + "-" + maxValue.textContent + "\\n"
+                    // selectNumberUI
+                    const sliderValues = document.querySelectorAll('.slider-value');
+                    const numberTitles = document.querySelectorAll('h3.number-title');
+                    if (sliderValues.length > 0 && sliderValues.length == numberTitles.length) {
+                        for (let i = 0; i < numberTitles.length; i++) {
+                            const sliderValue = sliderValues[i];
+                            const titleElement = numberTitles[i];
+                            userAnswer += titleElement.textContent.trim() + ": " + sliderValue.textContent + "\\n"
+                        }
                     }
-                }
 
-                agentCallbackObject.sendMessage(userAnswer-{ num }.trim());
+                    // selectRangeUI
+                    const minValues = document.querySelectorAll('.range-value-min');
+                    const maxValues = document.querySelectorAll('.range-value-max');
+                    const rangeTitles = document.querySelectorAll('h3.range-title');
+                    if (minValues.length > 0 && minValues.length == rangeTitles.length) {
+                        for (let i = 0; i < minValues.length; i++) {
+                            const maxValue = maxValues[i];
+                            const minValue = minValues[i];
+                            const titleElement = rangeTitles[i];
+                            userAnswer += titleElement.textContent.trim() + ": " + minValue.textContent + "-" + maxValue.textContent + "\\n"
+                        }
+                    }
+
+                    agentCallbackObject.sendMessage(userAnswer.trim());
+                    flag = false
+                }
             });
         </script>
     </body>

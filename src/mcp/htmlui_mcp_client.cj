@@ -25,7 +25,7 @@ public class HTMLUIMCPClient <: AbsMCPClient {
         }
     }
 
-    public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, title: String, tools: Array<Tool>): ToolResponse {
+    public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, layout: String, tools: Array<Tool>): ToolResponse {
         this.doBeforeRequest()
         // Prepare the request
         let argsArr = ArrayList<JsonObject>()
@@ -36,8 +36,8 @@ public class HTMLUIMCPClient <: AbsMCPClient {
         let req = CallHTMLUIRequest(
             params: CallUIParams(
                 names: names,
-                title: title,
-                combMode: 'Column',
+                title: 'title',
+                layout: layout,
                 arguments: if (args.isEmpty()) { None } else { argsArr.toArray() }
             )
         )

@@ -63,6 +63,13 @@ private func transformUI(input: Tokens, attr: UIAttr): Tokens {
         throw DslException("@ui should be called on function declarations")
     }
     let funcDecl = decl.asFuncDecl()
+
+    let templateFunc = if (funcDecl.block.nodes.size > 0 && !funcDecl.block.nodes[0].isStringLiteral()) {
+        transformComposition(funcDecl)
+    } else {
+        transformTemplate(funcDecl, attr)
+    }
+
     let modifier = funcDecl.modifiers
     let genericTypeParam = getGenericTypeParamsTokens(funcDecl)
     let genericConstraint = getGenericConstraintsTokens(funcDecl)
@@ -75,12 +82,6 @@ private func transformUI(input: Tokens, attr: UIAttr): Tokens {
     let retType = checkFuncRetString(funcDecl)
     let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
 
-    /*let template = attr.template.getOrThrow({ =>
-        DslException("@ui must have a template attribute.")
-    })
-    if (!exists(template)) {
-        throw DslException("`template` refers to non-existing file: ${template}")
-    }*/
     let toolAttrs = ArrayList<Tokens>()
     for (key in ["description", "parameters", "filterable", "terminal"]) {
         if (let Some(tokens) <- attr.getTokens(key)) {
@@ -89,105 +90,52 @@ private func transformUI(input: Tokens, attr: UIAttr): Tokens {
     }
     let toolAttr = joinTokens(toolAttrs, Token(TokenKind.COMMA))
 
-    let tempAttrs = ArrayList<Tokens>()
-    for (key in ["thumbnail", "title", "category"]) {
-        if (let Some(tokens) <- attr.getTokens(key)) {
-            tempAttrs.add(quote($(newIdentifierToken(key)): $tokens))
-        }
-    }
-    let tempAttr = joinTokens(tempAttrs, Token(TokenKind.COMMA))
+    quote(
+        $templateFunc
 
-    return quote(
-        @template[$tempAttr]
-        $modifier func $templateFnName $genericTypeParam ( $(funcDecl.funcParams) ): $retType $genericConstraint $(funcDecl.block)
-
-        @tool[$toolAttr]
-        $modifier func $(funcDecl.identifier) $genericTypeParam ( $(funcDecl.funcParams) ): $retType $genericConstraint {
-            $templateFnName($args)
-        }
+        @tool[$toolAttr](
+            $modifier func $(funcDecl.identifier) $genericTypeParam ( $(funcDecl.funcParams) ): $retType $genericConstraint {
+                $templateFnName($args)
+            }
+        )
     )
 }
 
-// private func transformUI(input: Tokens, attr: UIAttr): Tokens {
-//     let decl = parseDecl(input)
-//     if (!decl.isFuncDecl()) {
-//         throw DslException("@ui should be called on function declarations")
-//     }
-//     let funcDecl = decl.asFuncDecl()
-//     let templateFunc = if (attr.template.isSome()) {
-//         transformTemplateFile(funcDecl, attr)
-//     } else {
-//         transformComposition(funcDecl, attr)
-//     }
+private func transformTemplate(funcDecl: FuncDecl, attr: UIAttr): Tokens {
+    let tempAttrs = ArrayList<Tokens>()
+    for (key in ["thumbnail", "title", "category", "template"]) {
+        if (let Some(tokens) <- attr.getTokens(key)) {
+            if (key == "template") {
+                tempAttrs.add(quote($(newIdentifierToken('path')): $tokens))
+            } else {
+                tempAttrs.add(quote($(newIdentifierToken(key)): $tokens))
+            }
+        }
+    }
+    let tempAttr = joinTokens(tempAttrs, Token(TokenKind.COMMA))
+    let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
+    return quote(
+        @template[$tempAttr]
+            private func $templateFnName ( $(funcDecl.funcParams) ): String $(funcDecl.block)
+    )
+}
 
-//     let toolAttrs = ArrayList<Tokens>()
-//     for (key in ["description", "parameters", "filterable", "terminal", "dump", "uitype"]) {
-//         if (let Some(tokens) <- attr.getTokens(key)) {
-//             toolAttrs.add(quote($(newIdentifierToken(key)): $tokens))
-//         }
-//     }
-//     let toolAttr = joinTokens(toolAttrs, Token(TokenKind.COMMA))
-//     let modifier = funcDecl.modifiers
-//     let genericTypeParam = getGenericTypeParamsTokens(funcDecl)
-//     let genericConstraint = getGenericConstraintsTokens(funcDecl)
-//     let args: Tokens = joinTokens(
-//         getFuncParamNames(funcDecl) |>
-//             map { name: String => newIdentifierToken(name) } |>
-//             collectArray,
-//         Token(TokenKind.COMMA)
-//     )
-//     let retType = checkFuncRetString(funcDecl)
-//     let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
-//     quote(
-//         $templateFunc
-
-//         @tool[$toolAttr](
-//             $modifier func $(funcDecl.identifier) $genericTypeParam ( $(funcDecl.funcParams) ): $retType $genericConstraint {
-//                 $templateFnName($args)
-//             }
-//         )
-//     )
-// }
-
-// private func transformTemplateFile(funcDecl: FuncDecl, attr: UIAttr): Tokens {
-//     let path = attr.template.getOrThrow()
-//     if (!exists(path)) {
-//         throw DslException("`template` refers to non-existing file: ${path}")
-//     }
-//     let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
-//     return quote(
-//         @template[path: $(newLiteralToken(path))](
-//             private func $templateFnName ( $(funcDecl.funcParams) ): String { }
-//         )
-//     )
-// }
-
-// func fetchArgument(callExpr: CallExpr, argName: String): Expr {
-//     for (arg in callExpr.arguments) {
-//         if (arg.identifier.value == argName) {
-//             return arg.expr
-//         }
-//     }
-//     throw UnsupportedException()
-// }
-
-// private func transformComposition(funcDecl: FuncDecl, attr: UIAttr): Tokens {
-//     let body = quote(let components = ArrayList<HTMLComponent>())
-//     var index = 0
-//     for (node in funcDecl.block.nodes) {
-//         let call  = (node as CallExpr).getOrThrow()
-//         let name = (call.callFunc as RefExpr).getOrThrow().identifier.value
-//         // Check names
-//         body.append(quote(
-//             components.add(HTMLComponent($call, $index))
-//         ))
-//         index = index + 1
-//     }
-//     let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
-//     return quote(
-//         private func $templateFnName ( $(funcDecl.funcParams) ): String {
-//             $body
-//             mergeHTMLComponents("title", components)
-//         }
-//     )
-// }
+private func transformComposition(funcDecl: FuncDecl): Tokens {
+    let body = quote(let components = ArrayList<HTMLComponent>())
+    var index = 0
+    for (node in funcDecl.block.nodes) {
+        let call = node.asCallExpr()
+        // Check names
+        body.append(quote(
+            components.add(HTMLComponent($call, $index))
+        ))
+        index = index + 1
+    }
+    let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
+    return quote(
+        private func $templateFnName ( $(funcDecl.funcParams) ): String {
+            $body
+            mergeHTML("title", components, layout: Linear)
+        }
+    )
+}

@@ -398,6 +398,7 @@ public abstract class AbsMCPServer {
     private func handleCallHTMLUI(callUIRequest: CallHTMLUIRequest): ToJsonValue {
         let names = callUIRequest.params.names
         let title = callUIRequest.params.title
+        let layout = callUIRequest.params.layout
         let argArr = callUIRequest.params.arguments.getOrThrow()
         let components = ArrayList<HTMLComponent>()
         for(i in 0..names.size) {
@@ -415,7 +416,13 @@ public abstract class AbsMCPServer {
                 )
             }
         }
-        let code = mergeHTMLComponents(title, components)
+        let htmlLayout = match (layout) {
+            case "waterfall" => Waterfall
+            case "grid" => Grid
+            case _ => Linear
+        }
+        let code = mergeHTML(title, components, layout: htmlLayout)
+        //let code = mergeHTMLByLinear(title, components)
         return CallUIResponse(
             id: callUIRequest.id,
             result: CallUIResult(

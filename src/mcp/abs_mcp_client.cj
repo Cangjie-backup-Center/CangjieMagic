@@ -127,7 +127,7 @@ public abstract class AbsMCPClient <: MCPClient {
             params: CallUIParams(
                 names: names,
                 title: title,
-                combMode: 'Column',
+                layout: 'Column',
                 arguments: if (args.isEmpty()) { None } else { argsArr.toArray() }
             )
         )
