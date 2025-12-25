@@ -135,7 +135,9 @@ private func transformComposition(funcDecl: FuncDecl): Tokens {
     return quote(
         private func $templateFnName ( $(funcDecl.funcParams) ): String {
             $body
-            mergeHTML("title", components, layout: Linear)
+            let b = mergeHTML("title", components, layout: Grid)
+            println(b)
+            b
         }
     )
 }

@@ -162,9 +162,9 @@ public func mergeHTML(title: String,
         .responsive-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            gap: 3px;
             width: 100%;
-            padding: 0 0.5rem;
+            padding: 0;
             min-width: 300px;
         }
 
@@ -172,7 +172,7 @@ public func mergeHTML(title: String,
             .responsive-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 8px;
-                padding: 0 0.25rem;
+                padding: 0;
             }
         }
 
@@ -184,10 +184,7 @@ public func mergeHTML(title: String,
         }
 
         .grid-card {
-            background: hsl(0, 0%, 100%);
             border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
             width: 100%;
             height: 100%;
             box-sizing: border-box;

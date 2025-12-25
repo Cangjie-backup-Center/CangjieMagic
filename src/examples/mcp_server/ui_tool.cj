@@ -9,6 +9,7 @@ import magic.config.Config
 import magic.mcp.ArkUIMCPServer
 import magic.ui.arkui.*
 import magic.ui.html.*
+import magic.ui.*
 
 
 // @tool[
@@ -39,10 +40,19 @@ import magic.ui.html.*
 //     // }
 // }
 
+@ui
+public func foo(product: ProductCardInfo) {
+    productCards(product)
+    productCards(product)
+    productCards(product)
+}
+
 
 main() {
     Config.logLevel = "TRACE"
     Config.logFile = "./logs/mcp-server.log"
+    let product = ProductCardInfo(imageUrl: 'https://picsum.photos/600/500', title: '祖马龙圣诞限定香水', description:'东方英伦圣诞氛围，新香檀香木和暖杏自带幸运属性，适合追求高级感的女生', price: "200", tags:['香水', '礼盒'])
+    __template_of_foo(product)
 //    println("--------------UIMCPServer----------------")
 //    let info = ArrayList<Position>()
 //    let pos1 = Position(name:"青浦森林公园", distance:"5.5", price:'30', openTime:"全天", rating:'4.5', description:"ddfasadfafd", tags:['自然', 'afdfda', 'fads'])
@@ -52,4 +62,5 @@ main() {
 //    let a = recommend_scenices(info.toArray())
 //    println(a)
     // UIMCPServer.startWith([textListUI, radioListUI], "0.0.0.0", 8000)
+    return 0
 }
