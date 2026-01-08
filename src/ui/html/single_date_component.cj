@@ -17,8 +17,7 @@ import magic.prelude.*
     ''',
     parameters: {
         title: "描述特定选择日期事件的标题"
-     },
-    terminal: true ,
+    }
 ]
 public func singleDateComponent(title: String) {
     '''

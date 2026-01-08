@@ -17,8 +17,7 @@ import magic.prelude.*
     ''',
     parameters: {
         info: "选项列表"
-     },
-    terminal: true ,
+    }
 ]
 public func multiListComponent(info: OptionInfo) {
     '''

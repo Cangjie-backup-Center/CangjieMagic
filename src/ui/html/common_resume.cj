@@ -74,7 +74,6 @@ public class CommonResumeInfo {
     交互特性：信息展示型，仅用于呈现信息，无交互，
     风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
     ''',
-    terminal: true ,
     parameters: {
         info: "个人简历需要收集的信息"
     },

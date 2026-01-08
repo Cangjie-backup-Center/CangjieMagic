@@ -8,13 +8,13 @@ import magic.prelude.*
 import magic.config.Config
 import magic.mcp.ArkUIMCPServer
 import magic.ui.arkui.*
-import magic.ui.html.*
+// import magic.ui.html.*
 import magic.ui.*
 
 
 // @tool[
 //     description: "以纯文本为核心内容的列表，每个列表项是一段文字，比如步骤说明列表",
-//     terminal: true,
+//
 //     kind: "display",
 //     parameters: {
 //         info: "列表展示信息"
@@ -30,7 +30,7 @@ import magic.ui.*
 //         info: "选项列表"
 //     },
 //     kind: "input",
-//     terminal: true
+//
 // ]
 // public func radioListUI(info: TextInfo): String {
 //     // if (info.arr.size <= 5) {
@@ -40,7 +40,9 @@ import magic.ui.*
 //     // }
 // }
 
-@ui
+@ui[
+    layout: 'Linear'
+]
 public func foo(product: ProductCardInfo) {
     productCards(product)
     productCards(product)
@@ -51,8 +53,8 @@ public func foo(product: ProductCardInfo) {
 main() {
     Config.logLevel = "TRACE"
     Config.logFile = "./logs/mcp-server.log"
-    let product = ProductCardInfo(imageUrl: 'https://picsum.photos/600/500', title: '祖马龙圣诞限定香水', description:'东方英伦圣诞氛围，新香檀香木和暖杏自带幸运属性，适合追求高级感的女生', price: "200", tags:['香水', '礼盒'])
-    __template_of_foo(product)
+    // let product = ProductCardInfo(imageUrl: 'https://picsum.photos/600/500', title: '祖马龙圣诞限定香水', description:'东方英伦圣诞氛围，新香檀香木和暖杏自带幸运属性，适合追求高级感的女生', price: "200", tags:['香水', '礼盒'])
+    // __template_of_foo(product)
 //    println("--------------UIMCPServer----------------")
 //    let info = ArrayList<Position>()
 //    let pos1 = Position(name:"青浦森林公园", distance:"5.5", price:'30', openTime:"全天", rating:'4.5', description:"ddfasadfafd", tags:['自然', 'afdfda', 'fads'])
@@ -61,6 +63,7 @@ main() {
 //    info.add(pos2)
 //    let a = recommend_scenices(info.toArray())
 //    println(a)
-    // UIMCPServer.startWith([textListUI, radioListUI], "0.0.0.0", 8000)
+    // ArkUIMCPServer.startWith([textListUI, radioListUI], "0.0.0.0", 8000)
+    ArkUIMCPServer.startWith([textListUI], "0.0.0.0", 8000)
     return 0
 }

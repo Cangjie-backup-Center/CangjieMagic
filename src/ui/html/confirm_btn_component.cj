@@ -14,7 +14,6 @@ import magic.prelude.*
     交互特性：操作交互型，支持点击触发操作,
     风格属性：简约通用型，对于收集信息页面必须有且只有一个，且必须放在组件列表最后
     ''',
- terminal: true,
  dump: true,
 ]
 public func confirmBtnUI() {

@@ -21,7 +21,7 @@ private class UIAttr <: Attr {
         let map = AttrParser(attrTokens).parseAttr(
             macroName: "ui",
             validKeys: [
-                "template", "parameters", "description", "filterable",
+                "template", "parameters", "description", "filterable", "layout", "style",
                 "terminal", "dump", "title", "thumbnail", "category"
             ]
         )

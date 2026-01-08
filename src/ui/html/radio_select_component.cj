@@ -24,8 +24,7 @@ public class OptionInfo {
     ''',
      parameters: {
         info: "选项列表"
-     },
-     terminal: true
+     }
 ]
 public func radioListComponent(info: OptionInfo) {
     '''

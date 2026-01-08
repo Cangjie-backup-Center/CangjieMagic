@@ -32,7 +32,6 @@ public class MeetingInfo {
     交互特性：信息展示型，仅用于呈现信息，无交互,
     风格属性：简约型，仅适合特定场景
     ''',
- terminal: true
 ]
 public func meetingUI(info: MeetingInfo) {
     '''

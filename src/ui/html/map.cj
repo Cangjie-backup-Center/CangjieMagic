@@ -37,7 +37,6 @@ public class MyLocation {
     交互特性：数据可视化型，支持地图缩放 / 平移操作；支持定位当前位置,
     风格属性：简约型，仅适合特定场景
     ''',
-    terminal: true ,
 ]
 public func amap(info: MyLocation) {
     '''

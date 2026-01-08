@@ -33,7 +33,6 @@ public class Food {
     交互特性：信息展示及操作交互型，通过翻页展示食谱内容；附带互动小游戏,
     风格属性：复杂型，仅适合展示单个UI，不适合与其他UI进行组合
     ''',
-    terminal: true ,
     parameters: {
         info: "菜品信息列表"
      }

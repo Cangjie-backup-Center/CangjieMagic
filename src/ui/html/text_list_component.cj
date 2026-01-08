@@ -20,8 +20,7 @@ public class TextInfo {
     功能类型：纯文本列表，
     使用场景：以列表的形式展示信息，如步骤说明列表，
     交互特性：信息展示型，仅用于呈现信息，无交互，
-    风格属性：简约通用型''',
- terminal: true
+    风格属性：简约通用型'''
 ]
 public func textListUI(info: TextInfo) {
     '''
