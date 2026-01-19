@@ -77,6 +77,7 @@ public class CommonResumeInfo {
     parameters: {
         info: "个人简历需要收集的信息"
     },
+    kind: "display",
     thumbnail: "D:/Work/Cangjie/deveco5.1.1/CangjieMagic-HarmonyOS/entry/src/main/cangjie/common_resume.png",
     title: "现代简约模板",
     category: "resume",

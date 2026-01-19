@@ -462,7 +462,6 @@ extend Node <: NodeExt {
     }
 }
 
-
 protected const moreResumeButtonCss = '''
 		.custom-dialog-overlay {
             display: none;

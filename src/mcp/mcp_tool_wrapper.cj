@@ -22,12 +22,12 @@ protected class MCPToolWrapper <: Tool {
         this.mcpTool = mcpTool
     }
 
-    public prop name: String {
-        get() { this.mcpTool.name }
-    }
-
     public prop kind: String {
         get() { this.mcpTool.kind }
+    }
+
+    public prop name: String {
+        get() { this.mcpTool.name }
     }
 
     public prop description: String {

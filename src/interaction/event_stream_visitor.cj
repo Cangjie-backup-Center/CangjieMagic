@@ -18,14 +18,14 @@ public abstract class EventStreamVisitor {
     ) { }
 
     public func start(): Unit {
-        try {
-          for (event in this.events) {
-            this.onEvent(event)
+          try {
+               for (event in this.events) {
+               this.onEvent(event)
+               }
+          } catch (e: Exception) {
+               LogUtils.debug("==>debug")
+               LogUtils.debug(e)
           }
-        } catch (e: Exception) {
-            LogUtils.debug("==>debug")
-            LogUtils.debug(e)
-        }
     }
 
     private func onEvent(event: InteractionEvent): Unit {

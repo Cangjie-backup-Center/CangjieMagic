@@ -161,7 +161,6 @@ public func mergeArkUIComponents(title: String, components: ArrayList<ArkUICompo
 
         // 命名空间封装所有实现
         namespace NativeModule {
-
             // NativeModule单例类，提供NDK接口访问
             class NativeModuleInstance {
             public:

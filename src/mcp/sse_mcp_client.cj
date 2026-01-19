@@ -5,6 +5,7 @@ package magic.mcp
 
 import magic.dsl.jsonable
 import magic.core.tool.Tool
+import magic.core.ToolResponse
 import magic.jsonable.*
 import magic.log.LogUtils
 import magic.config.Config
@@ -99,5 +100,14 @@ public class SseMCPClient <: AbsMCPClient {
         } else {
             throw MCPException("Fail to receive sse event")
         }
+    }
+
+    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, layout: String, title: String): ToolResponse {
+        let argsArr = ArrayList<Array<(String, JsonValue)>>()
+        return this.callUI(names, argsArr.toArray(), '', title)
+    }
+
+    override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, layout: String, title: String): ToolResponse {
+        return ToolResponse('Not implemented', isError: true)
     }
 }

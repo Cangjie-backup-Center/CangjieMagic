@@ -65,8 +65,8 @@ public abstract class AbsMCPClient <: MCPClient {
     private func listDisplayUI(): ListUIResult {
         this.send(ListDisplayUIRequest())
         let resp = this.recvResponse<ListDisplayUIResponse>()
-        return resp.result
-    }
+         return resp.result
+     }
 
     override public prop tools: Array<Tool> {
         get() {
@@ -101,55 +101,55 @@ public abstract class AbsMCPClient <: MCPClient {
         }
     }
 
-    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, title: String): ToolResponse {
-        let argsArr = ArrayList<Array<(String, JsonValue)>>()
-        // var index = 0
-        for (argArr in args) {
-            let arguments = ArrayList<(String, JsonValue)>()
-            for (arg in argArr) {
-                arguments.add((arg[0], arg[1].toJsonValue()))
-            }
-            argsArr.add(arguments.toArray())
-            // index++
-        }
-        return this.callUI(names, argsArr.toArray(), title)
-    }
+    // override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, layout: String, title: String): ToolResponse {
+    //     let argsArr = ArrayList<Array<(String, JsonValue)>>()
+    //     // var index = 0
+    //     for (argArr in args) {
+    //         let arguments = ArrayList<(String, JsonValue)>()
+    //         for (arg in argArr) {
+    //             arguments.add((arg[0], arg[1].toJsonValue()))
+    //         }
+    //         argsArr.add(arguments.toArray())
+    //         // index++
+    //     }
+    //     return this.callUI(names, argsArr.toArray(), '', title)
+    // }
 
-    open override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, title: String): ToolResponse {
-        this.doBeforeRequest()
-        // Prepare the request
-        let argsArr = ArrayList<JsonObject>()
-        for (arg in args) {
-            let arguments = HashMap<String, JsonValue>(arg)
-            argsArr.add(JsonObject(arguments))
-        }
-        let req = CallArkUIRequest(
-            params: CallUIParams(
-                names: names,
-                title: title,
-                layout: 'Column',
-                arguments: if (args.isEmpty()) { None } else { argsArr.toArray() }
-            )
-        )
-        // Send the request and receive its response
-        this.send(req)
-        let resp = this.recvResponse<CallUIResponse>()
-        if (req.id != resp.id) {
-            LogUtils.error("Received invalid response with mismatched id: ${resp.toJsonValue().toJsonString()}")
-        }
-        // Merge all result content
-        let result = resp.result
-        let strBuilder = StringBuilder()
-        for (content in result.content) {
-            strBuilder.append(content.getValue())
-            strBuilder.append("\n")
-        }
-        if ((result.isError ?? false)) {
-            return ToolResponse(strBuilder.toString(), isError: true)
-        } else {
-            return ToolResponse(strBuilder.toString(), isError: false)
-        }
-    }
+    // override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, layout: String, title: String): ToolResponse {
+    //     this.doBeforeRequest()
+    //     // Prepare the request
+    //     let argsArr = ArrayList<JsonObject>()
+    //     for (arg in args) {
+    //         let arguments = HashMap<String, JsonValue>(arg)
+    //         argsArr.add(JsonObject(arguments))
+    //     }
+    //     let req = CallArkUIRequest(
+    //         params: CallUIParams(
+    //             names: names,
+    //             title: title,
+    //             layout: 'Column',
+    //             arguments: if (args.isEmpty()) { None } else { argsArr.toArray() }
+    //         )
+    //     )
+    //     // Send the request and receive its response
+    //     this.send(req)
+    //     let resp = this.recvResponse<CallUIResponse>()
+    //     if (req.id != resp.id) {
+    //         LogUtils.error("Received invalid response with mismatched id: ${resp.toJsonValue().toJsonString()}")
+    //     }
+    //     // Merge all result content
+    //     let result = resp.result
+    //     let strBuilder = StringBuilder()
+    //     for (content in result.content) {
+    //         strBuilder.append(content.getValue())
+    //         strBuilder.append("\n")
+    //     }
+    //     if ((result.isError ?? false)) {
+    //         return ToolResponse(strBuilder.toString(), isError: true)
+    //     } else {
+    //         return ToolResponse(strBuilder.toString(), isError: false)
+    //     }
+    // }
 
     override public func callTool(name: String, args: Array<(String, ToJsonValue)>): ToolResponse {
         let arguments = ArrayList<(String, JsonValue)>()

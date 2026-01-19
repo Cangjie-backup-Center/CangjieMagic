@@ -391,8 +391,8 @@ class CallUIResponse {
 
 @jsonable
 class CallUIResult {
-    public let content: Array<UICallContent>
-    public let isError: Option<Bool>
+    let content: Array<UICallContent>
+    let isError: Option<Bool>
 }
 
 public enum UICallContent <: Jsonable<UICallContent> {

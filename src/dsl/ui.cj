@@ -22,7 +22,7 @@ private class UIAttr <: Attr {
             macroName: "ui",
             validKeys: [
                 "template", "parameters", "description", "filterable", "layout", "style",
-                "terminal", "dump", "title", "thumbnail", "category"
+                "terminal", "dump", "title", "thumbnail", "category", "kind"
             ]
         )
         return UIAttr(map)
@@ -83,7 +83,7 @@ private func transformUI(input: Tokens, attr: UIAttr): Tokens {
     let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
 
     let toolAttrs = ArrayList<Tokens>()
-    for (key in ["description", "parameters", "filterable", "terminal"]) {
+    for (key in ["description", "parameters", "filterable", "terminal", "kind"]) {
         if (let Some(tokens) <- attr.getTokens(key)) {
             toolAttrs.add(quote($(newIdentifierToken(key)): $tokens))
         }

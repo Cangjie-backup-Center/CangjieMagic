@@ -166,6 +166,7 @@ func transformTemplate(input: Tokens, attr: TemplateAttr): Tokens {
             }
             template = styleStr + bodyStr + scriptStr + endStr
         }
+
         let body = TemplateCompiler().compile(prefix + template)
         if (category == "resume") {
             let base64 = "data:image/png;base64," + imgToBase64(thumbnail)

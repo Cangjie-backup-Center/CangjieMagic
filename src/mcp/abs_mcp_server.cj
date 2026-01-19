@@ -271,7 +271,30 @@ public abstract class AbsMCPServer {
         "D:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/native/sysroot/usr/include/x86_64-linux-ohos"
     )
 
-    target_link_libraries("# + libName + #" PUBLIC libace_napi.z.so libace_ndk.z.so)
+    target_link_libraries("# + libName + #" PUBLIC
+                      # [Start ndk_graphics_draw_cmake_EGL]
+                      EGL
+                      # [End ndk_graphics_draw_cmake_EGL]
+                      GLESv3
+                      # [Start ndk_graphics_draw_cmake_hilog]
+                      libhilog_ndk.z.so
+                      # [End ndk_graphics_draw_cmake_hilog]
+                      libace_napi.z.so
+                      # [Start ndk_graphics_draw_cmake_drawing]
+                      libnative_drawing.so
+                      # [End ndk_graphics_draw_cmake_drawing]
+                      libnative_window.so
+                      libace_ndk.z.so
+                      libnative_display_soloist.so
+                      # [Start ndk_graphics_draw_cmake_pixelmap]
+                      libpixelmap.so
+                      # [End ndk_graphics_draw_cmake_pixelmap]
+                      libnative_display_manager.so
+                      libace_ndk.z.so
+                      libpixelmap_ndk.z.so
+                      libimage_source_ndk.z.so
+                      librawfile.z.so
+                      )
     "#
 
             var cmakeFileHandle = File.create(cmakeFile)
@@ -281,6 +304,8 @@ public abstract class AbsMCPServer {
             // 创建源文件
             let sourceFile = sourceDir.join("temp_source.cpp")
             var sourceFileHandle = File.create(sourceFile)
+            println("--------------------------code----------------------------")
+            println(code)
             sourceFileHandle.write(code.toArray())
             sourceFileHandle.close()
 
@@ -334,6 +359,7 @@ public abstract class AbsMCPServer {
             } else {
                 let errorString = String.fromUtf8(ninjaStdErr)
                 remove(buildDir, recursive: true)
+                println("Build error: " + errorString)
                 return "Build error: " + errorString
             }
         } catch (e: ProcessException) {
@@ -396,6 +422,7 @@ public abstract class AbsMCPServer {
     }
 
     private func handleCallHTMLUI(callUIRequest: CallHTMLUIRequest): ToJsonValue {
+        println("------------------------handleCallHTMLUI-----------------------------")
         let names = callUIRequest.params.names
         let title = callUIRequest.params.title
         let layout = callUIRequest.params.layout
@@ -422,7 +449,6 @@ public abstract class AbsMCPServer {
             case _ => Linear
         }
         let code = mergeHTML(title, components, layout: htmlLayout)
-        //let code = mergeHTMLByLinear(title, components)
         return CallUIResponse(
             id: callUIRequest.id,
             result: CallUIResult(
@@ -456,7 +482,6 @@ public abstract class AbsMCPServer {
         let now = DateTime.now()
         let timeStamp = now.toUnixTimeStamp().toNanoseconds() / 1_000_000
         let name = "libmylib_"+ timeStamp.toString() +".so"
-        println(code)
         let arkUISO = compileSoFromCode(code, name)
         // let binary = readSoFileToBinary(name)
         // let hexStr = binaryToHex(binary)

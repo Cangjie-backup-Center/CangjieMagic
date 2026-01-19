@@ -118,14 +118,3 @@ public func template_text_list(info: TextInfo) {
         }  // extern "C"
     '''
 }
-
-@tool[
-    description: "以纯文本为核心内容的列表，每个列表项是一段文字，比如步骤说明列表",
-    terminal: true,
-    parameters: {
-        info: "列表展示信息"
-    }
-]
-public func textListUI(info: TextInfo): String {
-    template_text_list(info)
-}

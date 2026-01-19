@@ -3,6 +3,7 @@
  */
 package magic.mcp
 
+import magic.core.ToolResponse
 import magic.dsl.jsonable
 import magic.jsonable.*
 import magic.log.LogUtils
@@ -213,6 +214,15 @@ public class HttpMCPClient <: AbsMCPClient {
     public func close(): Unit {
         LogUtils.info("Closing HTTP MCP client session")
         this.terminateSession()
+    }
+
+    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, layout: String, title: String): ToolResponse {
+        let argsArr = ArrayList<Array<(String, JsonValue)>>()
+        return this.callUI(names, argsArr.toArray(), '', title)
+    }
+
+    override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, layout: String, title: String): ToolResponse {
+        return ToolResponse('Not implemented', isError: true)
     }
 }
 
