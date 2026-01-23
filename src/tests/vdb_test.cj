@@ -3,7 +3,7 @@
  */
 package magic.tests
 
-import magic.vdb.*
+import magic.rag.vdb.*
 import magic.model.{ModelUtils, ModelManager}
 import magic.utils.removeIfExists
 

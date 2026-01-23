@@ -3,7 +3,7 @@
  */
 package magic.rag
 
-import magic.core.rag.RetrieverException
+import magic.core.rag.RAGException
 import magic.utils.{fileExt, exists}
 
 import std.collection.{map, collectArrayList, collectArray}
@@ -18,11 +18,11 @@ enum RAGSource {
 func parseRAGSource(source: String): RAGSource {
     let items = source.split(":") |> map { item: String => item.trimAscii() } |> collectArrayList
     if (items.isEmpty()) {
-        throw RetrieverException("Invalid rag source")
+        throw RAGException("Invalid rag source")
     }
     let path = items[0]
     if (!exists(path)) {
-        throw RetrieverException("File ${path} does not exist")
+        throw RAGException("File ${path} does not exist")
     }
     match (fileExt(Path(path))) {
         case "md" | "markdown" => return RAGSource.Markdown(path)
@@ -33,8 +33,8 @@ func parseRAGSource(source: String): RAGSource {
                 let table = items[1]
                 return RAGSource.SqliteTable(path, table)
             } else {
-                throw RetrieverException("Invalid rag source for Sqlite `${source}`")
+                throw RAGException("Invalid rag source for Sqlite `${source}`")
             }
-        case _ => throw RetrieverException("Invalid rag source `${source}`")
+        case _ => throw RAGException("Invalid rag source `${source}`")
     }
 }

@@ -25,6 +25,13 @@ public class SimpleToolManager <: ToolManager {
         }
     }
 
+    /**
+     * Get the name of the toolset.
+     */
+    override public prop name: String {
+        get() { "SimpleToolManager" }
+    }
+
     override public prop tools: Array<Tool> {
         get() {
             this._tools.values().toArray()

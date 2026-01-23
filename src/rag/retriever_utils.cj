@@ -3,7 +3,9 @@
  */
 package magic.rag
 
-import magic.core.*
+import magic.core.agent.Agent
+import magic.core.rag.{Retriever, RetrieverMode, RAGException}
+import magic.rag.retriever.{SqliteRetriever, MarkdownRetriever, RetrieverWrapper }
 import magic.config.Config
 
 public struct RetrieverUtils {
@@ -32,7 +34,7 @@ public struct RetrieverUtils {
                     agent.model,
                     table: table)
             case RAGSource.Markdown(path) =>
-                let embModel = Config.defaultEmbeddingModel.getOrThrow({ => RetrieverException("Default embedding model is not set") })
+                let embModel = Config.defaultEmbeddingModel.getOrThrow({ => RAGException("Default embedding model is not set") })
                 return MarkdownRetriever(
                     path,
                     mode ?? RetrieverMode.Static,

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.vdb
+package magic.rag.vdb
 
 import std.core.LibC
 import std.collection.ArrayList
@@ -30,7 +30,7 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
             faissIndexPtr = LibC.malloc<CPointer<Unit>>(count: 1)
             let status = faiss_IndexFlatL2_new_with(faissIndexPtr, dimension)
             if (status != 0) {
-                throw VectorDatabaseException("Failed to open database.")
+                throw RAGException("Failed to open database.")
             }
         }
     }
@@ -48,7 +48,7 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
             let status = faiss_write_index_fname(faissIndexPtr.read(), cPath)
             LibC.free(cPath)
             if (status != 0) {
-                throw VectorDatabaseException("Failed to write faiss database.")
+                throw RAGException("Failed to write faiss database.")
             }
         }
     }
@@ -95,7 +95,7 @@ public class FaissVectorDatabase <: VectorDatabase<FaissVectorDatabase> {
             // Call the API
             let status = faiss_Index_search(faissIndexPtr.read(), N, inout queryFaissVec, number, distancePtr, indexPtr)
             if (status != 0) {
-                throw VectorDatabaseException("Failed to search faiss database.")
+                throw RAGException("Failed to search faiss database.")
             }
             for (i in 0..number) {
                 let dist = distancePtr.read(i)

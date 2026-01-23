@@ -97,7 +97,7 @@ protected class ReactTask <: AgentTask {
         let step = try {
             // Add a hint message
             this.execution.addMessage(
-                Message.system(REACT_STEP_PROMPT)
+                Message.user(REACT_STEP_PROMPT)
             )
             this.getNextReactStep()
         } finally {
@@ -157,7 +157,7 @@ protected class ReactTask <: AgentTask {
         LogUtils.info(this.agent.name, "Run Step")
         // Add a hint message
         this.execution.addMessage(
-            Message.system(REACT_STEP_PROMPT)
+            Message.user(REACT_STEP_PROMPT)
         )
         let asyncReactStep = this.getAsyncReactStep()
         // remove the hint message
@@ -181,7 +181,7 @@ protected class ReactTask <: AgentTask {
         } catch (ex: ParserException) {
             // Add the repair message
             this.execution.addMessage(
-                Message.system("You should generate valid tags of required syntax!")
+                Message.user("You should generate valid tags of required syntax!")
             )
             return None
         }

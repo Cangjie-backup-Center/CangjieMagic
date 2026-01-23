@@ -4,7 +4,7 @@
 package magic.memory
 
 import magic.core.memory.Memory
-import magic.vdb.{SemanticSet, InMemoryVectorDatabase, SimpleIndexMap}
+import magic.rag.vdb.{SemanticSet, InMemoryVectorDatabase, SimpleIndexMap}
 import magic.core.model.EmbeddingModel
 import magic.config.Config
 

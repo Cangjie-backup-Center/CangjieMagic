@@ -5,7 +5,7 @@ package magic.prompt
 
 /**
  * This interface is used to constrain types to generate prompts
- * It's used by vdb.SemanticMap
+ * It's used by rag.vdb.SemanticMap
  */
 public interface ToPrompt {
     func toPrompt(): String

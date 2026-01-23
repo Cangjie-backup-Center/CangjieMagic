@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.rag
+package magic.rag.retriever
 
 import magic.dsl.*
 import magic.core.*
@@ -11,7 +11,7 @@ import magic.agent.base.*
 import magic.agent_executor.AgentExecutorManager
 import magic.prompt.*
 import magic.model.*
-import magic.utils.*
+import magic.utils.SqliteUtils
 import magic.memory.*
 import magic.tool.*
 import magic.log.LogUtils

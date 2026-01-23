@@ -1,13 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.vdb
-
-import std.collection.ArrayList
-
-class VectorDatabaseException <: Exception {
-    init(msg: String) { super(msg) }
-}
+package magic.core.rag
 
 public struct SearchResult {
     public let index: Int64

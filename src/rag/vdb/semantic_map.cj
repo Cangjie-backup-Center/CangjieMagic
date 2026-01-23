@@ -1,12 +1,12 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.vdb
+package magic.rag.vdb
 
 import std.collection.{map, collectArray}
 import std.fs.{Path, FSException, FileInfo}
 
-import magic.core.rag.Retriever
+import magic.core.rag.{VectorDatabase, RAGException, IndexMap, SearchResult, Retriever}
 import magic.core.model.EmbeddingModel
 import magic.model.ModelUtils
 import magic.prompt.ToPrompt
@@ -60,15 +60,11 @@ public class SemanticMap<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
             collectArray
     }
 
-    public func asRetriever(): Retriever {
-        return SemanticMapRetriever(this)
-    }
-
     static private func checkAndGetPaths(dirPath: String): (String, String) {
         let path = Path(dirPath)
         try {
             if (!FileInfo(dirPath).isDirectory()) {
-                throw VectorDatabaseException("${dirPath} is not a directory")
+                throw RAGException("${dirPath} is not a directory")
             }
         } catch (ex: FSException) {
             throw ex

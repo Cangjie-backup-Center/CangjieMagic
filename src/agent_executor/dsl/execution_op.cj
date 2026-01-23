@@ -51,7 +51,7 @@ public struct ExecutionOpSet {
         let agent = state.task.agent
         // Prepare input messages
         LogUtils.debug(agent.name, operationPrompt)
-        state.execution.addMessage(Message.system(operationPrompt))
+        state.execution.addMessage(Message.user(operationPrompt))
         // Call the LLM
         try {
             return state.task.chatLLM(

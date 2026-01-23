@@ -80,8 +80,13 @@ public macro toolset(attrTokens: Tokens, input: Tokens): Tokens {
  * }
  * AS
  * struct/class <name> <: Toolset {
- *   public override iterator(): Iterator<Tool> {
- *      [<tool-names>]
+ *   public override prop name: String {
+ *      get() { $(typeDecl.identifier) }
+ *   }
+ *   public override prop tools: Array<Tool> {
+ *      get() {
+ *          return $(toolNames)
+ *      }
  *   }
  *   ...
  *   public static let <xxx-tool>Id = "<xxx-tool>"
@@ -110,7 +115,7 @@ private func transformToolsetStruct(structDecl: StructDecl, attr: ToolsetAttr): 
 }
 
 private func transformToolsetType(typeDecl: Decl, superTypes: ArrayList<TypeNode>, body: Body, attr: ToolsetAttr): Tokens {
-    let name = typeDecl.identifier
+    let typeName = typeDecl.identifier
     let allSuperTypes = if (superTypes.isEmpty()) {
         quote(Toolset)
     } else {
@@ -145,13 +150,18 @@ private func transformToolsetType(typeDecl: Decl, superTypes: ArrayList<TypeNode
 
     // Compose all `Tokens`
     return quote(
-        $(typeDecl.modifiers) $classOrStruct $name $genericTypeParamTokens <: $allSuperTypes $genericConstraintTokens {
+        $(typeDecl.modifiers) $classOrStruct $typeName $genericTypeParamTokens <: $allSuperTypes $genericConstraintTokens {
             $(body.decls)
             public override prop tools: Array<Tool> {
                 get() {
                     [ $( joinTokens(toolNames, Token(TokenKind.COMMA)) ) ]
                 }
             }
+
+            public override prop name: String {
+                get() { $( newLiteralToken(typeName.value) )  }
+            }
+
             $toolIdTokens
         }
     )

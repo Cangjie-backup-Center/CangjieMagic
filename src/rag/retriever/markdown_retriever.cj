@@ -1,12 +1,12 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.rag
+package magic.rag.retriever
 
 import magic.core.rag.*
 import magic.core.model.EmbeddingModel
 import magic.rag.splitter.{DocumentLoader, MarkdownSplitter}
-import magic.vdb.{InMemoryVectorDatabase, JsonlIndexMap, SemanticMap}
+import magic.rag.vdb.{InMemoryVectorDatabase, JsonlIndexMap, SemanticMap}
 import magic.log.LogUtils
 
 import std.collection.{map, collectArray}
@@ -31,12 +31,12 @@ private func buildMarkdownSemanticMap(path: String, embModel: EmbeddingModel): S
     return smap
 }
 
-class MarkdownRetriever <: Retriever {
+protected class MarkdownRetriever <: Retriever {
     private var _mode: RetrieverMode
     private let _description: String
     private let semanticMap: SimpleMarkdownSemanticMap
 
-    init(path: String, mode: RetrieverMode, description: String, embModel: EmbeddingModel) {
+    protected init(path: String, mode: RetrieverMode, description: String, embModel: EmbeddingModel) {
         this._mode = mode
         this._description = description
         this.semanticMap = buildMarkdownSemanticMap(path, embModel)

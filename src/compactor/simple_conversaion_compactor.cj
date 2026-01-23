@@ -35,7 +35,7 @@ public class SimpleConversationCompactor <: ConversationCompactor {
             messages.add(chatRound.answer)
         }
         messages.add(
-            Message.system("Now, summarize the conversation.")
+            Message.user("Now, summarize the conversation.")
         )
         let summary = this.model.create(ChatRequest(messages)).message.content
         LogUtils.debug(

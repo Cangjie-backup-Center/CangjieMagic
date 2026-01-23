@@ -1,7 +1,7 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.vdb
+package magic.core.rag
 
 import std.math.*
 
@@ -13,7 +13,7 @@ public class Vector {
         this.vector = vec
     }
 
-    func euclideanDistance(another: Vector) {
+    protected func euclideanDistance(another: Vector) {
         var sum: Float64 = 0.0
         for(i in 0..this.vector.size){
             let diff: Float64 = this.vector[i] - another.vector[i]

@@ -1,20 +1,20 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.rag
+package magic.rag.retriever
 
 import magic.core.rag.*
 
 /**
- * The wrapper of a retriever used when a retriever is set by the DSL.
+ * The wrapper of a retriever is used when a retriever is set by the DSL.
  * like @agent[rag: {source: FooRetriever(), mode: "dynamic"}]
  */
-class RetrieverWrapper <: Retriever {
+protected class RetrieverWrapper <: Retriever {
     private let retriever: Retriever
     private var _mode: RetrieverMode
     private let _description: String
 
-    init(retriever: Retriever, mode: Option<RetrieverMode>, description: Option<String>) {
+    protected init(retriever: Retriever, mode: Option<RetrieverMode>, description: Option<String>) {
         this.retriever = retriever
         _mode = mode ?? retriever.mode
         _description = description ?? retriever.description

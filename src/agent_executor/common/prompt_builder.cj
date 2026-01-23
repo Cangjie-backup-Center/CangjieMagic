@@ -10,7 +10,7 @@ import magic.core.message.{Message, Conversation, MessageList, Tag, WithTag}
 import magic.tokenizer.{TokenizerLoader, TokenizerType}
 import magic.log.LogUtils
 
-import std.collection.{ArrayList, forEach, map, filter, collectArray, enumerate}
+import std.collection.{ArrayList, map, collectArray, collectArrayList, enumerate}
 
 /**
  * A builder for constructing agent system prompts.
@@ -73,10 +73,12 @@ protected class PromptBuilder {
     }
 
     private func mergeSystemPrompt(): String {
-        return String.join(
-            this.systemMessages |> map { msg => msg.content } |> collectArray,
-            delimiter: "\n\n"
-        )
+        let messages = this.systemMessages |> map { msg => msg.content } |> collectArrayList
+        // Add conversation summary as a part of the system message
+        if (let Some(msg) <- this.mergeConversationSummary()) {
+            messages.add(msg)
+        }
+        return String.join(messages.toArray(), delimiter: "\n\n")
     }
 
     private func mergeConversationSummary(): Option<String> {
@@ -118,10 +120,6 @@ protected class PromptBuilder {
         let systemPrompt = this.mergeSystemPrompt()
         if (!systemPrompt.trimAscii().isEmpty()) {
             execution.addMessage(Message.system(systemPrompt))
-        }
-        // 2. Add conversation summary
-        if (let Some(summary) <- this.mergeConversationSummary()) {
-            execution.addMessage(Message.system(summary))
         }
         // 3. Add conversation messages in order
         if (let Some(con) <- this._conversation) {
