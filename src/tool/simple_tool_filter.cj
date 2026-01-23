@@ -11,7 +11,7 @@ import magic.core.model.{ChatModel, EmbeddingModel}
 import magic.jsonable.*
 import magic.log.LogUtils
 import magic.parser.{ParserUtils, ParserException}
-import magic.vdb.{SemanticMap, InMemoryVectorDatabase, SimpleIndexMap}
+import magic.rag.vdb.{SemanticMap, InMemoryVectorDatabase, SimpleIndexMap}
 import magic.model.{ModelManager, ModelUtils}
 import magic.prompt.Template
 

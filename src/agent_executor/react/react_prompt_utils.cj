@@ -193,7 +193,7 @@ protected struct ReactPromptUtils {
                 strBuilder.append("${msg.content}\n")
             }
         }
-        let sys = REACT_SUMMARIZE_SYSTEM_PROMPT.format(
+        let systemPrompt = REACT_SUMMARIZE_SYSTEM_PROMPT.format(
             ("question", task.request.question),
             ("procedure", strBuilder.toString()),
             ("retrieval", PromptBuilder.buildAgentRetrievalPrompt(task)),
@@ -201,7 +201,7 @@ protected struct ReactPromptUtils {
             ("memory", PromptBuilder.buildAgentMemoryPrompt(task))
         ).trimAscii()
         return [
-            Message.system(sys),
+            Message.system(systemPrompt),
             Message.user(REACT_SUMMARIZE_USER_PROMPT.trimAscii())
         ]
     }

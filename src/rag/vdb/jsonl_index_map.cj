@@ -1,11 +1,12 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.vdb
+package magic.rag.vdb
 
 import magic.jsonable.Jsonable
 import magic.prompt.ToPrompt
 import magic.utils.writeFile
+import magic.core.rag.IndexMap
 
 import std.fs.{Path, File, OpenMode}
 import std.io.{StringReader, StringWriter}

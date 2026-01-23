@@ -638,7 +638,6 @@ Each Agent has an `executor` property to specify which executor to use (differen
 |---|---|
 | `naive`  | Direct Q&A |
 | `react` | The Agent selects a tool to complete a solving step each time, then evaluates the tool's execution result to determine if the task is completed, iterating this process until the task is solved. |
-| `plan-react` | First, complete a task plan, then use React mode to solve each subtask derived from the plan. |
 | `tool-loop` | Functionally similar to `react` but without an explicit thinking process. |
 
 Among these, the `react` and `tool-loop` executors can specify the maximum number of iterations in the form `react:<number>`, such as `react:5`.
@@ -1511,7 +1510,7 @@ public class SemanticSet<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
 #### Usage Example
 
 ```cangjie
-import magic.vdb.*
+import magic.rag.vdb.*
 
 main() {
     let smap = SemanticMap(vectorDB: InMemoryVectorDatabase())
@@ -1530,55 +1529,3 @@ Add the vector database as a retriever to the agent for use. Currently, the vect
 let agent = FooAgent()
 agent.retriever = smap.asRetriever()
 ```
-
-### Knowledge Graph
-#### MiniRag
-Creation and usage of knowledge graphs based on MiniRag, which utilizes vector, key-value, and graph storage. The current implementation supports local storage.
-https://github.com/HKUDS/MiniRAG
-
-#### `Instantiation`
-Use `MiniRagBuilder` to instantiate a MiniRag object for subsequent knowledge graph construction and graph-based retrieval.
-Instantiating MiniRag requires specifying the ChatModel, Tokenizer, and EmbeddingModel.
-Based on the currently available tokenizers (see api_reference.md for details), the corresponding tokenizer configuration files need to be downloaded.
-For example:
-- [OpenAI CL100K](https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken) requires downloading the cl100k_base.tiktoken file.
-- [DeepSeek-V3](https://huggingface.co/deepseek-ai/DeepSeek-V3/tree/main) and other open-source models require downloading the corresponding tokenizer.json and tokenizer_config.json files.
-For other configurations, refer to the `MiniRagBuilder` interface documentation.
-
-```cangjie
-import magic.config.Config
-import magic.rag.graph.{MiniRagBuilder, MiniRagConfig, MiniRag}
-import magic.model.ollama.OllamaEmbeddingModel
-import magic.tokenizer.Cl100kTokenizer
-func instantiateMiniRag(): MiniRag {
-    Config.env["DEEPSEEK_API_KEY"] = "<your api key>"
-    let model = ModelManager.createChatModel("<Chat Model Name>")
-    let embed = OllamaEmbeddingModel("<Embedding Model Name>", baseURL: "<Embedding Model URL>")
-    let tokenizer = Cl100kTokenizer("<Your TickToken File Location>")
-    let config = MiniRagConfig(model, embed, tokenizer)
-    MiniRagBuilder(config).build()
-}
-```
-
-#### `Knowledge Graph Construction`
-```cangjie
-func buildGraph(): Unit {
-    let miniRag:MiniRag = instantiateMiniRag()
-    let content:String = "<Text Read From File>"
-    miniRag.insert(content)
-    miniRag.commit()
-}
-```
-
-#### `Knowledge Graph Retrieval`
-```cangjie
-func search(query:String): String {
-    let miniRag = instantiateMiniRag()
-    let retriever = miniRag.asRetriever()
-    let response = retriever.search(query)
-    response.toPrompt()
-}
-```
-
-#### Usage Example
-[Usage Example](../src/examples/mini_rag/main.cj)

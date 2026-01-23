@@ -6,7 +6,6 @@ package magic.agent_executor
 import magic.core.agent.AgentExecutor
 import magic.agent_executor.naive.NaiveExecutor
 import magic.agent_executor.react.ReactExecutor
-import magic.agent_executor.plan_react.PlanReactExecutor
 import magic.agent_executor.tool_loop.ToolLoopExecutor
 import magic.agent_executor.dsl.DslExecutor
 
@@ -43,8 +42,6 @@ public struct AgentExecutorManager {
             return NaiveExecutor()
         } else if (name == "react") {
             return ReactExecutor()
-        } else if (name == "plan-react") {
-            return PlanReactExecutor()
         } else if (name == "tool-loop") {
             return ToolLoopExecutor()
         } else if (name == "dsl-executor") {

@@ -1,9 +1,11 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.core.rag
+package magic.rag.retriever
 
 import magic.prompt.ToPrompt
+import magic.core.rag.{Retrieval, Document}
+
 import std.collection.{map, collectArray}
 
 /**
@@ -11,7 +13,8 @@ import std.collection.{map, collectArray}
  */
 protected class DocumentRetrieval <: Retrieval {
     protected DocumentRetrieval(
-        private let docs: Array<Document>) { }
+        private let docs: Array<Document>
+    ) { }
 
     override public prop sources: Array<Document> {
         get() { this.docs }

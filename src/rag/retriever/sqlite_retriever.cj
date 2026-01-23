@@ -1,17 +1,17 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.rag
+package magic.rag.retriever
 
 import magic.core.rag.*
 import magic.core.model.ChatModel
 
-class SqliteRetriever <: Retriever {
+protected class SqliteRetriever <: Retriever {
     private let sqliteAgent: SqliteAgent
     private var _mode: RetrieverMode
     private let _description: String
 
-    init(path: String, mode: RetrieverMode, description: String, model: ChatModel, table!: String) {
+    protected init(path: String, mode: RetrieverMode, description: String, model: ChatModel, table!: String) {
         sqliteAgent = SqliteAgent(path, table: table)
         sqliteAgent.model = model
         _mode = mode

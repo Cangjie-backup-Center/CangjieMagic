@@ -1,9 +1,9 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.vdb
+package magic.rag.vdb
 
-import magic.core.rag.Retriever
+import magic.core.rag.{Retriever, VectorDatabase, IndexMap}
 import magic.core.model.EmbeddingModel
 
 /**
@@ -38,10 +38,6 @@ public class SemanticSet<VDB, IMAP, T> where VDB <: VectorDatabase<VDB>,
 
     public func search(query: String, number!: Int64 = 5, minDistance!: Float64 = 0.3): Array<T> {
         return semanticMap.search(query, number: number, minDistance: minDistance)
-    }
-
-    public func asRetriever(): Retriever {
-        return SemanticMapRetriever(this.semanticMap)
     }
 
     public func save(dirPath: String): Unit {

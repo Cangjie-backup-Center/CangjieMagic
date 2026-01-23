@@ -1,8 +1,9 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.vdb
+package magic.rag.vdb
 
+import magic.core.rag.IndexMap
 import magic.utils.{readFile, writeFile}
 
 import std.collection.HashMap

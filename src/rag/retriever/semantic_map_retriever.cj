@@ -1,10 +1,11 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
  */
-package magic.vdb
+package magic.rag.retriever
 
 import magic.prompt.ToPrompt
 import magic.core.rag.*
+import magic.rag.vdb.SemanticMap
 import std.collection.{map, collectArray}
 
 class SemanticMapRetriever<VDB, IMAP, T> <: Retriever where VDB <: VectorDatabase<VDB>,

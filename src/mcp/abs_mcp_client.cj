@@ -56,6 +56,10 @@ public abstract class AbsMCPClient <: MCPClient {
         return resp.result
     }
 
+    override public prop name: String {
+        get() { "AbsMCPClient" }
+    }
+
     override public prop tools: Array<Tool> {
         get() {
             this.doBeforeRequest()

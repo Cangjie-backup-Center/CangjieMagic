@@ -8,6 +8,10 @@ package magic.core.tool
  */
 public interface Toolset {
     /**
+     * Get the name of the toolset.
+     */
+    prop name: String
+    /**
      * Get all tools
      */
     prop tools: Array<Tool>
