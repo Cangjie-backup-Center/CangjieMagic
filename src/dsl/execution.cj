@@ -46,18 +46,15 @@ private enum ExecutionOpKind {
 
 // Whether the execution operations contains nested operations, like loop(think |> action)
 private let EXECUTION_OPS = HashMap<String, ExecutionOpKind>(
-    ("loop", Nested(0)),
-    ("each", Nested(0)),
+    ("repeat", Nested(0)),
+    ("orchestrate", Nested(0)),
     ("think", Normal),
     ("action", Normal),
     ("plan", Normal),
-    ("divide", Normal),
-    ("summary", Normal),
     ("answer", Normal),
     ("done", Normal),
-    ("tool", Normal),
-    ("switch", Normal),
-    ("onCase", Nested(1)),
+    ("decide", Normal),
+    ("when", Normal),
     ("otherwise", Nested(0)),
     ("ExecutionState", Special)
 )
@@ -88,9 +85,9 @@ private func transformExecution(input: Tokens, executionAttr: ExecutionAttr): To
     // Rename all execution operation functions
     let result = Tokens()
     for (token in tokens) {
-        // Add a prefix "ExecutionOpSet." for each operation function
+        // Add a prefix "ExecutionDSL." for each operation function
         if (isExecutionOp(token)) {
-            result.append(newIdentifierToken("ExecutionOpSet"))
+            result.append(newIdentifierToken("ExecutionDSL"))
             result.append(Token(TokenKind.DOT))
         }
         result.append(token)

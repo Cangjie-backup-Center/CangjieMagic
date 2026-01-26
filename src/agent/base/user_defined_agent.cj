@@ -80,7 +80,7 @@ public abstract class UserDefinedAgent <: AbsAgent {
     }
 
     /*
-     * This method will be used in the future.
+     * This method is used to implement the execution DSL.
      */
     open public func __customized_execution_func__(state: Object): Option<Object> {
         return None
