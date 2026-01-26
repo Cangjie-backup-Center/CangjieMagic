@@ -672,7 +672,12 @@ class Bar{ }
 ```swift
 @agent class Foo {
   @execution(
-    plan |> loop(think |> action) |> answer
+    plan |>
+    repeat(
+        think |> action,
+        until: "done"
+    )
+    |> answer
   )
 }
 ```
@@ -698,8 +703,7 @@ class Bar{ }
 | `action`    | 选择并执行工具   | 可以出现在流程的任何位置，无前置/后置操作约束 |
 | `answer`    | 返回最终答案     | 可以出现在流程的任何位置，无前置操作约束，后面不能跟任何操作 |
 | `plan`      | 制定计划     | 可以出现在流程的任何位置，无前置/后置操作约束 |
-| `loop`      | 循环内部操作序列 | 可以出现在流程的任何位置，无前置/后置操作约束 |
-| `tool`      | 依次执行工具函数序列，工具的参数由 LLM 自动生成 | 可以出现在流程的任何位置，无前置/后置操作约束 |
+| `repeat`    | 循环内部操作序列 | 可以出现在流程的任何位置，无前置/后置操作约束 |
 | `done`      | 检查是否终止    | 可以出现在流程的任何位置，无前置操作约束，后面不能跟任何操作 |
 
 **复杂操作：任务分解&合并**
@@ -707,7 +711,10 @@ class Bar{ }
 ```swift
 @agent class ResearchAssistant {
   @execution(
-    divide |> each(tool(web_search)) |> summary |> answer
+    orchestrate(
+        think |>
+        action(tool: web_search)
+    ) |> answer
   )
   @tool
   func web_search(...) { ... }
@@ -716,29 +723,27 @@ class Bar{ }
 
 | 操作符      | 作用             |   约束  |
 |-------------|----------------|---------|
-| `divide` | 由 LLM 拆分任务为子问题，子问题数由 LLM 自动决定 | 可以出现在流程的任何位置，无前置操作约束，后面必须是 `each` 操作 |
-| `each` | 处理子任务 | 前置操作必须为 `divide`，后置操作必须为 `summary` |
-| `summary` | 汇总子任务结果 | 前置操作必须为 `each`，无后置操作约束 |
+| `orchestrate` | 由 LLM 拆分任务为子问题，子问题数由 LLM 自动决定，并总结子任务结果 | 可以出现在流程的任何位置，无前置操作约束，后面必须是 `action` 操作 |
 
 **复杂操作：条件控制**
 
 ```swift
 @agent class Assistant {
   @execution(
-    switch(
-      onCase("问题是询问天气？", tool(weather_api)),
-      onCase("问题是关于订单查询？", tool(db_query |> db_summary)),
-      otherwise(think |> answer)
+    decide(
+      when("问题是询问天气？") |> action(tool: weather_api),
+      when("问题是关于订单查询？") |> action(tool: db_query) |> action(tool: db_summary),
+      otherwise |> think |> answer
     )
   )
 }
 ```
 
-- `switch` 接受多个 `onCase` 子句，无前置/后置操作约束
-- 每个 `onCase` 子句由一个条件（自然语言表示）和操作序列组成
-    - 当 `onCase` 中条件成立（根据当前执行状态），对应的操作序列继续执行
-    - `onCase` 子句由上往下依次执行
-- 若没有 `onCase` 成立，则执行 `otherwise` 子句
+- `decide` 接受多个 `when` 子句，无前置/后置操作约束
+- 每个 `when` 子句由一个条件（自然语言表示）和操作序列组成
+    - 当 `when` 中条件成立（根据当前执行状态），对应的操作序列继续执行
+    - `when` 子句由上往下依次执行，若有多个 `when` 子句成立，则只有第一个会被执行
+- 若没有 `when` 成立，则执行 `otherwise` 子句
 - 若存在多个 `otherwise` 子句，则只有第一个会被执行
 
 ## 外部知识

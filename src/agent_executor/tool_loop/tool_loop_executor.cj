@@ -9,7 +9,7 @@ import magic.core.model.{ChatRequest}
 import magic.config.Config
 import magic.agent.base.AgentOp
 import magic.agent_executor.common.{AgentTask, PromptBuilder, FutureIteratorWrapper}
-import magic.agent_executor.dsl.{ExecutionOpSet, ExecutionState}
+import magic.agent_executor.dsl.{ExecutionDSL, ExecutionState}
 import magic.log.LogUtils
 import magic.model.ModelUtils
 import magic.prompt.Template
@@ -47,7 +47,7 @@ public class ToolLoopExecutor <: AgentExecutor {
         try {
             task.begin()
             for (_ in 0..this.loop) {
-                state = ExecutionOpSet.action(state)
+                state = ExecutionDSL.action(state)
                 if (state.done) {
                     return state.answer
                 }
@@ -58,7 +58,7 @@ public class ToolLoopExecutor <: AgentExecutor {
                 task.handleAgentStepEvent()
             }
             LogUtils.info("Exceed the max loop")
-            state = ExecutionOpSet.answer(state)
+            state = ExecutionDSL.answer(state)
             return state.answer
         } finally {
             task.end()
