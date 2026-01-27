@@ -42,11 +42,9 @@ public class ArkUIComponent {
     func extractNativeModuleClass(content: String, index: Int64) {
         let nativeModulePattern = Regex("namespace\\s+NativeModule\\s*\\{((?:[^{}]++|\\{(?1)\\})*)\\}")
         let nativeModuleMatch = nativeModulePattern.find(content)
-
         match (nativeModuleMatch) {
             case Some(r) =>
                 var classContent = r.matchString(0)
-
                 // 查找类名并添加索引后缀
                 let classPattern = Regex("class\\s+(\\w+)")
                 let classMatches = classPattern.findAll(classContent)
@@ -55,7 +53,6 @@ public class ArkUIComponent {
                     for (classMatch in classMatches) {
                         let originalClassName = classMatch.matchString(0).split(" ")[1]
                         let newClassName = "${originalClassName}_${index}"
-
                         // 替换类名
                         classContent = classContent.replace(originalClassName, newClassName)
                         this.code = this.code.replace(originalClassName, newClassName)
@@ -93,7 +90,8 @@ public class ArkUIComponent {
             case Some(r) =>
                 var externContent = r.matchString(0)
                 // 提取函数定义
-                let functionPattern = Regex("(?m)^[\\s\\w:*&<>]+\\s+(\\w+)\\s*\\([^)]*\\)\\s*\\{(?:[^{}]*|\\{[^{}]*\\})*\\}")
+                // let functionPattern = Regex("(?m)^[\\s\\w:*&<>]+\\s+(\\w+)\\s*\\([^)]*\\)\\s*\\{(?:[^{}]*|\\{[^{}]*\\})*\\}")
+                let functionPattern = Regex("(?ms)^[\\s\\w:<>,*&]+?\\s+(\\w+)\\s*\\([^()]*\\)\\s*\\{(?:[^{}]|(\\{(?:[^{}]|(?2))*\\}))*\\}")
                 let functionMatches = functionPattern.findAll(externContent)
                 var modifiedFunctions = ""
                 if (index !=0) {
@@ -102,15 +100,9 @@ public class ArkUIComponent {
                         // 提取函数名
                         let funcNamePattern = Regex("[\\s\\w:*&<>]+?\\s+(\\w+)\\s*\\(")
                         let funcNameMatch = funcNamePattern.find(funcContent)
-
                         match (funcNameMatch) {
                             case Some(nameMatch) =>
                                 var originalFuncName = removeLastParen(nameMatch.matchString(0))
-                                var newFuncName = "${originalFuncName}_${index}"
-
-                                // 替换函数名
-                                funcContent = funcContent.replace(originalFuncName, newFuncName)
-
                                 // 添加到调用列表
                                 let originalFuncNameArr = originalFuncName.split(" ")
                                 originalFuncName = originalFuncNameArr[originalFuncNameArr.size - 1]
@@ -123,7 +115,12 @@ public class ArkUIComponent {
                         }
                     }
                 }
-
+                let subStr = 'g_click_callback('
+                let pos = externContent.indexOf(subStr)
+                if (pos.isSome()) {
+                    let endPos = pos.getOrThrow() + subStr.size
+                    externContent = externContent[0..endPos] + "${index}, " + externContent[endPos..]
+                }
                 UINode = externContent
             case None =>
                 // 没有找到extern "C"块，保持为空
@@ -148,12 +145,13 @@ public class ArkUIComponent {
     }
 }
 
-public func mergeArkUIComponents(title: String, components: ArrayList<ArkUIComponent>, mode!: String = 'Column'): String {
+public func mergeArkUIComponents(title: String, components: ArrayList<ArkUIComponent>, mode: String): String {
     var common = '''
         #include "napi/native_api.h"
         #include <arkui/native_node.h>
         #include <arkui/native_interface.h>
         #include <arkui/native_type.h>
+        #include <hilog/log.h>
         #include <cassert>
         #include <list>
         #include <memory>
@@ -233,9 +231,35 @@ public func mergeArkUIComponents(title: String, components: ArrayList<ArkUICompo
 
             class ArkUINode : public ArkUIBaseNode {
             public:
-                explicit ArkUINode(ArkUI_NodeHandle handle) : ArkUIBaseNode(handle) {}
+                explicit ArkUINode(ArkUI_NodeHandle handle) : ArkUIBaseNode(handle) {
+                    nativeModule_ = NativeModuleInstance::GetInstance()->GetNativeNodeAPI();
+                    // 事件触发时需要通过函数获取对应的事件对象，这边通过设置节点自定义数据将封装类指针保持在组件上，方便后续事件分发。
+                    nativeModule_->setUserData(handle_, this);
+                    // 注册节点监听事件接受器。
+                    nativeModule_->addNodeEventReceiver(handle_, ArkUINode::NodeEventReceiver);
+                }
 
-                ~ArkUINode() override {}
+                ~ArkUINode() override {
+                    if (onClick_) {
+                        nativeModule_->unregisterNodeEvent(handle_, NODE_ON_CLICK_EVENT);
+                    }
+                    if (&onTextAreaChange_) {
+                        nativeModule_->unregisterNodeEvent(handle_, NODE_TEXT_AREA_ON_CHANGE);
+                    }
+                    if (&onCheckboxChange_) {
+                        nativeModule_->unregisterNodeEvent(handle_, NODE_CHECKBOX_EVENT_ON_CHANGE);
+                    }
+                    if (&onDatePickChange_) {
+                        nativeModule_->unregisterNodeEvent(handle_, NODE_DATE_PICKER_EVENT_ON_DATE_CHANGE);
+                    }
+                    if (&onTimePickChange_) {
+                        nativeModule_->unregisterNodeEvent(handle_, NODE_TIME_PICKER_EVENT_ON_CHANGE);
+                    }
+                    if (&onCalendarPickChange_) {
+                        nativeModule_->unregisterNodeEvent(handle_, NODE_CALENDAR_PICKER_EVENT_ON_CHANGE);
+                    }
+                    nativeModule_->removeNodeEventReceiver(handle_, ArkUINode::NodeEventReceiver);
+                }
 
                 void SetWidth(float width) {
                     assert(handle_);
@@ -319,8 +343,122 @@ public func mergeArkUIComponents(title: String, components: ArrayList<ArkUICompo
                     ArkUI_AttributeItem item = {value, 1};
                     nativeModule_->setAttribute(handle_, NODE_SHADOW, &item);
                 }
+                // 处理通用事件。
+                void RegisterOnClick(const std::function<void(ArkUI_NodeEvent *event)> &onClick)
+                {
+                    if (!handle_) {
+                        return;
+                    }
+                    onClick_ = onClick;
+                    nativeModule_->registerNodeEvent(handle_, NODE_ON_CLICK_EVENT, 0, nullptr);
+                }
+
+                void RegisterOnCheckboxChange(const std::function<void(ArkUI_NodeEvent *event)> &onCheckboxChange)
+                {
+                    if (!handle_) {
+                        return;
+                    }
+                    onCheckboxChange_ = onCheckboxChange;
+                    nativeModule_->registerNodeEvent(handle_, NODE_CHECKBOX_EVENT_ON_CHANGE, 0, nullptr);
+                }
+
+                void RegisterOnTextAreaChange(const std::function<void(ArkUI_NodeEvent *event)> &onTextAreaChange)
+                {
+                    if (!handle_) {
+                        return;
+                    }
+                    onTextAreaChange_ = onTextAreaChange;
+                    nativeModule_->registerNodeEvent(handle_, NODE_TEXT_AREA_ON_CHANGE, 0, nullptr);
+                }
+
+                void RegisterOnDatePickerChange(const std::function<void(ArkUI_NodeEvent *event)> &onDatePickChange)
+                {
+                    if (!handle_) {
+                        return;
+                    }
+                    onDatePickChange_ = onDatePickChange;
+                    nativeModule_->registerNodeEvent(handle_, NODE_DATE_PICKER_EVENT_ON_DATE_CHANGE, 0, nullptr);
+                }
+
+                void RegisterOnTimePickerChange(const std::function<void(ArkUI_NodeEvent *event)> &onTimePickChange)
+                {
+                    if (!handle_) {
+                        return;
+                    }
+                    onTimePickChange_ = onTimePickChange;
+                    nativeModule_->registerNodeEvent(handle_, NODE_TIME_PICKER_EVENT_ON_CHANGE, 0, nullptr);
+                }
+
+                void RegisterOnCalendarPickerChange(const std::function<void(ArkUI_NodeEvent *event)> &onCalendarPickChange)
+                {
+                    if (!handle_) {
+                        return;
+                    }
+                    onCalendarPickChange_ = onCalendarPickChange;
+                    nativeModule_->registerNodeEvent(handle_, NODE_CALENDAR_PICKER_EVENT_ON_CHANGE, 0, nullptr);
+                }
 
             protected:
+                // 事件监听器函数指针。
+                static void NodeEventReceiver(ArkUI_NodeEvent *event)
+                {
+                    // 获取事件发生的UI组件对象。
+                    auto nodeHandle = OH_ArkUI_NodeEvent_GetNodeHandle(event);
+                    // 获取保持在UI组件对象中的自定义数据，返回封装类指针。
+                    auto *node = reinterpret_cast<ArkUINode *>(
+                        NativeModuleInstance::GetInstance()->GetNativeNodeAPI()->getUserData(nodeHandle));
+                    // 基于封装类实例对象处理事件。
+                    node->ProcessNodeEvent(event);
+                }
+                void ProcessNodeEvent(ArkUI_NodeEvent *event)
+                {
+                    auto eventType = OH_ArkUI_NodeEvent_GetEventType(event);
+                    switch (eventType) {
+                        case NODE_ON_CLICK_EVENT: {
+                            if (onClick_) {
+                                onClick_(event);
+                            }
+                            break;
+                        }
+                        case NODE_CHECKBOX_EVENT_ON_CHANGE: {
+                            if (onCheckboxChange_) {
+                                onCheckboxChange_(event);
+                            }
+                            break;
+                        }
+                        case NODE_TEXT_AREA_ON_CHANGE: {
+                            if (onTextAreaChange_) {
+                                onTextAreaChange_(event);
+                            }
+                            break;
+                        }
+                        case NODE_DATE_PICKER_EVENT_ON_DATE_CHANGE: {
+                            if (onDatePickChange_) {
+                                onDatePickChange_(event);
+                            }
+                            break;
+                        }
+                        case NODE_TIME_PICKER_EVENT_ON_CHANGE: {
+                            if (onTimePickChange_) {
+                                onTimePickChange_(event);
+                            }
+                            break;
+                        }
+                        case NODE_CALENDAR_PICKER_EVENT_ON_CHANGE: {
+                            if (onCalendarPickChange_) {
+                                onCalendarPickChange_(event);
+                            }
+                            break;
+                        }
+
+                        default: {
+                            // 组件特有事件交给子类处理
+                            OnNodeEvent(event);
+                        }
+                    }
+                }
+
+                virtual void OnNodeEvent(ArkUI_NodeEvent *event) {}
                 // 组件树操作的实现类对接。
                 void OnAddChild(const std::shared_ptr<ArkUIBaseNode> &child) override {
                     nativeModule_->addChild(handle_, child->GetHandle());
@@ -331,6 +469,13 @@ public func mergeArkUIComponents(title: String, components: ArrayList<ArkUICompo
                 void OnInsertChild(const std::shared_ptr<ArkUIBaseNode> &child, int32_t index) override {
                     nativeModule_->insertChildAt(handle_, child->GetHandle(), index);
                 }
+            private:
+                std::function<void(ArkUI_NodeEvent *event)> onClick_;
+                std::function<void(ArkUI_NodeEvent *event)> onTextAreaChange_;
+                std::function<void(ArkUI_NodeEvent *event)> onCheckboxChange_;
+                std::function<void(ArkUI_NodeEvent *event)> onDatePickChange_;
+                std::function<void(ArkUI_NodeEvent *event)> onTimePickChange_;
+                std::function<void(ArkUI_NodeEvent *event)> onCalendarPickChange_;
             };
 
             class ArkUITextNode : public ArkUINode {
@@ -510,11 +655,6 @@ public func mergeArkUIComponents(title: String, components: ArrayList<ArkUICompo
     var UINode = commonComponent.getUINode()
     var returnValue = ''
     var mainCode = match (mode) {
-        case "Column" =>
-            returnValue = 'column'
-            '''
-                auto column = std::make_shared<ArkUIColumnNode>();
-            '''
         case "Flex" =>
             returnValue = 'flex'
             '''
@@ -527,7 +667,11 @@ public func mergeArkUIComponents(title: String, components: ArrayList<ArkUICompo
                 // grid->SetColumnTemplate("1fr 1fr 2fr");  // 3列，宽度占比1:1:2
                 // grid->SetRowTemplate("1fr 1fr 2fr");     // 3行，高度占比1:1:2
             '''
-        case _ => ''
+        case _ =>
+            returnValue = 'column'
+            '''
+                auto column = std::make_shared<ArkUIColumnNode>();
+            '''
     }
 
     let titleComp = '''
@@ -547,10 +691,15 @@ public func mergeArkUIComponents(title: String, components: ArrayList<ArkUICompo
         UINode = UINode + '\n' + comp.getUINode()
         mainCode = mainCode + '\n' + 'auto component_${i} = ${comp.getMainFunc()}();'  + '\n' + '${returnValue}->AddChild(component_${i});'
     }
-    var template = head + '\n' + nativeModule + '\n' + UINode
+    var resValue = 'typedef void (*ClickCallback)(int, std::string, std::string); \n static ClickCallback g_click_callback = nullptr;'
+    var template = head + '\n' + resValue + '\n' + nativeModule + '\n'+ UINode
     template = template + '''
         extern "C" {
         using namespace NativeModule;
+
+        void register_click_callback(ClickCallback callback) {
+            g_click_callback = callback;
+        }
 
         std::shared_ptr<ArkUIBaseNode> CreateArkUI() {
             ${mainCode}

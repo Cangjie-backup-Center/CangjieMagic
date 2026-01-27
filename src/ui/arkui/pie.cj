@@ -50,7 +50,7 @@ public func template_pie_chart(info: PieChartInfo) {
         #include "native_drawing/drawing_types.h"
         #include "native_drawing/drawing_typeface.h"
 
-       namespace NativeModule {
+        namespace NativeModule {
             class ArkUICustomNode : public ArkUINode {
             public:
                 // 使用自定义组件类型ARKUI_NODE_CUSTOM创建组件。
@@ -101,8 +101,6 @@ public func template_pie_chart(info: PieChartInfo) {
                 : value(v), color(c), label(l) {}
                 };
 
-                #define DEG_TO_RAD(deg) ((deg) * M_PI / 180.0f)
-
                 void OnDraw(ArkUI_NodeCustomEvent *event)
                 {
                     auto drawContext = OH_ArkUI_NodeCustomEvent_GetDrawContextInDraw(event);
@@ -133,17 +131,30 @@ public func template_pie_chart(info: PieChartInfo) {
                     OH_Drawing_PenSetWidth(pen, 2);           // 轮廓宽度2px
                     OH_Drawing_PenSetAntiAlias(pen, true);
 
+                    // 计算饼图中心和半径（取宽高中较小值，避免变形）
+                    const float centerX = size.width / 2.0f;
+                    const float centerY = size.height / 2.0f;
+                    const float radius = std::min(size.width, size.height) * 0.4f;
+
+                    // 创建字型对象
+                    OH_Drawing_Font *font = OH_Drawing_FontCreate();
+                    // 设置文字大小
+                    OH_Drawing_FontSetTextSize(font, 50);
+                    // 设置跟随主题字体
+                    OH_Drawing_FontSetThemeFontFollowed(font, true);
+
                     // 逐个绘制扇形
                     float startAngle = 0; // 起始角度（0度在右侧，顺时针）
-                    const float cx = size.width / 2;
                     for (const auto& data : pieData) {
                         float sweepAngle = (data.value / total) * 360; // 扇形角度
 
                         // 创建路径
                         OH_Drawing_Path* path = OH_Drawing_PathCreate();
-                        OH_Drawing_PathMoveTo(path, cx, cx);
-                        OH_Drawing_PathArcTo(path, 0, 0, 2*cx, 2*cx,
-                                            startAngle, sweepAngle); // 顺时针绘制
+                        OH_Drawing_PathMoveTo(path, centerX, centerY);
+                        OH_Drawing_PathArcTo(path,
+                            centerX - radius, centerY - radius,  // 圆弧包围盒左上角
+                            centerX + radius, centerY + radius,  // 圆弧包围盒右下角
+                            startAngle, sweepAngle); // 顺时针绘制
                         OH_Drawing_PathClose(path); // 闭合路径
 
                         // 设置填充颜色并填充
@@ -154,9 +165,19 @@ public func template_pie_chart(info: PieChartInfo) {
 
                         // 绘制标签（使用官方标准文本接口）
                         float midAngle = startAngle + sweepAngle / 2;
-                        float labelRadius = cx + 40; // 标签距离中心的半径
-                        float labelX = cx + labelRadius * cos(midAngle * M_PI / 180);
-                        float labelY = cx + labelRadius * sin(midAngle * M_PI / 180);
+                        float labelRadius = radius; // 标签距离中心的半径
+                        // 角度转弧度，注意坐标系Y轴向下，sin值取反
+                        float radian = midAngle * M_PI / 180.0f;
+                        float labelX = centerX + labelRadius * cos(radian);
+                        float labelY = centerY + labelRadius * sin(radian);
+                        const std::string str = data.label;
+                        // 创建字块对象
+                        OH_Drawing_TextBlob *textBlob =
+                            OH_Drawing_TextBlobCreateFromString(str.c_str(), font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
+                        // 绘制字块
+                        OH_Drawing_CanvasDrawTextBlob(canvas, textBlob, labelX, labelY);
+                        // 释放字块对象
+                        OH_Drawing_TextBlobDestroy(textBlob);
 
                         // 更新起始角度
                         startAngle += sweepAngle;
@@ -168,6 +189,7 @@ public func template_pie_chart(info: PieChartInfo) {
                     // 释放资源
                     OH_Drawing_BrushDestroy(brush);
                     OH_Drawing_PenDestroy(pen);
+                    OH_Drawing_FontDestroy(font);
                 }
             };
        }  // namespace NativeModule

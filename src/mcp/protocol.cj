@@ -379,6 +379,7 @@ class CallUIParams {
     let names: Array<String>
     let title: String
     let layout: String
+    let kind: String
     let arguments: Option<Array<JsonObject>>
 }
 

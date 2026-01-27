@@ -20,7 +20,7 @@ import magic.prelude.*
      },
     dump: true,
 ]
-public func inputComponent(title: String) {
+public func textAreaUI(title: String) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">

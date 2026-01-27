@@ -7,7 +7,7 @@ import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonI
 
 
 @jsonable
-public class ItemData {
+public class ListItemData {
     @field["The title of the information"]
     let name: String
     @field["The main content of the information"]
@@ -15,17 +15,15 @@ public class ItemData {
 }
 
 @jsonable
-public class TextInfo {
+public class ListInfo {
     @field["The theme to be presented"]
     let title: String
     @field["The data information to be displayed"]
-    let data: Array<ItemData>
+    let data: Array<ListItemData>
 }
 
-@template[
-    dump: true,
-]
-public func template_text_list(info: TextInfo) {
+@template[]
+public func template_text_list(info: ListInfo) {
     '''
         namespace NativeModule {
             // 列表项节点类

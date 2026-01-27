@@ -3,11 +3,18 @@ package magic.ui.arkui
 import magic.dsl.*
 import magic.jsonable.*
 import std.collection.*
+import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
 
-@template[
-    dump: true,
-]
-public func template_radio_list(info: TextInfo) {
+@jsonable
+public class SelectInfo {
+    @field["The title of the radio selection list"]
+    let title: String
+    @field["The optional options data of the radio selection list"]
+    let data: Array<String>
+}
+
+@template[]
+public func template_radio_list(info: SelectInfo) {
     '''
         namespace NativeModule {
             class ArkUIRadioNode : public ArkUINode {
@@ -81,7 +88,53 @@ public func template_radio_list(info: TextInfo) {
         extern "C" {
             using namespace NativeModule;
 
-            std::shared_ptr<ArkUIBaseNode> CreateRadioListExample() {
+            std::shared_ptr<ArkUIRowNode> CreateRadioRow(const std::string& groupName,
+                                             const std::string& value,
+                                             const std::string& text) {
+                auto row = std::make_shared<ArkUIRowNode>();
+
+                // 创建Radio组件
+                auto radioItem = std::make_shared<ArkUIRadioNode>();
+                radioItem->SetGroupName(groupName);
+                radioItem->SetValue(value);
+                auto onClick = [groupName, value](ArkUI_NodeEvent *event) {
+                    // 从组件事件中获取基础事件对象
+                    auto *inputEvent = OH_ArkUI_NodeEvent_GetInputEvent(event);
+                    if (inputEvent == nullptr) {
+                        return;
+                    }
+                    // 从组件事件获取事件类型
+                    auto eventType = OH_ArkUI_NodeEvent_GetEventType(event);
+                    switch (eventType) {
+                        case NODE_ON_CLICK_EVENT: {
+                            g_click_callback(groupName, value);
+                        }
+                        default: {
+                            break;
+                        }
+                    }
+                };
+                radioItem->RegisterOnClick(onClick);
+
+                // 创建文本组件
+                auto textInfo = std::make_shared<ArkUITextNode>();
+                textInfo->SetTextContent(text);
+                textInfo->SetFontSize(18);
+
+                // 设置Row样式
+                row->AddChild(radioItem);
+                row->AddChild(textInfo);
+                row->SetMargin(0, 0, 10, 0);
+                row->SetBorderColor(0xFFefefef);
+                row->SetBorderWidth(1);
+                row->SetPercentWidth(0.9);
+                row->SetCornerRadius(15);
+                row->SetPadding(15, 10, 20, 10);
+
+                return row;
+            }
+
+            std::shared_ptr<ArkUIBaseNode> CreateRadioList() {
                 auto column = std::make_shared<ArkUIColumnNode>();
                 column->SetBorderWidth(1);
                 column->SetPercentWidth(1);
@@ -89,32 +142,17 @@ public func template_radio_list(info: TextInfo) {
                 column->SetBorderColor(0xFFefefef);
                 column->SetShadowStyle(ARKUI_SHADOW_STYLE_OUTER_DEFAULT_MD);
                 auto title = std::make_shared<ArkUITextNode>();
-                title->SetTextContent("标题");
+                title->SetTextContent(\"{% info.title %}\");
                 title->SetFontSize(22);
                 title->SetPercentWidth(1);
                 title->SetPadding(15, 0.0, 10, 15);
                 title->SetFontWeight(ARKUI_FONT_WEIGHT_W600);
                 column->AddChild(title);
-                // 2：创建Radio子组件并挂载到Row上。
+                column->SetMargin(0, 0, 20, 0);
+
+                // 创建Radio选项行（复用抽取的逻辑）
                 {% for item in info.data %}
-                {
-                    auto row = std::make_shared<ArkUIRowNode>();
-                    auto radioItem = std::make_shared<ArkUIRadioNode>();
-                    auto textInfo = std::make_shared<ArkUITextNode>();
-                    radioItem->SetGroupName(\"{% item.content %}\");
-                    radioItem->SetValue(\"{% item.content %}\");
-                    textInfo->SetTextContent(\"{% item.content %}\");
-                    textInfo->SetFontSize(18);
-                    row->AddChild(radioItem);
-                    row->AddChild(textInfo);
-                    row->SetMargin(0, 0, 10, 0);
-                    row->SetBorderColor(0xFFefefef);
-                    row->SetBorderWidth(1);
-                    row->SetPercentWidth(0.9);
-                    row->SetCornerRadius(15);
-                    row->SetPadding(15, 10, 15, 10);
-                    column->AddChild(row);
-                }
+                    column->AddChild(CreateRadioRow(\"{% info.title %}\", \"{% item %}\", \"{% item %}\"));
                 {% /for %}
                 return column;
             }

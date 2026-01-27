@@ -296,10 +296,13 @@ public abstract class AbsMCPServer {
                       librawfile.z.so
                       )
     "#
-
-            var cmakeFileHandle = File.create(cmakeFile)
-            cmakeFileHandle.write(cmakeContent.toArray())
-            cmakeFileHandle.close()
+            try {
+                var cmakeFileHandle = File.create(cmakeFile)
+                cmakeFileHandle.write(cmakeContent.toArray())
+                cmakeFileHandle.close()
+            } catch (ex: Exception) {
+                println("cmakeFileHandle error: ${ex.message}")
+            }
 
             // 创建源文件
             let sourceFile = sourceDir.join("temp_source.cpp")
@@ -327,6 +330,7 @@ public abstract class AbsMCPServer {
             if (cmakeExitCode != 0) {
                 let errorString = String.fromUtf8(cmakeStdErr)
                 remove(buildDir, recursive: true)
+                println("CMake configuration error: " + errorString)
                 return "CMake configuration error: " + errorString
             }
 
@@ -354,6 +358,7 @@ public abstract class AbsMCPServer {
                     println("Shared library compiled successfully: ${output_path}")
                     return "Shared library compiled successfully: ${output_path}"
                 } else {
+                    println("Build error: " + outputString)
                     return outputString
                 }
             } else {
@@ -478,10 +483,10 @@ public abstract class AbsMCPServer {
                 )
             }
         }
-        let code = mergeArkUIComponents("title", components)
+        let code = mergeArkUIComponents(callUIRequest.params.title, components, callUIRequest.params.layout)
         let now = DateTime.now()
         let timeStamp = now.toUnixTimeStamp().toNanoseconds() / 1_000_000
-        let name = "libmylib_"+ timeStamp.toString() +".so"
+        let name = "libmylib_" + callUIRequest.params.kind + "_" + timeStamp.toString() + ".so"
         let arkUISO = compileSoFromCode(code, name)
         // let binary = readSoFileToBinary(name)
         // let hexStr = binaryToHex(binary)

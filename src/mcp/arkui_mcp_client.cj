@@ -97,7 +97,7 @@ public class ArkUIMCPClient <: AbsMCPClient {
         }
     }
 
-    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, layout: String, title: String): ToolResponse {
+    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, layout: String, title: String, kind: String): ToolResponse {
         let argsArr = ArrayList<Array<(String, JsonValue)>>()
         // var index = 0
         for (argArr in args) {
@@ -108,10 +108,10 @@ public class ArkUIMCPClient <: AbsMCPClient {
             argsArr.add(arguments.toArray())
             // index++
         }
-        return this.callUI(names, argsArr.toArray(), '', title)
+        return this.callUI(names, argsArr.toArray(), layout, title, kind)
     }
 
-    override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, layout: String, title: String): ToolResponse {
+    override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, layout: String, title: String, kind: String): ToolResponse {
         this.doBeforeRequest()
         // Prepare the request
         let argsArr = ArrayList<JsonObject>()
@@ -123,7 +123,8 @@ public class ArkUIMCPClient <: AbsMCPClient {
             params: CallUIParams(
                 names: names,
                 title: title,
-                layout: 'Column',
+                layout: layout,
+                kind: kind,
                 arguments: if (args.isEmpty()) { None } else { argsArr.toArray() }
             )
         )
