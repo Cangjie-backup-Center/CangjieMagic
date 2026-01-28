@@ -944,6 +944,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 | Llama.cpp | `llamacpp` | 无需配置模型名称和 API Key | `LLAMACPP_BASE_URl`，默认 `http://localhost:8080` |
 | Ollama | `ollama:phi-3` | 无需配置 API Key | `OLLAMA_BASE_URl`，默认 `http://localhost:11434` |
 | OpenAI  | `openai:gpt-4o` | `OPENAI_API_KEY` | `OPENAI_BASE_URL`，默认 `https://api.openai.com/v1` |
+| Anthropic | `anthropic:claude-3-5-sonnet` | `ANTHROPIC_API_KEY` | `ANTHROPIC_BASE_URL`，默认 `https://api.anthropic.com` |
 | SiliconFlow | `siliconflow:deepseek-ai/DeepSeek-V3` | `SILICONFLOW_API_KEY` | `SILICONFLOW_BASE_URL`，默认 `https://api.siliconflow.cn/v1` |
 | 智谱 AI | `zhipuai:glm-4` | `ZHIPUAI_API_KEY` | `ZHIPUAI_BASE_URL`，默认 `https://open.bigmodel.cn/api/paas/v4` |
 | Google | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` | `GOOGLE_BASE_URL`，默认 `https://generativelanguage.googleapis.com/v1beta/openai` |
@@ -962,6 +963,7 @@ main() { keywordsOf("https://cangjie-lang.cn/") }
 | Llama.cpp | ✔️ | ❌  | ❌ |
 | Ollama | ✔️ | ✔️ | ❌ |
 | OpenAI | ✔️ | ✔️ | ✔️ |
+| Anthropic | ✔️ | ❌ | ❌ |
 | SiliconFlow | ✔️ | ✔️ | ✔️ |
 | 智谱 AI | ✔️ | ❌ | ❌ |
 | Google | ✔️ | ❌ | ❌ |

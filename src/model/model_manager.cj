@@ -10,6 +10,7 @@ import magic.log.LogUtils
 import magic.utils.getEnv
 import magic.config.Config
 import magic.model.openai.{OpenAIChatModel, OpenAIEmbeddingModel, OpenAIImageModel}
+import magic.model.anthropic.AnthropicChatModel
 import magic.model.ollama.{OllamaChatModel, OllamaEmbeddingModel}
 import magic.model.dashscope.DashscopeEmbeddingModel
 import magic.model.llamacpp.LlamacppEmbeddingModel
@@ -32,6 +33,9 @@ private let DEFAULT_PROVIDER_MAP = HashMap<String, ProviderConfig>([
     ("openai", ProviderConfig("OPENAI_BASE_URL",
                               "https://api.openai.com/v1",
                               "OPENAI_API_KEY")),
+    ("anthropic", ProviderConfig("ANTHROPIC_BASE_URL",
+                                 "https://api.anthropic.com/v1",
+                                 "ANTHROPIC_API_KEY")),
     ("dashscope", ProviderConfig("DASHSCOPE_BASE_URL", // openai-compatible
                                  "https://dashscope.aliyuncs.com/compatible-mode/v1",
                                  "DASHSCOPE_API_KEY")),
@@ -198,7 +202,19 @@ public struct ModelManager {
         match (modelConfig.provider) {
             case "openai" | "dashscope" | "ark" | "deepseek" |
                  "siliconflow" | "zhipuai" | "maas" | "google" | "moonshot" | "openrouter" =>
-                return OpenAIChatModel(modelConfig.provider, modelConfig.name, apiKey: modelConfig.apiKey, baseURL: modelConfig.baseURL)
+                return OpenAIChatModel(
+                    modelConfig.provider,
+                    modelConfig.name,
+                    apiKey: modelConfig.apiKey,
+                    baseURL: modelConfig.baseURL
+                )
+            case "anthropic" =>
+                return AnthropicChatModel(
+                    modelConfig.provider,
+                    modelConfig.name,
+                    apiKey: modelConfig.apiKey,
+                    baseURL: modelConfig.baseURL
+                )
             case "ollama" =>
                 return OllamaChatModel(modelConfig.name, baseURL: modelConfig.baseURL)
             case _ =>

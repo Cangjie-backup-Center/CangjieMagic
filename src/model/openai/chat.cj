@@ -260,9 +260,9 @@ public class OpenAIChatModel <: ChatModel {
     override public func create(chatReq: ChatRequest): ChatResponse {
         let (header, req) = prepareHeaderAndRequest(chatReq, stream: false)
         let start = DateTime.now()
-
+        let url = this.baseURL.trimEnd("/")
         try {
-            match (HttpUtils.post("${this.baseURL}/chat/completions", header, req)) {
+            match (HttpUtils.post("${url}/chat/completions", header, req)) {
                 case Some(body) =>
                     if (body.isEmpty()) {
                         throw ModelException("Http response body is empty")
@@ -300,15 +300,21 @@ public class OpenAIChatModel <: ChatModel {
                 jo.put("stop", ja)
             }
         }
+
         if (let Some(temp) <- chatReq.temperature) {
             jo.put("temperature", JsonFloat(temp))
         }
+
         if (!chatReq.tools.isEmpty()) {
             jo.put("tools", this.tools2Json(chatReq.tools))
         }
-        if (let Some(value) <- this.maxTokens) {
+
+        if (let Some(value) <- chatReq.maxTokens) {
+            jo.put("max_tokens", JsonInt(value))
+        } else if (let Some(value) <- this.maxTokens) {
             jo.put("max_tokens", JsonInt(value))
         }
+
         return jo
     }
 
