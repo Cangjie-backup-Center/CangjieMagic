@@ -10,6 +10,9 @@ import std.sync.AtomicBool
 public struct AsyncChatChunk <: ToString {
     protected AsyncChatChunk(
         public let message!: Message,
+        /**
+         * Only the last chunk will be marked as done and contain the usage info
+         */
         public let done!: Bool = false,
         public let usage!: Option<ChatUsage> = None
     ) { }

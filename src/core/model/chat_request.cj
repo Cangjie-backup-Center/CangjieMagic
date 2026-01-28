@@ -15,53 +15,62 @@ public class ChatRequest <: ToString & ToJsonValue {
     public let stop: Option<Array<String>>
     public let temperature: Option<Float64>
     public let tools: Array<Tool>
+    public let maxTokens: Option<Int64>
 
     public init(
         message: String,
         temperature!: Option<Float64> = None,
         stop!: Option<Array<String>> = None,
-        tools!: Array<Tool> = []
+        tools!: Array<Tool> = [],
+        maxTokens!: Option<Int64> = None
     ) {
         this.messageList = MessageList([Message.user(message)])
         this.temperature = temperature
         this.stop = stop
         this.tools = tools
+        this.maxTokens = maxTokens
     }
 
     public init(
         message: Message,
         temperature!: Option<Float64> = None,
         stop!: Option<Array<String>> = None,
-        tools!: Array<Tool> = []
+        tools!: Array<Tool> = [],
+        maxTokens!: Option<Int64> = None
     ) {
         this.messageList = MessageList([message])
         this.temperature = temperature
         this.stop = stop
         this.tools = tools
+        this.maxTokens = maxTokens
     }
 
     public init(
         messages: Array<Message>,
         temperature!: Option<Float64> = None,
         stop!: Option<Array<String>> = None,
-        tools!: Array<Tool> = []
+        tools!: Array<Tool> = [],
+        maxTokens!: Option<Int64> = None
     ) {
         this.messageList = MessageList(messages)
         this.stop = stop
         this.temperature = temperature
         this.tools = tools
+        this.maxTokens = maxTokens
     }
 
     public init(
         messageList: MessageList,
         temperature!: Option<Float64> = None,
         stop!: Option<Array<String>> = None,
-        tools!: Array<Tool> = []
+        tools!: Array<Tool> = [],
+        maxTokens!: Option<Int64> = None
     ) {
         this.messageList = messageList
         this.stop = stop
         this.temperature = temperature
         this.tools = tools
+        this.maxTokens = maxTokens
     }
 
     override public func toString(): String {
@@ -82,6 +91,9 @@ public class ChatRequest <: ToString & ToJsonValue {
         }
         if (!tools.isEmpty()) {
             jo.put("tools", JsonArray(tools |> map { t => t.toJsonValue() } |> collectArray))
+        }
+        if (let Some(maxTokens) <- maxTokens) {
+            jo.put("max_tokens", JsonInt(maxTokens))
         }
         return jo
     }

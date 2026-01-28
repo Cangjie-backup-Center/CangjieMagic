@@ -932,6 +932,7 @@ Model configuration follows the format `<provider>:<model>`. Currently supported
 | Llama.cpp | `llamacpp` | No model name or API Key required | `LLAMACPP_BASE_URl`, default `http://localhost:8080` |
 | Ollama | `ollama:phi-3` | No API Key required | `OLLAMA_BASE_URl`, default `http://localhost:11434` |
 | OpenAI | `openai:gpt-4o` | `OPENAI_API_KEY` | `OPENAI_BASE_URL`, default `https://api.openai.com/v1` |
+| Anthropic | `anthropic:claude-3-5-sonnet` | `ANTHROPIC_API_KEY` | `ANTHROPIC_BASE_URL`, default `https://api.anthropic.com` |
 | SiliconFlow | `siliconflow:deepseek-ai/DeepSeek-V3` | `SILICONFLOW_API_KEY` | `SILICONFLOW_BASE_URL`, default `https://api.siliconflow.cn/v1` |
 | Zhipu AI | `zhipuai:glm-4` | `ZHIPUAI_API_KEY` | `ZHIPUAI_BASE_URL`, default `https://open.bigmodel.cn/api/paas/v4` |
 | Google | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` | `GOOGLE_BASE_URL`, default `https://generativelanguage.googleapis.com/v1beta/openai` |
@@ -950,6 +951,7 @@ Model configuration can be used not only in the `model` property of `@agent`, bu
 | Llama.cpp | ✔️ | ❌ | ❌ |
 | Ollama | ✔️ | ✔️ | ❌ |
 | OpenAI | ✔️ | ✔️ | ✔️ |
+| Anthropic | ✔️ | ❌ | ❌ |
 | SiliconFlow | ✔️ | ✔️ | ✔️ |
 | Zhipu AI | ✔️ | ❌ | ❌ |
 | Google | ✔️ | ❌ | ❌ |
