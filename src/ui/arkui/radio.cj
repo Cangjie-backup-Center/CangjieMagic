@@ -145,7 +145,7 @@ public func template_radio_list(info: SelectInfo) {
                 title->SetTextContent(\"{% info.title %}\");
                 title->SetFontSize(22);
                 title->SetPercentWidth(1);
-                title->SetPadding(15, 0.0, 10, 15);
+                title->SetPadding(15, 0, 10, 15);
                 title->SetFontWeight(ARKUI_FONT_WEIGHT_W600);
                 column->AddChild(title);
                 column->SetMargin(0, 0, 20, 0);

@@ -677,7 +677,7 @@ public func mergeArkUIComponents(title: String, components: ArrayList<ArkUICompo
     let titleComp = '''
         auto title = std::make_shared<ArkUITextNode>();
         title->SetTextContent("${title}");
-        title->SetFontSize(25);
+        title->SetFontSize(22);
         title->SetPercentWidth(1);
         title->SetPadding(15, 15, 10, 15);
         title->SetFontWeight(ARKUI_FONT_WEIGHT_W600);

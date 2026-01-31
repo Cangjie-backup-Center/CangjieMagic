@@ -363,7 +363,7 @@ public abstract class AbsMCPServer {
                 }
             } else {
                 let errorString = String.fromUtf8(ninjaStdErr)
-                remove(buildDir, recursive: true)
+                // remove(buildDir, recursive: true)
                 println("Build error: " + errorString)
                 return "Build error: " + errorString
             }

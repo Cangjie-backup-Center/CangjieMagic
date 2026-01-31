@@ -5,21 +5,12 @@ import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
 
-
-@jsonable
-public class ListItemData {
-    @field["The title of the information"]
-    let name: String
-    @field["The main content of the information"]
-    let content: String
-}
-
 @jsonable
 public class ListInfo {
     @field["The theme to be presented"]
     let title: String
     @field["The data information to be displayed"]
-    let data: Array<ListItemData>
+    let data: Array<String>
 }
 
 @template[]
@@ -63,55 +54,53 @@ public func template_text_list(info: ListInfo) {
         extern "C" {
             using namespace NativeModule;
 
-            // 创建文本节点的函数
             std::shared_ptr<ArkUIColumnNode> createColumnNode(std::string text) {
-                auto head = std::make_shared<ArkUITextNode>();
                 auto content = std::make_shared<ArkUITextNode>();
                 auto column = std::make_shared<ArkUIColumnNode>();
-                head->SetTextContent("标题");
-                head->SetFontSize(21);
-                head->SetPercentWidth(1);
-                head->SetPadding(15, 15, 10, 15);
-                head->SetFontWeight(ARKUI_FONT_WEIGHT_W600);
                 content->SetTextContent(text);
-                content->SetFontSize(18);
+                content->SetFontSize(16);
                 content->SetPercentWidth(1);
-                content->SetPadding(5.0, 15, 15, 15);
-                column->AddChild(head);
+                content->SetPadding(10, 10, 10, 10);
                 column->AddChild(content);
                 return column;
             }
 
-            // 创建列表项的回调函数
             std::shared_ptr<ArkUIListItemNode> createListItem(int32_t index, std::string content) {
                 auto listItem = std::make_shared<ArkUIListItemNode>();
                 auto textNode = createColumnNode(content);
                 listItem->InsertChild(textNode, index);
+                listItem->SetCornerRadius(13);
+                listItem->SetBorderColor(0xFFEFEFEF);
                 listItem->SetBorderWidth(1.0);
-                listItem->SetCornerRadius(18);
-                listItem->SetBorderColor(0xFFf7f7f7);
-                listItem->SetBorderWidth(1.0);
-                // listItem->SetPercentWidth(0.9);
                 listItem->SetMargin(0.0, 0.0, 15.0, 0.0);
-                listItem->SetShadowStyle(ARKUI_SHADOW_STYLE_OUTER_DEFAULT_SM);
+                listItem->SetBackgroundColor(0x25E8E8E8);
                 return listItem;
             }
 
             std::shared_ptr<ArkUIBaseNode> CreateTextListExample() {
-                // 创建List组件
+                auto column = std::make_shared<ArkUIColumnNode>();
+                auto title = std::make_shared<ArkUITextNode>();
+                title->SetTextContent(\"{% info.title %}\");
+                title->SetFontSize(20);
+                title->SetPercentWidth(1);
+                title->SetPadding(15, 0, 10, 05);
+                title->SetFontWeight(ARKUI_FONT_WEIGHT_W600);
+
                 auto list = std::make_shared<ArkUIListNode>();
                 list->SetPercentWidth(1);
                 list->SetScrollBarState(true);
 
-                // 创建列表项
                 {% for (index, item) in enumerate(info.data) %}
                 {
-                    auto listItem = createListItem({% index %}, \"{% item.content %}\");
+                    auto listItem = createListItem({% index %}, \"{% item %}\");
                     list->AddChild(listItem);
                 }
                 {% /for %}
 
-                return list;
+                column->AddChild(title);
+                column->AddChild(list);
+                column->SetMargin(0, 0, 15, 0);
+                return column;
             }
         }  // extern "C"
     '''

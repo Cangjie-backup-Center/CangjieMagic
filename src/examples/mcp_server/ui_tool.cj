@@ -19,8 +19,17 @@ import magic.ui.*
         info: "展示信息"
     }
 ]
-public func pieCharttUI(info: PieChartInfo): String {
+public func pieChartUI(info: PieChartInfo): String {
     template_pie_chart(info)
+}
+
+@tool[
+    description: "折线图，展示数据趋势",
+    terminal: true,
+    kind: "display",
+]
+public func lineChartUI(info: LineChartInfo): String {
+    template_line_chart(info)
 }
 
 @tool[
@@ -123,6 +132,6 @@ main() {
     Config.logLevel = "TRACE"
     Config.logFile = "./logs/mcp-server.log"
     println("--------------UIMCPServer----------------")
-    ArkUIMCPServer.startWith([textListUI, pieCharttUI, radioListUI, checkboxListUI, textAreaUI, timePickerUI, datePickerUI, calendarPickerUI], "0.0.0.0", 8000)
+    ArkUIMCPServer.startWith([textListUI, lineChartUI, pieChartUI, radioListUI, checkboxListUI, textAreaUI, timePickerUI, datePickerUI, calendarPickerUI], "0.0.0.0", 8000)
     // HTMLUIMCPServer.startWith([textListUI, commonResume], "0.0.0.0", 8000)
 }
