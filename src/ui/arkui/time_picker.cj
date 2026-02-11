@@ -14,7 +14,8 @@ public class TimePickerInfo {
 }
 
 @ui[
-    description: "时间选择器，用于选择时间点",
+    description: "时间选择器：时间点选择组件，用于选择具体时/分/秒的时间信息",
+    lang: "arkui",
     kind: "input"
 ]
 public func template_time_picker(info: TimePickerInfo) {

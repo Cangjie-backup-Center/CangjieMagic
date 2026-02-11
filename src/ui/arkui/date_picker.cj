@@ -18,7 +18,7 @@ public class DatePickerInfo {
 }
 
 @ui[
-    description: "日期选择器",
+    description: "日期选择器：日期维度选择组件，用于选择具体年/月/日的日期信息",
     lang: "arkui",
     kind: "input"
 ]

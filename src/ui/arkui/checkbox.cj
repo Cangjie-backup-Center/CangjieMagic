@@ -7,10 +7,7 @@ import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
 
 @ui[
-    description: "多选列表",
-    parameters: {
-        info: "选项列表"
-    },
+    description: "多选复选框列表",
     lang: "arkui",
     kind: "input"
 ]

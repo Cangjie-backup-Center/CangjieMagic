@@ -18,10 +18,9 @@ public class CalendarPickerInfo {
 }
 
 @ui[
-    description: "日历选择器",
+    description: "日历选择器：日历化日期选择组件，以日历视图适配单日/多日的日期选择场景",
     lang: "arkui",
-    kind: "input",
-    dump: true
+    kind: "input"
 ]
 public func template_calendar_picker(info: CalendarPickerInfo) {
     '''

@@ -13,7 +13,8 @@ public class TextAreaInfo {
 }
 
 @ui[
-    description: "文本输入框",
+    description: "文本输入框：多行文本输入组件，用于接收用户自定义的文本内容输入",
+    lang: "arkui",
     kind: "input"
 ]
 public func template_textarea(info: TextAreaInfo) {

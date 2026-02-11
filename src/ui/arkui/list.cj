@@ -15,10 +15,9 @@ public class ListInfo {
 }
 
 @ui[
-    description: "以纯文本为核心内容的列表，每个列表项是一段文字，比如步骤说明列表",
+    description: "纯文本列表：以纯文字为核心的结构化列表，适配步骤、说明等纯文本展示场景",
     lang: "arkui",
-    kind: "display",
-    dump: true
+    kind: "display"
 ]
 public func template_text_list(info: ListInfo) {
     '''

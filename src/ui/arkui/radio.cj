@@ -15,7 +15,8 @@ public class SelectInfo {
 }
 
 @ui[
-    description: "单选列表，用户只能从预设选项中选择唯一一项，适用于需要用户在互斥选项中做出唯一选择的场景（如性别、支付方式、学历等）",
+    description: "单选按钮列表",
+    lang: "arkui",
     kind: "input"
 ]
 public func template_radio_list(info: SelectInfo) {

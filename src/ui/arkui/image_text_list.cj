@@ -27,7 +27,11 @@ public class ImgTextListInfo {
     let data: Array<ImgTextItem>
 }
 
-@template[]
+@ui[
+    description: "图文结构化列表：图文结合的结构化展示列表，适配需图文联动的信息展示场景",
+    lang: "arkui",
+    kind: "display"
+]
 public func template_image_text_list(info: ImgTextListInfo) {
     '''
         namespace NativeModule {

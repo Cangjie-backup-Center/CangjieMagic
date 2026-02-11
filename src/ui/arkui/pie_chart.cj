@@ -26,7 +26,8 @@ public class PieChartInfo {
 }
 
 @ui[
-    description: "饼图，展示数据占比",
+    description: "饼图：可视化展示各维度数据占总体的比例分布",
+    lang: "arkui",
     kind: "display"
 ]
 public func template_pie_chart(info: PieChartInfo) {
