@@ -30,6 +30,14 @@ protected class MCPUIWrapper <: Tool {
         get() { this.mcpUI.kind }
     }
 
+    public prop lang: String {
+        get() { this.mcpUI.lang }
+    }
+
+    public prop category: Option<String> {
+        get() { this.mcpUI.category }
+    }
+
     public prop description: String {
         get() { this.mcpUI.description ?? "" }
     }
@@ -51,10 +59,11 @@ protected class MCPUIWrapper <: Tool {
     }
 
     override public func invoke(args: HashMap<String, JsonValue>): ToolResponse {
-        let toolResponse = this.client.callUI([this.name], [args.toArray()], '', '', '')
+        /*let toolResponse = this.client.callUI([this.name], [args.toArray()], '', '', '')
         // If the content is error messages, truncate it
         let runes = toolResponse.content.toRuneArray()
-        return toolResponse
+        return toolResponse*/
+        return ToolResponse('Not implemented', isError: true)
     }
 
     override public func toJsonValue(): JsonValue {
@@ -62,6 +71,8 @@ protected class MCPUIWrapper <: Tool {
         let toolJo = this.mcpUI.toJsonValue().asObject()
         let jo = JsonObject()
         jo.put("name", toolJo["name"])
+        jo.put("kind", toolJo["kind"])
+        jo.put("lang", toolJo["lang"])
         jo.put("description", toolJo["description"])
         jo.put("parameters", toolJo["inputSchema"])
         return jo

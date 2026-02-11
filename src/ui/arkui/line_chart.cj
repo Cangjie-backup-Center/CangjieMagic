@@ -1,6 +1,7 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
@@ -30,7 +31,11 @@ public class LineChartInfo {
     let dataArr: Array<LineItemData>
 }
 
-@template[]
+@ui[
+    description: "折线图，展示数据趋势",
+    lang: "arkui",
+    kind: "display"
+]
 public func template_line_chart(info: LineChartInfo) {
    '''
         #include "native_drawing/drawing_point.h"

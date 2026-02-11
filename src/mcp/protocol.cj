@@ -245,7 +245,9 @@ public class ListToolsResult {
 @jsonable
 public class MCPTool {
     let name: String
-    let kind: String
+    let kind: Option<String>
+    let category: Option<String>
+    let lang: Option<String>
     let description: Option<String>
     let inputSchema: JsonObject
 }
@@ -313,30 +315,21 @@ public enum ToolCallContent <: Jsonable<ToolCallContent> {
 //-----------------------------------------------------------------
 
 @jsonable
-class ListInputUIRequest {
+class ListUIRequest {
     var jsonrpc: String = JSONRPC_VERSION
     var id: Int64 = getRequestID()
-    var method: String = "ui/input/list"
-    var params: PaginatedParams = PaginatedParams()
+    var method: String = "ui/list"
+    var params: ListUIParams
 }
 
 @jsonable
-class ListDisplayUIRequest {
-    var jsonrpc: String = JSONRPC_VERSION
-    var id: Int64 = getRequestID()
-    var method: String = "ui/display/list"
-    var params: PaginatedParams = PaginatedParams()
+class ListUIParams {
+    let kind: String
+    var lang: String = "html"
 }
 
 @jsonable
-class ListInputUIResponse {
-    var jsonrpc: String = JSONRPC_VERSION
-    let id: Int64
-    let result: ListUIResult
-}
-
-@jsonable
-class ListDisplayUIResponse {
+class ListUIResponse {
     var jsonrpc: String = JSONRPC_VERSION
     let id: Int64
     let result: ListUIResult
@@ -352,6 +345,8 @@ public class ListUIResult {
 public class MCPUI {
     let name: String
     let kind: String
+    let category: Option<String>
+    var lang: String = "html"
     let description: Option<String>
     let inputSchema: JsonObject
 }
@@ -359,34 +354,32 @@ public class MCPUI {
 //-----------------------------------------------------------------
 
 @jsonable
-class CallArkUIRequest {
+class CallUIRequest {
     var jsonrpc: String = JSONRPC_VERSION
     var id: Int64 = getRequestID()
-    var method: String = "arkui/call"
+    var method: String = "ui/call"
     let params: CallUIParams
 }
 
 @jsonable
-class CallHTMLUIRequest {
-    var jsonrpc: String = JSONRPC_VERSION
-    var id: Int64 = getRequestID()
-    var method: String = "htmlui/call"
-    let params: CallUIParams
+public class CallUIItem {
+    let name: String
+    let arguments: Option<JsonObject>
 }
 
 @jsonable
 class CallUIParams {
-    let names: Array<String>
     let title: String
     let layout: String
-    let kind: String
-    let arguments: Option<Array<JsonObject>>
+    let lang: String
+    let components: Array<CallUIItem>
 }
 
 @jsonable
 class CallUIResponse {
     var jsonrpc: String = JSONRPC_VERSION
     let id: Int64
+    let kind: String
     let result: CallUIResult
 }
 

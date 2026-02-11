@@ -1,6 +1,7 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
@@ -16,7 +17,11 @@ public class DatePickerInfo {
     let end_date: String
 }
 
-@template[]
+@ui[
+    description: "日期选择器",
+    lang: "arkui",
+    kind: "input"
+]
 public func template_date_picker(info: DatePickerInfo) {
     '''
         namespace NativeModule {

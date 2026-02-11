@@ -56,17 +56,15 @@ public abstract class AbsMCPClient <: MCPClient {
         return resp.result
     }
 
-    private func listInputUI(): ListUIResult {
-        this.send(ListInputUIRequest())
-        let resp = this.recvResponse<ListInputUIResponse>()
+    private func listUI(kind: String, lang: String): ListUIResult {
+        this.send(ListUIRequest(
+            params: ListUIParams(
+                kind: kind,
+                lang: lang
+            )))
+        let resp = this.recvResponse<ListUIResponse>()
         return resp.result
     }
-
-    private func listDisplayUI(): ListUIResult {
-        this.send(ListDisplayUIRequest())
-        let resp = this.recvResponse<ListDisplayUIResponse>()
-         return resp.result
-     }
 
     override public prop tools: Array<Tool> {
         get() {
@@ -79,77 +77,49 @@ public abstract class AbsMCPClient <: MCPClient {
         }
     }
 
-    public prop displayUI: Array<Tool> {
+    public prop displayArkUI: Array<Tool> {
         get() {
             this.doBeforeRequest()
             let result = ArrayList<Tool>()
-            for (u in this.listDisplayUI().ui) {
+            for (u in this.listUI("display", "arkui").ui) {
                 result.add(MCPUIWrapper(this, u))
             }
             return result.toArray()
         }
     }
 
-    public prop inputUI: Array<Tool> {
+    public prop inputArkUI: Array<Tool> {
         get() {
             this.doBeforeRequest()
             let result = ArrayList<Tool>()
-            for (u in this.listInputUI().ui) {
+            for (u in this.listUI("input", "arkui").ui) {
                 result.add(MCPUIWrapper(this, u))
             }
             return result.toArray()
         }
     }
 
-    // override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, layout: String, title: String): ToolResponse {
-    //     let argsArr = ArrayList<Array<(String, JsonValue)>>()
-    //     // var index = 0
-    //     for (argArr in args) {
-    //         let arguments = ArrayList<(String, JsonValue)>()
-    //         for (arg in argArr) {
-    //             arguments.add((arg[0], arg[1].toJsonValue()))
-    //         }
-    //         argsArr.add(arguments.toArray())
-    //         // index++
-    //     }
-    //     return this.callUI(names, argsArr.toArray(), '', title)
-    // }
+    public prop displayHTMLUI: Array<Tool> {
+        get() {
+            this.doBeforeRequest()
+            let result = ArrayList<Tool>()
+            for (u in this.listUI("display", "html").ui) {
+                result.add(MCPUIWrapper(this, u))
+            }
+            return result.toArray()
+        }
+    }
 
-    // override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, layout: String, title: String): ToolResponse {
-    //     this.doBeforeRequest()
-    //     // Prepare the request
-    //     let argsArr = ArrayList<JsonObject>()
-    //     for (arg in args) {
-    //         let arguments = HashMap<String, JsonValue>(arg)
-    //         argsArr.add(JsonObject(arguments))
-    //     }
-    //     let req = CallArkUIRequest(
-    //         params: CallUIParams(
-    //             names: names,
-    //             title: title,
-    //             layout: 'Column',
-    //             arguments: if (args.isEmpty()) { None } else { argsArr.toArray() }
-    //         )
-    //     )
-    //     // Send the request and receive its response
-    //     this.send(req)
-    //     let resp = this.recvResponse<CallUIResponse>()
-    //     if (req.id != resp.id) {
-    //         LogUtils.error("Received invalid response with mismatched id: ${resp.toJsonValue().toJsonString()}")
-    //     }
-    //     // Merge all result content
-    //     let result = resp.result
-    //     let strBuilder = StringBuilder()
-    //     for (content in result.content) {
-    //         strBuilder.append(content.getValue())
-    //         strBuilder.append("\n")
-    //     }
-    //     if ((result.isError ?? false)) {
-    //         return ToolResponse(strBuilder.toString(), isError: true)
-    //     } else {
-    //         return ToolResponse(strBuilder.toString(), isError: false)
-    //     }
-    // }
+    public prop inputHTMLUI: Array<Tool> {
+        get() {
+            this.doBeforeRequest()
+            let result = ArrayList<Tool>()
+            for (u in this.listUI("input", "html").ui) {
+                result.add(MCPUIWrapper(this, u))
+            }
+            return result.toArray()
+        }
+    }
 
     override public func callTool(name: String, args: Array<(String, ToJsonValue)>): ToolResponse {
         let arguments = ArrayList<(String, JsonValue)>()

@@ -109,12 +109,11 @@ public class StdioMCPClient <: AbsMCPClient {
         return msg
     }
 
-    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, layout: String, title: String, kind: String): ToolResponse {
-        let argsArr = ArrayList<Array<(String, JsonValue)>>()
-        return this.callUI(names, argsArr.toArray(), layout, title, kind)
+    override public func callUI(names: Array<String>, args: Array<Array<(String, ToJsonValue)>>, layout: String, title: String, lang: String): ToolResponse {
+        return ToolResponse('Not implemented', isError: true)
     }
 
-    override public func callUI(names: Array<String>, args: Array<Array<(String, JsonValue)>>, layout: String, title: String, kind: String): ToolResponse {
+    override public func callUI(components: Array<CallUIItem>, layout: String, title: String, lang: String): ToolResponse {
         return ToolResponse('Not implemented', isError: true)
     }
 }

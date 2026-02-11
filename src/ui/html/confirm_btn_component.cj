@@ -13,12 +13,11 @@ import magic.prelude.*
     使用场景：触发确认类核心操作，如提交表单、确认订单、保存设置、执行删除操作、确认时间选择结果、提交表格编辑内容,
     交互特性：操作交互型，支持点击触发操作,
     风格属性：简约通用型，对于收集信息页面必须有且只有一个，且必须放在组件列表最后
-    ''',
- dump: true,
+    '''
 ]
 public func confirmBtnUI() {
     '''
-     <!DOCTYPE html>
+    <!DOCTYPE html>
     <html lang="zh-CN">
     <head>
         <meta charset="UTF-8">

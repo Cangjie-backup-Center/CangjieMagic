@@ -18,7 +18,6 @@ import magic.prelude.*
     parameters: {
         title: "描述需要输入文本内容的标题"
      },
-    dump: true,
 ]
 public func textAreaUI(title: String) {
     '''

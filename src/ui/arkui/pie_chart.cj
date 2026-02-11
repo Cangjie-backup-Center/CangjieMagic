@@ -1,6 +1,7 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
@@ -24,7 +25,10 @@ public class PieChartInfo {
    let data: Array<PieItemData>
 }
 
-@template[]
+@ui[
+    description: "饼图，展示数据占比",
+    kind: "display"
+]
 public func template_pie_chart(info: PieChartInfo) {
    '''
         #include "native_drawing/drawing_point.h"

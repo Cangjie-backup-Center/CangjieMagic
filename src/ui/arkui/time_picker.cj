@@ -1,6 +1,7 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
@@ -12,7 +13,10 @@ public class TimePickerInfo {
     let title: String
 }
 
-@template[]
+@ui[
+    description: "时间选择器，用于选择时间点",
+    kind: "input"
+]
 public func template_time_picker(info: TimePickerInfo) {
     '''
         namespace NativeModule {

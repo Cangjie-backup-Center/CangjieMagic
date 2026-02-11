@@ -20,6 +20,14 @@ private class ToolAttr <: Attr {
         get() { getString("kind") ?? "" }
     }
 
+    prop lang: String {
+        get() { getString("lang") ?? "" }
+    }
+
+    prop category: String {
+        get() { getString("category") ?? "" }
+    }
+
     // Whether this tool is defined inside an @agent.
     var insideAgent = false
 
@@ -81,7 +89,7 @@ private class ToolAttr <: Attr {
             validKeys: [
                 "description", "parameters", "examples",
                 "filterable", "terminal", "compactable",
-                "dump", "kind"
+                "dump", "kind", "lang"
             ]
         )
         return ToolAttr(map)

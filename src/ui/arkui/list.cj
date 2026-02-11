@@ -1,6 +1,7 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
@@ -13,7 +14,12 @@ public class ListInfo {
     let data: Array<String>
 }
 
-@template[]
+@ui[
+    description: "以纯文本为核心内容的列表，每个列表项是一段文字，比如步骤说明列表",
+    lang: "arkui",
+    kind: "display",
+    dump: true
+]
 public func template_text_list(info: ListInfo) {
     '''
         namespace NativeModule {

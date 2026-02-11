@@ -1,11 +1,19 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
 
-@template[]
+@ui[
+    description: "多选列表",
+    parameters: {
+        info: "选项列表"
+    },
+    lang: "arkui",
+    kind: "input"
+]
 public func template_checkbox_list(info: SelectInfo) {
     '''
         namespace NativeModule {

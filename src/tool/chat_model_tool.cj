@@ -23,7 +23,15 @@ protected class ChatModelTool <: AbsTool {
     }
 
     public prop kind: String {
-        get() { 'tool' }
+        get() { "" }
+    }
+
+    public prop lang: String {
+        get() { "" }
+    }
+
+    public prop category: Option<String> {
+        get() { Option.None }
     }
 
     public prop description: String {

@@ -17,12 +17,16 @@ private class UIAttr <: Attr {
         }
     }
 
+    prop lang: String {
+        get() { getString("lang") ?? "" }
+    }
+
     static func parse(attrTokens: Tokens): UIAttr {
         let map = AttrParser(attrTokens).parseAttr(
             macroName: "ui",
             validKeys: [
                 "template", "parameters", "description", "filterable", "layout", "style",
-                "terminal", "dump", "title", "thumbnail", "category", "kind"
+                "terminal", "lang", "dump", "title", "thumbnail", "category", "kind"
             ]
         )
         return UIAttr(map)
@@ -65,7 +69,12 @@ private func transformUI(input: Tokens, attr: UIAttr): Tokens {
     let funcDecl = decl.asFuncDecl()
 
     let templateFunc = if (funcDecl.block.nodes.size > 0 && !funcDecl.block.nodes[0].isStringLiteral()) {
-        transformComposition(funcDecl)
+        if (attr.lang == "arkui") {
+            transformArkUIComposition(funcDecl)
+        }
+        else {
+            transformHTMLComposition(funcDecl)
+        }
     } else {
         transformTemplate(funcDecl, attr)
     }
@@ -83,7 +92,7 @@ private func transformUI(input: Tokens, attr: UIAttr): Tokens {
     let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
 
     let toolAttrs = ArrayList<Tokens>()
-    for (key in ["description", "parameters", "filterable", "terminal", "kind"]) {
+    for (key in ["description", "parameters", "filterable", "terminal", "kind", "lang"]) {
         if (let Some(tokens) <- attr.getTokens(key)) {
             toolAttrs.add(quote($(newIdentifierToken(key)): $tokens))
         }
@@ -94,7 +103,8 @@ private func transformUI(input: Tokens, attr: UIAttr): Tokens {
         $templateFunc
 
         @tool[$toolAttr](
-            $modifier func $(funcDecl.identifier) $genericTypeParam ( $(funcDecl.funcParams) ): $retType $genericConstraint {
+            $modifier func $(funcDecl.identifier) $genericTypeParam ( $(funcDecl.funcParams) ): $retType $genericConstraint
+            {
                 $templateFnName($args)
             }
         )
@@ -120,7 +130,7 @@ private func transformTemplate(funcDecl: FuncDecl, attr: UIAttr): Tokens {
     )
 }
 
-private func transformComposition(funcDecl: FuncDecl): Tokens {
+private func transformHTMLComposition(funcDecl: FuncDecl): Tokens {
     let body = quote(let components = ArrayList<HTMLComponent>())
     var index = 0
     for (node in funcDecl.block.nodes) {
@@ -135,7 +145,29 @@ private func transformComposition(funcDecl: FuncDecl): Tokens {
     return quote(
         private func $templateFnName ( $(funcDecl.funcParams) ): String {
             $body
-            let b = mergeHTML("title", components, layout: Grid)
+            let b = mergeHTML("title", components, layout: Linear)
+            println(b)
+            b
+        }
+    )
+}
+
+private func transformArkUIComposition(funcDecl: FuncDecl): Tokens {
+    let body = quote(let components = ArrayList<ArkUIComponent>())
+    var index = 0
+    for (node in funcDecl.block.nodes) {
+        let call = node.asCallExpr()
+        // Check names
+        body.append(quote(
+            components.add(ArkUIComponent($call, $index))
+        ))
+        index = index + 1
+    }
+    let templateFnName = newIdentifierToken("__template_of_${funcDecl.identifier.value}")
+    return quote(
+        private func $templateFnName ( $(funcDecl.funcParams) ): String {
+            $body
+            let b = mergeArkUIComponents("title", components, "Linear")
             println(b)
             b
         }

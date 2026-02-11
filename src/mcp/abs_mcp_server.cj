@@ -36,6 +36,8 @@ private func convertTool2MCP(tool: Tool): MCPTool {
     return MCPTool(
         name: tool.name,
         kind: tool.kind,
+        lang: tool.lang,
+        category: tool.category,
         description: tool.description,
         inputSchema: inputSchema
     )
@@ -61,15 +63,17 @@ private func convertUI2MCP(tool: Tool): MCPUI {
     return MCPUI(
         name: tool.name,
         kind: tool.kind,
+        lang: tool.lang,
+        category: tool.category ?? "",
         description: tool.description,
         inputSchema: inputSchema
     )
 }
 
-private func getUIToolByKind(tools: Array<Tool>, kind: String): Array<Tool> {
+private func getUIToolByKind(tools: Array<Tool>, kind: String, lang: String): Array<Tool> {
     let toolArr = ArrayList<Tool>()
     for (t in tools) {
-        if (t.kind == kind) {
+        if (t.kind == kind && t.lang == lang) {
             toolArr.add(t)
         }
     }
@@ -139,22 +143,17 @@ public abstract class AbsMCPServer {
                     result: ListToolsResult(tools: mcpTools)
                 )
             case "tools/call" => this.handleCallTool(CallToolRequest.fromJsonValue(JsonValue.fromStr(msg)))
-            case "ui/input/list" =>
-                let toolArr = getUIToolByKind(this.tools, "input")
+            case "ui/list" =>
+                let req = ListUIRequest.fromJsonValue(JsonValue.fromStr(msg))
+                let kind = req.params.kind
+                let lang = req.params.lang
+                let toolArr = getUIToolByKind(this.tools, kind, lang)
                 let mcpui = toolArr |> map { ui => convertUI2MCP(ui) } |> collectArray
-                ListInputUIResponse(
+                ListUIResponse(
                     id: req.id,
                     result: ListUIResult(ui: mcpui)
                 )
-            case "ui/display/list" =>
-                let toolArr = getUIToolByKind(this.tools, "display")
-                let mcpui = toolArr |> map { ui => convertUI2MCP(ui) } |> collectArray
-                ListDisplayUIResponse(
-                    id: req.id,
-                    result: ListUIResult(ui: mcpui)
-                )
-            case "arkui/call" => this.handleCallArkUI(CallArkUIRequest.fromJsonValue(JsonValue.fromStr(msg)))
-            case "htmlui/call" => this.handleCallHTMLUI(CallHTMLUIRequest.fromJsonValue(JsonValue.fromStr(msg)))
+            case "ui/call" => this.handleCallUI(CallUIRequest.fromJsonValue(JsonValue.fromStr(msg)))
             case "ping" => PingResponse(
                 id: req.id,
                 result: PingResult()
@@ -426,18 +425,29 @@ public abstract class AbsMCPServer {
         }
     }
 
-    private func handleCallHTMLUI(callUIRequest: CallHTMLUIRequest): ToJsonValue {
-        println("------------------------handleCallHTMLUI-----------------------------")
-        let names = callUIRequest.params.names
+    private func handleCallUI(callUIRequest: CallUIRequest): ToJsonValue {
+        let lang = callUIRequest.params.lang
+        if (lang == "arkui") {
+            return handleCallArkUI(callUIRequest)
+        } else {
+            return handleCallHTMLUI(callUIRequest)
+        }
+    }
+
+    private func handleCallHTMLUI(callUIRequest: CallUIRequest): ToJsonValue {
+        let components = callUIRequest.params.components
         let title = callUIRequest.params.title
         let layout = callUIRequest.params.layout
-        let argArr = callUIRequest.params.arguments.getOrThrow()
-        let components = ArrayList<HTMLComponent>()
-        for(i in 0..names.size) {
-            let name = names[i]
-            let args = argArr[i].getFields()
+        let comps = ArrayList<HTMLComponent>()
+        var kind = ""
+        for(i in 0..components.size) {
+            let name = components[i].name
+            let args = components[i].arguments.getOrThrow().getFields()
             if (let Some(ui) <- this.findTool(name)) {
-                components.add(HTMLComponent(ui.invoke(args).content, i + 1))
+                comps.add(HTMLComponent(ui.invoke(args).content, i + 1))
+                if (kind == "") {
+                    kind = ui.kind
+                }
             } else {
                 return MCPError(
                     id: callUIRequest.id,
@@ -453,9 +463,10 @@ public abstract class AbsMCPServer {
             case "grid" => Grid
             case _ => Linear
         }
-        let code = mergeHTML(title, components, layout: htmlLayout)
+        let code = mergeHTML(title, comps, layout: htmlLayout)
         return CallUIResponse(
             id: callUIRequest.id,
+            kind: kind,
             result: CallUIResult(
                 content: [UICallContent.Text(TextContent(text: code))],
                 isError: false
@@ -463,16 +474,19 @@ public abstract class AbsMCPServer {
         )
     }
 
-    private func handleCallArkUI(callUIRequest: CallArkUIRequest): ToJsonValue {
-        let names = callUIRequest.params.names
-        let argArr = callUIRequest.params.arguments.getOrThrow()
+    private func handleCallArkUI(callUIRequest: CallUIRequest): ToJsonValue {
+        let components = callUIRequest.params.components
         // let args = (callUIRequest.params.arguments ?? JsonObject()).getFields()
-        let components = ArrayList<ArkUIComponent>()
-        for(i in 0..names.size) {
-            let name = names[i]
-            let args = argArr[i].getFields()
+        let comps = ArrayList<ArkUIComponent>()
+        var kind = ""
+        for(i in 0..components.size) {
+            let name = components[i].name
+            let args = components[i].arguments.getOrThrow().getFields()
             if (let Some(ui) <- this.findTool(name)) {
-                components.add(ArkUIComponent(ui.invoke(args).content, i + 1))
+                comps.add(ArkUIComponent(ui.invoke(args).content, i + 1))
+                if (kind == "") {
+                    kind = ui.kind
+                }
             } else {
                 return MCPError(
                     id: callUIRequest.id,
@@ -483,10 +497,10 @@ public abstract class AbsMCPServer {
                 )
             }
         }
-        let code = mergeArkUIComponents(callUIRequest.params.title, components, callUIRequest.params.layout)
+        let code = mergeArkUIComponents(callUIRequest.params.title, comps, callUIRequest.params.layout)
         let now = DateTime.now()
         let timeStamp = now.toUnixTimeStamp().toNanoseconds() / 1_000_000
-        let name = "libmylib_" + callUIRequest.params.kind + "_" + timeStamp.toString() + ".so"
+        let name = "libmylib_" + kind + "_" + timeStamp.toString() + ".so"
         let arkUISO = compileSoFromCode(code, name)
         // let binary = readSoFileToBinary(name)
         // let hexStr = binaryToHex(binary)
@@ -495,6 +509,7 @@ public abstract class AbsMCPServer {
         remove(name)
         return CallUIResponse(
             id: callUIRequest.id,
+            kind: kind,
             result: CallUIResult(
                 content: [UICallContent.Binary(BinaryContent(data: name))], // 'Successfully compiled the .so file'
                 isError: false

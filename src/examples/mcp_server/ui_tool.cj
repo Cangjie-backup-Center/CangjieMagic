@@ -6,12 +6,12 @@ package magic.examples.mcp_server
 import magic.dsl.*
 import magic.prelude.*
 import magic.config.Config
-import magic.mcp.ArkUIMCPServer
+import magic.mcp.UIMCPServer
 import magic.ui.arkui.*
-// import magic.ui.html.*
+import magic.ui.html.*
 import magic.ui.*
 
-@tool[
+/*@tool[
     description: "饼图，展示数据占比",
     terminal: true,
     kind: "display",
@@ -125,6 +125,31 @@ public func timePickerUI(info: TimePickerInfo): String {
 ]
 public func calendarPickerUI(info: CalendarPickerInfo): String {
     return template_calendar_picker(info)
+}*/
+
+@ui[
+    description: '''
+    ... ...
+    ''',
+    lang: "html",
+    dump: true
+]
+public func testUI1(info: TextInfo, list: Array<TimeLineItem>) {
+    textListUI(info)
+    timeLineUI(list)
+    confirmBtnUI()
+}
+
+@ui[
+    description: '''
+    ... ...
+    ''',
+    lang: "arkui",
+    dump: true
+]
+public func testUI2(info1: CalendarPickerInfo, info2: TimePickerInfo) {
+    template_time_picker(info2)
+    template_calendar_picker(info1)
 }
 
 
@@ -132,6 +157,7 @@ main() {
     Config.logLevel = "TRACE"
     Config.logFile = "./logs/mcp-server.log"
     println("--------------UIMCPServer----------------")
-    ArkUIMCPServer.startWith([textListUI, lineChartUI, pieChartUI, radioListUI, checkboxListUI, textAreaUI, timePickerUI, datePickerUI, calendarPickerUI], "0.0.0.0", 8000)
+    UIMCPServer.startWith([testUI1, testUI2], "0.0.0.0", 8000)
+    //UIMCPServer.startWith([textListUI, lineChartUI, pieChartUI, radioListUI, checkboxListUI, textAreaUI, timePickerUI, datePickerUI, calendarPickerUI], "0.0.0.0", 8000)
     // HTMLUIMCPServer.startWith([textListUI, commonResume], "0.0.0.0", 8000)
 }

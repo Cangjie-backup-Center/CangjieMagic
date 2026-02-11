@@ -23,7 +23,15 @@ protected class MCPToolWrapper <: Tool {
     }
 
     public prop kind: String {
-        get() { this.mcpTool.kind }
+        get() { this.mcpTool.kind ?? "" }
+    }
+
+    public prop lang: String {
+        get() { this.mcpTool.lang ?? "html" }
+    }
+
+    public prop category: Option<String> {
+        get() { this.mcpTool.category }
     }
 
     public prop name: String {

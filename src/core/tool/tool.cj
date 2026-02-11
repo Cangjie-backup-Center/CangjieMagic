@@ -22,6 +22,18 @@ public interface Tool <: ToJsonValue {
     prop kind: String
 
     /**
+     * Only applicable to UI tools
+     * The language of UI
+     */
+    prop lang: String
+
+    /**
+     * Only applicable to UI tools
+     * Category information associated with UI components, such as 'resume'
+     */
+    prop category: Option<String>
+
+    /**
      * Description of the tool
      * LLM will choose the tool according to the description
      */

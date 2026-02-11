@@ -1,6 +1,7 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
@@ -13,7 +14,10 @@ public class SelectInfo {
     let data: Array<String>
 }
 
-@template[]
+@ui[
+    description: "单选列表，用户只能从预设选项中选择唯一一项，适用于需要用户在互斥选项中做出唯一选择的场景（如性别、支付方式、学历等）",
+    kind: "input"
+]
 public func template_radio_list(info: SelectInfo) {
     '''
         namespace NativeModule {

@@ -1,6 +1,7 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 import stdx.encoding.json.{JsonValue, JsonObject, JsonException, JsonKind, JsonInt, JsonString, JsonBool, JsonFloat, JsonArray, JsonNull}
@@ -11,7 +12,10 @@ public class TextAreaInfo {
     let title: String
 }
 
-@template[]
+@ui[
+    description: "文本输入框",
+    kind: "input"
+]
 public func template_textarea(info: TextAreaInfo) {
     '''
         namespace NativeModule {

@@ -1,10 +1,11 @@
 package magic.ui.arkui
 
 import magic.dsl.*
+import magic.prelude.*
 import magic.jsonable.*
 import std.collection.*
 
-@template[]
+@ui[]
 public func template_textinput() {
     '''
         namespace NativeModule {
