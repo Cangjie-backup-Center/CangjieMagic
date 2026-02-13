@@ -19,7 +19,7 @@ import magic.prelude.*
         title: "描述特定选择日期事件的标题"
     }
 ]
-public func startEndDateComponent(title: String) {
+public func startEndDateUI(title: String) {
     '''
     <!DOCTYPE html>
     <html>

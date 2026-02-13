@@ -31,7 +31,9 @@ protected class MCPUIWrapper <: Tool {
     }
 
     public prop lang: String {
-        get() { this.mcpUI.lang }
+        get() {
+            println("mcp ui")
+            this.mcpUI.lang }
     }
 
     public prop category: Option<String> {

@@ -27,7 +27,9 @@ protected class MCPToolWrapper <: Tool {
     }
 
     public prop lang: String {
-        get() { this.mcpTool.lang ?? "html" }
+        get() {
+            println("mcp tool")
+            this.mcpTool.lang ?? "html" }
     }
 
     public prop category: Option<String> {

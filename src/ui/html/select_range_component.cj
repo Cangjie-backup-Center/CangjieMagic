@@ -19,7 +19,7 @@ import magic.prelude.*
         nr: "数值范围区间，包括最大值和最小值"
      }
 ]
-public func selectRangeComponent(nr: NumericRange) {
+public func selectRangeUI(nr: NumericRange) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">

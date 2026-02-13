@@ -19,7 +19,7 @@ import magic.prelude.*
         info: "选项列表"
     }
 ]
-public func multiListComponent(info: OptionInfo) {
+public func multiListUI(info: OptionInfo) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">

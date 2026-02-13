@@ -29,7 +29,7 @@ public class NumericRange {
         nr: "数值范围区间，包括最大值和最小值"
     }
 ]
-public func selectNumberComponent(nr: NumericRange) {
+public func selectNumberUI(nr: NumericRange) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">

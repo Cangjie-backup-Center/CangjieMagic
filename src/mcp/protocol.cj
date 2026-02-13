@@ -363,8 +363,8 @@ class CallUIRequest {
 
 @jsonable
 public class CallUIItem {
-    let name: String
-    let arguments: Option<JsonObject>
+    public let name: String
+    public let arguments: Option<JsonObject>
 }
 
 @jsonable

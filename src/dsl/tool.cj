@@ -21,7 +21,7 @@ private class ToolAttr <: Attr {
     }
 
     prop lang: String {
-        get() { getString("lang") ?? "" }
+        get() { getString("lang") ?? "html" }
     }
 
     prop category: String {
@@ -224,6 +224,7 @@ private func initNativeFuncTool(toolAttr: ToolAttr, funcDecl: FuncDecl): Tokens 
     return quote($ctor(
         name: $funcName,
         kind: $(newMultilineStringLiteralToken(toolAttr.kind)),
+        lang: $(newMultilineStringLiteralToken(toolAttr.lang)),
         description: $(newMultilineStringLiteralToken(toolAttr.description)),
         parameters: [$(joinTokens(parameters, Token(TokenKind.COMMA)))],
         // retType: $retType.getTypeSchema(),

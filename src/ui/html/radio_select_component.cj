@@ -26,7 +26,7 @@ public class OptionInfo {
         info: "选项列表"
      }
 ]
-public func radioListComponent(info: OptionInfo) {
+public func radioListUI(info: OptionInfo) {
     '''
     <!DOCTYPE html>
     <html lang="zh-CN">

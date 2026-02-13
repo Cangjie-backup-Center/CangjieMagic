@@ -25,7 +25,7 @@ open public class NativeFuncTool <: AbsTool {
     public init(name!: String,
                 description!: String,
                 kind!: String = 'tool',
-                lang!: String = "",
+                lang!: String = '',
                 parameters!: Array<(String, String, TypeSchema)> = [],
                 retType!: TypeSchema = TypeSchema.Str,
                 examples!: Array<String> = [],
@@ -51,11 +51,11 @@ open public class NativeFuncTool <: AbsTool {
     }
 
     public prop kind: String {
-        get() { "" }
+        get() { _kind }
     }
 
     public prop lang: String {
-        get() { "" }
+        get() { _lang}
     }
 
     public prop category: Option<String> {

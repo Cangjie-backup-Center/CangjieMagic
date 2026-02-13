@@ -55,7 +55,7 @@ public func formatStringArray(arr: Array<String>): String {
     风格属性：复杂型，适合与map UI进行组合
     '''
 ]
-public func recommend_scenices(info: Array<Position>) {
+public func recommendScenices(info: Array<Position>) {
     '''
 <!DOCTYPE html>
 <html lang="zh-CN">

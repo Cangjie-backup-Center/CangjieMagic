@@ -125,7 +125,7 @@ public func timePickerUI(info: TimePickerInfo): String {
 ]
 public func calendarPickerUI(info: CalendarPickerInfo): String {
     return template_calendar_picker(info)
-}*/
+}
 
 @ui[
     description: '''
@@ -150,14 +150,18 @@ public func testUI1(info: TextInfo, list: Array<TimeLineItem>) {
 public func testUI2(info1: CalendarPickerInfo, info2: TimePickerInfo) {
     template_time_picker(info2)
     template_calendar_picker(info1)
-}
+}*/
 
 
 main() {
     Config.logLevel = "TRACE"
     Config.logFile = "./logs/mcp-server.log"
     println("--------------UIMCPServer----------------")
-    UIMCPServer.startWith([testUI1, testUI2], "0.0.0.0", 8000)
+    UIMCPServer.startWith([
+        textAreaUI, radioListUI, multiListUI, selectNumberUI, selectRangeUI, singleDateUI, startEndDateUI, confirmBtnUI,
+        compareUI, creativeResume, commonResume, technicalResume, businessResume, clockComponent, imgListUI, textListUI, textURLListUI, ticketListUI, timeLineUI, pieChartUI, lineChartUI, amap, meetingUI, productCards, recipe, recommendScenices,
+        template_radio_list, template_checkbox_list, template_textarea,
+        template_tab_list, template_time_line, template_pie_chart, template_line_chart, template_text_list, template_image_text_list, template_date_picker, template_calendar_picker, template_time_picker], "0.0.0.0", 8000)
     //UIMCPServer.startWith([textListUI, lineChartUI, pieChartUI, radioListUI, checkboxListUI, textAreaUI, timePickerUI, datePickerUI, calendarPickerUI], "0.0.0.0", 8000)
     // HTMLUIMCPServer.startWith([textListUI, commonResume], "0.0.0.0", 8000)
 }
